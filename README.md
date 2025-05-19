@@ -10,9 +10,9 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ## 🔗 Project Links
 
-- 🔖 [Functional Requirements (SRS) Document](https://your-link-to-srs.com)
-- 📋 [GitHub Project Board](https://github.com/YourOrg/prompt-forge/projects)
-- 🗂️ [Demo 1 Instructions](./docs/Capstone_Demo1_Instructions.pdf)
+- 🔖 [Functional Requirements (SRS) Document]()
+- 📋 [GitHub Project Board]()
+- 🗂️ [Demo 1 Instructions]()
 
 ---
 
@@ -101,8 +101,8 @@ The first demo will showcase light implementations of at least three use cases.
 ## ⏱️ Meeting Schedule
 
 - 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
-- 💼 Industry Client Meetings: Bi-weekly via Google Meet
-- 🧾 Meeting minutes logged on ClickUP under Group Discussions
+- 💼 Industry Client Meetings: Bi-weekly via Google Meet/Discord
+- 🧾 Meeting minutes logged on Notion
 
 ---
 
