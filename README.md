@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/Logo.png" alt="Prompt Forge Logo" width="200"/>
+</p>
+
 # 5iveOps - Prompt Forge
 
 Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment.
@@ -22,28 +26,24 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Navendran Naidoo    | 21512494       | [LinkedIn](https://www.linkedin.com/in/navendran-naidoo-0bb732221) | [GitHub](https://github.com/naven1309)          |
 | Rethabile Bore      | 23772141       | [LinkedIn](https://www.linkedin.com/in/rethabilebore)     | [GitHub](https://github.com/riri-bygit)         |
 
+<p align="center">
+  <img src="./assets/5iveOps.jpg" alt="5iveOps Team" width="700"/>
+</p>
+
 ---
 
 ## 🧪 Demo 1 Goals (Due: 28 May 2025)
 
 The first demo will showcase light implementations of at least three use cases.
 
-### ✅ Implemented Features
+### ✅ Planned Demo 1 Features
 
 - 🔑 **Alternative Authentication Systems**
-  - Social login or token-based mock authentication setup
 - 👤 **User Profile Setup**
-  - Basic profile creation after login
 - 🛍️ **Prompt Store (Phase 1)**
-  - Prompt listing and preview (no payments)
-  - Simulated purchases using mock or sandbox logic
 - 🔍 **Prompt Filtering**
-  - Sort prompts by category or keyword
 - 📊 **Prompt Details Page**
-  - Display prompt content and metrics (mocked)
 - 🤖 **LLM Integration**
-  - Hugging Face integration for prompt testing
-  - Basic sentiment analysis support
 
 ---
 
@@ -64,21 +64,19 @@ The first demo will showcase light implementations of at least three use cases.
 
 ## 🌳 Branching Strategy (GitFlow)
 
-- `main` – Stable production code
-- `develop` – Active development branch
-- `feature/*` – New features (e.g. `feature/auth`, `feature/profile`)
-- `release/*` – Pre-demo branches
-- `hotfix/*` – Emergency fixes
+- `main` – Stable production code  
+- `develop` – Active development branch  
+- `feature/*` – New features (e.g. `feature/auth`)  
+- `release/*` – Pre-demo branches  
+- `hotfix/*` – Emergency fixes  
 
 ---
 
 ## ✅ Base Features
 
-> These features are expected by all teams:
-
-- [x] Registration & Login (with mocks)
-- [x] Basic UI themes (Tailwind)
-- [x] Form validation
+- [ ] Registration & Login (with mocks)
+- [ ] Basic UI themes (Tailwind)
+- [ ] Form validation
 
 ---
 
@@ -87,8 +85,8 @@ The first demo will showcase light implementations of at least three use cases.
 | Item                    | Status     |
 |-------------------------|------------|
 | CI/CD Pipeline          | Pending    |
-| Unit Tests (Frontend)   | Planned (Jest) |
-| Unit Tests (Backend)    | Planned (JUnit) |
+| Unit Tests (Frontend)   | Planned    |
+| Unit Tests (Backend)    | Planned    |
 | Code Coverage Badge     | Planned    |
 | Issue Tracking          | ✅ Enabled |
 | GitHub Project Board    | ✅ Linked  |
@@ -97,7 +95,7 @@ The first demo will showcase light implementations of at least three use cases.
 
 ## ⏱️ Meeting Schedule
 
-- 🧑‍🤝‍🧑 Internal Standups: Twice a week (scheduled on Discord)
+- 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
 - 💼 Industry Client Meetings: Bi-weekly via Google Meet
 - 🧾 Meeting minutes logged on ClickUP under Group Discussions
 
