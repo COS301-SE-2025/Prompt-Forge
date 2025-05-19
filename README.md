@@ -32,7 +32,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 
 <p align="center">
-  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="700"/>
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
 </p>
 
 ---
