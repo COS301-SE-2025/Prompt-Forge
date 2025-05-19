@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="500"/>
+  <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="700"/>
 </p>
 
 # 5iveOps - Prompt Forge
