@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/Logo.png" alt="Prompt Forge Logo" width="200"/>
+  <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="200"/>
 </p>
 
 # 5iveOps - Prompt Forge
@@ -27,7 +27,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Rethabile Bore      | 23772141       | [LinkedIn](https://www.linkedin.com/in/rethabilebore)     | [GitHub](https://github.com/riri-bygit)         |
 
 <p align="center">
-  <img src="./assets/5iveOps.jpg" alt="5iveOps Team" width="700"/>
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="700"/>
 </p>
 
 ---
