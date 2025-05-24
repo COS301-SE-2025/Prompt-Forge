@@ -1,6 +1,6 @@
 "use client"
 
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
 import { Moon, Sun, User, LogOut, Settings } from "lucide-react"
 import { useTheme } from "./theme-provider"
@@ -11,6 +11,7 @@ export default function Header() {
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const pathname = location.pathname
+  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -22,6 +23,12 @@ export default function Header() {
     { name: "Marketplace", href: "/marketplace" },
     { name: "Community", href: "/community" },
   ]
+
+  const handleLogout = () => {
+    // Add any logout logic here (clear tokens, etc.)
+    setDropdownOpen(false)
+    navigate('/')
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -86,7 +93,7 @@ export default function Header() {
                   </Link>
                   <button
                     className="flex w-full items-center px-4 py-2 text-sm text-red-500 hover:bg-muted"
-                    onClick={() => setDropdownOpen(false)}
+                    onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Logout</span>
