@@ -1,128 +1,105 @@
-"use client"
-
-import { useState } from "react"
-import { Link } from "react-router-dom"
-import { BrainCircuit, Github } from "lucide-react"
-import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Input } from "../components/ui/Input"
+import { Code, Command, FileText, MessageSquare, Sparkles, Zap } from "lucide-react"
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("login")
-
   return (
-    <main className="min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col md:flex-row">
-        <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-[hsl(var(--background))] p-8 flex flex-col justify-center items-center text-center">
-          <div className="max-w-md mx-auto">
-            <div className="mb-6 flex justify-center">
-              <div className="bg-white/10 p-4 rounded-full">
-                <BrainCircuit className="w-12 h-12 text-white" />
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-[#3ebb9e] mb-4">
+                Optimize your AI prompts
+                <br />
+                with
+                <br />
+                <span className="text-foreground">Prompt Forge</span>
+              </h1>
+
+              <p className="text-muted-foreground mb-6">
+                Test, refine, and optimize AI prompts to get the best results. Our platform helps you create, test, and
+                share prompts that deliver consistent, high-quality AI outputs every time.
+              </p>
+
+              <div className="text-xs text-muted-foreground">
+                Trusted by thousands of AI professionals and enthusiasts worldwide
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white">Prompt Forge</h1>
-            <p className="text-sm text-white/70 uppercase tracking-widest mb-8">Forge the future</p>
+            <div className="flex justify-center">
+              <div className="w-64 h-64 relative">
+                <img
+                  src="/placeholder.svg?height=256&width=256"
+                  alt="AI Assistant"
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            </div>
+          </div>
 
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              Discover, Test & Master
-              <br />
-              AI Prompts
-            </h2>
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-blue-500/10 border-blue-500/20 p-6">
+              <div className="bg-blue-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <Command className="text-blue-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Prompt Engineering</h3>
+              <p className="text-sm text-muted-foreground">
+                Create and refine prompts with our intuitive editor. Test variations and see results in real-time.
+              </p>
+            </Card>
 
-            <p className="text-sm text-white/80 mb-6">
-              The marketplace for high-quality, tested AI prompts.
-              <br />
-              Buy, sell, test, and compare prompts to maximize
-              <br />
-              your AI potential.
-            </p>
+            <Card className="bg-purple-500/10 border-purple-500/20 p-6">
+              <div className="bg-purple-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <Sparkles className="text-purple-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Model Comparison</h3>
+              <p className="text-sm text-muted-foreground">
+                Test your prompts across different AI models to find the best fit for your specific use case.
+              </p>
+            </Card>
+
+            <Card className="bg-green-500/10 border-green-500/20 p-6">
+              <div className="bg-green-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <MessageSquare className="text-green-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Prompt Library</h3>
+              <p className="text-sm text-muted-foreground">
+                Save and organize your prompts in a personal library. Share with your team or keep them private.
+              </p>
+            </Card>
+
+            <Card className="bg-orange-500/10 border-orange-500/20 p-6">
+              <div className="bg-orange-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="text-orange-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Template Gallery</h3>
+              <p className="text-sm text-muted-foreground">
+                Browse our collection of prompt templates for various use cases and industries.
+              </p>
+            </Card>
+
+            <Card className="bg-red-500/10 border-red-500/20 p-6">
+              <div className="bg-red-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <Zap className="text-red-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Performance Analytics</h3>
+              <p className="text-sm text-muted-foreground">
+                Track and analyze the performance of your prompts with detailed metrics and insights.
+              </p>
+            </Card>
+
+            <Card className="bg-cyan-500/10 border-cyan-500/20 p-6">
+              <div className="bg-cyan-500/20 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                <Code className="text-cyan-400 h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Community Sharing</h3>
+              <p className="text-sm text-muted-foreground">
+                Share your prompts with the community and discover prompts created by other users.
+              </p>
+            </Card>
           </div>
         </div>
-
-        <div className="w-full md:w-1/2 bg-background p-8 flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <div className="p-6">
-              <div className="flex border-b border-border mb-6">
-                <button
-                  className={`px-4 py-2 text-sm font-medium ${
-                    activeTab === "login" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground"
-                  }`}
-                  onClick={() => setActiveTab("login")}
-                >
-                  Login
-                </button>
-                <button
-                  className={`px-4 py-2 text-sm font-medium ${
-                    activeTab === "signup" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground"
-                  }`}
-                  onClick={() => setActiveTab("signup")}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              {activeTab === "login" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Input type="email" placeholder="Email" className="bg-muted border-muted" />
-                  </div>
-                  <div className="space-y-2">
-                    <Input type="password" placeholder="Password" className="bg-muted border-muted" />
-                  </div>
-                  <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]">Login</Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Github className="mr-2 h-4 w-4" />
-                    Continue with Google
-                  </Button>
-
-                  <div className="flex justify-between text-xs text-muted-foreground mt-4">
-                    <Link to="#" className="hover:text-foreground">
-                      Forgot?
-                    </Link>
-                    <Link to="#" className="hover:text-foreground">
-                      Create Account
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "signup" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Input type="text" placeholder="Username" className="bg-muted border-muted" />
-                  </div>
-                  <div className="space-y-2">
-                    <Input type="email" placeholder="Email" className="bg-muted border-muted" />
-                  </div>
-                  <div className="space-y-2">
-                    <Input type="password" placeholder="Password" className="bg-muted border-muted" />
-                  </div>
-                  <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]">Sign Up</Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Github className="mr-2 h-4 w-4" />
-                    Continue with Google
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
       </div>
-    </main>
+    </div>
   )
 }

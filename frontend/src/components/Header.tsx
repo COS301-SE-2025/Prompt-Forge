@@ -15,12 +15,12 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
+    { name: "Home", href: "/home" },
     { name: "Dashboard", href: "/dashboard" },
     { name: "Editor", href: "/editor" },
     { name: "My Prompts", href: "/my-prompts" },
     { name: "Marketplace", href: "/marketplace" },
     { name: "Community", href: "/community" },
-    { name: "Features", href: "/features" },
   ]
 
   useEffect(() => {
