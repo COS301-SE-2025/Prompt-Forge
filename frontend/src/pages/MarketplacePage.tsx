@@ -1,5 +1,4 @@
 import { useState } from "react"
-import Header from "../components/Header"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -380,8 +379,6 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-
       <div className="flex">
         {/* Sidebar */}
         <div className="w-48 bg-muted border-r border-border p-4 hidden md:block">
