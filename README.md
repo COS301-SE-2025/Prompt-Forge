@@ -70,7 +70,7 @@ The first demo will showcase light implementations of at least three use cases.
 ## 🌳 Branching Strategy (GitFlow)
 
 - `main` – Stable production code  
-- `develop` – Active development branch  
+- `dev` – Active development branch  
 - `feature/*` – New features (e.g. `feature/auth`)  
 - `release/*` – Pre-demo branches  
 - `hotfix/*` – Emergency fixes  
