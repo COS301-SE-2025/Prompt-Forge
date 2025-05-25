@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        labelText:"hsl(216 12% 84%)",
+        labelText:"hsl(var(--labelText))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

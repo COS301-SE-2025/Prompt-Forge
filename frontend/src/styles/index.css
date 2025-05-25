@@ -22,6 +22,7 @@
   --border: 0 0% 90%;
   --input: 0 0% 90%;
   --ring: 165 100% 37%;
+  --labelText: 0, 0%, 16%;
 }
 
 .dark {
@@ -44,6 +45,7 @@
   --border: 0 0% 20%;
   --input: 0 0% 20%;
   --ring: 165 100% 37%;
+  --labelText: 216 12% 84%;
 }
 
 body, html {
