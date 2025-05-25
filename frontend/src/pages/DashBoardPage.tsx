@@ -4,7 +4,7 @@ import { ArrowRight, ChevronUp, Star, TrendingUp, User } from "lucide-react"
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex flex-col md:flex-row flex-1">
         {/* Sidebar */}
         <div className="w-full md:w-64 bg-card border-r border-border p-6">
