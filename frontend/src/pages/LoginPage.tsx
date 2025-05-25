@@ -23,7 +23,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col md:flex-row">
-        <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-[hsl(var(--background))] p-8 flex flex-col justify-center items-center text-center">
+        <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-hsl(var(--background)) p-8 flex flex-col justify-center items-center text-center">
           <div className="max-w-md mx-auto">
             <div className="mb-6 flex justify-center">
               <div className="bg-white/10 p-4 rounded-full">
@@ -40,7 +40,7 @@ export default function LoginPage() {
               AI Prompts
             </h2>
 
-            <p className="text-sm text-white/80 mb-6">
+            <p className="text-sm text-labelText/80 mb-6">
               The marketplace for high-quality, tested AI prompts.
               <br />
               Buy, sell, test, and compare prompts to maximize
@@ -56,7 +56,7 @@ export default function LoginPage() {
               <div className="flex border-b border-border mb-6 justify-center">
                 <button
                   className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-muted-foreground"
+                    activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
                   }`}
                   onClick={() => setActiveTab("login")}
                 >
@@ -64,7 +64,7 @@ export default function LoginPage() {
                 </button>
                 <button
                   className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-muted-foreground"
+                    activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
                   }`}
                   onClick={() => setActiveTab("signup")}
                 >
@@ -80,7 +80,7 @@ export default function LoginPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
-                    <div className="flex items-center cols-2 border-muted bg-muted rounded-md pr-5">
+                    <div className="flex items-center cols-2 border border-input bg-muted rounded-md pr-5">
                       <Input displayBorder={false} type={toggleLoginPassword?"text":"password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
                       {toggleLoginPassword ? <EyeOff className="cursor-pointer" onClick={() => setToggleLoginPassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setToggleLoginPassword(true)} />}
                     </div>
