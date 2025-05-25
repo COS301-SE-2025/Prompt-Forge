@@ -42,6 +42,9 @@ export default {
           green: "hsl(165, 100%, 37%)",
           "green-dark": "hsl(165, 100%, 27%)",
         },
+        fontFamily: {
+        sans: ["'Red Hat Display'", "system-ui", "sans-serif"],
+        },
       },
     },
   },
