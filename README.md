@@ -80,7 +80,7 @@ The first demo will showcase light implementations of at least three use cases.
 ## ✅ Base Features
 
 - [ ] Registration & Login (with mocks)
-- [ ] Basic UI themes (Tailwind)
+- [X] Basic UI themes (Tailwind)
 - [ ] Form validation
 
 ---
@@ -108,12 +108,12 @@ The first demo will showcase light implementations of at least three use cases.
 
 ## 📋 Demo 1 Checklist
 
-- [ ] Requirements clarification with client ✅
-- [ ] GitHub README, Project Board, and team profiles ✅
+- [X] Requirements clarification with client ✅
+- [X] GitHub README, Project Board, and team profiles ✅
 - [ ] At least 3 working low-level use cases ✅
 - [ ] Unit Tests
 - [ ] SRS Link uploaded
-- [ ] Booked Demo Slot via Hyperperform
+- [X] Booked Demo Slot via Hyperperform
 
 ---
 
