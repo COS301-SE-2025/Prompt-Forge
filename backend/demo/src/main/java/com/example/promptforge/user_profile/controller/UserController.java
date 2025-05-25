@@ -1,5 +1,5 @@
 package com.example.promptforge.user_profile.controller;
-
+import java.util.UUID;
 import com.example.promptforge.user_profile.dto.UpdateProfileDto;
 import com.example.promptforge.user_profile.dto.UserDto;
 import com.example.promptforge.user_profile.service.UserService;
@@ -14,12 +14,12 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/{id}")
-    public UserDto getUser(@PathVariable Long id) {
+    public UserDto getUser(@PathVariable  UUID id) {
         return userService.getUserById(id);
     }
 
     @PutMapping("/{id}")
-    public UserDto updateUser(@PathVariable Long id, @RequestBody UpdateProfileDto dto) {
+    public UserDto updateUser(@PathVariable  UUID id, @RequestBody UpdateProfileDto dto) {
         return userService.updateUser(id, dto);
     }
 }

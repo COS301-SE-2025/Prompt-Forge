@@ -1,5 +1,6 @@
 package com.example.promptforge.user_profile.model;
-
+import java.time.LocalDateTime;
+import java.util.UUID;
 import jakarta.persistence.*;
 
 @Entity
@@ -8,61 +9,108 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+   @Column(name = "user_id") // Map the Java field to the DB column
+    private UUID userId;
 
     private String username;
     private String email;
-    private String password;
-    private String profilePicture;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "is_active")
+    private Boolean isActive;
+
+    private String role;
     private String bio;
 
-    // Getters and Setters
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 
-    public Long getId() {
-        return id;
-    }
+    private String badges;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+// Getters
+public UUID getUserId() {
+    return userId;
+}
 
-    public String getUsername() {
-        return username;
-    }
+public String getUsername() {
+    return username;
+}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+public String getEmail() {
+    return email;
+}
 
-    public String getEmail() {
-        return email;
-    }
+public String getPasswordHash() {
+    return passwordHash;
+}
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+public LocalDateTime getCreatedAt() {
+    return createdAt;
+}
 
-    public String getPassword() {
-        return password;
-    }
+public boolean isActive() {
+    return isActive;
+}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+public String getRole() {
+    return role;
+}
 
-    public String getProfilePicture() {
-        return profilePicture;
-    }
+public String getBio() {
+    return bio;
+}
 
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
+public String getAvatarUrl() {
+    return avatarUrl;
+}
 
-    public String getBio() {
-        return bio;
-    }
+public String getBadges() {
+    return badges;
+}
 
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
+// Setters
+public void setUserId(UUID userId) {
+    this.userId = userId;
+}
+
+public void setUsername(String username) {
+    this.username = username;
+}
+
+public void setEmail(String email) {
+    this.email = email;
+}
+
+public void setPasswordHash(String passwordHash) {
+    this.passwordHash = passwordHash;
+}
+
+public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+}
+
+public void setActive(boolean active) {
+    isActive = active;
+}
+
+public void setRole(String role) {
+    this.role = role;
+}
+
+public void setBio(String bio) {
+    this.bio = bio;
+}
+
+public void setAvatarUrl(String avatarUrl) {
+    this.avatarUrl = avatarUrl;
+}
+
+public void setBadges(String badges) {
+    this.badges = badges;
+}
 }
