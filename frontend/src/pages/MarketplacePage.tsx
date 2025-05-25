@@ -378,7 +378,7 @@ export default function MarketplacePage() {
   const featuredPrompts = MOCK_PROMPTS.filter((prompt) => prompt.featured).slice(0, 4)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex">
         {/* Sidebar */}
         <div className="w-48 bg-muted border-r border-border p-4 hidden md:block">

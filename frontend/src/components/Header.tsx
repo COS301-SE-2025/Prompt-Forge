@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
-import { Moon, Sun, User, LogOut, Settings } from "lucide-react"
+import { Moon, Sun, User, LogOut, Settings, Menu } from "lucide-react"
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
@@ -13,6 +13,7 @@ export default function Header() {
   const pathname = location.pathname
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
@@ -46,11 +47,12 @@ export default function Header() {
     <header className="bg-card border-b border-border">
       <div className="container mx-auto flex h-14 items-center px-4">
         <div className="mr-4 flex">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/home" className="flex items-center space-x-2">
             <span className="font-bold text-lg">Prompt Forge</span>
           </Link>
         </div>
-        <nav className="flex-1 flex items-center justify-center space-x-4 text-sm">
+        {/* Desktop nav */}
+        <nav className="hidden md:flex flex-1 items-center justify-center space-x-4 text-sm">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -64,6 +66,19 @@ export default function Header() {
             </Link>
           ))}
         </nav>
+        {/* Hamburger for mobile */}
+        <div className="flex md:hidden flex-1 justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
+        {/* Theme/User controls */}
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
@@ -104,6 +119,24 @@ export default function Header() {
           </div>
         </div>
       </div>
+      {/* Mobile nav menu */}
+      {mobileMenuOpen && (
+        <nav className="md:hidden bg-card border-t border-border px-4 py-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={cn(
+                "block py-2 text-base transition-colors hover:text-foreground",
+                pathname === item.href ? "text-foreground font-medium" : "text-muted-foreground",
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }
