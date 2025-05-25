@@ -1,4 +1,4 @@
-package com.example.promptforge.user_profile.config;
+package com.example.promptforge.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.context.annotation.Bean;
