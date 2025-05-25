@@ -46,10 +46,13 @@
   --ring: 165 100% 37%;
 }
 
+body, html {
+  font-family: 'Red Hat Display', system-ui, sans-serif;
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
 }
