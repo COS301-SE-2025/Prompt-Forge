@@ -128,6 +128,7 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
                 </Card>
+
               </div>
             </TabsContent>
 
@@ -263,42 +264,6 @@ export default function ProfileSettingsPage() {
                           Newsletter
                         </Label>
                         <Switch id="email-newsletter" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium mb-3">In-App Notifications</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-prompts" className="flex-1">
-                          Prompt Updates
-                        </Label>
-                        <Switch id="app-prompts" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-followers" className="flex-1">
-                          New Followers
-                        </Label>
-                        <Switch id="app-followers" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-comments" className="flex-1">
-                          Comments on Your Prompts
-                        </Label>
-                        <Switch id="app-comments" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-sales" className="flex-1">
-                          Prompt Sales
-                        </Label>
-                        <Switch id="app-sales" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-announcements" className="flex-1">
-                          Platform Announcements
-                        </Label>
-                        <Switch id="app-announcements" defaultChecked />
                       </div>
                     </div>
                   </div>
