@@ -1,4 +1,5 @@
-package backend.Dashboard;
+package com.example.promptforge.dashboard.dashboard_services;
+
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

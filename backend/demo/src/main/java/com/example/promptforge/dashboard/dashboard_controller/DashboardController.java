@@ -1,7 +1,5 @@
 package com.example.promptforge.dashboard.dashboard_controller;
-
-public class DashboardController {
-import com.promptforger.dto.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
