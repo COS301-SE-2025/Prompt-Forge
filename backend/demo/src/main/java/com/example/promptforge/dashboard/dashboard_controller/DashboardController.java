@@ -1,4 +1,4 @@
-package backend.Dashboard.controller;
+package com.example.promptforge.dashboard.dashboard_controller;
 
 public class DashboardController {
 import com.promptforger.dto.*;
