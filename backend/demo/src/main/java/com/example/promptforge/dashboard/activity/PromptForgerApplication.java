@@ -1,4 +1,4 @@
-package com.example.promptforge.dashboard.dashboard_services;
+package com.example.promptforge.dashboard.activity;
 
 
 import org.springframework.boot.SpringApplication;
