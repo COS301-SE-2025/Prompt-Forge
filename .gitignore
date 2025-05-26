@@ -3,3 +3,4 @@ package-lock.json
 **/*.class
 test-results/
 .vscode/settings.json
+backend/PromptForge/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
