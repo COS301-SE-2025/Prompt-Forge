@@ -65,7 +65,7 @@ export default function HomePage() {
               </Link>
 
               {/* Prompt Comparison */}
-              <Link to="/editor">
+              <Link to="/construction">
                 <Card className="bg-green-500/20 border-green-500/30 p-3 lg:p-4 hover:bg-green-500/30 transition-colors cursor-pointer h-full">
                   <div className="bg-green-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Scale className="text-white h-4 w-4 lg:h-5 lg:w-5" />
@@ -91,7 +91,7 @@ export default function HomePage() {
               </Link>
 
               {/* Categorization */}
-              <Link to="/marketplace">
+              <Link to="/construction">
                 <Card className="bg-purple-600/20 border-purple-600/30 p-3 lg:p-4 hover:bg-purple-600/30 transition-colors cursor-pointer h-full">
                   <div className="bg-purple-600 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Tag className="text-white h-4 w-4 lg:h-5 lg:w-5" />
