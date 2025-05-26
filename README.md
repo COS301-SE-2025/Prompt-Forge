@@ -59,7 +59,6 @@ We use a **GitFlow** branching strategy to organize our development:
 - **Main** – Production-ready code.
 - **Dev** – Major development changes and integration.
 - **Feature** – Temporary branches for developing new features.
-- **Release** – Used to prepare for a new software release.
 - **Bugfix** – For fixing non-critical bugs.
 - **Hotfix** – For addressing critical production issues that need immediate fixing.
 
