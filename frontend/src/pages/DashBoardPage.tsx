@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             <p className="font-medium">Bio</p>
-            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">Theo is a software developer and aspiring AI researcher with a passion for solving complex problems using code. With hands-on experience in full-stack development, prompt engineering, and applied machine learning, Alex thrives in building tools that bridge human creativity with intelligent systems. Notably, they led a community robotics initiative and built educational platforms to simplify AI concepts for beginners. When not coding, Alex enjoys reading sci-fi novels, mentoring students, and hiking</p>
+            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools.</p>
           </div>
         </div>
 
