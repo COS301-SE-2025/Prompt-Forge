@@ -106,7 +106,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
                 <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5">Total prompts</p>
+                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Total prompts</p>
                   <div className="p-2 w-fit">
                     <ChartNoAxesColumn size={20} color="#60A5FA" />
                   </div>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
               <Card className="p-4">
                 <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5">Total Users</p>
+                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Total Users</p>
                   <div className="p-2 w-fit">
                     <UsersRound size={20} color="#60A5FA" />
                   </div>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
 
               <Card className="p-4">
                 <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5">Average Rating</p>
+                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Average Rating</p>
                   <div className="p-2 w-fit">
                     <Star size={20} color="#60A5FA" />
                   </div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
 
               <Card className="p-4">
                 <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground font-medium h-fit pl-5">Monthly Usage</p>
+                  <p className="text-sm text-muted-foreground font-medium h-fit pl-5 font-semibold">Monthly Usage</p>
                   <div className="p-2 w-fit">
                     <TrendingUp size={20} color="#60A5FA"/>
                   </div>
@@ -187,7 +187,7 @@ export default function DashboardPage() {
                       <div className="text-foreground text-sm">Technical Writing</div>
                       <div className="flex items-center">
                         <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-yellow-400 font-medium">4.8</span>
+                        <span className="text-xs text-rating font-medium">4.8</span>
                         <span className="ml-2 text-muted-foreground">234 uses</span>
                       </div>
                     </div>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                       <div className="text-foreground text-sm">Technical Writing</div>
                       <div className="flex items-center">
                         <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-yellow-400 font-medium">4.8</span>
+                        <span className="text-xs text-rating font-medium">4.8</span>
                         <span className="ml-2 text-muted-foreground">234 uses</span>
                       </div>
                     </div>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                       <div className="text-foreground text-sm">Technical Writing</div>
                       <div className="flex items-center">
                         <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-yellow-400 font-medium">4.8</span>
+                        <span className="text-xs text-rating font-medium">4.8</span>
                         <span className="ml-2 text-muted-foreground">234 uses</span>
                       </div>
                     </div>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
               </Card>
               <Card className="p-4">
                 <div className="mb-2 flex justify-between items-center w-full">
-                  <p className="text-sm h-fit">Recent Activity</p>
+                  <p className="text-sm h-fit font-semibold">Recent Activity</p>
                   <div className="p-1 w-fit">
                     <Activity size={24} color="#60A5FA" />
                   </div>
