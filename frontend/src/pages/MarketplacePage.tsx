@@ -476,7 +476,7 @@ export default function MarketplacePage() {
             <div className="mb-8">
               <div className="relative">
                 <Input
-                  placeholder="Search for prompts..."
+                  placeholder="        Search for prompts..."
                   className="bg-muted border-muted pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -486,7 +486,7 @@ export default function MarketplacePage() {
                 </div>
               </div>
             </div>
-
+            
             {/* Featured Prompts */}
             {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
               <div className="mb-8">
