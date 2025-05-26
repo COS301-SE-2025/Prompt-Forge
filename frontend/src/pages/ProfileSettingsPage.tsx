@@ -128,36 +128,6 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
                 </Card>
-
-                <Card className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Social Links</h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="twitter">Twitter</Label>
-                      <Input id="twitter" placeholder="@username" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="github">GitHub</Label>
-                      <Input id="github" placeholder="username" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="linkedin">LinkedIn</Label>
-                      <Input id="linkedin" placeholder="profile-url" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <Input id="website" placeholder="https://yourwebsite.com" />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} className="bg-[#3ebb9e] hover:bg-[#00674f]">
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Links
-                    </Button>
-                  </div>
-                </Card>
               </div>
             </TabsContent>
 
