@@ -52,6 +52,25 @@ The first demo will showcase light implementations of at least three use cases.
 
 ---
 
+## 🏗️ Repository Structure & GitFlow
+
+We use a **GitFlow** branching strategy to organize our development:
+
+- **Main** – Production-ready code.
+- **Dev** – Major development changes and integration.
+- **Feature** – Temporary branches for developing new features.
+- **Release** – Used to prepare for a new software release.
+- **Bugfix** – For fixing non-critical bugs.
+- **Hotfix** – For addressing critical production issues that need immediate fixing.
+
+**Pros of this approach:**
+- Provides a clear separation between stable releases, ongoing development, and feature work.
+- Ensures a well-structured workflow for large projects and planned releases.
+- Supports parallel development of multiple features without affecting stability.
+- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
+
+---
+
 ## 🧱 Tech Stack
 
 | Layer         | Technology                         |
