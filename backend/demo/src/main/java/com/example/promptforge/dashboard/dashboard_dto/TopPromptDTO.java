@@ -1,4 +1,4 @@
-package backend.Dashboard.dto;
+package com.example.promptforge.dashboard.dashboard_dto;
 
 public class TopPromptDTO {
     
