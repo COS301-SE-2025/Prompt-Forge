@@ -1,11 +1,34 @@
 import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
+import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowRight, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, Activity } from "lucide-react"
 
 export default function DashboardPage() {
+  // Add state for profile image
+  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
+
+  // Listen for changes to localStorage
+  useEffect(() => {
+    // Initial load
+    const savedImage = localStorage.getItem('userProfileImage')
+    if (savedImage) {
+      setProfileImage(savedImage)
+    }
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userProfileImage') {
+        setProfileImage(e.newValue || "/placeholder.svg?height=80&width=80")
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex flex-col md:flex-row flex-1">
@@ -13,7 +36,12 @@ export default function DashboardPage() {
         <div className="w-full md:w-64 bg-card border-r border-border p-6">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-2">
-              <img src="/placeholder.svg?height=80&width=80" alt="Profile" className="w-20 h-20 rounded-full" />
+              {/* Update img src to use profileImage state */}
+              <img 
+                src={profileImage} 
+                alt="Profile" 
+                className="w-20 h-20 rounded-full object-cover"
+              />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
             <h3 className="font-medium">theo_unknown</h3>
