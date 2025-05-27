@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom"
 import { Card } from "../components/ui/Card"
 import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, Tag } from "lucide-react"
