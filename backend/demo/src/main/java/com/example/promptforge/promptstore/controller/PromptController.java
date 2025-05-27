@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.promptforge.promptstore.model.Prompt;
+import com.example.promptforge.promptstore.model.PromptMetadata;
+import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
 import com.example.promptforge.promptstore.repository.PromptRepository;
 
 @RestController
@@ -112,5 +114,24 @@ public class PromptController {
     public ResponseEntity<List<Prompt>> getPromptsUnderPrice(@RequestParam double maxPrice) {
         List<Prompt> prompts = promptRepository.findPublicPromptsUnderPrice(maxPrice);
         return ResponseEntity.ok(prompts);
+    }
+
+    @Autowired
+    private PromptMetadataRepository metadataRepository;
+
+    @GetMapping("/{id}/metadata")
+    public ResponseEntity<PromptMetadata> getPromptMetadata(@PathVariable UUID id) {
+        PromptMetadata metadata = metadataRepository.findByPromptId(id);
+        if (metadata != null) {
+            return ResponseEntity.ok(metadata);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> trackPromptView(@PathVariable UUID id) {
+        metadataRepository.incrementViewCount(id);
+        return ResponseEntity.ok().build();
     }
 }
