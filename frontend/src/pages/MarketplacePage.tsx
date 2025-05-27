@@ -378,7 +378,7 @@ export default function MarketplacePage() {
   const featuredPrompts = MOCK_PROMPTS.filter((prompt) => prompt.featured).slice(0, 4)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex">
         {/* Sidebar */}
         <div className="w-48 bg-muted border-r border-border p-4 hidden md:block">
@@ -476,17 +476,18 @@ export default function MarketplacePage() {
             <div className="mb-8">
               <div className="relative">
                 <Input
-                  placeholder="Search for prompts..."
+                  placeholder="        Search for prompts..."
                   className="bg-muted border-muted pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </div>
+                {!searchQuery && (
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
-
             {/* Featured Prompts */}
             {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
               <div className="mb-8">

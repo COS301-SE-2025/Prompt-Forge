@@ -22,6 +22,7 @@
   --border: 0 0% 90%;
   --input: 0 0% 90%;
   --ring: 165 100% 37%;
+  --labelText: 0, 0%, 16%;
 }
 
 .dark {
@@ -44,12 +45,25 @@
   --border: 0 0% 20%;
   --input: 0 0% 20%;
   --ring: 165 100% 37%;
+  --labelText: 216 12% 84%;
+}
+
+body, html {
+  font-family: 'Red Hat Display', system-ui, sans-serif;
 }
 
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #222;
+  box-shadow: 0 0 0px 1000px #f3f4f6 inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
