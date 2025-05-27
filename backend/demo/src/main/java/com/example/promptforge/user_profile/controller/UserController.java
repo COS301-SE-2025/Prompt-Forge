@@ -18,7 +18,7 @@ public class UserController {
         return userService.getUserById(id);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public UserDto updateUser(@PathVariable  UUID id, @RequestBody UpdateProfileDto dto) {
         return userService.updateUser(id, dto);
     }
