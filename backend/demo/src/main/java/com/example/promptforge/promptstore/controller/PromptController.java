@@ -21,7 +21,7 @@ import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
 import com.example.promptforge.promptstore.repository.PromptRepository;
 
 @RestController
-@RequestMapping("/api/prompts")
+@RequestMapping("/prompts")
 public class PromptController {
 
     private final PromptRepository promptRepository;
@@ -79,12 +79,15 @@ public class PromptController {
     public ResponseEntity<Prompt> updatePrompt(@PathVariable UUID id, @RequestBody Prompt promptDetails) {
         return promptRepository.findById(id)
                 .map(prompt -> {
+                    // Only update allowed fields
                     prompt.setTitle(promptDetails.getTitle());
                     prompt.setDescription(promptDetails.getDescription());
                     prompt.setContent(promptDetails.getContent());
                     prompt.setPrice(promptDetails.getPrice());
                     prompt.setCategory(promptDetails.getCategory());
                     prompt.setIsPublic(promptDetails.getIsPublic());
+                    // authorId remains unchanged from existing prompt
+                    
                     Prompt updatedPrompt = promptRepository.save(prompt);
                     return ResponseEntity.ok(updatedPrompt);
                 })
