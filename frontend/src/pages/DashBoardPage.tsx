@@ -1,3 +1,4 @@
+import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
 import { Button } from "../components/ui/Button"
@@ -63,71 +64,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
-                <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Total prompts</p>
-                  <div className="p-2 w-fit">
-                    <ChartNoAxesColumn size={20} color="#60A5FA" />
-                  </div>
-                </div>
-                <div className="text-center mb-5">
-                  <h3 className="text-2xl font-bold justify-center">175</h3>
-                </div>
-                
-                <div className="flex items-center text-xs justify-center">
-                  <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-green-500 font-medium pr-2">+12.5% last month</span>
-                </div>
+                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
               </Card>
 
               <Card className="p-4">
-                <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Total Users</p>
-                  <div className="p-2 w-fit">
-                    <UsersRound size={20} color="#60A5FA" />
-                  </div>
-                </div>
-                <div className="text-center mb-5">
-                  <h3 className="text-2xl font-bold justify-center">175</h3>
-                </div>
-                
-                <div className="flex items-center text-xs justify-center">
-                  <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-green-500 font-medium pr-2">+12.5% last month</span>
-                </div>
+                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
               </Card>
 
               <Card className="p-4">
-                <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground h-fit pl-5 font-semibold">Average Rating</p>
-                  <div className="p-2 w-fit">
-                    <Star size={20} color="#60A5FA" />
-                  </div>
-                </div>
-                <div className="text-center mb-5">
-                  <h3 className="text-2xl font-bold justify-center">175</h3>
-                </div>
-                
-                <div className="flex items-center text-xs justify-center">
-                  <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-green-500 font-medium pr-2">+12.5% last month</span>
-                </div>
+                <DashboardCard heading='Average Rating' headingIcon={<Star size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
               </Card>
 
               <Card className="p-4">
-                <div className="flex justify-center items-center">
-                  <p className="text-sm text-muted-foreground font-medium h-fit pl-5 font-semibold">Monthly Usage</p>
-                  <div className="p-2 w-fit">
-                    <TrendingUp size={20} color="#60A5FA"/>
-                  </div>
-                </div>
-                <div className="text-center mb-5">
-                  <h3 className="text-2xl font-bold justify-center">175</h3>
-                </div>
-                
-                <div className="flex items-center text-xs justify-center">
-                  <ChevronDown className="h-3 w-3 text-red-500 mr-1" />
-                  <span className="text-red-500 font-medium pr-2">-12.5% last month</span>
-                </div>
+                <DashboardCard heading='Monthly Usage' headingIcon={<TrendingUp size={20} color="#60A5FA" />} value={175} icon={<ChevronDown className="h-3 w-3 text-red-500 mr-1" />} changeValue='-12.5%'/>
               </Card>
 
             </div>
@@ -140,18 +89,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="items-center text-xs">
-                  <div className="mb-5 flex text-muted-foreground justify-between items-center w-full">
-                    <div>
-                      <div className="text-foreground text-sm">Technical Writing</div>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-rating font-medium">4.8</span>
-                        <span className="ml-2 text-muted-foreground">234 uses</span>
-                      </div>
-                    </div>
-                    <button className="text-[#0066e2] font-semibold">view</button>
-                  </div>
-
                   <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
                   <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
                   <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />            
