@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Header from "../components/Header"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check } from "lucide-react"

@@ -8,6 +8,7 @@ import MyPromptsPage from "./pages/MyPromptsPage"
 import CommunityPage from "./pages/CommunityPage"
 import HomePage from "./pages/HomePage"
 import ProfileSettingsPage from "./pages/ProfileSettingsPage"
+import UnderConstructionPage from "./pages/UnderConstructionPage"
 
 function App() {
   const location = useLocation()
@@ -26,6 +27,7 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/profile-settings" element={<ProfileSettingsPage />} />
+          <Route path="/construction" element={<UnderConstructionPage />} />
         </Routes>
       </main>
     </div>
