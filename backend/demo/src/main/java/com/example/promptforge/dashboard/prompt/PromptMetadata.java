@@ -6,13 +6,13 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "prompt_metadata")
+@Table(name = "prompt_metadata", schema = "public")
 public class PromptMetadata {
     @Id
-    @Column(columnDefinition = "UUID")
+    @Column(name = "metadata_id", columnDefinition = "UUID")
     private UUID metadataId;
-    
-    @Column(columnDefinition = "UUID")
+
+    @Column(name = "prompt_id", columnDefinition = "UUID")
     private UUID promptId;
     
     private Integer viewCount;

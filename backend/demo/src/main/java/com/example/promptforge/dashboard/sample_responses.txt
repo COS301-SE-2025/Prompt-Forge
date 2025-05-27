@@ -1,0 +1,80 @@
+1. GET /api/dashboard/summary
+    response:
+    {
+  "totalPrompts": 128,
+  "totalUsers": 1200,
+  "averageRating": 4.5
+    }
+
+2. GET /api/dashboard/monthly-usage
+    response:
+    [
+        {
+            "month": "2025-05",
+            "usageCount": 42,
+            "growthPercentage": 32
+        },
+        {
+            "month": "2025-04",
+            "usageCount": 38,
+            "growthPercentage": 8
+        }
+        ]
+
+3. GET /api/dashboard/top-prompts
+    response:
+    [
+        {
+            "title": "Technical Writing",
+            "usageCount": 1034,
+            "averageRating": 4.8,
+            "starCount": 48
+        },
+        {
+            "title": "Creative Storytelling",
+            "usageCount": 882,
+            "averageRating": 4.7,
+            "starCount": 47
+        }
+        ]
+    
+4. GET /api/dashboard/recent-activities
+    response:
+    [
+        {
+            "username": "thee_unknown",
+            "action": "created",
+            "promptTitle": "Technical Writing",
+            "timestamp": "2025-05-27T10:15:00"
+        },
+        {
+            "username": "Jawdsmith",
+            "action": "rated",
+            "promptTitle": "Creative Storytelling",
+            "timestamp": "2025-05-27T09:30:00"
+        }
+    ]
+
+5. GET /api/users/{userId}
+    response:
+    {
+        "username": "Katiego",
+        "email": "mostkatiego@gmail.com",
+        "promptsCount": 32,
+        "followers": 120,
+        "following": 85,
+        "memberSince": "2025-01-15"
+    }
+
+6. GET /api/users/{userId}/prompts
+    response:
+    [
+        {
+            "id": "448ede7a-04f1-4d0e-b78e-433f626cf8c6",
+            "title": "Advanced SaaS Sales Script",
+            "description": "High-conversion sales script",
+            "price": 9.99,
+            "usageCount": 1034,
+            "averageRating": 4.8
+        }
+    ]

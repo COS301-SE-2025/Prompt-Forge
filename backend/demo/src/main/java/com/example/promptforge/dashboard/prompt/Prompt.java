@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "prompts")
+@Table(name = "prompts", schema = "public")
 public class Prompt {
     @Id
-    @Column(columnDefinition = "UUID")
+    @Column(name = "prompt_id",columnDefinition = "UUID")
     private UUID promptId;
     
     private String title;
