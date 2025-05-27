@@ -481,9 +481,11 @@ export default function MarketplacePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </div>
+                {!searchQuery && (
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
             
