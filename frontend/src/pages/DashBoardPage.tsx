@@ -64,19 +64,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
-                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
+                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
-                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
+                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
-                <DashboardCard heading='Average Rating' headingIcon={<Star size={20} color="#60A5FA" />} value={175} icon={<ChevronUp className="h-3 w-3 text-green-500 mr-1" />} changeValue='+12.5%' />
+                <DashboardCard heading='Average Rating' headingIcon={<Star size={20} color="#60A5FA" />} value={175} change="loss" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
-                <DashboardCard heading='Monthly Usage' headingIcon={<TrendingUp size={20} color="#60A5FA" />} value={175} icon={<ChevronDown className="h-3 w-3 text-red-500 mr-1" />} changeValue='-12.5%'/>
+                <DashboardCard heading='Monthly Usage' headingIcon={<TrendingUp size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5}/>
               </Card>
 
             </div>
