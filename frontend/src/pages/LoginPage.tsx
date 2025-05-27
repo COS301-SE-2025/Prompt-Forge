@@ -80,16 +80,27 @@ export default function LoginPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
-                    <div className="flex items-center cols-2 border border-input bg-muted rounded-md pr-5">
-                      <Input displayBorder={false} type={toggleLoginPassword?"text":"password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
-                      {toggleLoginPassword ? <EyeOff className="cursor-pointer" onClick={() => setToggleLoginPassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setToggleLoginPassword(true)} />}
+                    <div className="relative">
+                      <Input 
+                        type={toggleLoginPassword ? "text" : "password"} 
+                        placeholder="Password" 
+                        className="bg-muted border-muted h-11 pr-12 w-full" 
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        {toggleLoginPassword ? (
+                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setToggleLoginPassword(false)} 
+                          />
+                        ) : (
+                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setToggleLoginPassword(true)} 
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                    <div className="flex items-center w-fit">
-                      <Input id="rm" type="checkbox" className="h-5" /><label className="text-sm w-max text-nowrap pl-2 cursor-pointer hover:text-foreground" htmlFor="rm">Remember me</label>
-                    </div>
                     <Link to="#" className="hover:text-forge-green-dark text-forge-green text-sm">
                       Forgot password?
                     </Link>

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -10,8 +10,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Camera, Check, Save, Trash, Upload, X, Plus } from "lucide-react"
 
 export default function ProfileSettingsPage() {
-  const [profileImage, setProfileImage] = useState("/placeholder.svg?height=100&width=100")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [profileImage, setProfileImage] = useState<string>(() => {
+    // Initialize from localStorage if exists
+    return localStorage.getItem('userProfileImage') || "/placeholder.svg?height=100&width=100"
+  })
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setProfileImage(base64String)
+        localStorage.setItem('userProfileImage', base64String)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setProfileImage("/placeholder.svg?height=100&width=100")
+    localStorage.removeItem('userProfileImage')
+  }
 
   const handleSave = () => {
     setSaveStatus("saving")
@@ -46,19 +68,34 @@ export default function ProfileSettingsPage() {
                       <div className="relative mb-4">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-muted">
                           <img
-                            src={profileImage || "/placeholder.svg"}
+                            src={profileImage}
                             alt="Profile"
                             className="object-cover w-full h-full"
                           />
                         </div>
-                        <div className="absolute -bottom-2 -right-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <div 
+                          className="absolute -bottom-2 -right-2"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
                           <div className="bg-[#3ebb9e] rounded-full p-1.5 cursor-pointer">
                             <Camera className="h-4 w-4 text-white" />
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="text-xs">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-xs"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
                           <Upload className="h-3 w-3 mr-1" />
                           Upload
                         </Button>
@@ -66,6 +103,7 @@ export default function ProfileSettingsPage() {
                           variant="outline"
                           size="sm"
                           className="text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                          onClick={handleRemoveImage}
                         >
                           <Trash className="h-3 w-3 mr-1" />
                           Remove
