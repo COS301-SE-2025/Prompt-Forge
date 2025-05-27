@@ -2,11 +2,19 @@
 package com.example.promptforge.dashboard.activity;
 
 
-import com.example.promptforge.dashboard.prompt.Prompt;
-import com.example.promptforge.dashboard.user.User;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import com.example.promptforge.promptstore.model.Prompt;
+import com.example.promptforge.user_profile.model.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "activities", schema = "public")

@@ -4,17 +4,18 @@ package com.example.promptforge.dashboard.dashboard_services;
 
 
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.example.promptforge.dashboard.activity.ActivityRepository;
 import com.example.promptforge.dashboard.dashboard_dto.ActivityDTO;
 import com.example.promptforge.dashboard.dashboard_dto.MonthlyUsageDTO;
 import com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO;
 import com.example.promptforge.dashboard.dashboard_repo.DashboardRepository;
-import com.example.promptforge.dashboard.prompt.PromptMetadataRepository;
-import com.example.promptforge.dashboard.prompt.PromptRepository;
-import com.example.promptforge.dashboard.user.UserRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.example.promptforge.dashboard.prompt.PromptMetadataRepo;
+import com.example.promptforge.promptstore.repository.PromptRepository;
+import com.example.promptforge.user_profile.repository.UserRepository;
 
 @Service
 public class DashboardService {
@@ -23,13 +24,13 @@ public class DashboardService {
     private final ActivityRepository activityRepository;
     private final PromptRepository promptRepository;
     private final UserRepository userRepository;
-    private final PromptMetadataRepository promptMetadataRepository;
+    private final PromptMetadataRepo promptMetadataRepository;
     
     public DashboardService(DashboardRepository dashboardRepository, 
                           ActivityRepository activityRepository,
                           PromptRepository promptRepository,
                           UserRepository userRepository,
-                          PromptMetadataRepository promptMetadataRepository) {
+                          PromptMetadataRepo promptMetadataRepository) {
         this.dashboardRepository = dashboardRepository;
         this.activityRepository = activityRepository;
         this.promptRepository = promptRepository;
