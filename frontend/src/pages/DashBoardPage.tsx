@@ -1,3 +1,4 @@
+import { RecentActivity } from '../components/RecentActivity';
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowRight, ChevronUp, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, ChevronDown, Activity } from "lucide-react"
@@ -185,18 +186,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="items-center text-xs">
-                  <div className="mb-2 flex text-muted-foreground justify-between items-center w-full">
-                    <div className="flex items-center">
-                      <span className="text-[#0066e2] pr-1">JamesDoe <span className="text-muted-foreground">bought your prompt</span></span>
-                    </div>
-                    <div>2h ago</div>
-                  </div>
-                  <div className="mb-2 flex text-muted-foreground justify-between items-center w-full">
-                    <div className="flex items-center">
-                      <span className="text-[#0066e2] pr-1">MarryDoe <span className="text-muted-foreground">followed you</span></span>
-                    </div>
-                    <div>2h ago</div>
-                  </div>
+                  <RecentActivity  username='JohnDoe' activity='rated your prompt' time='2h'   />
+                  <RecentActivity  username='MarryDoe' activity='followed you' time='1.5h'   />
                 </div>
               </Card>
             </div>
