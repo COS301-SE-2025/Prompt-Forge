@@ -40,7 +40,7 @@ export function DashboardCard({ heading, headingIcon, value, changeValue, change
                 :
                     <>
                         <Minus className="h-3 w-3 text-gray-500 mr-1" />
-                        <span className="text-gray-500 font-medium pr-2">-{changeValue}% last month</span>
+                        <span className="text-gray-500 font-medium pr-2">{changeValue}% last month</span>
                     </>  
                 
               }
