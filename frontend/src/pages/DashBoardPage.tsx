@@ -3,7 +3,7 @@ import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, ChevronUp, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, ChevronDown, Activity } from "lucide-react"
+import { ArrowRight, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, Activity } from "lucide-react"
 
 export default function DashboardPage() {
   return (
