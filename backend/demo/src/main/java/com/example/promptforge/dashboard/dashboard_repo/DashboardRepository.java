@@ -24,14 +24,14 @@ public interface DashboardRepository extends JpaRepository<PromptMetadata, UUID>
     @Query("SELECT AVG(pm.avgRating) FROM PromptMetadata pm WHERE pm.avgRating IS NOT NULL")
     Double calculateAverageRating();
     
-    @Query("SELECT new com.example.promptforge.dashboard_dto.MonthlyUsageDTO(" +
+    @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.MonthlyUsageDTO(" +
            "TO_CHAR(p.createdAt, 'YYYY-MM'), COUNT(p)) " +
            "FROM Prompt p " +
            "GROUP BY TO_CHAR(p.createdAt, 'YYYY-MM') " +
            "ORDER BY TO_CHAR(p.createdAt, 'YYYY-MM') DESC")
     List<MonthlyUsageDTO> findMonthlyUsage();
-    
-    @Query("SELECT new com.example.promptforge.dashboard_dto.TopPromptDTO(" +
+
+    @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(" +
            "p.title, pm.viewCount, pm.avgRating) " +
            "FROM Prompt p " +
            "JOIN PromptMetadata pm ON p.promptId = pm.promptId " +

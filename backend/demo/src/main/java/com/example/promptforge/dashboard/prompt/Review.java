@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", schema = "public")
 public class Review {
     @Id
     @Column(columnDefinition = "UUID")
