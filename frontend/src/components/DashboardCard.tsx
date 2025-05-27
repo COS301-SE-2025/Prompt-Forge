@@ -1,6 +1,5 @@
+import { ChevronDown, ChevronUp, Minus } from "lucide-react"
 import type React from "react"
-import { ChevronUp, ChevronDown, Minus } from "lucide-react"
-// import { cn } from "../lib/utils"
 import {  ReactNode } from "react"
 
 
@@ -8,10 +7,10 @@ interface DashboardCardProps extends React.HTMLAttributes<HTMLDivElement> {
     heading:string,
     headingIcon: ReactNode,
     value: number,
-    icon:ReactNode,
-    changeValue:string
+    changeValue:number,
+    change:"loss"|"gain"|"none"
 }
-export function DashboardCard({ heading, headingIcon, value, icon, changeValue}: DashboardCardProps) {
+export function DashboardCard({ heading, headingIcon, value, changeValue, change}: DashboardCardProps) {
   return (
 
     <>
@@ -26,8 +25,26 @@ export function DashboardCard({ heading, headingIcon, value, icon, changeValue}:
           </div>
 
           <div className="flex items-center text-xs justify-center">
-              {icon}
-              <span className="text-red-500 font-medium pr-2">{changeValue} last month</span>
+              {
+                change == "gain" ?
+                    <>
+                        <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
+                        <span className="text-green-500 font-medium pr-2">+{changeValue}% last month</span>
+                    </>  
+                : change == "loss" ? 
+                    <>
+                        <ChevronDown className="h-3 w-3 text-red-500 mr-1" />
+                        <span className="text-red-500 font-medium pr-2">-{changeValue}% last month</span>
+                    </>  
+        
+                :
+                    <>
+                        <Minus className="h-3 w-3 text-gray-500 mr-1" />
+                        <span className="text-gray-500 font-medium pr-2">-{changeValue}% last month</span>
+                    </>  
+                
+              }
+              
           </div>
     </>
   )
