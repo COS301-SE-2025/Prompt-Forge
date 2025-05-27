@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
@@ -34,7 +35,6 @@ export default function ProfileSettingsPage() {
     setProfileImage("/placeholder.svg?height=100&width=100")
     localStorage.removeItem('userProfileImage')
   }
-
   const handleSave = () => {
     setSaveStatus("saving")
     setTimeout(() => {

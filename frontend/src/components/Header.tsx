@@ -14,7 +14,6 @@ export default function Header() {
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
     { name: "Home", href: "/home" },
