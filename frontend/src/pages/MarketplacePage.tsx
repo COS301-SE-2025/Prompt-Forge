@@ -488,6 +488,7 @@ export default function MarketplacePage() {
                 )}
               </div>
             </div>
+            
             {/* Featured Prompts */}
             {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
               <div className="mb-8">

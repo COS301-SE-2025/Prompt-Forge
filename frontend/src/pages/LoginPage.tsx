@@ -39,6 +39,7 @@ export default function LoginPage() {
               <br />
               AI Prompts
             </h2>
+
             <p className="text-sm text-labelText/80 mb-6">
               The marketplace for high-quality, tested AI prompts.
               <br />
@@ -104,6 +105,7 @@ export default function LoginPage() {
                       Forgot password?
                     </Link>
                   </div>
+
                   <Button 
                     className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
                     onClick={handleLogin}
@@ -120,7 +122,9 @@ export default function LoginPage() {
                   <Button variant="outline" className="w-full">
                     <Chrome className="mr-2 h-4 w-4" />
                     Continue with Google
-                  </Button>        
+                  </Button>
+
+                  
                 </div>
               )}
 
