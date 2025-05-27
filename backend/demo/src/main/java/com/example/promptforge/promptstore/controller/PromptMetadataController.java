@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,8 @@ import com.example.promptforge.promptstore.model.PromptMetadata;
 import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
 
 @RestController
-@RequestMapping("/api/prompts/metadata")
+@RequestMapping("/prompts/metadata")
+@Transactional
 public class PromptMetadataController {
 
     private final PromptMetadataRepository metadataRepository;
@@ -25,20 +27,10 @@ public class PromptMetadataController {
         this.metadataRepository = metadataRepository;
     }
 
-    // @GetMapping("/{promptId}")
-    // public ResponseEntity<PromptMetadata> getMetadataByPromptId(@PathVariable UUID promptId) {
-    //     return metadataRepository.findByPromptId(promptId)
-    //             .map(ResponseEntity::ok)
-    //             .orElse(ResponseEntity.notFound().build());
-    // }
     @GetMapping("/{promptId}")
     public ResponseEntity<PromptMetadata> getMetadataByPromptId(@PathVariable UUID promptId) {
         PromptMetadata metadata = metadataRepository.findByPromptId(promptId);
-        if (metadata != null) {
-            return ResponseEntity.ok(metadata);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return metadata != null ? ResponseEntity.ok(metadata) : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/{promptId}/view")
@@ -59,16 +51,15 @@ public class PromptMetadataController {
         return ResponseEntity.ok().build();
     }
 
-@GetMapping("/{promptId}/stats")
-public ResponseEntity<PromptMetadata> getPromptStats(@PathVariable UUID promptId) {
-    PromptMetadata metadata = metadataRepository.findByPromptId(promptId);
-    if (metadata == null) {
-        return ResponseEntity.notFound().build();
+    @GetMapping("/{promptId}/stats")
+    public ResponseEntity<PromptMetadata> getPromptStats(@PathVariable UUID promptId) {
+        PromptMetadata metadata = metadataRepository.findByPromptId(promptId);
+        if (metadata == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Double avgRating = metadataRepository.calculateAverageRating(promptId);
+        metadata.setAverageRating(avgRating);
+        return ResponseEntity.ok(metadata);
     }
-    
-    // Recalculate average rating in case it changed
-    Double avgRating = metadataRepository.calculateAverageRating(promptId);
-    metadata.setAverageRating(avgRating);
-    return ResponseEntity.ok(metadata);
-}
 }
