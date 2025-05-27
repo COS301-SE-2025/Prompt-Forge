@@ -1,25 +1,24 @@
 package com.example.promptforge.dashboard.dashboard_controller;
 
-import com.example.promptforge.dashboard.dashboard_services.DashboardService;
-import com.example.promptforge.dashboard.dashboard_repo.DashboardRepository;
-import com.example.promptforge.dashboard.activity.ActivityRepository;
-import com.example.promptforge.dashboard.prompt.PromptRepository;
-import com.example.promptforge.dashboard.prompt.PromptMetadataRepository;
-import com.example.promptforge.dashboard.user.UserRepository;
-import com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO;
+import java.util.Arrays;
+import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import com.example.promptforge.dashboard.activity.ActivityRepository;
+import com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO;
+import com.example.promptforge.dashboard.dashboard_repo.DashboardRepository;
+import com.example.promptforge.dashboard.dashboard_services.DashboardService;
+import com.example.promptforge.dashboard.prompt.PromptMetadataRepo;
+import com.example.promptforge.dashboard.prompt.PromptRepo;
+import com.example.promptforge.user_profile.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class DashboardServiceTest {
@@ -31,13 +30,13 @@ public class DashboardServiceTest {
     private ActivityRepository activityRepository;
     
     @Mock
-    private PromptRepository promptRepository;
+    private PromptRepo promptRepository;
     
     @Mock
     private UserRepository userRepository;
     
     @Mock
-    private PromptMetadataRepository promptMetadataRepository;
+    private PromptMetadataRepo promptMetadataRepository;
 
     @InjectMocks
     private DashboardService dashboardService;

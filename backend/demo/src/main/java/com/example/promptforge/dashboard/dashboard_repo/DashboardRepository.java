@@ -2,15 +2,16 @@
 package com.example.promptforge.dashboard.dashboard_repo;
 
 
-import com.example.promptforge.dashboard.dashboard_dto.MonthlyUsageDTO;
-import com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO;
-import com.example.promptforge.dashboard.prompt.PromptMetadata;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import com.example.promptforge.dashboard.dashboard_dto.MonthlyUsageDTO;
+import com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO;
+import com.example.promptforge.promptstore.model.PromptMetadata;
 
 @Repository
 public interface DashboardRepository extends JpaRepository<PromptMetadata, UUID> {
@@ -21,7 +22,7 @@ public interface DashboardRepository extends JpaRepository<PromptMetadata, UUID>
     @Query("SELECT COUNT(u) FROM User u")
     Long countTotalUsers();
     
-    @Query("SELECT AVG(pm.avgRating) FROM PromptMetadata pm WHERE pm.avgRating IS NOT NULL")
+    @Query("SELECT AVG(pm.averageRating) FROM PromptMetadata pm WHERE pm.averageRating IS NOT NULL")
     Double calculateAverageRating();
     
     @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.MonthlyUsageDTO(" +
@@ -31,11 +32,17 @@ public interface DashboardRepository extends JpaRepository<PromptMetadata, UUID>
            "ORDER BY TO_CHAR(p.createdAt, 'YYYY-MM') DESC")
     List<MonthlyUsageDTO> findMonthlyUsage();
 
-    @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(" +
-           "p.title, pm.viewCount, pm.avgRating) " +
-           "FROM Prompt p " +
-           "JOIN PromptMetadata pm ON p.promptId = pm.promptId " +
-           "ORDER BY pm.viewCount DESC, pm.avgRating DESC " +
-           "LIMIT 5")
+//     @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(" +
+//            "p.title, pm.viewCount, pm.averageRating) " +
+//            "FROM Prompt p " +
+//            "JOIN PromptMetadata pm ON p.id; = pm.id; " +
+//            "ORDER BY pm.viewCount DESC, pm.averageRating DESC " +
+//            "LIMIT 5")
+//     List<TopPromptDTO> findTopPrompts();
+
+    @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(p.title, pm.viewCount, pm.averageRating) " +
+           "FROM Prompt p JOIN PromptMetadata pm ON p.id = pm.id " +
+           "ORDER BY pm.viewCount DESC, pm.averageRating DESC LIMIT 5")
     List<TopPromptDTO> findTopPrompts();
+
 }
