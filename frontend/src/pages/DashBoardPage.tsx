@@ -1,7 +1,10 @@
+import { DashboardCard } from '@/components/DashboardCard';
+import { RecentActivity } from '../components/RecentActivity';
+import { TopPrompt } from '../components/TopPrompt';
 import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, ChevronUp, Star, TrendingUp, User } from "lucide-react"
+import { ArrowRight, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, Activity } from "lucide-react"
 
 export default function DashboardPage() {
   // Add state for profile image
@@ -77,52 +80,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-muted-foreground"
-                >
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              </div>
-              <span className="text-sm">Home</span>
-            </div>
-            <div className="flex items-center space-x-3 px-2 py-1.5 rounded-md bg-muted cursor-pointer">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" x2="8" y1="13" y2="13" />
-                  <line x1="16" x2="8" y1="17" y2="17" />
-                  <line x1="10" x2="8" y1="9" y2="9" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium">Catalog</span>
-            </div>
-          </div>
-
-          <div className="mt-4 text-xs text-muted-foreground">
-            <p>markdavis@gmail.com</p>
+            <p className="font-medium">Bio</p>
+            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools.</p>
           </div>
         </div>
 
@@ -130,84 +89,52 @@ export default function DashboardPage() {
         <div className="flex-1 p-6">
           <h1 className="text-xl font-semibold mb-6">Dashboard</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Prompts</p>
-                  <h3 className="text-2xl font-bold">175</h3>
-                </div>
-                <div className="bg-[#3ebb9e]/10 p-2 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-[#3ebb9e]"
-                  >
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" x2="8" y1="13" y2="13" />
-                    <line x1="16" x2="8" y1="17" y2="17" />
-                    <line x1="10" x2="8" y1="9" y2="9" />
-                  </svg>
-                </div>
-              </div>
-              <div className="flex items-center text-xs">
-                <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+12.5% last month</span>
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <Card className="p-4">
+                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
+              </Card>
 
-            <Card className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Uses</p>
-                  <h3 className="text-2xl font-bold">1.2k</h3>
-                </div>
-                <div className="bg-blue-500/10 p-2 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-blue-500"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="flex items-center text-xs">
-                <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+8.1% last month</span>
-              </div>
-            </Card>
+              <Card className="p-4">
+                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
+              </Card>
 
-            <Card className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Monthly Usage</p>
-                  <h3 className="text-2xl font-bold">15.2k</h3>
+              <Card className="p-4">
+                <DashboardCard heading='Average Rating' headingIcon={<Star size={20} color="#60A5FA" />} value={175} change="loss" changeValue={12.5} />
+              </Card>
+
+              <Card className="p-4">
+                <DashboardCard heading='Monthly Usage' headingIcon={<TrendingUp size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5}/>
+              </Card>
+
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <Card className="p-4">
+                <div className="mb-2 flex justify-between items-center w-full">
+                  <p className="text-sm h-fit font-semibold">Top Performing Prompts</p>
+                  <div className="p-1 w-fit">
+                    <TrendingUp size={24} color="#60A5FA" />
+                  </div>
                 </div>
-                <div className="bg-purple-500/10 p-2 rounded-md">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
+                <div className="items-center text-xs">
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />            
                 </div>
-              </div>
-              <div className="flex items-center text-xs">
-                <ChevronUp className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+5.3% last month</span>
-              </div>
-            </Card>
+              </Card>
+              <Card className="p-4">
+                <div className="mb-2 flex justify-between items-center w-full">
+                  <p className="text-sm h-fit font-semibold">Recent Activity</p>
+                  <div className="p-1 w-fit">
+                    <Activity size={24} color="#60A5FA" />
+                  </div>
+                </div>
+                <div className="items-center text-xs">
+                  <RecentActivity  username='JohnDoe' activity='rated your prompt' time='2h'   />
+                  <RecentActivity  username='MarryDoe' activity='followed you' time='1.5h'   />
+                </div>
+              </Card>
+            </div>
           </div>
 
           <div>
