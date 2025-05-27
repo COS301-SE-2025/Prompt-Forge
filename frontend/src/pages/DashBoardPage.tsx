@@ -1,4 +1,5 @@
 import { RecentActivity } from '../components/RecentActivity';
+import { TopPrompt } from '../components/TopPrompt';
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowRight, ChevronUp, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, ChevronDown, Activity } from "lucide-react"
@@ -151,31 +152,9 @@ export default function DashboardPage() {
                     <button className="text-[#0066e2] font-semibold">view</button>
                   </div>
 
-                  <div className="mb-5 flex text-muted-foreground justify-between items-center w-full">
-                    <div>
-                      <div className="text-foreground text-sm">Technical Writing</div>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-rating font-medium">4.8</span>
-                        <span className="ml-2 text-muted-foreground">234 uses</span>
-                      </div>
-                    </div>
-                    <button className="text-[#0066e2] font-semibold">view</button>
-                  </div>
-
-                  <div className="mb-5 flex text-muted-foreground justify-between items-center w-full">
-                    <div>
-                      <div className="text-foreground text-sm">Technical Writing</div>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                        <span className="text-xs text-rating font-medium">4.8</span>
-                        <span className="ml-2 text-muted-foreground">234 uses</span>
-                      </div>
-                    </div>
-                    <button className="text-[#0066e2] font-semibold">view</button>
-                  </div>
-
-                  
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />
+                  <TopPrompt heading='Technical Writing' rating={4.8} usesCount={234} promptId='ghjhn' />            
                 </div>
               </Card>
               <Card className="p-4">
