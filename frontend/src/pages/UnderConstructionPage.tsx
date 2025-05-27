@@ -3,7 +3,7 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowLeft, Wrench, Clock, Zap, Star } from "lucide-react"
 
-export default function CommunityPage() {
+export default function UnderConstructionPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center">
