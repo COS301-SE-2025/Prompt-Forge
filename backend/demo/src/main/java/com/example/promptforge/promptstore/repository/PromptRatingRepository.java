@@ -10,5 +10,5 @@ import com.example.promptforge.promptstore.model.PromptRating;
 
 @Repository
 public interface PromptRatingRepository extends JpaRepository<PromptRating, UUID> {
-    boolean existsByPromptIdAndUserId(UUID promptId, UUID userId);
+    //boolean existsByPromptIdAndUserId(UUID promptId, UUID userId);
 }

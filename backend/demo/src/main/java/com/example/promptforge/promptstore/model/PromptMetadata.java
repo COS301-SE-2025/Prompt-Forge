@@ -1,8 +1,6 @@
 package com.example.promptforge.promptstore.model;
 
 import jakarta.persistence.*;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -37,6 +35,6 @@ public class PromptMetadata {
     @Column(name = "download_count", nullable = false)
     private int downloadCount = 0;
 
-    @Column(name = "avg_rating", precision = 3, scale = 2)
+    @Column(name = "avg_rating")
     private Double averageRating;
 }
