@@ -9,6 +9,9 @@ import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-re
 export default function DashboardPage() {
   // Add state for profile image
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
+  const [userBio, setUserBio] = useState<string>(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation."
+  })
 
   // Listen for changes to localStorage
   useEffect(() => {
@@ -18,10 +21,18 @@ export default function DashboardPage() {
       setProfileImage(savedImage)
     }
 
+    const savedBio = localStorage.getItem('userBio')
+    if (savedBio) {
+      setUserBio(savedBio)
+    }
+
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'userProfileImage') {
         setProfileImage(e.newValue || "/placeholder.svg?height=80&width=80")
+      }
+      if (e.key === 'userBio') {
+        setUserBio(e.newValue || "")
       }
     }
 
@@ -81,7 +92,9 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             <p className="font-medium">Bio</p>
-            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools.</p>
+            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">
+              {userBio}
+            </p>
           </div>
         </div>
 
