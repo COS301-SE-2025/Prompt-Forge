@@ -17,5 +17,15 @@ class AuthService {
         }
     }
 
+    async signup(userData:Object){
+        try {
+            const response = await this.httpClient.post(`${this.apiUrl}/signup`,userData)
+            return response.json()
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
 }
 
