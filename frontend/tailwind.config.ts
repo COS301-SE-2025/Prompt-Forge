@@ -5,6 +5,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        rating:"hsl(var(--rating))",
+        labelText:"hsl(var(--labelText))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -41,6 +43,9 @@ export default {
         forge: {
           green: "hsl(165, 100%, 37%)",
           "green-dark": "hsl(165, 100%, 27%)",
+        },
+        fontFamily: {
+        sans: ["'Red Hat Display'", "system-ui", "sans-serif"],
         },
       },
     },
