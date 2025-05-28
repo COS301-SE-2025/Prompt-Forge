@@ -9,6 +9,13 @@ import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-re
 export default function DashboardPage() {
   // Add state for profile image
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
+  const [userBio, setUserBio] = useState<string>(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation."
+  })
+  // Add username state
+  const [username, setUsername] = useState<string>(() => {
+    return localStorage.getItem('username') || "theo_unknown"
+  })
 
   // Listen for changes to localStorage
   useEffect(() => {
@@ -18,10 +25,27 @@ export default function DashboardPage() {
       setProfileImage(savedImage)
     }
 
+    const savedBio = localStorage.getItem('userBio')
+    if (savedBio) {
+      setUserBio(savedBio)
+    }
+    // Add username to existing useEffect
+    const savedUsername = localStorage.getItem('username')
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
+
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'userProfileImage') {
         setProfileImage(e.newValue || "/placeholder.svg?height=80&width=80")
+      }
+      if (e.key === 'userBio') {
+        setUserBio(e.newValue || "")
+      }
+      // Add username case to existing storage handler
+      if (e.key === 'username') {
+        setUsername(e.newValue || "theo_unknown")
       }
     }
 
@@ -44,7 +68,7 @@ export default function DashboardPage() {
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
-            <h3 className="font-medium">theo_unknown</h3>
+            <h3 className="font-medium">{username}</h3>
 
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
@@ -81,7 +105,9 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             <p className="font-medium">Bio</p>
-            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools.</p>
+            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">
+              {userBio}
+            </p>
           </div>
         </div>
 
