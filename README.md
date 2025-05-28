@@ -135,9 +135,9 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 📋 Demo 1 Checklist
 
-- [X] Requirements clarification with client ✅
-- [X] GitHub README, Project Board, and team profiles ✅
-- [X] At least 3 working low-level use cases ✅
+- [X] Requirements clarification with client
+- [X] GitHub README, Project Board, and team profiles
+- [X] At least 3 working low-level use cases
 - [X] Unit Tests
 - [X] SRS Link uploaded
 - [X] Booked Demo Slot via Hyperperform
