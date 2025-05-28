@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -16,6 +16,9 @@ export default function ProfileSettingsPage() {
     return localStorage.getItem('userProfileImage') || "/placeholder.svg?height=100&width=100"
   })
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
+  const [bio, setBio] = useState(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
+  })
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -35,8 +38,15 @@ export default function ProfileSettingsPage() {
     localStorage.removeItem('userProfileImage')
   }
 
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBio(e.target.value)
+  }
+
   const handleSave = () => {
     setSaveStatus("saving")
+    // Save bio to localStorage
+    localStorage.setItem('userBio', bio)
+    
     setTimeout(() => {
       setSaveStatus("success")
       setTimeout(() => setSaveStatus(null), 2000)
@@ -133,7 +143,8 @@ export default function ProfileSettingsPage() {
                         <Textarea
                           id="bio"
                           placeholder="Tell us about yourself"
-                          defaultValue="AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
+                          value={bio}
+                          onChange={handleBioChange}
                           className="min-h-[100px]"
                         />
                       </div>
