@@ -1,4 +1,4 @@
-package com.example.promptforge.config;
+package com.example.promptforge.DatabaseConfig;
 
 import java.sql.Connection;
 import java.sql.SQLException;
