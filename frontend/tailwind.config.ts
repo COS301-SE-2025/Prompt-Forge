@@ -5,6 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        rating:"hsl(var(--rating))",
         labelText:"hsl(var(--labelText))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

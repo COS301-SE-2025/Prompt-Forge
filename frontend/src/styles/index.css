@@ -14,7 +14,7 @@
   --secondary: 0 0% 96%;
   --secondary-foreground: 0 0% 10%;
   --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
+  --muted-foreground: 0 0% 42%;
   --accent: 165 100% 37%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 100% 50%;
@@ -23,6 +23,7 @@
   --input: 0 0% 90%;
   --ring: 165 100% 37%;
   --labelText: 0, 0%, 16%;
+  --rating: 47 100% 45%;
 }
 
 .dark {
@@ -46,6 +47,7 @@
   --input: 0 0% 20%;
   --ring: 165 100% 37%;
   --labelText: 216 12% 84%;
+  --rating: 48 96% 53%;
 }
 
 body, html {
