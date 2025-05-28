@@ -1,9 +1,15 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate, Navigate } from "react-router-dom"
 import { BrainCircuit, Chrome, Eye, EyeOff } from "lucide-react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
+
+// Test users array - moved outside component to persist during session
+const TEST_USERS = [
+  { email: "test@example.com", password: "password123", username: "testuser" },
+  { email: "admin@promptforge.com", password: "admin123", username: "admin" },
+]
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
@@ -11,13 +17,111 @@ export default function LoginPage() {
   const [toggleLoginPassword,setToggleLoginPassword] = useState(false);
   const [togglePassword,setTogglePassword] = useState(false);
   const [toggleConfirmPassword,setToggleConfirmPassword] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+  const [signupEmail, setSignupEmail] = useState("")
+  const [signupPassword, setSignupPassword] = useState("")
+  const [signupUsername, setSignupUsername] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState("")
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('username') || "Guest"
+  })
+
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('username')
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'username') {
+        setUsername(e.newValue || "Guest")
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   const handleLogin = () => {
-    navigate('/home') // Change from '/features' to '/home'
+    const user = TEST_USERS.find(u => u.email === loginEmail)
+    
+    if (!user) {
+      setError("User not found")
+      return
+    }
+
+    if (user.password !== loginPassword) {
+      setError("Invalid password")
+      return
+    }
+
+    // Save user data to localStorage
+    localStorage.setItem('username', user.username)
+    localStorage.setItem('userEmail', user.email)
+    
+    setError("")
+    navigate('/home')
   }
 
   const handleSignUp = () => {
-    navigate('/home') // Change from '/features' to '/home'
+    // Validation
+    if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
+      setError("All fields are required")
+      return
+    }
+
+    if (signupPassword !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (TEST_USERS.some(u => u.email === signupEmail)) {
+      setError("Email already exists")
+      return
+    }
+
+    if (TEST_USERS.some(u => u.username === signupUsername)) {
+      setError("Username already taken")
+      return
+    }
+
+    // Add new user
+    TEST_USERS.push({
+      email: signupEmail,
+      password: signupPassword,
+      username: signupUsername
+    })
+
+    // Save user data to localStorage
+    localStorage.setItem('username', signupUsername)
+    localStorage.setItem('userEmail', signupEmail)
+
+    setError("")
+    navigate('/home')
+  }
+
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('username')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userProfileImage')
+    localStorage.removeItem('userBio')
+    
+    // Navigate to login page
+    navigate('/login')
+  }
+
+  // Add this to routes that require authentication
+  const RequireAuth = ({ children }: { children: React.ReactNode }) => {
+    const username = localStorage.getItem('username')
+    
+    if (!username) {
+      return <Navigate to="/login" replace />
+    }
+
+    return <>{children}</>
   }
 
   return (
@@ -76,15 +180,23 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Email</label>
-                    <Input type="email" placeholder="you@example.com" className="bg-muted border-muted h-11" />
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      className="bg-muted border-muted h-11"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
                     <div className="relative">
                       <Input 
-                        type={toggleLoginPassword ? "text" : "password"} 
-                        placeholder="Password" 
-                        className="bg-muted border-muted h-11 pr-12 w-full" 
+                        type={toggleLoginPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="bg-muted border-muted h-11 pr-12 w-full"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                         {toggleLoginPassword ? (
@@ -132,24 +244,68 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-labelText px-1 text-sm">Username</label>
-                    <Input type="text" placeholder="Username" className="bg-muted border-muted h-11" />
+                    <Input 
+                      type="text" 
+                      placeholder="Username" 
+                      className="bg-muted border-muted h-11"
+                      value={signupUsername}
+                      onChange={(e) => setSignupUsername(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1 text-sm">Email</label>
-                    <Input type="email" placeholder="you@example.com" className="bg-muted border-muted h-11" />
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      className="bg-muted border-muted h-11"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
-                    <div className="flex items-center cols-2 border-muted bg-muted rounded-md pr-5">
-                      <Input displayBorder={false} type={togglePassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
-                      {togglePassword ? <EyeOff className="cursor-pointer" onClick={() => setTogglePassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setTogglePassword(true)} />}
+                    <div className="relative">
+                      <Input 
+                        type={togglePassword ? "text" : "password"} 
+                        placeholder="Password"
+                        className="bg-muted border-muted h-11 pr-12 w-full"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        {togglePassword ? (
+                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setTogglePassword(false)} 
+                          />
+                        ) : (
+                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setTogglePassword(true)} 
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Confirm Password</label>
-                    <div className="flex items-center cols-2 border-muted bg-muted rounded-md pr-5">
-                      <Input displayBorder={false} type={toggleConfirmPassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
-                      {toggleConfirmPassword ? <EyeOff className="cursor-pointer" onClick={() => setToggleConfirmPassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setToggleConfirmPassword(true)} />}
+                    <div className="relative">
+                      <Input 
+                        type={toggleConfirmPassword ? "text" : "password"} 
+                        placeholder="Password"
+                        className="bg-muted border-muted h-11 pr-12 w-full"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        {toggleConfirmPassword ? (
+                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setToggleConfirmPassword(false)} 
+                          />
+                        ) : (
+                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                            onClick={() => setToggleConfirmPassword(true)} 
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                   <Button 
@@ -170,6 +326,10 @@ export default function LoginPage() {
                     Continue with Google
                   </Button>
                 </div>
+              )}
+
+              {error && (
+                <p className="text-red-500 text-sm mt-2">{error}</p>
               )}
             </div>
           </Card>
