@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -167,35 +167,6 @@ export default function ProfileSettingsPage() {
                   </div>
                 </Card>
 
-                <Card className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Social Links</h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="twitter">Twitter</Label>
-                      <Input id="twitter" placeholder="@username" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="github">GitHub</Label>
-                      <Input id="github" placeholder="username" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="linkedin">LinkedIn</Label>
-                      <Input id="linkedin" placeholder="profile-url" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <Input id="website" placeholder="https://yourwebsite.com" />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} className="bg-[#3ebb9e] hover:bg-[#00674f]">
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Links
-                    </Button>
-                  </div>
-                </Card>
               </div>
             </TabsContent>
 
@@ -334,42 +305,6 @@ export default function ProfileSettingsPage() {
                       </div>
                     </div>
                   </div>
-
-                  <div>
-                    <h3 className="font-medium mb-3">In-App Notifications</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-prompts" className="flex-1">
-                          Prompt Updates
-                        </Label>
-                        <Switch id="app-prompts" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-followers" className="flex-1">
-                          New Followers
-                        </Label>
-                        <Switch id="app-followers" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-comments" className="flex-1">
-                          Comments on Your Prompts
-                        </Label>
-                        <Switch id="app-comments" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-sales" className="flex-1">
-                          Prompt Sales
-                        </Label>
-                        <Switch id="app-sales" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="app-announcements" className="flex-1">
-                          Platform Announcements
-                        </Label>
-                        <Switch id="app-announcements" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="mt-6 flex justify-end">
@@ -383,48 +318,6 @@ export default function ProfileSettingsPage() {
 
             <TabsContent value="billing">
               <div className="grid gap-6">
-                <Card className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Subscription</h2>
-
-                  <div className="bg-muted p-4 rounded-md mb-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">Pro Plan</h3>
-                        <p className="text-sm text-muted-foreground">$19.99/month, renews on June 15, 2025</p>
-                      </div>
-                      <Button variant="outline">Change Plan</Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-medium">Plan Features</h3>
-                    <ul className="space-y-2">
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-[#3ebb9e] mr-2" />
-                        <span>Unlimited prompt testing</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-[#3ebb9e] mr-2" />
-                        <span>Access to all AI models</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-[#3ebb9e] mr-2" />
-                        <span>Advanced analytics</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-[#3ebb9e] mr-2" />
-                        <span>Priority support</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="mt-6 flex justify-end">
-                    <Button variant="outline" className="text-red-500 hover:bg-red-500/10 hover:text-red-600">
-                      Cancel Subscription
-                    </Button>
-                  </div>
-                </Card>
-
                 <Card className="p-6">
                   <h2 className="text-lg font-medium mb-4">Payment Methods</h2>
 

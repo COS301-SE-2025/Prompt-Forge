@@ -6,7 +6,7 @@ import { Sparkles, Star, User, Search, Filter } from "lucide-react"
 
 // Mock data for prompts
 const PROMPTS_PER_PAGE = 12
-const TOTAL_PROMPTS = 48
+// const TOTAL_PROMPTS = 48
 
 const MOCK_PROMPTS = [
   {
