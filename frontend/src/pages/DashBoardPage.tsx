@@ -4,7 +4,7 @@ import { TopPrompt } from '../components/TopPrompt';
 import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, Star, User, TrendingUp, Activity, LucideBarChart, Bot, Rocket, } from "lucide-react"
+import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-react"
 
 export default function DashboardPage() {
   // Add state for profile image
