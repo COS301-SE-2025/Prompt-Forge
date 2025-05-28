@@ -4,7 +4,7 @@ import { TopPrompt } from '../components/TopPrompt';
 import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, Activity } from "lucide-react"
+import { ArrowRight, Star, User, TrendingUp, Activity, LucideBarChart, Bot, Rocket, } from "lucide-react"
 
 export default function DashboardPage() {
   // Add state for profile image
@@ -92,11 +92,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
-                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
+                <DashboardCard heading='Total Prompts' headingIcon={<Rocket size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
-                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
+                <DashboardCard heading='Total Users' headingIcon={<User size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
