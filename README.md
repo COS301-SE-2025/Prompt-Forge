@@ -25,7 +25,8 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
 | Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
 | Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
-| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1Q40Ot5QISZ65EeLbF6FOHZQRMN29BGTS/view?usp=drive_link)      | May 2025     |
+| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
+| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
 
 ---
 
