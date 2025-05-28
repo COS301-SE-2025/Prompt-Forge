@@ -4,6 +4,8 @@
 
 # 5iveOps - Prompt Forge
 
+![GitHub Actions Workflow Status](https://github.com/COS301-SE-2025/Prompt-Forge/actions/workflows/main.yml/badge.svg)
+
 Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment.
 
 ---
@@ -13,6 +15,18 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 - 🔖 [Functional Requirements (SRS) Document]()
 - 📋 [GitHub Project Board]()
 - 🗂️ [Demo 1 Instructions]()
+
+---
+
+## 📑 Documentation Links
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/1U1uyaNdSERa0dD4x4kRv3VM24MQWOf_0/view?usp=drive_link)                               | May 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
+| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
 
 ---
 
@@ -47,8 +61,6 @@ The first demo will showcase light implementations of at least three use cases.
 - 👤 **User Profile Setup**
 - 🛍️ **Prompt Store (Phase 1)**
 - 🔍 **Prompt Filtering**
-- 📊 **Prompt Details Page**
-- 🤖 **LLM Integration**
 
 ---
 
@@ -97,9 +109,9 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## ✅ Base Features
 
-- [ ] Registration & Login (with mocks)
+- [X] Registration & Login (with mocks)
 - [X] Basic UI themes (Tailwind)
-- [ ] Form validation
+- [X] Form validation
 
 ---
 
@@ -107,10 +119,8 @@ We use a **GitFlow** branching strategy to organize our development:
 
 | Item                    | Status     |
 |-------------------------|------------|
-| CI/CD Pipeline          | Pending    |
-| Unit Tests (Frontend)   | Planned    |
-| Unit Tests (Backend)    | Planned    |
-| Code Coverage Badge     | Planned    |
+| CI/CD Pipeline          | ![GitHub Actions Workflow Status](https://github.com/COS301-SE-2025/Prompt-Forge/actions/workflows/main.yml/badge.svg) |
+| Unit Tests (Backend)    | ✅ Completed|
 | Issue Tracking          | ✅ Enabled |
 | GitHub Project Board    | ✅ Linked  |
 
@@ -128,9 +138,9 @@ We use a **GitFlow** branching strategy to organize our development:
 
 - [X] Requirements clarification with client ✅
 - [X] GitHub README, Project Board, and team profiles ✅
-- [ ] At least 3 working low-level use cases ✅
-- [ ] Unit Tests
-- [ ] SRS Link uploaded
+- [X] At least 3 working low-level use cases ✅
+- [X] Unit Tests
+- [X] SRS Link uploaded
 - [X] Booked Demo Slot via Hyperperform
 
 ---
