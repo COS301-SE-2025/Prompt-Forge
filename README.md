@@ -92,7 +92,7 @@ We use a **GitFlow** branching strategy to organize our development:
 | Auth          | Mock Auth / Alternative Auth       |
 | Versioning    | Git + GitFlow                      |
 | Deployment    | AWS Free Tier / Local Dev          |
-| Testing       | Jest, JUnit (Planned)              |
+| Testing       | JUnit              |
 
 ---
 
