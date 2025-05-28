@@ -18,6 +18,7 @@ import com.example.promptforge.dashboard.dashboard_repo.DashboardRepository;
 import com.example.promptforge.dashboard.dashboard_services.DashboardService;
 import com.example.promptforge.dashboard.prompt.PromptMetadataRepo;
 import com.example.promptforge.dashboard.prompt.PromptRepo;
+import com.example.promptforge.promptstore.repository.PromptRepository;
 import com.example.promptforge.user_profile.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,8 +30,10 @@ public class DashboardServiceTest {
     @Mock
     private ActivityRepository activityRepository;
     
+    // @Mock
+    // private PromptRepo promptRepository;
     @Mock
-    private PromptRepo promptRepository;
+    private PromptRepository promptRepository;
     
     @Mock
     private UserRepository userRepository;
