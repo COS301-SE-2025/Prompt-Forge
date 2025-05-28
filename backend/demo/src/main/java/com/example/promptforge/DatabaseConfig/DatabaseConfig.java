@@ -1,13 +1,15 @@
 package com.example.promptforge.DatabaseConfig;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import javax.sql.DataSource;
+
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 @Configuration
 public class DatabaseConfig {
@@ -43,3 +45,4 @@ public class DatabaseConfig {
         return dataSource;
     }
 }
+

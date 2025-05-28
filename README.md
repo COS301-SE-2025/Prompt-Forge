@@ -52,6 +52,24 @@ The first demo will showcase light implementations of at least three use cases.
 
 ---
 
+## 🏗️ Repository Structure & GitFlow
+
+We use a **GitFlow** branching strategy to organize our development:
+
+- **Main** – Production-ready code.
+- **Dev** – Major development changes and integration.
+- **Feature** – Temporary branches for developing new features.
+- **Bugfix** – For fixing non-critical bugs.
+- **Hotfix** – For addressing critical production issues that need immediate fixing.
+
+**Pros of this approach:**
+- Provides a clear separation between stable releases, ongoing development, and feature work.
+- Ensures a well-structured workflow for large projects and planned releases.
+- Supports parallel development of multiple features without affecting stability.
+- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
+
+---
+
 ## 🧱 Tech Stack
 
 | Layer         | Technology                         |
@@ -70,7 +88,7 @@ The first demo will showcase light implementations of at least three use cases.
 ## 🌳 Branching Strategy (GitFlow)
 
 - `main` – Stable production code  
-- `develop` – Active development branch  
+- `dev` – Active development branch  
 - `feature/*` – New features (e.g. `feature/auth`)  
 - `release/*` – Pre-demo branches  
 - `hotfix/*` – Emergency fixes  
@@ -80,7 +98,7 @@ The first demo will showcase light implementations of at least three use cases.
 ## ✅ Base Features
 
 - [ ] Registration & Login (with mocks)
-- [ ] Basic UI themes (Tailwind)
+- [X] Basic UI themes (Tailwind)
 - [ ] Form validation
 
 ---
@@ -108,12 +126,12 @@ The first demo will showcase light implementations of at least three use cases.
 
 ## 📋 Demo 1 Checklist
 
-- [ ] Requirements clarification with client ✅
-- [ ] GitHub README, Project Board, and team profiles ✅
+- [X] Requirements clarification with client ✅
+- [X] GitHub README, Project Board, and team profiles ✅
 - [ ] At least 3 working low-level use cases ✅
 - [ ] Unit Tests
 - [ ] SRS Link uploaded
-- [ ] Booked Demo Slot via Hyperperform
+- [X] Booked Demo Slot via Hyperperform
 
 ---
 

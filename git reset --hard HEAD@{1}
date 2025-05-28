@@ -1,0 +1,11 @@
+[33m897694a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/backend/prompstore[m[33m, [m[1;32mmain[m[33m)[m HEAD@{0}: reset: moving to main
+[33m76a1dc1[m HEAD@{1}: commit: implementing promt controller- these are the endpoints for prompt requests etc.. for prompt store
+[33m6fb5b4f[m HEAD@{2}: commit: clean up of user profile implementation
+[33m1ac06ff[m HEAD@{3}: commit: adding data Jpa and lombok dependencies
+[33mf280ff5[m HEAD@{4}: commit: update to Demoapplication
+[33m9b1922b[m HEAD@{5}: commit: moving database config
+[33m46ebffb[m HEAD@{6}: commit: implementation of prompt model- mirroring promts table
+[33m02d6b0b[m[33m ([m[1;31morigin/feature/backend/prompstore[m[33m)[m HEAD@{7}: pull --tags origin feature/backend/prompstore: Fast-forward
+[33m84506f0[m HEAD@{8}: checkout: moving from feature/profile-setup to feature/backend/prompstore
+[33mf07deb1[m[33m ([m[1;32mfeature/profile-setup[m[33m)[m HEAD@{9}: checkout: moving from main to feature/profile-setup
+[33m897694a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/backend/prompstore[m[33m, [m[1;32mmain[m[33m)[m HEAD@{10}: clone: from https://github.com/COS301-SE-2025/Prompt-Forge.git
