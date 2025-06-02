@@ -1,13 +1,15 @@
 import type React from "react"
 import { cn } from "../../lib/utils"
+import { RefObject } from "react"
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  displayBorder?:Boolean
+  displayBorder?:Boolean,
+  refName?:RefObject<HTMLInputElement>
 }
 
-export function Input({id, className,displayBorder, ...props }: InputProps) {
+export function Input({id, className,displayBorder,refName, ...props }: InputProps) {
   return (
-    <input id={id}
+    <input id={id} ref={refName}
       className={(displayBorder==null || displayBorder==true)?cn(
         "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
       ) : cn(

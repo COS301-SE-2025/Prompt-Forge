@@ -1,7 +1,7 @@
 import HttpClient from "./httpClient";
-import { User } from "./mockAuthService";
+import { User } from "./User";
 
-class AuthService {
+export class AuthService {
     private httpClient:HttpClient;
     private apiUrl = 'https://localhost:8080'
     constructor(httpClient:HttpClient) {
