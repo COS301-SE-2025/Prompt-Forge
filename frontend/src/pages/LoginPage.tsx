@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { BrainCircuit, Chrome, Eye, EyeOff } from "lucide-react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
+// import mockAuthService from "@/services/mockAuthService"
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
@@ -12,8 +14,59 @@ export default function LoginPage() {
   const [togglePassword,setTogglePassword] = useState(false);
   const [toggleConfirmPassword,setToggleConfirmPassword] = useState(false);
 
-  const handleLogin = () => {
-    navigate('/home') // Change from '/features' to '/home'
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const signupemailRef = useRef<HTMLInputElement>(null);
+  const signuppasswordRef = useRef<HTMLInputElement>(null);
+  const confirmpasswordRef = useRef<HTMLInputElement>(null);
+
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    // navigate('/home') // Change from '/features' to '/home'
+    e.preventDefault();
+    try {
+      if(emailRef.current?.value.trim()!=""){
+        if(passwordRef.current?.value.trim()!=""){
+          try{
+          }
+          catch(error){
+          }
+        }
+        else{
+          notify("error", "Password required")
+        }
+      }
+      else{
+        notify("error", "Email required")
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const notify = (status: string, message: string) => {
+    status == "success" ?
+      toast.success(message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
+      :
+      toast.error(message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
   }
 
   const handleSignUp = () => {
@@ -22,6 +75,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
+      <ToastContainer />
       <div className="flex-1 flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-hsl(var(--background)) p-8 flex flex-col justify-center items-center text-center">
           <div className="max-w-md mx-auto">
@@ -73,18 +127,19 @@ export default function LoginPage() {
               </div>
 
               {activeTab === "login" && (
-                <div className="space-y-4">
+                <form className="space-y-4" onSubmit={handleLogin}>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Email</label>
-                    <Input type="email" placeholder="you@example.com" className="bg-muted border-muted h-11" />
+                    <Input refName={emailRef} type="email" placeholder="you@example.com" className="bg-muted border-muted h-11"  />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
                     <div className="relative">
-                      <Input 
+                      <Input refName={passwordRef}
                         type={toggleLoginPassword ? "text" : "password"} 
                         placeholder="Password" 
                         className="bg-muted border-muted h-11 pr-12 w-full" 
+                        
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                         {toggleLoginPassword ? (
@@ -106,9 +161,9 @@ export default function LoginPage() {
                     </Link>
                   </div>
 
-                  <Button 
+                  <Button type="submit"
                     className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
-                    onClick={handleLogin}
+                    // onClick={handleLogin}
                   >
                     Login
                   </Button>
@@ -125,30 +180,30 @@ export default function LoginPage() {
                   </Button>
 
                   
-                </div>
+                </form>
               )}
 
               {activeTab === "signup" && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-labelText px-1 text-sm">Username</label>
-                    <Input type="text" placeholder="Username" className="bg-muted border-muted h-11" />
+                    <Input  refName={usernameRef} type="text" placeholder="Username" className="bg-muted border-muted h-11" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1 text-sm">Email</label>
-                    <Input type="email" placeholder="you@example.com" className="bg-muted border-muted h-11" />
+                    <Input  refName={signupemailRef} type="email" placeholder="you@example.com" className="bg-muted border-muted h-11" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Password</label>
                     <div className="flex items-center cols-2 border-muted bg-muted rounded-md pr-5">
-                      <Input displayBorder={false} type={togglePassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
+                      <Input  refName={signuppasswordRef} displayBorder={false} type={togglePassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
                       {togglePassword ? <EyeOff className="cursor-pointer" onClick={() => setTogglePassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setTogglePassword(true)} />}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Confirm Password</label>
                     <div className="flex items-center cols-2 border-muted bg-muted rounded-md pr-5">
-                      <Input displayBorder={false} type={toggleConfirmPassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
+                      <Input  refName={confirmpasswordRef} displayBorder={false} type={toggleConfirmPassword ? "text" : "password"} placeholder="Password" className="bg-muted border-muted h-11" ></Input>
                       {toggleConfirmPassword ? <EyeOff className="cursor-pointer" onClick={() => setToggleConfirmPassword(false)} /> : <Eye className="cursor-pointer" onClick={() => setToggleConfirmPassword(true)} />}
                     </div>
                   </div>
