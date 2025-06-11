@@ -4,11 +4,18 @@ import { TopPrompt } from '../components/TopPrompt';
 import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, Star, ChartNoAxesColumn, User, TrendingUp, UsersRound, Activity } from "lucide-react"
+import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-react"
 
 export default function DashboardPage() {
   // Add state for profile image
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
+  const [userBio, setUserBio] = useState<string>(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation."
+  })
+  // Add username state
+  const [username, setUsername] = useState<string>(() => {
+    return localStorage.getItem('username') || "theo_unknown"
+  })
 
   // Listen for changes to localStorage
   useEffect(() => {
@@ -18,10 +25,27 @@ export default function DashboardPage() {
       setProfileImage(savedImage)
     }
 
+    const savedBio = localStorage.getItem('userBio')
+    if (savedBio) {
+      setUserBio(savedBio)
+    }
+    // Add username to existing useEffect
+    const savedUsername = localStorage.getItem('username')
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
+
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'userProfileImage') {
         setProfileImage(e.newValue || "/placeholder.svg?height=80&width=80")
+      }
+      if (e.key === 'userBio') {
+        setUserBio(e.newValue || "")
+      }
+      // Add username case to existing storage handler
+      if (e.key === 'username') {
+        setUsername(e.newValue || "theo_unknown")
       }
     }
 
@@ -44,7 +68,7 @@ export default function DashboardPage() {
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
-            <h3 className="font-medium">theo_unknown</h3>
+            <h3 className="font-medium">{username}</h3>
 
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
@@ -81,7 +105,9 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             <p className="font-medium">Bio</p>
-            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools.</p>
+            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">
+              {userBio}
+            </p>
           </div>
         </div>
 
@@ -92,11 +118,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
-                <DashboardCard heading='Total Prompts' headingIcon={<ChartNoAxesColumn size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
+                <DashboardCard heading='Total Prompts' headingIcon={<Rocket size={20} color="#60A5FA" />} value={175} change="gain" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
-                <DashboardCard heading='Total Users' headingIcon={<UsersRound size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
+                <DashboardCard heading='Total Users' headingIcon={<User size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
               </Card>
 
               <Card className="p-4">
