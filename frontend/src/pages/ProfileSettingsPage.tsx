@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -16,6 +16,13 @@ export default function ProfileSettingsPage() {
     return localStorage.getItem('userProfileImage') || "/placeholder.svg?height=100&width=100"
   })
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
+  const [bio, setBio] = useState(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
+  })
+  // Add username state
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('username') || "theo_unknown"
+  })
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -35,8 +42,16 @@ export default function ProfileSettingsPage() {
     localStorage.removeItem('userProfileImage')
   }
 
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBio(e.target.value)
+  }
+
   const handleSave = () => {
     setSaveStatus("saving")
+    // Add username to existing save handler
+    localStorage.setItem('username', username)
+    localStorage.setItem('userBio', bio)
+    
     setTimeout(() => {
       setSaveStatus("success")
       setTimeout(() => setSaveStatus(null), 2000)
@@ -115,7 +130,12 @@ export default function ProfileSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="username">Username</Label>
-                          <Input id="username" defaultValue="theo_unknown" />
+                          <Input 
+                            id="username" 
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="bg-muted"
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="display-name">Display Name</Label>
@@ -133,7 +153,8 @@ export default function ProfileSettingsPage() {
                         <Textarea
                           id="bio"
                           placeholder="Tell us about yourself"
-                          defaultValue="AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
+                          value={bio}
+                          onChange={handleBioChange}
                           className="min-h-[100px]"
                         />
                       </div>
