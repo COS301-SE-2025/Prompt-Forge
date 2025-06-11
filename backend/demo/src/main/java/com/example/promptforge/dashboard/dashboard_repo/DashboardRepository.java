@@ -32,14 +32,6 @@ public interface DashboardRepository extends JpaRepository<PromptMetadata, UUID>
            "ORDER BY TO_CHAR(p.createdAt, 'YYYY-MM') DESC")
     List<MonthlyUsageDTO> findMonthlyUsage();
 
-//     @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(" +
-//            "p.title, pm.viewCount, pm.averageRating) " +
-//            "FROM Prompt p " +
-//            "JOIN PromptMetadata pm ON p.id; = pm.id; " +
-//            "ORDER BY pm.viewCount DESC, pm.averageRating DESC " +
-//            "LIMIT 5")
-//     List<TopPromptDTO> findTopPrompts();
-
     @Query("SELECT new com.example.promptforge.dashboard.dashboard_dto.TopPromptDTO(p.title, pm.viewCount, pm.averageRating) " +
            "FROM Prompt p JOIN PromptMetadata pm ON p.id = pm.id " +
            "ORDER BY pm.viewCount DESC, pm.averageRating DESC LIMIT 5")
