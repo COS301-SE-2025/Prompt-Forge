@@ -1,3 +1,5 @@
+<h1 align="center">5iveOps - Prompt Forge</h1>
+
 <p align="center">
   <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="700"/>
 </p>
@@ -51,7 +53,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-## 🧪 Demo 2 Goals (Due: 30 July 2025)
+## 🧪 Demo 2 Goals (Due: 27 June 2025)
 
 The second demo will showcase a functional, integrated system that allows users to test prompts and interact with a production-ready marketplace.
 
