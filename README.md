@@ -81,16 +81,16 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 🧱 Tech Stack
 
-| Layer         | Technology                         |
-|---------------|-------------------------------------|
-| Frontend      | React with Tailwind CSS            |
-| Backend       | Spring Boot                        |
-| Database      | PostgreSQL                         |
-| LLMs          | Hugging Face (Sentiment Analysis)  |
-| Auth          | Mock Auth / Alternative Auth       |
-| Versioning    | Git + GitFlow                      |
-| Deployment    | AWS Free Tier / Local Dev          |
-| Testing       | JUnit              |
+| Layer         | Technology                         | Icons |
+|---------------|-------------------------------------|-------|
+| Frontend      | React with Tailwind CSS            | <img src="https://skillicons.dev/icons?i=react,tailwind" /> |
+| Backend       | Spring Boot                        | <img src="https://skillicons.dev/icons?i=spring" /> |
+| Database      | PostgreSQL                         | <img src="https://skillicons.dev/icons?i=postgres" /> |
+| LLMs          | Hugging Face (Sentiment Analysis)  | <img src="https://skillicons.dev/icons?i=pytorch" /> |
+| Auth          | Mock Auth / Alternative Auth       | <img src="https://skillicons.dev/icons?i=auth0" /> |
+| Versioning    | Git + GitFlow                      | <img src="https://skillicons.dev/icons?i=git,github" /> |
+| Deployment    | AWS Free Tier / Local Dev          | <img src="https://skillicons.dev/icons?i=aws" /> |
+| Testing       | JUnit                              | <img src="https://skillicons.dev/icons?i=java" /> |
 
 ---
 
