@@ -51,16 +51,31 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-## 🧪 Demo 1 Goals (Due: 28 May 2025)
+## 🧪 Demo 2 Goals (Due: 30 July 2025)
 
-The first demo will showcase light implementations of at least three use cases.
+The second demo will showcase a functional, integrated system that allows users to test prompts and interact with a production-ready marketplace.
 
-### ✅ Planned Demo 1 Features
+### ✅ Planned Demo 2 Features
 
-- 🔑 **Alternative Authentication Systems**
-- 👤 **User Profile Setup**
-- 🛍️ **Prompt Store (Phase 1)**
-- 🔍 **Prompt Filtering**
+- 🧠 **Prompt Testing Ground**
+  - Multi-model evaluation
+  - LLM integration
+  - Real-time testing
+
+- 🛒 **Fully Functional Prompt Marketplace**
+  - Buying and selling features
+  - Advanced filtering system
+  - User reviews and ratings
+
+- 🔁 **Frontend–Backend Integration**
+  - Live prompt evaluation
+  - Real-time data updates
+  - Seamless user experience
+
+- 📊 **Prompt Performance Metrics**
+  - Usage statistics
+  - Rating analytics
+  - Performance comparisons
 
 ---
 
@@ -107,13 +122,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ---
 
-## ✅ Base Features
-
-- [X] Registration & Login (with mocks)
-- [X] Basic UI themes (Tailwind)
-- [X] Form validation
-
----
 
 ## 🔍 Repository Quality
 
@@ -130,18 +138,49 @@ We use a **GitFlow** branching strategy to organize our development:
 
 - 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
 - 💼 Industry Client Meetings: Bi-weekly via Google Meet/Discord
-- 🧾 Meeting minutes logged on Notion
+- 🧾 Meeting minutes logged on ClickUp
 
 ---
 
-## 📋 Demo 1 Checklist
+## 📋 Demo 2 Checklist (Due: 27 June 2025)
 
-- [X] Requirements clarification with client
-- [X] GitHub README, Project Board, and team profiles
-- [X] At least 3 working low-level use cases
-- [X] Unit Tests
-- [X] SRS Link uploaded
-- [X] Booked Demo Slot via Hyperperform
+- [ ] **Core Implementation**
+  - [ ] 3+ New fully integrated components
+  - [ ] Complete backend-to-frontend integration
+  - [ ] Functional requirements satisfied
+  - [ ] Landing page implemented and live
+  - [ ] In-product help menu functioning
+
+- [ ] **Testing & Quality**
+  - [ ] Automated unit tests passing
+  - [ ] Integration tests complete
+  - [ ] CI/CD pipeline running tests
+  - [ ] 5 quantified quality requirements
+  - [ ] GitFlow structure maintained
+
+- [ ] **Documentation Updates**
+  - [ ] SRS Document v2
+    - [ ] Revised user stories
+    - [ ] Updated functional requirements
+    - [ ] New domain model
+    - [ ] Enhanced use case diagram
+  - [ ] Architecture Documentation
+    - [ ] System constraints
+    - [ ] Technology justifications
+
+- [ ] **Demo Preparation**
+  - [ ] Quality & architecture overview (3min)
+  - [ ] Feature demonstrations (5min)
+  - [ ] Testing walkthrough (3min)
+  - [ ] Q&A prep (2min)
+  - [ ] Speaking roles assigned
+  - [ ] Slides prepared
+
+- [ ] **Final Steps**
+  - [ ] Code merged to main
+  - [ ] Mentor grading submitted
+  - [ ] Repository cleaned
+  - [ ] Demo slot booked
 
 ---
 
