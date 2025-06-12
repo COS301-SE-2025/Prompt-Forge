@@ -4,6 +4,11 @@
   <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="700"/>
 </p>
 
+<h3 align="center">A Capstone Project for
+   <a href="https://www.epiuselabs.com/">
+EPI-USE Labs.     </a>
+</h3>
+
 Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment.
 
 ---
