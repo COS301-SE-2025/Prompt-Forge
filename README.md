@@ -81,7 +81,7 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 🧱 Tech Stack
 
-| Layer         | Technology                         | Icons |
+| Layer         | Technology                         |  |
 |---------------|-------------------------------------|-------|
 | Frontend      | React with Tailwind CSS            | <img src="https://skillicons.dev/icons?i=react,tailwind" /> |
 | Backend       | Spring Boot                        | <img src="https://skillicons.dev/icons?i=spring" /> |
