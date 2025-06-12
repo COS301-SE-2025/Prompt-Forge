@@ -33,27 +33,6 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-## 👨‍💻 Team Members
-
-<div align="center">
-
-| Name                | Student Number | LinkedIn                                      | GitHub                                |
-|---------------------|----------------|-----------------------------------------------|----------------------------------------|
-| Katlego Mositi      | 22658395       | [LinkedIn](http://www.linkedin.com/in/katlegomositi)     | [GitHub](https://github.com/katlegomositi)     |
-| Paballo Diyase      | 23528142       | [LinkedIn](https://www.linkedin.com/in/paballo-diyase-486895318/) | [GitHub](https://github.com/mainmee)            |
-| Boitumelo Mtsatse   | 23684365       | [LinkedIn](https://www.linkedin.com/in/boitumelo-mtsatse-44832a33a/) | [GitHub](https://github.com/BoitumeloMtsatse)   |
-| Navendran Naidoo    | 21512494       | [LinkedIn](https://www.linkedin.com/in/navendran-naidoo-0bb732221) | [GitHub](https://github.com/naven1309)          |
-| Rethabile Bore      | 23772141       | [LinkedIn](https://www.linkedin.com/in/rethabilebore)     | [GitHub](https://github.com/riri-bygit)         |
-
-</div>
-
-
-<p align="center">
-  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
-</p>
-
----
-
 ## 🧪 Demo 2 Goals (Due: 27 June 2025)
 
 The second demo will showcase a functional, integrated system that allows users to test prompts and interact with a production-ready marketplace.
@@ -187,9 +166,26 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ---
 
-## 📬 Contact
+## 👨‍💻 Team Members
 
-For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5iveOps.Capstone@gmail.com)
+<div align="center">
+
+| Name                | Student Number | 
+|---------------------|----------------|
+| Katlego Mositi      | 22658395       |
+| Paballo Diyase      | 23528142       |
+| Boitumelo Mtsatse   | 23684365       |
+| Navendran Naidoo    | 21512494       |
+| Rethabile Bore      | 23772141       |
+
+</div>
+
+
+<p align="center">
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
+</p>
+
+---
 
 ---
 
@@ -290,5 +286,9 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
     </td>
   </tr>
 </table>
+
+## 📬 Contact
+
+For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5iveOps.Capstone@gmail.com)
 
 > © 2025 Team 5iveOps – COS 301 – University of Pretoria
