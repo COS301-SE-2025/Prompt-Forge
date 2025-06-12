@@ -35,7 +35,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
     // List<Prompt> findTopRatedPrompts();
 
     // Custom query with native SQL
-    @Query(value = "SELECT * FROM prompt WHERE is_public = true AND price <= :maxPrice", nativeQuery = true)
+    @Query(value = "SELECT * FROM prompts WHERE is_public = true AND price <= :maxPrice", nativeQuery = true)
     List<Prompt> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice);
 
     // Count prompts by category
