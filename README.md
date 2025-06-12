@@ -197,7 +197,7 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
 <table style="border-width: 1px; width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-  <img src="./assests/Katlego.jpg" height="auto">
+      <img src="./assests/Katlego.jpg" width="400" height="auto">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Katlego Mositi
@@ -214,11 +214,9 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
     </td>
   </tr>
 
-
- 
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Pabi.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Pabi.jpg" width="400" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Paballo Diyase</b></h2>
@@ -234,12 +232,9 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
     </td>
   </tr>
 
-
-
-
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Boity.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Boity.jpg" width="400" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Boitumelo Mtsatse</b></h2>
@@ -257,12 +252,9 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
     </td>
   </tr>
 
-
-
-
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Naven.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Naven.jpg" width="400" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Navendran Naidoo</b></h2>
@@ -278,13 +270,9 @@ For questions or feedback, reach us at: [5iveOps.Capstone@gmail.com](mailto:5ive
     </td>
   </tr>
 
-
-
-
-
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Reta.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Reta.jpg" width="400" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Rethabile Bore
