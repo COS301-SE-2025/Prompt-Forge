@@ -4,8 +4,6 @@
   <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="700"/>
 </p>
 
-![GitHub Actions Workflow Status](https://github.com/COS301-SE-2025/Prompt-Forge/actions/workflows/main.yml/badge.svg)
-
 Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment.
 
 ---
