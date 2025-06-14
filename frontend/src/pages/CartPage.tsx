@@ -1,7 +1,40 @@
+import { useState } from 'react';
 import { CartSummary } from '@/components/CartSummary';
-import { ShoppingCartIcon, StarIcon, Trash2Icon } from 'lucide-react';
+import { ShoppingCartIcon } from 'lucide-react';
+import { CartItem } from '@/components/CartItem';
+
+const initialCartItems = [{
+    id: '1',
+    title: 'Expert Content Writer',
+    category: 'Writing',
+    price: 4.99,
+    rating: 4.8,
+    author: 'Content Pro',
+    authorHandle: '@writer_pro'
+}, {
+    id: '2',
+    title: 'Advanced SEO Optimizer',
+    category: 'Marketing',
+    price: 6.99,
+    rating: 4.9,
+    author: 'SEO Master',
+    authorHandle: '@seomaster'
+}, {
+    id: '3',
+    title: 'UI/UX Design Assistant',
+    category: 'Design',
+    price: 7.99,
+    rating: 4.6,
+    author: 'Design Pro',
+    authorHandle: '@designpro'
+}];
 
 export default function CartPage(){
+    const [cartItems, setCartItems] = useState(initialCartItems);
+    const removeItem = (id: string) => {
+        setCartItems(cartItems.filter(item => item.id !== id));
+    };
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
     return <div className="w-full pt-10 px-16 mx-auto" >
       <div className="flex items-center mb-8">
         <ShoppingCartIcon className="mr-3" size={24} />
@@ -10,108 +43,11 @@ export default function CartPage(){
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 border-b border-gray-800">
-                <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-3 py-1 text-sm rounded-md bg-blue-900 text-blue-200`}>
-                        Writing
-                        </span>
-                        <div className="flex items-center text-yellow-400">
-                            <StarIcon size={16} fill="currentColor" />
-                            <span className="ml-1 text-sm">4.8</span>
-                        </div>
-                    </div>
-                      <h3 className="text-lg font-medium mb-1">Expert Content Writer</h3>
-                    <div className="flex items-center text-gray-400 text-sm">
-                          <span>by Content Pro</span>
-                        <span className="mx-1">·</span>
-                          <span>@writer_pro</span>
-                    </div>
-                </div>
-                <div className="flex items-center mt-4 md:mt-0">
-                      <span className="font-medium text-lg mr-6">$6.99</span>
-                    <button className="text-gray-400 hover:text-red-500 transition-colors p-1">
-                        <Trash2Icon size={18} />
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 border-b border-gray-800">
-                <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-3 py-1 text-sm rounded-md bg-green-900 text-green-200`}>
-                            Development
-                        </span>
-                        <div className="flex items-center text-yellow-400">
-                            <StarIcon size={16} fill="currentColor" />
-                            <span className="ml-1 text-sm">4.8</span>
-                        </div>
-                    </div>
-                      <h3 className="text-lg font-medium mb-1">Expert Content Writer</h3>
-                    <div className="flex items-center text-gray-400 text-sm">
-                          <span>by Content Pro</span>
-                        <span className="mx-1">·</span>
-                          <span>@writer_pro</span>
-                    </div>
-                </div>
-                <div className="flex items-center mt-4 md:mt-0">
-                      <span className="font-medium text-lg mr-6">$6.99</span>
-                    <button className="text-gray-400 hover:text-red-500 transition-colors p-1">
-                        <Trash2Icon size={18} />
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 border-b border-gray-800">
-                <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                          <span className={`px-3 py-1 text-sm rounded-md bg-pink-900 text-pink-200`}>
-                        Design
-                        </span>
-                        <div className="flex items-center text-yellow-400">
-                            <StarIcon size={16} fill="currentColor" />
-                            <span className="ml-1 text-sm">4.8</span>
-                        </div>
-                    </div>
-                      <h3 className="text-lg font-medium mb-1">Expert Content Writer</h3>
-                    <div className="flex items-center text-gray-400 text-sm">
-                          <span>by Content Pro</span>
-                        <span className="mx-1">·</span>
-                          <span>@writer_pro</span>
-                    </div>
-                </div>
-                <div className="flex items-center mt-4 md:mt-0">
-                      <span className="font-medium text-lg mr-6">$6.99</span>
-                    <button className="text-gray-400 hover:text-red-500 transition-colors p-1">
-                        <Trash2Icon size={18} />
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 border-b border-gray-800">
-                <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                          <span className={`px-3 py-1 text-sm rounded-md bg-purple-900 text-purple-200`}>
-                          Marketing
-                        </span>
-                        <div className="flex items-center text-yellow-400">
-                            <StarIcon size={16} fill="currentColor" />
-                            <span className="ml-1 text-sm">4.8</span>
-                        </div>
-                    </div>
-                      <h3 className="text-lg font-medium mb-1">Expert Content Writer</h3>
-                    <div className="flex items-center text-gray-400 text-sm">
-                          <span>by Content Pro</span>
-                        <span className="mx-1">·</span>
-                          <span>@writer_pro</span>
-                    </div>
-                </div>
-                <div className="flex items-center mt-4 md:mt-0">
-                      <span className="font-medium text-lg mr-6">$6.99</span>
-                    <button className="text-gray-400 hover:text-red-500 transition-colors p-1">
-                        <Trash2Icon size={18} />
-                    </button>
-                </div>
+            <div>
+                {cartItems.map(item => <CartItem key={item.id} {...item} removeItem={removeItem} />)}
             </div>
         </div>
-        <CartSummary subtotal={19.79}/>
-      </div>
+        <div>{cartItems.length > 0 && <CartSummary subtotal={subtotal} />}</div>
+        </div>
     </div>
 }
