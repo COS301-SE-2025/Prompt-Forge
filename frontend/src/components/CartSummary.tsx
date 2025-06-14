@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 interface CartSummaryProps {
   subtotal: number
   discount?: number
@@ -27,7 +29,8 @@ export const CartSummary = ({
         Proceed to Checkout
       </button>
     <button className="w-full text-center mt-4 text-[#3ebb9e] hover:text-[#00674f]">
-        Continue Shopping
+      <Link to='/marketplace'>Continue Shopping</Link>
+        
       </button>
     </div>
 }
