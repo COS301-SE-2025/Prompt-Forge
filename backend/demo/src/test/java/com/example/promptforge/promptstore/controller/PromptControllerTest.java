@@ -24,8 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.example.promptforge.promptstore.model.Prompt;
-import com.example.promptforge.promptstore.repository.PromptRepository;
+import com.example.promptforge.prompts.controller.PromptController;
+import com.example.promptforge.prompts.model.Prompt;
+import com.example.promptforge.prompts.repository.PromptRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class PromptControllerTest {

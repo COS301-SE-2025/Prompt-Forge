@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.model;
+package com.example.promptforge.prompts.model;
 
 
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.controller;
+package com.example.promptforge.prompts.controller;
 
 
 import java.util.UUID;
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
-import com.example.promptforge.promptstore.repository.PromptRatingRepository;
+import com.example.promptforge.prompts.repository.PromptMetadataRepository;
+import com.example.promptforge.prompts.repository.PromptRatingRepository;
 
 @RestController
 @RequestMapping("/api/prompts/ratings")

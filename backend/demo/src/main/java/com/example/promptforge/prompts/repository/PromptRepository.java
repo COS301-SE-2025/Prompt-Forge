@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.repository;
+package com.example.promptforge.prompts.repository;
 
 
 
@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.example.promptforge.promptstore.model.Prompt;
+import com.example.promptforge.prompts.model.Prompt;
 
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {

@@ -1,8 +1,11 @@
-package com.example.promptforge.promptstore.model;
+package com.example.promptforge.prompts.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
@@ -17,7 +20,7 @@ import java.util.UUID;
 public class PromptMetadata {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     @Column(name = "metadata_id", columnDefinition = "UUID")
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;

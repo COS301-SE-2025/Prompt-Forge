@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.controller;
+package com.example.promptforge.prompts.controller;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.promptforge.promptstore.model.Prompt;
-import com.example.promptforge.promptstore.model.PromptMetadata;
-import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
-import com.example.promptforge.promptstore.repository.PromptRepository;
+import com.example.promptforge.prompts.model.Prompt;
+import com.example.promptforge.prompts.model.PromptMetadata;
+import com.example.promptforge.prompts.repository.PromptMetadataRepository;
+import com.example.promptforge.prompts.repository.PromptRepository;
 
 @RestController
 @RequestMapping("/prompts")
@@ -70,6 +70,14 @@ public class PromptController {
     // Create new prompt
     @PostMapping
     public ResponseEntity<Prompt> createPrompt(@RequestBody Prompt prompt) {
+        PromptMetadata metadata = PromptMetadata.builder()
+            .viewCount(0)
+            .forkCount(0)
+            .downloadCount(0)
+            .averageRating(null)
+            .build();
+        prompt.setMetadata(metadata);
+
         Prompt savedPrompt = promptRepository.save(prompt);
         return ResponseEntity.ok(savedPrompt);
     }

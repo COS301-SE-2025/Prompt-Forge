@@ -19,8 +19,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.example.promptforge.promptstore.model.PromptMetadata;
-import com.example.promptforge.promptstore.repository.PromptMetadataRepository;
+import com.example.promptforge.prompts.controller.PromptMetadataController;
+import com.example.promptforge.prompts.model.PromptMetadata;
+import com.example.promptforge.prompts.repository.PromptMetadataRepository;
 
 class PromptMetadataControllerTest {
 
