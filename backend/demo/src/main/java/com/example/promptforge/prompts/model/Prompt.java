@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.model;
+package com.example.promptforge.prompts.model;
 
 
 import java.time.LocalDateTime;
@@ -70,8 +70,21 @@ public class Prompt {
     @OneToOne(
     mappedBy = "prompt",
     cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
 )
 @JsonIgnore
 private PromptMetadata metadata;
+
+public void setMetadata(PromptMetadata metadata) {
+    if (metadata == null) {
+        if (this.metadata != null) {
+            this.metadata.setPrompt(null);
+        }
+    } else {
+        metadata.setPrompt(this);
+    }
+    this.metadata = metadata;
+}
+
 }

@@ -1,4 +1,4 @@
-package com.example.promptforge.promptstore.repository;
+package com.example.promptforge.prompts.repository;
 
 
 
@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.promptforge.promptstore.model.PromptMetadata;
+import com.example.promptforge.prompts.model.PromptMetadata;
 
 @Repository
 public interface PromptMetadataRepository extends JpaRepository<PromptMetadata, UUID> {
