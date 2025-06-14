@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenRouter Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            white-space: pre-wrap;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>OpenRouter Chat Test</h2>
+        <textarea id="prompt" rows="4">What is the meaning of life?</textarea>
+        <button onclick="sendPrompt()">Send</button>
+        <pre id="response"></pre>
+    </div>
+
+    <script>
+        async function sendPrompt() {
+            const responseElement = document.getElementById('response');
+            responseElement.textContent = 'Sending request...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/test/openrouter/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(document.getElementById('prompt').value)
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    responseElement.textContent = data.choices[0].message.content;
+                } else {
+                    responseElement.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                responseElement.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

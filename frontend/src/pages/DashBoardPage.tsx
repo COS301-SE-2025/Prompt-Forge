@@ -12,6 +12,10 @@ export default function DashboardPage() {
   const [userBio, setUserBio] = useState<string>(() => {
     return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation."
   })
+  // Add username state
+  const [username, setUsername] = useState<string>(() => {
+    return localStorage.getItem('username') || "theo_unknown"
+  })
 
   // Listen for changes to localStorage
   useEffect(() => {
@@ -25,6 +29,11 @@ export default function DashboardPage() {
     if (savedBio) {
       setUserBio(savedBio)
     }
+    // Add username to existing useEffect
+    const savedUsername = localStorage.getItem('username')
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
 
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
@@ -33,6 +42,10 @@ export default function DashboardPage() {
       }
       if (e.key === 'userBio') {
         setUserBio(e.newValue || "")
+      }
+      // Add username case to existing storage handler
+      if (e.key === 'username') {
+        setUsername(e.newValue || "theo_unknown")
       }
     }
 
@@ -55,7 +68,7 @@ export default function DashboardPage() {
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
-            <h3 className="font-medium">theo_unknown</h3>
+            <h3 className="font-medium">{username}</h3>
 
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
