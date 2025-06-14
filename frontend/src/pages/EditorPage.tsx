@@ -241,6 +241,21 @@ Please:
     setSuggestionResponse("")
   }
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      // Optional: You can update the copy button temporarily to show success
+      const copyButton = document.activeElement as HTMLButtonElement
+      const originalContent = copyButton.innerHTML
+      copyButton.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+      setTimeout(() => {
+        copyButton.innerHTML = originalContent
+      }, 1000)
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
+    }
+  }
+
   const selectedModelData = aiModels[selectedModel]
 
   return (
@@ -326,7 +341,12 @@ Please:
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => copyToClipboard(aiResponse)}
+                      >
                         <Copy className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6">
