@@ -27,7 +27,7 @@ export default function EditorPage() {
   const [lastTestedPrompt, setLastTestedPrompt] = useState("")
   const [suggestionResponse, setSuggestionResponse] = useState("")
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
-  const [lastSuggestedPrompt, setLastSuggestedPrompt] = useState("") // New state for tracking last suggested prompt
+  const [lastSuggestedPrompt, setLastSuggestedPrompt] = useState("")
 
   const aiModels = [
     {
