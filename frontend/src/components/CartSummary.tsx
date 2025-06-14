@@ -9,7 +9,7 @@ export const CartSummary = ({
   discount = 0
 }: CartSummaryProps) => {
   const total = subtotal - discount
-  return <div className="bg-[#1a1a1a] rounded-lg p-6">
+  return <div>
       <h3 className="text-lg font-medium mb-4">Order Summary</h3>
       <div className="space-y-3 mb-6">
         <div className="flex justify-between">

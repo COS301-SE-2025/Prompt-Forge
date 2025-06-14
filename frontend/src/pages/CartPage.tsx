@@ -40,7 +40,7 @@ export default function CartPage(){
       <div className="flex items-center mb-8">
         <ShoppingCartIcon className="mr-3" size={24} />
         <h1 className="text-2xl font-bold">Your Cart</h1>
-        <span className="ml-3 text-gray-400">(4 items)</span>
+        <span className="ml-3 text-gray-400">({cartItems.length} items)</span>
       </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className={cartItems.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
@@ -49,7 +49,7 @@ export default function CartPage(){
                         {cartItems.map(item => <CartItem key={item.id} {...item} removeItem={removeItem} />)}
                     </div>
                     :
-                    <div className="text-center py-12 bg-[#1a1a1a] rounded-lg">
+                    <div className="text-center py-12">
                         <ShoppingCartIcon className="mx-auto mb-4 text-gray-500" size={48} />
                         <h3 className="text-xl font-medium mb-2">Your cart is empty</h3>
                         <p className="text-gray-400 mb-6">
