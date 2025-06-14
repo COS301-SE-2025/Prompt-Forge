@@ -82,6 +82,17 @@ export default function EditorPage() {
     setAiResponse(`Testing with ${aiModels[index].name}...`)
   }
 
+  const decodeUnicode = (str: string) => {
+    return str
+      .replace(/\\u[\dA-F]{4}/gi, match =>
+        String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
+      )
+      .replace(/\\n/g, '\n')
+      .replace(/\\/g, '')
+      .replace(/\*\*/g, '')  // Remove markdown bold
+      .replace(/\*([^*]+)\*/g, '$1')  // Remove markdown italic
+  }
+
   const getRating = async (prompt: string, response: string) => {
     setIsLoadingRating(true)
     setRatingResponse("Rating your prompt...")
@@ -124,7 +135,7 @@ Please:
 
       const data = await response.json()
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setRatingResponse(data.choices[0].message.content)
+        setRatingResponse(decodeUnicode(data.choices[0].message.content))
       }
     } catch (error) {
       setRatingResponse("Error generating rating: " + error)
@@ -173,7 +184,7 @@ Please:
 
       const data = await response.json()
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setSuggestionResponse(data.choices[0].message.content)
+        setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
         setLastSuggestedPrompt(prompt)  // Store the suggested prompt
       }
     } catch (error) {
@@ -215,13 +226,12 @@ Please:
 
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const aiResponseText = data.choices[0].message.content
-      setAiResponse(aiResponseText)
+      setAiResponse(decodeUnicode(aiResponseText))
       setLastTestedPrompt(promptText)
       
-      // Generate rating and suggestions after response
       await Promise.all([
-        getRating(promptText, aiResponseText),
-        getSuggested(promptText, aiResponseText)
+        getRating(promptText, decodeUnicode(aiResponseText)),
+        getSuggested(promptText, decodeUnicode(aiResponseText))
       ])
     }
   } catch (error: unknown) {
