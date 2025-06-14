@@ -32,18 +32,13 @@ public class SecurityConfig {
       .csrf(csrf -> csrf.disable())
       .authorizeHttpRequests(auth ->
         auth
-        //   .requestMatchers("/")
-        //   .permitAll()
-        //   .requestMatchers("/auth/**")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.GET, "/user/**")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.PATCH, "/user/**")
-        //   .authenticated()
-        //   .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
-        //   .permitAll()
-        //   // other security rules
-          .anyRequest().permitAll()
+          .requestMatchers("/api/test/**").permitAll()  // Allow OpenRouter test endpoints
+          .requestMatchers("/test.html").permitAll()    // Allow test page
+          .requestMatchers("/auth/**").permitAll()
+          .requestMatchers(HttpMethod.GET, "/user/**").permitAll()
+          .requestMatchers(HttpMethod.PATCH, "/user/**").authenticated()
+          .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+          .anyRequest().authenticated()
       )
       .sessionManagement(sm ->
         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
