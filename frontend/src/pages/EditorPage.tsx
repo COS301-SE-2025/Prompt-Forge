@@ -5,20 +5,26 @@ import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check } from "lucide-react"
 import { useState } from "react"
 
-export default function EditorPage() {
-  const [promptText, setPromptText] = useState(`Write your prompt here...
-Example:
-You are an AI assistant specialized in [specific domain].
-When responding to queries always follow these guidelines:
-1. [First Guideline]
-2. [Second Guideline]
-3. [Third Guideline]
-If the user asks about [specific topic], respond with [specific format].`)
+const defaultPrompt = `Write your prompt here...
 
-  const [sampleInput, setSampleInput] = useState("")
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]`
+
+export default function EditorPage() {
+  const [promptText, setPromptText] = useState(defaultPrompt)
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
-  const [selectedModel, setSelectedModel] = useState(0) // Default to first model (ChatGPT-4)
+  const [selectedModel, setSelectedModel] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [currentView, setCurrentView] = useState("test") // "test" or "rate"
+  const [currentPage, setCurrentPage] = useState(1)
+  const [ratingResponse, setRatingResponse] = useState("") // New state for rating
+  const [isLoadingRating, setIsLoadingRating] = useState(false) // Add new loading state
+  const [lastTestedPrompt, setLastTestedPrompt] = useState("") // New state for tracking last tested prompt
 
   const aiModels = [
     {
@@ -74,42 +80,112 @@ If the user asks about [specific topic], respond with [specific format].`)
     setAiResponse(`Testing with ${aiModels[index].name}...`)
   }
 
-  const testPrompt = async () => {
-    setIsLoading(true)
-    setAiResponse("Generating response...")
+  const getRating = async (prompt: string, response: string) => {
+    setIsLoadingRating(true)
+    setRatingResponse("Rating your prompt...")
+
+    const ratingPrompt = `
+Given this prompt:
+---
+${prompt}
+---
+
+And this AI response:
+---
+${response}
+---
+
+Please:
+1. Rate the effectiveness of the prompt (1-10)
+2. Explain why you gave this rating
+3. Provide specific suggestions to improve the prompt
+4. Point out any potential issues or ambiguities
+`
 
     try {
       const requestBody = {
-        messages: [{
-          role: "user",
-          content: sampleInput || "Please enter some sample input to test"
-        }]
+        messages: [
+          {
+            role: "user",
+            content: ratingPrompt,
+          },
+        ],
       }
 
-      console.log('Sending to OpenRouter:', requestBody)
-
-      const response = await fetch('http://localhost:8080/api/test/openrouter/chat', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
-      console.log('Response from OpenRouter:', data)
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        setRatingResponse(data.choices[0].message.content)
+      }
+    } catch (error) {
+      setRatingResponse("Error generating rating: " + error)
+    } finally {
+      setIsLoadingRating(false)
+    }
+  }
+
+  const testPrompt = async () => {
+    // Check if prompt has changed
+    if (promptText === lastTestedPrompt) {
+      setCurrentView("test")
+      setCurrentPage(1)  // Force page 1 for viewing response
+      return
+    }
+
+    setIsLoading(true)
+    setAiResponse("Generating response...")
+    setCurrentView("test")  // Switch to response view immediately
+    setCurrentPage(1)      // Set to page 1 for response
+
+    try {
+      const requestBody = {
+        messages: [
+          {
+            role: "user",
+            content: promptText,
+          },
+        ],
+      }
+
+      console.log("Sending to OpenRouter:", requestBody)
+
+      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json()
+      console.log("Response from OpenRouter:", data)
 
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setAiResponse(data.choices[0].message.content)
-      } else {
-        setAiResponse(JSON.stringify(data, null, 2))
+        const aiResponseText = data.choices[0].message.content
+        setAiResponse(aiResponseText)
+        setLastTestedPrompt(promptText)
+        await getRating(promptText, aiResponseText)
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
       setAiResponse(`Error: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleReset = () => {
+    setPromptText(defaultPrompt)
+    setAiResponse("AI response to your prompt here...")
+    setRatingResponse("")
+    setLastTestedPrompt("")
   }
 
   const selectedModelData = aiModels[selectedModel]
@@ -145,114 +221,222 @@ If the user asks about [specific topic], respond with [specific format].`)
 
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">{promptText.length} chars</div>
-            <Button size="sm" className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8">
-              <Play className="h-3 w-3 mr-1" />
-              Publish
-            </Button>
-          </div>
-        </div>
-
-        {/* Right Panel - Test Your Prompt */}
-        <div className="bg-background p-3 lg:p-4 flex flex-col min-h-0 overflow-hidden">
-          <h2 className="text-lg lg:text-xl font-semibold text-foreground mb-3 lg:mb-4">Test Your Prompt</h2>
-
-          <div className="flex-1 flex flex-col min-h-0 space-y-3 lg:space-y-4">
-            {/* Sample Input */}
-            <div className="flex-shrink-0">
-              <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Type your prompt here</h3>
-              <div className="bg-muted rounded-lg p-2 lg:p-3">
-                <textarea
-                  className="w-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
-                  placeholder="Enter input..."
-                  value={sampleInput}
-                  onChange={(e) => setSampleInput(e.target.value)}
-                  rows={2}
-                />
-              </div>
-            </div>
-
-            {/* AI Response */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
-                <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Download className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative">
-                <div className="absolute inset-0 p-3 overflow-y-auto">
-                  <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">{aiResponse}</pre>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Models */}
-            <div className="flex-shrink-0">
-              <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">AI Models</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {aiModels.map((model, index) => (
-                  <Card
-                    key={index}
-                    className={`p-2 lg:p-3 ${
-                      selectedModel === index ? model.selectedBg : model.cardBg
-                    } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                    onClick={() => handleModelSelect(index)}
-                  >
-                    {selectedModel === index && (
-                      <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
-                        <div
-                          className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
-                        >
-                          <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-start space-x-2">
-                      <div
-                        className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                      >
-                        {model.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                          {model.name}
-                        </h4>
-                        <p className="text-xs text-muted-foreground leading-tight line-clamp-2">{model.description}</p>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between flex-shrink-0">
-              <Button variant="ghost" size="sm" className="text-muted-foreground text-xs h-8">
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Reset
+            <div className="flex space-x-2">
+              <Button 
+                size="sm" 
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8" 
+                onClick={() => {
+                  testPrompt();
+                  setCurrentView("test");
+                  setCurrentPage(1);  // Set to page 1 when clicking Test
+                }}
+              >
+                <Play className="h-3 w-3 mr-1" />
+                Test Prompt
               </Button>
               <Button
                 size="sm"
                 className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
-                onClick={testPrompt}
-                disabled={isLoading}
+                onClick={() => {
+                  setCurrentView("rate");
+                  setCurrentPage(2);  // Set to page 2 when clicking Rate
+                }}
               >
-                {isLoading ? (
-                  <>
-                    <RotateCcw className="h-3 w-3 mr-1 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-3 w-3 mr-1" />
-                    Test with {selectedModelData.shortName}
-                  </>
+                Rate
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel - Dynamic Content */}
+        <div className="bg-background p-3 lg:p-4 flex flex-col min-h-0 overflow-hidden">
+          <h2 className="text-lg lg:text-xl font-semibold text-foreground mb-3 lg:mb-4">
+            {currentView === "test" ? "Test Your Prompt" : "Rate Prompt"}
+          </h2>
+
+          <div className="flex-1 flex flex-col min-h-0 space-y-4">
+            {currentView === "test" ? (
+              <>
+                {/* AI Response */}
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
+                    <div className="flex items-center space-x-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                    <div className="absolute inset-0 p-3 overflow-y-auto">
+                      {isLoading ? (
+                        <div className="flex items-center space-x-2">
+                          <RotateCcw className="h-4 w-4 animate-spin" />
+                          <span>Generating response...</span>
+                        </div>
+                      ) : (
+                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                          {aiResponse}
+                        </pre>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Models */}
+                <div className="flex-shrink-0 mt-auto">
+                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">AI Models</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {aiModels.map((model, index) => (
+                      <Card
+                        key={index}
+                        className={`p-2 lg:p-3 ${
+                          selectedModel === index ? model.selectedBg : model.cardBg
+                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
+                        onClick={() => handleModelSelect(index)}
+                      >
+                        {selectedModel === index && (
+                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                            <div
+                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                            >
+                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-start space-x-2">
+                          <div
+                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
+                          >
+                            {model.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+                              {model.name}
+                            </h4>
+                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+                              {model.description}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination for Test View */}
+                <div className="flex items-center justify-center space-x-2 flex-shrink-0">
+                  {[1, 2].map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page)
+                        if (page > 1) setCurrentView("rate")
+                      }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                        currentPage === page
+                          ? "bg-[#3ebb9e] text-white shadow-md"
+                          : "bg-[#3ebb9e]/20 text-[#3ebb9e] hover:bg-[#3ebb9e]/30"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Rating Response Area */}
+                {currentView === "rate" && (
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                      <div className="absolute inset-0 p-3 overflow-y-auto">
+                        {isLoadingRating ? (
+                          <div className="flex items-center space-x-2">
+                            <RotateCcw className="h-4 w-4 animate-spin" />
+                            <span>Rating your prompt...</span>
+                          </div>
+                        ) : (
+                          <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                            {ratingResponse || "Rating will appear here..."}
+                          </pre>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
+
+                {/* Rating Models (same as AI Models) */}
+                <div className="flex-shrink-0 mt-auto">
+                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Rating Models</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {aiModels.map((model, index) => (
+                      <Card
+                        key={index}
+                        className={`p-2 lg:p-3 ${
+                          selectedModel === index ? model.selectedBg : model.cardBg
+                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
+                        onClick={() => handleModelSelect(index)}
+                      >
+                        {selectedModel === index && (
+                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                            <div
+                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                            >
+                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-start space-x-2">
+                          <div
+                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
+                          >
+                            {model.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+                              {model.name}
+                            </h4>
+                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+                              {model.description}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination for Rate View */}
+                <div className="flex items-center justify-center space-x-2 flex-shrink-0">
+                  {[1, 2].map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page)
+                        if (page === 1) setCurrentView("test")
+                      }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                        currentPage === page
+                          ? "bg-[#3ebb9e] text-white shadow-md"
+                          : "bg-[#3ebb9e]/20 text-[#3ebb9e] hover:bg-[#3ebb9e]/30"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Bottom Actions */}
+            <div className="flex items-center justify-between flex-shrink-0">
+              <Button variant="ghost" size="sm" className="text-muted-foreground text-xs h-8" onClick={handleReset}>
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
               </Button>
             </div>
           </div>
