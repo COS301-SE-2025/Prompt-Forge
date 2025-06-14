@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check } from "lucide-react"
+import { useState } from "react"
 
 export default function EditorPage() {
   const [promptText, setPromptText] = useState(`Write your prompt here...
@@ -18,8 +18,21 @@ If the user asks about [specific topic], respond with [specific format].`)
   const [sampleInput, setSampleInput] = useState("")
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
   const [selectedModel, setSelectedModel] = useState(0) // Default to first model (ChatGPT-4)
+  const [isLoading, setIsLoading] = useState(false)
 
   const aiModels = [
+    {
+      name: "Deepseek",
+      shortName: "Deepseek",
+      description: "Advanced reasoning and code generation",
+      icon: "🔮",
+      iconBg: "bg-gradient-to-br from-violet-500 to-purple-600",
+      cardBg: "bg-violet-500/10 border-violet-500/20",
+      selectedBg: "bg-violet-500/20 border-violet-500/40",
+      textColor: "text-violet-400",
+      available: true,
+      model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+    },
     {
       name: "ChatGPT-4",
       shortName: "GPT-4",
@@ -29,17 +42,6 @@ If the user asks about [specific topic], respond with [specific format].`)
       cardBg: "bg-green-500/10 border-green-500/20",
       selectedBg: "bg-green-500/20 border-green-500/40",
       textColor: "text-green-400",
-      available: true,
-    },
-    {
-      name: "ChatGPT-3.5",
-      shortName: "GPT-3.5",
-      description: "Fast and efficient for most tasks",
-      icon: "⚡",
-      iconBg: "bg-gradient-to-br from-blue-500 to-cyan-600",
-      cardBg: "bg-blue-500/10 border-blue-500/20",
-      selectedBg: "bg-blue-500/20 border-blue-500/40",
-      textColor: "text-blue-400",
       available: true,
     },
     {
@@ -70,6 +72,44 @@ If the user asks about [specific topic], respond with [specific format].`)
     setSelectedModel(index)
     // You could also trigger a test here if desired
     setAiResponse(`Testing with ${aiModels[index].name}...`)
+  }
+
+  const testPrompt = async () => {
+    setIsLoading(true)
+    setAiResponse("Generating response...")
+
+    try {
+      const requestBody = {
+        messages: [{
+          role: "user",
+          content: sampleInput || "Please enter some sample input to test"
+        }]
+      }
+
+      console.log('Sending to OpenRouter:', requestBody)
+
+      const response = await fetch('http://localhost:8080/api/test/openrouter/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      const data = await response.json()
+      console.log('Response from OpenRouter:', data)
+
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        setAiResponse(data.choices[0].message.content)
+      } else {
+        setAiResponse(JSON.stringify(data, null, 2))
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      setAiResponse(`Error: ${errorMessage}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const selectedModelData = aiModels[selectedModel]
@@ -119,15 +159,35 @@ If the user asks about [specific topic], respond with [specific format].`)
           <div className="flex-1 flex flex-col min-h-0 space-y-3 lg:space-y-4">
             {/* Sample Input */}
             <div className="flex-shrink-0">
-              <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Sample Input</h3>
+              <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Type your prompt here</h3>
               <div className="bg-muted rounded-lg p-2 lg:p-3">
                 <textarea
                   className="w-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
-                  placeholder="Enter sample input..."
+                  placeholder="Enter input..."
                   value={sampleInput}
                   onChange={(e) => setSampleInput(e.target.value)}
                   rows={2}
                 />
+              </div>
+            </div>
+
+            {/* AI Response */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
+                <div className="flex items-center space-x-1">
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative">
+                <div className="absolute inset-0 p-3 overflow-y-auto">
+                  <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">{aiResponse}</pre>
+                </div>
               </div>
             </div>
 
@@ -170,33 +230,29 @@ If the user asks about [specific topic], respond with [specific format].`)
               </div>
             </div>
 
-            {/* AI Response */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
-                <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Download className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 overflow-auto">
-                <div className="text-xs lg:text-sm text-muted-foreground">{aiResponse}</div>
-              </div>
-            </div>
-
             {/* Bottom Actions */}
             <div className="flex items-center justify-between flex-shrink-0">
               <Button variant="ghost" size="sm" className="text-muted-foreground text-xs h-8">
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Reset
               </Button>
-              <Button size="sm" className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8">
-                <Play className="h-3 w-3 mr-1" />
-                Test with {selectedModelData.shortName}
+              <Button
+                size="sm"
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                onClick={testPrompt}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RotateCcw className="h-3 w-3 mr-1 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-3 w-3 mr-1" />
+                    Test with {selectedModelData.shortName}
+                  </>
+                )}
               </Button>
             </div>
           </div>
