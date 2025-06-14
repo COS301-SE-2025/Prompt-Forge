@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CartSummary } from '@/components/CartSummary';
 import { ShoppingCartIcon } from 'lucide-react';
 import { CartItem } from '@/components/CartItem';
+import { Link } from 'react-router-dom';
 
 const initialCartItems = [{
     id: '1',
@@ -54,9 +55,9 @@ export default function CartPage(){
                         <p className="text-gray-400 mb-6">
                             Browse the marketplace to find prompts you'll love
                         </p>
-                        <button className="bg-[#00674f] hover:bg-[3ebb9e] text-white px-6 py-2 rounded-md font-medium transition-colors">
+                        <Link to="/marketplace" className="bg-[#00674f] hover:bg-[#3ebb9e] text-white px-6 py-2 rounded-md font-medium transition-colors">
                             Explore Marketplace
-                        </button>
+                        </Link>
                     </div>
                 }
             </div>
