@@ -41,12 +41,25 @@ export default function CartPage(){
         <h1 className="text-2xl font-bold">Your Cart</h1>
         <span className="ml-3 text-gray-400">(4 items)</span>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-            <div>
-                {cartItems.map(item => <CartItem key={item.id} {...item} removeItem={removeItem} />)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className={cartItems.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+                {cartItems.length > 0 ?
+                    <div>
+                        {cartItems.map(item => <CartItem key={item.id} {...item} removeItem={removeItem} />)}
+                    </div>
+                    :
+                    <div className="text-center py-12 bg-[#1a1a1a] rounded-lg">
+                        <ShoppingCartIcon className="mx-auto mb-4 text-gray-500" size={48} />
+                        <h3 className="text-xl font-medium mb-2">Your cart is empty</h3>
+                        <p className="text-gray-400 mb-6">
+                            Browse the marketplace to find prompts you'll love
+                        </p>
+                        <button className="bg-[#00674f] hover:bg-[3ebb9e] text-white px-6 py-2 rounded-md font-medium transition-colors">
+                            Explore Marketplace
+                        </button>
+                    </div>
+                }
             </div>
-        </div>
         <div>{cartItems.length > 0 && <CartSummary subtotal={subtotal} />}</div>
         </div>
     </div>
