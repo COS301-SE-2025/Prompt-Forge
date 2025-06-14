@@ -19,6 +19,10 @@ export default function ProfileSettingsPage() {
   const [bio, setBio] = useState(() => {
     return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
   })
+  // Add username state
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('username') || "theo_unknown"
+  })
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -44,7 +48,8 @@ export default function ProfileSettingsPage() {
 
   const handleSave = () => {
     setSaveStatus("saving")
-    // Save bio to localStorage
+    // Add username to existing save handler
+    localStorage.setItem('username', username)
     localStorage.setItem('userBio', bio)
     
     setTimeout(() => {
@@ -125,7 +130,12 @@ export default function ProfileSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="username">Username</Label>
-                          <Input id="username" defaultValue="theo_unknown" />
+                          <Input 
+                            id="username" 
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="bg-muted"
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="display-name">Display Name</Label>
