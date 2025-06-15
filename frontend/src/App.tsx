@@ -10,6 +10,7 @@ import SubmitPromptPage from "./pages/SubmitPromptPage"
 import HomePage from "./pages/HomePage"
 import ProfileSettingsPage from "./pages/ProfileSettingsPage"
 import UnderConstructionPage from "./pages/UnderConstructionPage"
+import CartPage from "./pages/CartPage"
 
 function App() {
   const location = useLocation()
@@ -30,6 +31,8 @@ function App() {
           <Route path="/profile-settings" element={<ProfileSettingsPage />} />
           <Route path="/construction" element={<UnderConstructionPage />} />
           <Route path="/submit" element={<SubmitPromptPage />} />
+          <Route path="/cart" element={<CartPage />} />
+
         </Routes>
       </main>
     </div>

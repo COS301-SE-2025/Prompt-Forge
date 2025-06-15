@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
-import { Moon, Sun, User, LogOut, Settings, Menu } from "lucide-react"
+import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart } from "lucide-react"
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
@@ -87,6 +87,14 @@ export default function Header() {
             className="rounded-full"
           >
             {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <Link
+              to="/cart"
+              className="rounded-full"
+            >
+              <ShoppingCart className="h-5 w-5" />
+            </Link>
           </Button>
 
           <div className="relative" ref={dropdownRef}>
