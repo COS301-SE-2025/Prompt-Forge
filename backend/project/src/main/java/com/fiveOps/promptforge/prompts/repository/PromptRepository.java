@@ -14,12 +14,16 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
 
     List<Prompt> findByVisibility(String visibility);
-    List<Prompt> findByCategoryAndVisibility(String category, String visibility);
+    //List<Prompt> findByCategoryAndVisibility(String category, String visibility);
     List<Prompt> findByAuthorId(UUID authorId);
     List<Prompt> findByTitleContainingIgnoreCase(String title);
+    
+    @Query(value = "SELECT * FROM prompts WHERE :tagId = ANY(prompt_tags)", 
+           nativeQuery = true)
+    List<Prompt> findByTagId(@Param("tagId") UUID tagId);
 
-    @Query(value = "SELECT * FROM prompts WHERE visibility = 'PUBLIC' AND price <= :maxPrice", nativeQuery = true)
+    @Query(value = "SELECT * FROM prompts WHERE visibility = 'public' AND price <= :maxPrice", nativeQuery = true)
     List<Prompt> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice);
 
-    long countByCategory(String category);
+    //long countByCategory(String category);
 }
