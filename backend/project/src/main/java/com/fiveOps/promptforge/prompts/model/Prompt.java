@@ -1,22 +1,16 @@
 package com.fiveOps.promptforge.prompts.model;
 
-
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,53 +32,56 @@ public class Prompt {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "author_id", nullable = false)
+    private UUID authorId;
+
+    @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(nullable = false, length = 255)
+    private String slug;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private Double price;
 
+    @Column(nullable = false, length = 20)
+    private String visibility;
+
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
+    @Column(name = "prompt_tags", columnDefinition = "uuid[]")
+    private List<UUID> promptTags;
 
-    @Column(name = "author_id", nullable = false)
-    private UUID authorId;
+    ///analytics functionality
+    /// 
+    // @OneToOne(
+    //     mappedBy = "prompt",
+    //     cascade = CascadeType.ALL,
+    //     fetch = FetchType.LAZY,
+    //     orphanRemoval = true
+    // )
+    // @JsonIgnore
+    // private PromptMetadata metadata;
 
-    @Column(nullable = false)
-    private String category;
-
-    @OneToOne(
-    mappedBy = "prompt",
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-)
-@JsonIgnore
-private PromptMetadata metadata;
-
-public void setMetadata(PromptMetadata metadata) {
-    if (metadata == null) {
-        if (this.metadata != null) {
-            this.metadata.setPrompt(null);
-        }
-    } else {
-        metadata.setPrompt(this);
-    }
-    this.metadata = metadata;
-}
-
+    // public void setMetadata(PromptMetadata metadata) {
+    //     if (metadata == null) {
+    //         if (this.metadata != null) {
+    //             this.metadata.setPrompt(null);
+    //         }
+    //     } else {
+    //         metadata.setPrompt(this);
+    //     }
+    //     this.metadata = metadata;
+    // }
 }
