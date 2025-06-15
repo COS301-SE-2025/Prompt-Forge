@@ -25,7 +25,7 @@ export const CartSummary = ({
           <span>${total.toFixed(2)}</span>
         </div>
       </div>
-    <button className="w-full bg-[#00674f] hover:bg-[#3ebb9e] text-white py-3 rounded-md font-medium transition-colors">
+    <button className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white py-3 rounded-md font-medium transition-colors">
         Proceed to Checkout
       </button>
     <button className="w-full text-center mt-4 text-[#3ebb9e] hover:text-[#00674f]">
