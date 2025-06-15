@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>com.fiveOps</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>project</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo</name>
+    <name>project</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -120,6 +120,12 @@
             <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+    </dependency>
+
     </dependencies>
 
     <build>
