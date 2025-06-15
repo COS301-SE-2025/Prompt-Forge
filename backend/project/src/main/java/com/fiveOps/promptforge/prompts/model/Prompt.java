@@ -1,22 +1,16 @@
 package com.fiveOps.promptforge.prompts.model;
 
+import com.fiveOps.promptforge.prompts.service.TagService;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "prompts")
@@ -26,7 +20,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Prompt {
-
     @Id
     @Column(name = "prompt_id", columnDefinition = "UUID")
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -47,21 +40,40 @@ public class Prompt {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 10)
     private Double price;
 
-    @Column(nullable = false, length = 20)
-    private String visibility;
+    @Column(name = "visibility", nullable = false, length = 20)
+    private String visibility = "PRIVATE";
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
     @Column(name = "prompt_tags", columnDefinition = "uuid[]")
-    private List<UUID> promptTags;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<UUID> tagIds;
+
+    @Transient
+    private List<String> tagNames;
+
+    public void resolveAndSetTags(TagService tagService) {
+        if (this.tagNames != null && !this.tagNames.isEmpty()) {
+            List<Tag> tags = tagService.findOrCreateTags(this.tagNames);
+            this.tagIds = tags.stream()
+                .map(Tag::getId)
+                .toList();
+            
+            // Update usage counts
+            tags.forEach(tag -> tagService.incrementUsageCount(tag.getId()));
+        }
+    }
+
+    
 
     ///analytics functionality
     /// 
