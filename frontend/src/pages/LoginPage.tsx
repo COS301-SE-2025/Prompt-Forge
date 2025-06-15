@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate, Navigate } from "react-router-dom"
-import { BrainCircuit, Chrome, Eye, EyeOff } from "lucide-react"
+import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -27,6 +27,8 @@ export default function LoginPage() {
   const [username, setUsername] = useState(() => {
     return localStorage.getItem('username') || "Guest"
   })
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
 
   useEffect(() => {
     const savedUsername = localStorage.getItem('username')
@@ -113,6 +115,29 @@ export default function LoginPage() {
     navigate('/login')
   }
 
+  const handleForgotPassword = () => {
+    if (!forgotEmail) {
+      setError("Email is required")
+      return
+    }
+
+    const user = TEST_USERS.find(u => u.email === forgotEmail)
+    
+    if (!user) {
+      setError("No account found with this email address")
+      return
+    }
+
+    // Mock password reset
+    setError("")
+    alert(`Password reset instructions sent to ${forgotEmail}
+    \nFor demo purposes:
+    Username: ${user.username}
+    Password: ${user.password}`)
+    setShowForgotPassword(false)
+    setForgotEmail("")
+  }
+
   // Add this to routes that require authentication
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
     const username = localStorage.getItem('username')
@@ -157,175 +182,221 @@ export default function LoginPage() {
         <div className="w-full md:w-1/2 bg-background p-8 flex items-center justify-center">
           <Card className="w-full max-w-md">
             <div className="p-6">
-              <div className="flex border-b border-border mb-6 justify-center">
-                <button
-                  className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
-                  }`}
-                  onClick={() => setActiveTab("login")}
-                >
-                  Login
-                </button>
-                <button
-                  className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
-                  }`}
-                  onClick={() => setActiveTab("signup")}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              {activeTab === "login" && (
+              {showForgotPassword ? (
                 <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false)
+                      setError("")
+                    }}
+                    className="flex items-center text-sm text-muted-foreground hover:text-forge-green mb-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to login
+                  </button>
+
+                  <h2 className="text-xl font-semibold mb-2">Reset Password</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Enter your email address and we'll send you instructions to reset your password.
+                  </p>
+
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Email</label>
                     <Input 
                       type="email" 
                       placeholder="you@example.com" 
                       className="bg-muted border-muted h-11"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={toggleLoginPassword ? "text" : "password"}
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {toggleLoginPassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleLoginPassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleLoginPassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                    <Link to="#" className="hover:text-forge-green-dark text-forge-green text-sm">
-                      Forgot password?
-                    </Link>
                   </div>
 
                   <Button 
                     className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
-                    onClick={handleLogin}
+                    onClick={handleForgotPassword}
                   >
-                    Login
-                  </Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Continue with Google
-                  </Button>
-
-                  
-                </div>
-              )}
-
-              {activeTab === "signup" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1 text-sm">Username</label>
-                    <Input 
-                      type="text" 
-                      placeholder="Username" 
-                      className="bg-muted border-muted h-11"
-                      value={signupUsername}
-                      onChange={(e) => setSignupUsername(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1 text-sm">Email</label>
-                    <Input 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      className="bg-muted border-muted h-11"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={togglePassword ? "text" : "password"} 
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {togglePassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setTogglePassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setTogglePassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Confirm Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={toggleConfirmPassword ? "text" : "password"} 
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {toggleConfirmPassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleConfirmPassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleConfirmPassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
-                    onClick={handleSignUp}
-                  >
-                    Sign Up
-                  </Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Continue with Google
+                    Send Reset Instructions
                   </Button>
                 </div>
+              ) : (
+                <>
+                  <div className="flex border-b border-border mb-6 justify-center">
+                    <button
+                      className={`px-4 py-5 text-base font-medium w-1/2 ${
+                        activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
+                      }`}
+                      onClick={() => setActiveTab("login")}
+                    >
+                      Login
+                    </button>
+                    <button
+                      className={`px-4 py-5 text-base font-medium w-1/2 ${
+                        activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
+                      }`}
+                      onClick={() => setActiveTab("signup")}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+
+                  {activeTab === "login" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Email</label>
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          className="bg-muted border-muted h-11"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Password</label>
+                        <div className="relative">
+                          <Input 
+                            type={toggleLoginPassword ? "text" : "password"}
+                            placeholder="Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {toggleLoginPassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleLoginPassword(false)} 
+                              />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleLoginPassword(true)} 
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
+                        <button 
+                          onClick={() => {
+                            setShowForgotPassword(true)
+                            setError("")
+                          }}
+                          className="hover:text-forge-green-dark text-forge-green text-sm"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
+                        onClick={handleLogin}
+                      >
+                        Login
+                      </Button>
+
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-border"></div>
+                        <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
+                        <div className="flex-grow border-t border-border"></div>
+                      </div>
+
+                      <Button variant="outline" className="w-full">
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </Button>
+
+                      
+                    </div>
+                  )}
+
+                  {activeTab === "signup" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1 text-sm">Username</label>
+                        <Input 
+                          type="text" 
+                          placeholder="Username" 
+                          className="bg-muted border-muted h-11"
+                          value={signupUsername}
+                          onChange={(e) => setSignupUsername(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1 text-sm">Email</label>
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          className="bg-muted border-muted h-11"
+                          value={signupEmail}
+                          onChange={(e) => setSignupEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Password</label>
+                        <div className="relative">
+                          <Input 
+                            type={togglePassword ? "text" : "password"} 
+                            placeholder="Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={signupPassword}
+                            onChange={(e) => setSignupPassword(e.target.value)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {togglePassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setTogglePassword(false)} 
+                              />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setTogglePassword(true)} 
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Confirm Password</label>
+                        <div className="relative">
+                          <Input 
+                            type={toggleConfirmPassword ? "text" : "password"} 
+                            placeholder="Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {toggleConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleConfirmPassword(false)} 
+                              />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleConfirmPassword(true)} 
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
+                        onClick={handleSignUp}
+                      >
+                        Sign Up
+                      </Button>
+
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-border"></div>
+                        <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
+                        <div className="flex-grow border-t border-border"></div>
+                      </div>
+
+                      <Button variant="outline" className="w-full">
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
 
               {error && (
