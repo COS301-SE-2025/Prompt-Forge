@@ -527,32 +527,38 @@ Please provide:
               </Button>
             </div>
 
-            <div className="flex-1 p-4 space-y-6">
+            <div className="flex-1 p-3 space-y-4"> {/* Reduced padding and spacing */}
               {/* Model A Selection */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-3">Model for Prompt A</h4>
-                <div className="space-y-2">
+                <h4 className="text-sm font-medium text-foreground mb-2"> {/* Reduced margin */}
+                  Model for Prompt A
+                </h4>
+                <div className="space-y-1.5"> {/* Reduced spacing between cards */}
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-3 ${
+                      className={`p-2 ${/* Reduced padding */
                         selectedModelA === index ? model.selectedBg : model.cardBg
                       } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02]`}
                       onClick={() => setSelectedModelA(index)}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2"> {/* Reduced spacing */}
                         <div
-                          className={`w-8 h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-base shadow-lg flex-shrink-0`}
+                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg flex-shrink-0`} /* Smaller icon container */
                         >
                           {model.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`text-sm font-semibold ${model.textColor} mb-1`}>{model.name}</h4>
-                          <p className="text-xs text-muted-foreground">{model.description}</p>
+                          <h4 className={`text-xs font-semibold ${model.textColor} mb-0.5`}> {/* Smaller text and margin */}
+                            {model.name}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground leading-tight"> {/* Smaller description text */}
+                            {model.description}
+                          </p>
                         </div>
                         {selectedModelA === index && (
-                          <div className="w-4 h-4 rounded-full bg-[#3ebb9e] flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-3 h-3 rounded-full bg-[#3ebb9e] flex items-center justify-center"> {/* Smaller radio button */}
+                            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                           </div>
                         )}
                       </div>
@@ -561,31 +567,37 @@ Please provide:
                 </div>
               </div>
 
-              {/* Model B Selection */}
+              {/* Model B Selection - Apply the same changes */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-3">Model for Prompt B</h4>
-                <div className="space-y-2">
+                <h4 className="text-sm font-medium text-foreground mb-2">
+                  Model for Prompt B
+                </h4>
+                <div className="space-y-1.5">
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-3 ${
+                      className={`p-2 ${
                         selectedModelB === index ? model.selectedBg : model.cardBg
                       } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02]`}
                       onClick={() => setSelectedModelB(index)}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
                         <div
-                          className={`w-8 h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-base shadow-lg flex-shrink-0`}
+                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg flex-shrink-0`}
                         >
                           {model.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`text-sm font-semibold ${model.textColor} mb-1`}>{model.name}</h4>
-                          <p className="text-xs text-muted-foreground">{model.description}</p>
+                          <h4 className={`text-xs font-semibold ${model.textColor} mb-0.5`}>
+                            {model.name}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground leading-tight">
+                            {model.description}
+                          </p>
                         </div>
                         {selectedModelB === index && (
-                          <div className="w-4 h-4 rounded-full bg-[#3ebb9e] flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-3 h-3 rounded-full bg-[#3ebb9e] flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                           </div>
                         )}
                       </div>
