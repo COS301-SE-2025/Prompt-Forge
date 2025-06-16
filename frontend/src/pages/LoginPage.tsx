@@ -166,24 +166,24 @@ export default function LoginPage() {
           <div className="max-w-md mx-auto">
             <div className="mb-6 flex justify-center">
               <div className="bg-[#00876e]/10 p-4 rounded-full">
-                <BrainCircuit className="w-12 h-12 text-[#0C201B] dark:text-white" />
+                <BrainCircuit className="w-12 h-12 text-white dark:text-white" />
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-[#0C201B] dark:text-white">
+            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white dark:text-white">
               Prompt Forge
             </h1>
-            <p className="text-sm text-[#0C201B]/70 dark:text-white/70 uppercase tracking-widest mb-8">
+            <p className="text-sm text-white/70 dark:text-white/70 uppercase tracking-widest mb-8">
               Forge the future
             </p>
 
-            <h2 className="text-xl font-semibold mb-4 text-[#0C201B] dark:text-white">
+            <h2 className="text-xl font-semibold mb-4 text-white dark:text-white">
               Discover, Test & Master
               <br />
               AI Prompts
             </h2>
 
-            <p className="text-sm text-[#0C201B]/80 dark:text-labelText/80 mb-6">
+            <p className="text-sm text-white/80 dark:text-labelText/80 mb-6">
               The marketplace for high-quality, tested AI prompts.
               <br />
               Buy, sell, test, and compare prompts to maximize

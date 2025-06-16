@@ -29,7 +29,7 @@ export default function Header() {
   const handleLogout = () => {
     // Add any logout logic here (clear tokens, etc.)
     setDropdownOpen(false)
-    navigate('/')
+    navigate('/login')
   }
 
   useEffect(() => {
