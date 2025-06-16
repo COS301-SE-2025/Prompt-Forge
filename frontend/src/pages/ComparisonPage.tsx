@@ -484,8 +484,8 @@ Please provide:
               </Button>
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto">
-              <div className="bg-muted rounded-lg p-4 h-full">
+            <div className="flex-1 p-4 overflow-hidden"> {/* Changed from overflow-y-auto */}
+              <div className="bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
                 {isLoadingRating ? (
                   <div className="flex items-center space-x-2">
                     <RotateCcw className="h-4 w-4 animate-spin" />
