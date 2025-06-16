@@ -5,6 +5,7 @@ import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star } from "lucide-react"
 import { useState } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
+import { jsPDF } from 'jspdf';
 
 type ViewType = "test" | "rate" | "suggest";
 
@@ -270,6 +271,40 @@ Please:
     }
   }
 
+  const downloadAsPDF = (promptText: string, aiResponse: string, modelName: string) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const lineHeight = 7;
+
+    // Add title and metadata
+    doc.setFontSize(16);
+    doc.text('Prompt Forge - Generated Response', margin, margin);
+
+    // Add timestamp and model info
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, margin + lineHeight);
+    doc.text(`Model: ${modelName}`, margin, margin + (lineHeight * 2));
+
+    // Add prompt section
+    doc.setFontSize(12);
+    doc.text('Prompt:', margin, margin + (lineHeight * 4));
+    doc.setFontSize(10);
+    const promptLines = doc.splitTextToSize(promptText, pageWidth - (margin * 2));
+    doc.text(promptLines, margin, margin + (lineHeight * 5));
+
+    // Add response section
+    const responseStartY = margin + (lineHeight * (6 + promptLines.length));
+    doc.setFontSize(12);
+    doc.text('Response:', margin, responseStartY);
+    doc.setFontSize(10);
+    const responseLines = doc.splitTextToSize(aiResponse, pageWidth - (margin * 2));
+    doc.text(responseLines, margin, responseStartY + lineHeight);
+
+    // Save the PDF
+    doc.save(`prompt-response-${new Date().toISOString().slice(0,10)}.pdf`);
+  };
+
   const selectedModelData = aiModels[selectedModel]
 
   // First, create a viewTitles mapping object
@@ -372,7 +407,12 @@ Please:
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => downloadAsPDF(promptText, aiResponse, aiModels[selectedModel].name)}
+                      >
                         <Download className="h-3 w-3" />
                       </Button>
                     </div>
