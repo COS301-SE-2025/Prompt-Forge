@@ -2,8 +2,11 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star } from "lucide-react"
 import { useState } from "react"
+import { ChevronUp, ChevronDown } from "lucide-react"
+
+type ViewType = "test" | "rate" | "suggest";
 
 const defaultPrompt = `Write your prompt here...
 
@@ -20,7 +23,7 @@ export default function EditorPage() {
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
   const [selectedModel, setSelectedModel] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [currentView, setCurrentView] = useState<"test" | "rate" | "suggest">("test")
+  const [currentView, setCurrentView] = useState<ViewType>("test")
   const [currentPage, setCurrentPage] = useState(1)
   const [ratingResponse, setRatingResponse] = useState("")
   const [isLoadingRating, setIsLoadingRating] = useState(false)
@@ -28,6 +31,7 @@ export default function EditorPage() {
   const [suggestionResponse, setSuggestionResponse] = useState("")
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
   const [lastSuggestedPrompt, setLastSuggestedPrompt] = useState("")
+  const [modelsCollapsed, setModelsCollapsed] = useState(false)
 
   const aiModels = [
     {
@@ -268,6 +272,13 @@ Please:
 
   const selectedModelData = aiModels[selectedModel]
 
+  // First, create a viewTitles mapping object
+  const viewTitles: Record<ViewType, string> = {
+    "test": "AI Models",
+    "rate": "Rating Models",
+    "suggest": "Suggestion Models"
+  };
+
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
@@ -314,23 +325,25 @@ Please:
               </Button>
               <Button
                 size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
                 onClick={() => {
                   setCurrentView("rate");
                   setCurrentPage(2);
                 }}
               >
+                <Star className="h-3 w-3 mr-1" />
                 Rate
               </Button>
               <Button
                 size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
                 onClick={() => {
                   getSuggested(promptText, aiResponse);
                   setCurrentView("suggest");
                   setCurrentPage(3);
                 }}
               >
+                <HelpCircle className="h-3 w-3 mr-1" />
                 Suggest
               </Button>
             </div>
@@ -364,7 +377,11 @@ Please:
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoading ? (
                         <div className="flex items-center space-x-2">
@@ -381,44 +398,63 @@ Please:
                 </div>
 
                 {/* AI Models */}
-                <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">AI Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                <div className="flex-shrink-0 mt-auto transition-all duration-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      {modelsCollapsed ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {!modelsCollapsed && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {aiModels.map((model, index) => (
+                        <Card
+                          key={index}
+                          className={`p-2 lg:p-3 ${
+                            selectedModel === index ? model.selectedBg : model.cardBg
+                          } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
+                          onClick={() => handleModelSelect(index)}
+                        >
+                          {selectedModel === index && (
+                            <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                              <div
+                                className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              >
+                                <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex items-start space-x-2">
                             <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                             >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              {model.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+                                {model.name}
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+                                {model.description}
+                              </p>
                             </div>
                           </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Pagination for Test View */}
@@ -447,7 +483,11 @@ Please:
               <>
                 {/* Rating Response Area */}
                 <div className="flex-1 min-h-0 flex flex-col">
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingRating ? (
                         <div className="flex items-center space-x-2">
@@ -464,44 +504,63 @@ Please:
                 </div>
 
                 {/* Rating Models (same as AI Models) */}
-                <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Rating Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                <div className="flex-shrink-0 mt-auto transition-all duration-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      {modelsCollapsed ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {!modelsCollapsed && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {aiModels.map((model, index) => (
+                        <Card
+                          key={index}
+                          className={`p-2 lg:p-3 ${
+                            selectedModel === index ? model.selectedBg : model.cardBg
+                          } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
+                          onClick={() => handleModelSelect(index)}
+                        >
+                          {selectedModel === index && (
+                            <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                              <div
+                                className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              >
+                                <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex items-start space-x-2">
                             <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                             >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              {model.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+                                {model.name}
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+                                {model.description}
+                              </p>
                             </div>
                           </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Pagination for Rate View */}
@@ -530,7 +589,11 @@ Please:
               <>
                 {/* Suggestion Response Area */}
                 <div className="flex-1 min-h-0 flex flex-col">
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingSuggestion ? (
                         <div className="flex items-center space-x-2">
@@ -547,44 +610,63 @@ Please:
                 </div>
 
                 {/* Suggestion Models */}
-                <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Suggestion Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                <div className="flex-shrink-0 mt-auto transition-all duration-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      {modelsCollapsed ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {!modelsCollapsed && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {aiModels.map((model, index) => (
+                        <Card
+                          key={index}
+                          className={`p-2 lg:p-3 ${
+                            selectedModel === index ? model.selectedBg : model.cardBg
+                          } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
+                          onClick={() => handleModelSelect(index)}
+                        >
+                          {selectedModel === index && (
+                            <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+                              <div
+                                className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              >
+                                <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex items-start space-x-2">
                             <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+                              className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                             >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+                              {model.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+                                {model.name}
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+                                {model.description}
+                              </p>
                             </div>
                           </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Pagination for Suggest View */}
