@@ -152,28 +152,38 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col md:flex-row">
-        <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-hsl(var(--background)) p-8 flex flex-col justify-center items-center text-center">
+        <div 
+          className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
+          style={{
+            backgroundImage: `linear-gradient(-45deg, 
+              ${document.documentElement.classList.contains('dark') 
+                ? '#3ebb9e, #45c1a4, #00674f, #174037'
+                : '#ebf5f3, #45c1a4, #3AA189, #9ccfc4'
+              })`,
+            backgroundSize: '400% 400%'
+          }}
+        >
           <div className="max-w-md mx-auto">
             <div className="mb-6 flex justify-center">
               <div className="bg-[#00876e]/10 p-4 rounded-full">
-                <BrainCircuit className="w-12 h-12 dark:text-white text-[#354b45]" />
+                <BrainCircuit className="w-12 h-12 text-[#0C201B] dark:text-white" />
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 dark:text-white text-[#354b45]">
+            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-[#0C201B] dark:text-white">
               Prompt Forge
             </h1>
-            <p className="text-sm dark:text-white/70 text-[#354b45]/70 uppercase tracking-widest mb-8">
+            <p className="text-sm text-[#0C201B]/70 dark:text-white/70 uppercase tracking-widest mb-8">
               Forge the future
             </p>
 
-            <h2 className="text-xl font-semibold mb-4 dark:text-white text-[#354b45]">
+            <h2 className="text-xl font-semibold mb-4 text-[#0C201B] dark:text-white">
               Discover, Test & Master
               <br />
               AI Prompts
             </h2>
 
-            <p className="text-sm dark:text-labelText/80 text-[#354b45]/80 mb-6">
+            <p className="text-sm text-[#0C201B]/80 dark:text-labelText/80 mb-6">
               The marketplace for high-quality, tested AI prompts.
               <br />
               Buy, sell, test, and compare prompts to maximize
