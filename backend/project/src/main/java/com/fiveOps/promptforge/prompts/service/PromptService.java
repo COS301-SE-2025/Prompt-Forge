@@ -9,8 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
-import com.fiveOps.promptforge.prompts.service.TagService;
-import com.fiveOps.promptforge.prompts.repository.TagRepository;
 
 @Service
 public class PromptService {
@@ -36,7 +34,10 @@ public class PromptService {
 
     @Transactional
     public Prompt createPrompt(Prompt prompt) {
-        prompt.setVisibility("PRIVATE");  // Ensure new prompts are private by default
+        prompt.setVisibility("private");
+        if (prompt.getPrice() == null) {
+            prompt.setPrice(0.0);
+        }
         /////add analytics too later!!!!!
         prompt.resolveAndSetTags(tagService);
         return promptRepository.save(prompt);
