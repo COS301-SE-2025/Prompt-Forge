@@ -1,9 +1,9 @@
+
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,120 +16,87 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.prompts.model.PromptMetadata;
-import com.fiveOps.promptforge.prompts.repository.PromptMetadataRepository;
-import com.fiveOps.promptforge.prompts.repository.PromptRepository;
+import com.fiveOps.promptforge.prompts.service.PromptService;
 
 @RestController
-@RequestMapping("/prompts")
+@RequestMapping("/api/prompts")
 public class PromptController {
+    private final PromptService promptService;
 
-    private final PromptRepository promptRepository;
-
-    @Autowired
-    public PromptController(PromptRepository promptRepository) {
-        this.promptRepository = promptRepository;
+    public PromptController(PromptService promptService) {
+        this.promptService = promptService;
     }
 
-    // Get all public prompts
     @GetMapping
-    public ResponseEntity<List<Prompt>> getAllPublicPrompts() {
-        List<Prompt> prompts = promptRepository.findByIsPublicTrue();
-        return ResponseEntity.ok(prompts);
+    public ResponseEntity<List<Prompt>> getAllPrompts() {
+        return ResponseEntity.ok(promptService.getAllPrompts());
     }
 
-    // Get prompt by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id) {
-        return promptRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Get prompts by category
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<Prompt>> getPromptsByCategory(@PathVariable String category) {
-        List<Prompt> prompts = promptRepository.findByCategoryAndIsPublicTrue(category);
-        return ResponseEntity.ok(prompts);
-    }
-
-    // Get prompts by author
     @GetMapping("/author/{authorId}")
     public ResponseEntity<List<Prompt>> getPromptsByAuthor(@PathVariable UUID authorId) {
-        List<Prompt> prompts = promptRepository.findByAuthorId(authorId);
-        return ResponseEntity.ok(prompts);
+        return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId));
     }
 
-    // Search prompts by title
-    @GetMapping("/search")
-    public ResponseEntity<List<Prompt>> searchPrompts(@RequestParam String query) {
-        List<Prompt> prompts = promptRepository.findByTitleContainingIgnoreCase(query);
-        return ResponseEntity.ok(prompts);
+    @GetMapping("/{id}")
+    public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id) {
+        Prompt prompt = promptService.getPromptById(id);
+        return prompt != null ? ResponseEntity.ok(prompt) : ResponseEntity.notFound().build();
     }
 
-    // Create new prompt
     @PostMapping
     public ResponseEntity<Prompt> createPrompt(@RequestBody Prompt prompt) {
-        PromptMetadata metadata = PromptMetadata.builder()
-            .viewCount(0)
-            .forkCount(0)
-            .downloadCount(0)
-            .averageRating(null)
-            .build();
-        prompt.setMetadata(metadata);
-
-        Prompt savedPrompt = promptRepository.save(prompt);
-        return ResponseEntity.ok(savedPrompt);
+        if (prompt.getPrice() == null) {
+        prompt.setPrice(0.0);
+    }
+        Prompt created = promptService.createPrompt(prompt);
+        return ResponseEntity.ok(created);
+        /////analytics!!!!!
+        
     }
 
-    // Update existing prompt
     @PutMapping("/{id}")
     public ResponseEntity<Prompt> updatePrompt(@PathVariable UUID id, @RequestBody Prompt promptDetails) {
-        return promptRepository.findById(id)
-                .map(prompt -> {
-                    // Only update allowed fields
-                    prompt.setTitle(promptDetails.getTitle());
-                    prompt.setDescription(promptDetails.getDescription());
-                    prompt.setContent(promptDetails.getContent());
-                    prompt.setPrice(promptDetails.getPrice());
-                    prompt.setCategory(promptDetails.getCategory());
-                    prompt.setIsPublic(promptDetails.getIsPublic());
-                    // authorId remains unchanged from existing prompt
-                    
-                    Prompt updatedPrompt = promptRepository.save(prompt);
-                    return ResponseEntity.ok(updatedPrompt);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Prompt updatedPrompt = promptService.updatePrompt(id, promptDetails);
+        return updatedPrompt != null ? ResponseEntity.ok(updatedPrompt) : ResponseEntity.notFound().build();
     }
 
-    // Delete prompt
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<Prompt> publishPrompt(@PathVariable UUID id) {
+        Prompt publishedPrompt = promptService.publishPrompt(id);
+        return publishedPrompt != null ? ResponseEntity.ok(publishedPrompt) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/unpublish")
+    public ResponseEntity<Prompt> unpublishPrompt(@PathVariable UUID id) {
+        Prompt unpublishedPrompt = promptService.unpublishPrompt(id);
+        return unpublishedPrompt != null ? ResponseEntity.ok(unpublishedPrompt) : ResponseEntity.notFound().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePrompt(@PathVariable UUID id) {
-        return promptRepository.findById(id)
-                .map(prompt -> {
-                    promptRepository.delete(prompt);
-                    return ResponseEntity.ok().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+        boolean deleted = promptService.deletePrompt(id);
+        return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
-    // // Get top-rated prompts
-    // @GetMapping("/top-rated")
-    // public ResponseEntity<List<Prompt>> getTopRatedPrompts() {
-    //     List<Prompt> prompts = promptRepository.findTopRatedPrompts();
-    //     return ResponseEntity.ok(prompts);
-    // }
-
-    // Get public prompts under a certain price
-    @GetMapping("/price")
-    public ResponseEntity<List<Prompt>> getPromptsUnderPrice(@RequestParam double maxPrice) {
-        List<Prompt> prompts = promptRepository.findPublicPromptsUnderPrice(maxPrice);
-        return ResponseEntity.ok(prompts);
+    @GetMapping("/by-tag/{tagName}")
+    public ResponseEntity<List<Prompt>> getByTagName(@PathVariable String tagName) {
+        return ResponseEntity.ok(promptService.getPromptsByTagName(tagName));
     }
 
-    @Autowired
-    private PromptMetadataRepository metadataRepository;
+    @GetMapping("/search")
+    public ResponseEntity<List<Prompt>> searchPrompts(
+            @RequestParam String query,
+            @RequestParam(required = false) Boolean onlyPublic) {
+        
+        if (onlyPublic != null && onlyPublic) {
+            return ResponseEntity.ok(promptService.searchPublicByTitle(query));
+        }
+        return ResponseEntity.ok(promptService.searchByTitle(query));
+    }
 
+
+    // Removed metadata/analytics endpoints endpoints
+    /*
     @GetMapping("/{id}/metadata")
     public ResponseEntity<PromptMetadata> getPromptMetadata(@PathVariable UUID id) {
         PromptMetadata metadata = metadataRepository.findByPromptId(id);
@@ -145,4 +112,5 @@ public class PromptController {
         metadataRepository.incrementViewCount(id);
         return ResponseEntity.ok().build();
     }
+    */
 }
