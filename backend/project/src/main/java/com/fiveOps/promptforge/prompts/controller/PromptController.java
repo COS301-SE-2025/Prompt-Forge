@@ -44,6 +44,9 @@ public class PromptController {
 
     @PostMapping
     public ResponseEntity<Prompt> createPrompt(@RequestBody Prompt prompt) {
+        if (prompt.getPrice() == null) {
+        prompt.setPrice(0.0);
+    }
         Prompt created = promptService.createPrompt(prompt);
         return ResponseEntity.ok(created);
         /////analytics!!!!!
