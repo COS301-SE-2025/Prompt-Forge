@@ -69,7 +69,7 @@ public class PromptService {
     public Prompt publishPrompt(UUID id) {
         return promptRepository.findById(id)
                 .map(prompt -> {
-                    prompt.setVisibility("PUBLIC");
+                    prompt.setVisibility("public");
                     prompt.setPublishedAt(java.time.LocalDateTime.now());
                     return promptRepository.save(prompt);
                 })
@@ -80,7 +80,7 @@ public class PromptService {
     public Prompt unpublishPrompt(UUID id) {
         return promptRepository.findById(id)
                 .map(prompt -> {
-                    prompt.setVisibility("PRIVATE");
+                    prompt.setVisibility("private");
                     return promptRepository.save(prompt);
                 })
                 .orElse(null);
