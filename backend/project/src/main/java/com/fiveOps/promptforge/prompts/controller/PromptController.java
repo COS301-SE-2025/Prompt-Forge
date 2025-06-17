@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
@@ -80,6 +81,17 @@ public class PromptController {
     @GetMapping("/by-tag/{tagName}")
     public ResponseEntity<List<Prompt>> getByTagName(@PathVariable String tagName) {
         return ResponseEntity.ok(promptService.getPromptsByTagName(tagName));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Prompt>> searchPrompts(
+            @RequestParam String query,
+            @RequestParam(required = false) Boolean onlyPublic) {
+        
+        if (onlyPublic != null && onlyPublic) {
+            return ResponseEntity.ok(promptService.searchPublicByTitle(query));
+        }
+        return ResponseEntity.ok(promptService.searchByTitle(query));
     }
 
 
