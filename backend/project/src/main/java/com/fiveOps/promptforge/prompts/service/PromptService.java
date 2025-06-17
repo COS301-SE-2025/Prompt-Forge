@@ -96,4 +96,12 @@ public class PromptService {
                 .orElse(false);
                 //////later add deleting analytics
     }
+
+     public List<Prompt> searchByTitle(String searchTerm) {
+        return promptRepository.findByTitleContainingIgnoreCase(searchTerm);
+    }
+
+    public List<Prompt> searchPublicByTitle(String searchTerm) {
+        return promptRepository.searchPublicByTitle(searchTerm);
+    }
 }
