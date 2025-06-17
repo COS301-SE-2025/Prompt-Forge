@@ -41,7 +41,7 @@ public class Prompt {
     private String description;
 
     @Column(nullable = false, precision = 10)
-    private Double price;
+    private Double price= 0.0;
 
     @Column(name = "visibility", nullable = false, length = 20)
     private String visibility = "PRIVATE";
@@ -71,6 +71,22 @@ public class Prompt {
             // Update usage counts
             tags.forEach(tag -> tagService.incrementUsageCount(tag.getId()));
         }
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.slug == null || this.slug.isEmpty()) {
+            this.slug = generateSlug(this.title);
+        }
+    }
+    
+    private String generateSlug(String title) {
+        if (title == null) return "";
+        return title.toLowerCase()
+            .replaceAll("[^a-z0-9\\s-]", "") // Remove invalid chars
+            .replaceAll("\\s+", "-")         // Replace spaces with hyphens
+            .replaceAll("-+", "-")           // Replace multiple hyphens
+            .replaceAll("^-|-$", "");        // Trim hyphens from ends
     }
 
     
