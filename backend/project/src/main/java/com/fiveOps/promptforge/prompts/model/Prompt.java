@@ -89,6 +89,12 @@ public class Prompt {
             .replaceAll("^-|-$", "");        // Trim hyphens from ends
     }
 
+
+    @PreUpdate // Add this annotation
+    protected void onUpdate() {
+        this.slug = generateSlug(this.title);
+    }
+
     
 
     ///analytics functionality
