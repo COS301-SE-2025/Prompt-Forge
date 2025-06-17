@@ -1,16 +1,28 @@
 package com.fiveOps.promptforge.prompts.model;
 
-import com.fiveOps.promptforge.prompts.service.TagService;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "prompts")
@@ -20,102 +32,59 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Prompt {
+
     @Id
     @Column(name = "prompt_id", columnDefinition = "UUID")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "author_id", nullable = false)
-    private UUID authorId;
-
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String title;
-
-    @Column(nullable = false, length = 255)
-    private String slug;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, precision = 10)
-    private Double price= 0.0;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
 
-    @Column(name = "visibility", nullable = false, length = 20)
-    private String visibility = "PRIVATE";
+    @Column(nullable = false)
+    private Double price;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    @Column(name = "published_at")
-    private LocalDateTime publishedAt;
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic;
 
-    @Column(name = "prompt_tags", columnDefinition = "uuid[]")
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    private List<UUID> tagIds;
+    @Column(name = "author_id", nullable = false)
+    private UUID authorId;
 
-    @Transient
-    private List<String> tagNames;
+    @Column(nullable = false)
+    private String category;
 
-    public void resolveAndSetTags(TagService tagService) {
-        if (this.tagNames != null && !this.tagNames.isEmpty()) {
-            List<Tag> tags = tagService.findOrCreateTags(this.tagNames);
-            this.tagIds = tags.stream()
-                .map(Tag::getId)
-                .toList();
-            
-            // Update usage counts
-            tags.forEach(tag -> tagService.incrementUsageCount(tag.getId()));
+    @OneToOne(
+    mappedBy = "prompt",
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
+)
+@JsonIgnore
+private PromptMetadata metadata;
+
+public void setMetadata(PromptMetadata metadata) {
+    if (metadata == null) {
+        if (this.metadata != null) {
+            this.metadata.setPrompt(null);
         }
+    } else {
+        metadata.setPrompt(this);
     }
+    this.metadata = metadata;
+}
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.slug == null || this.slug.isEmpty()) {
-            this.slug = generateSlug(this.title);
-        }
-    }
-    
-    private String generateSlug(String title) {
-        if (title == null) return "";
-        return title.toLowerCase()
-            .replaceAll("[^a-z0-9\\s-]", "") // Remove invalid chars
-            .replaceAll("\\s+", "-")         // Replace spaces with hyphens
-            .replaceAll("-+", "-")           // Replace multiple hyphens
-            .replaceAll("^-|-$", "");        // Trim hyphens from ends
-    }
-
-
-    @PreUpdate // Add this annotation
-    protected void onUpdate() {
-        this.slug = generateSlug(this.title);
-    }
-
-    
-
-    ///analytics functionality
-    /// 
-    // @OneToOne(
-    //     mappedBy = "prompt",
-    //     cascade = CascadeType.ALL,
-    //     fetch = FetchType.LAZY,
-    //     orphanRemoval = true
-    // )
-    // @JsonIgnore
-    // private PromptMetadata metadata;
-
-    // public void setMetadata(PromptMetadata metadata) {
-    //     if (metadata == null) {
-    //         if (this.metadata != null) {
-    //             this.metadata.setPrompt(null);
-    //         }
-    //     } else {
-    //         metadata.setPrompt(this);
-    //     }
-    //     this.metadata = metadata;
-    // }
 }
