@@ -14,8 +14,18 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 @Repository
 public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
     List<Prompt> findByVisibility(String visibility);
-    List<Prompt> findByVisibilityAndPriceLessThanEqual(String visibility, double maxPrice);
     
-    @Query("SELECT p FROM Prompt p JOIN p.tagIds t WHERE p.visibility = 'PUBLIC' AND t = :tagId")
-    List<Prompt> findPublicPromptsByTag(@Param("tagId") UUID tagId);
+    @Query("SELECT p FROM Prompt p WHERE " +
+           "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "AND p.visibility = 'public'")
+    List<Prompt> searchPublicByTitle(@Param("query") String query);
+    
+    @Query("SELECT p FROM Prompt p WHERE " +
+           "p.visibility = 'public' AND p.price <= :maxPrice")
+    List<Prompt> findPublicUnderPrice(@Param("maxPrice") double maxPrice);
+    
+    List<Prompt> findByIdAndVisibility(UUID id, String visibility);
+
+    @Query("SELECT p FROM Prompt p WHERE p.visibility = 'public' AND p.publishedAt IS NOT NULL ORDER BY p.publishedAt DESC")
+List<Prompt> findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(String visibility);
 }
