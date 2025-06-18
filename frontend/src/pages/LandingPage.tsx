@@ -66,7 +66,7 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #45c1a4, #174037, #000000
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
             )`,
             backgroundSize: "400% 400%",
           }}
@@ -79,7 +79,7 @@ export default function LandingPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#FFFFFF] mb-6 leading-tight">
               Forge the Future of
               <br />
-              <span className="text-[#00674f]">AI Interactions</span>
+              <span className="text-[#45c1a4]">AI Interactions</span>
             </h1>
             <p className="text-xl text-[#FFFFFF]/80 mb-8 max-w-2xl mx-auto leading-relaxed">
               The world's first comprehensive marketplace for AI prompts. Discover, test, compare, and master
@@ -346,8 +346,7 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, 
-              #3ebb9e, #45c1a4, #00674f, #174037
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
             )`,
             backgroundSize: "400% 400%",
           }}
