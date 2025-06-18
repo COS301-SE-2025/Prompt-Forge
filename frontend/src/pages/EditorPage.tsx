@@ -318,7 +318,7 @@ Please:
     <div className="flex-1 flex flex-col w-full h-full bg-background">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
         {/* Left Panel - Prompt Editor */}
-        <div className="bg-muted border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
+        <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
