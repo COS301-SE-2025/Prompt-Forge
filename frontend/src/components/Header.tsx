@@ -19,7 +19,7 @@ export default function Header() {
   const navItems = [
     { name: "Home", href: "/home" },
     { name: "Dashboard", href: "/dashboard" },
-    { name: "Editor", href: "/editor" },
+    { name: "Testing Ground", href: "/editor" },
     { name: "Comparison", href: "/comparison" },
     { name: "My Prompts", href: "/my-prompts" },
     { name: "Marketplace", href: "/marketplace" },

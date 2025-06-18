@@ -155,12 +155,9 @@ export default function LoginPage() {
         <div 
           className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, 
-              ${document.documentElement.classList.contains('dark') 
-                ? '#3ebb9e, #45c1a4, #00674f, #174037'
-                : '#ebf5f3, #45c1a4, #3AA189, #9ccfc4'
-              })`,
-            backgroundSize: '400% 400%'
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
+            )`,
+            backgroundSize: "400% 400%",
           }}
         >
           <div className="max-w-md mx-auto">
