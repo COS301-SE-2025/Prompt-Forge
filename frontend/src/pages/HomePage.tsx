@@ -20,11 +20,11 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-muted-foreground text-sm lg:text-base mb-4 lg:mb-6 leading-relaxed">
-                  Test, rank, and evaluate AI prompts in a
+                  Write it. Test it. Refine it. Repeat.
                   <br className="hidden sm:block" />
-                  structured and collaborative environment.
+                  A creative playground for building and perfecting AI prompts.
                   <br className="hidden sm:block" />
-                  Unlock the full potential of AI with better prompts.
+                  Because smarter prompts mean smarter AI.
                 </p>
               </div>
 

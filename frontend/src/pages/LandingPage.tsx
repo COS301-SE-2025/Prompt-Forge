@@ -16,45 +16,73 @@ import {
   Moon,
   Sun,
 } from "lucide-react"
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react"
 import { Image } from "../components/ui/Image"
 import { useTheme } from "../components/theme-provider"
+import { Link } from "react-router-dom"
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme()
+  const [typedText, setTypedText] = useState("")
+  const fullText = "Forge the Future of"
+
+  useEffect(() => {
+    let index = 0
+    const timer = setInterval(() => {
+      if (index <= fullText.length) {
+        setTypedText(fullText.slice(0, index))
+        index++
+      } else {
+        clearInterval(timer)
+      }
+    }, 150)
+
+    return () => clearInterval(timer)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <nav className="border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
-                <BrainCircuit className="w-3 h-3 text-[#3ebb9e]" />
+                <BrainCircuit className="w-3 h-3 text-[#3ebb9e] " />
               </div>
               <span className="text-lg font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="#features" className="text-sm font-medium hover:text-[#3ebb9e] transition-colors">
+              <a
+                href="#features"
+                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+              >
                 Features
-              </Link>
-              <Link to="#how-it-works" className="text-sm font-medium hover:text-[#3ebb9e] transition-colors">
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+              >
                 How It Works
-              </Link>
-              <Link to="#pricing" className="text-sm font-medium hover:text-[#3ebb9e] transition-colors">
+              </a>
+              <a
+                href="#pricing"
+                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+              >
                 Pricing
-              </Link>
+              </a>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="rounded-full"
+                className="rounded-full hover:rotate-180 transition-transform duration-500"
               >
                 {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
               <Link to="/login">
-                <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Get Started</Button>
+                <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white hover:scale-105 transition-all duration-300">
+                  Get Started
+                </Button>
               </Link>
             </div>
           </div>
@@ -66,18 +94,25 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
-            )`,
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
             backgroundSize: "400% 400%",
           }}
         />
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-6 bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20">
-              🚀 The Future of AI Prompt Engineering
-            </Badge>
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Badge className="bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20 text-lg px-0.5 py-2">
+                <span className="animate-rocket text-1xl">🚀</span>
+              </Badge>
+              <Badge className="bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20 text-lg px-0.5 py-2">
+                The Future of AI Prompt Engineering
+              </Badge>
+            </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#FFFFFF] mb-6 leading-tight">
-              Forge the Future of
+              <span className="inline-block min-h-[1.2em]">
+                {typedText}
+                <span className="animate-blink">|</span>
+              </span>{" "}
               <br />
               <span className="text-[#45c1a4]">AI Interactions</span>
             </h1>
@@ -87,30 +122,33 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/login">
-                <Button size="lg" className="bg-[#00674f] hover:bg-[#004d3a] text-white px-8 py-3 text-lg">
+                <Button
+                  size="lg"
+                  className="bg-[#00674f] hover:bg-[#004d3a] text-white px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+                >
                   Start Your Journey
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
                 </Button>
               </Link>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg"
+                className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
               >
                 Watch Demo
               </Button>
             </div>
             <div className="mt-12 flex justify-center items-center space-x-8 text-sm text-[#FFFFFF]/60">
               <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF]" />
+                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF] animate-tick" />
                 No Credit Card Required
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF]" />
+                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF] animate-tick animation-delay-200" />
                 Free Testing Environment
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF]" />
+                <CheckCircle className="h-4 w-4 mr-2 text-[#FFFFFF] animate-tick animation-delay-400" />
                 Community Driven
               </div>
             </div>
@@ -129,7 +167,7 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="p-6 text-center border-l-4 border-l-red-500">
+            <Card className="p-6 text-center border-l-4 border-l-red-500 hover:scale-105 transition-all duration-300">
               <div className="text-red-500 mb-4">
                 <Target className="h-8 w-8 mx-auto" />
               </div>
@@ -138,7 +176,7 @@ export default function LandingPage() {
                 Without proper prompt engineering, AI outputs vary wildly in quality and relevance.
               </p>
             </Card>
-            <Card className="p-6 text-center border-l-4 border-l-yellow-500">
+            <Card className="p-6 text-center border-l-4 border-l-yellow-500 hover:scale-105 transition-all duration-300">
               <div className="text-yellow-500 mb-4">
                 <Search className="h-8 w-8 mx-auto" />
               </div>
@@ -147,7 +185,7 @@ export default function LandingPage() {
                 Users lack proper tools to test, compare, and optimize their prompts systematically.
               </p>
             </Card>
-            <Card className="p-6 text-center border-l-4 border-l-blue-500">
+            <Card className="p-6 text-center border-l-4 border-l-blue-500 hover:scale-105 transition-all duration-300">
               <div className="text-blue-500 mb-4">
                 <Users className="h-8 w-8 mx-auto" />
               </div>
@@ -164,7 +202,7 @@ export default function LandingPage() {
       <section id="features" className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-[#3ebb9e]/10 text-[#00674f]">Our Solution</Badge>
+            <Badge className="mb-4 bg-[#3ebb9e]/0 text-[#00674f] text-lg">Our Solution</Badge>
             <h2 className="text-3xl lg:text-4xl font-bold mb-6">Everything You Need for Prompt Excellence</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Prompt Forge provides a comprehensive ecosystem for prompt engineering, from discovery to optimization.
@@ -184,16 +222,16 @@ export default function LandingPage() {
                 case, and performance ratings.
               </p>
               <ul className="space-y-3">
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-200">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick" />
                   <span>Curated by experts</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-400">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200" />
                   <span>Performance guaranteed</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-600">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400" />
                   <span>Industry-specific categories</span>
                 </li>
               </ul>
@@ -233,16 +271,16 @@ export default function LandingPage() {
                 metrics and optimization suggestions.
               </p>
               <ul className="space-y-3">
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInRight animation-delay-200">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick" />
                   <span>Multi-model testing</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInRight animation-delay-400">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200" />
                   <span>Real-time analytics</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInRight animation-delay-600">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400" />
                   <span>A/B comparison tools</span>
                 </li>
               </ul>
@@ -262,16 +300,16 @@ export default function LandingPage() {
                 and improve continuously.
               </p>
               <ul className="space-y-3">
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-200">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick" />
                   <span>Performance tracking</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-400">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200" />
                   <span>Community ratings</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3" />
+                <li className="flex items-center animate-slideInLeft animation-delay-600">
+                  <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400" />
                   <span>AI-powered insights</span>
                 </li>
               </ul>
@@ -293,7 +331,7 @@ export default function LandingPage() {
       {/* How It Works */}
       <section id="how-it-works" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fadeInUp">
             <h2 className="text-3xl lg:text-4xl font-bold mb-6">How Prompt Forge Works</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               A simple, powerful workflow that transforms how you work with AI prompts
@@ -301,7 +339,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="text-center">
+            <div className="text-center animate-fadeInUp">
               <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
                 1
               </div>
@@ -310,7 +348,7 @@ export default function LandingPage() {
                 Browse our marketplace of tested, high-quality prompts across various categories and industries.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center animate-fadeInUp animation-delay-200">
               <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
                 2
               </div>
@@ -319,7 +357,7 @@ export default function LandingPage() {
                 Use our testing ground to evaluate prompts with different AI models and compare performance.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center animate-fadeInUp animation-delay-400">
               <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
                 3
               </div>
@@ -328,7 +366,7 @@ export default function LandingPage() {
                 Get AI-powered suggestions and community feedback to continuously improve your prompts.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center animate-fadeInUp animation-delay-600">
               <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
                 4
               </div>
@@ -346,25 +384,33 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
-            )`,
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
             backgroundSize: "400% 400%",
           }}
         />
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">Ready to Transform Your AI Experience?</h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 animate-fadeInUp">
+            Ready to Transform Your AI Experience?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-fadeInUp animation-delay-200">
             Join thousands of prompt engineers, creators, and AI enthusiasts who are already forging the future of AI
             interactions.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-400">
             <Link to="/login">
-              <Button size="lg" className="bg-white text-[#00674f] hover:bg-gray-100 px-8 py-3 text-lg">
-                Start Free Today
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg">
+                <Button
+              size="lg"
+              className="bg-white text-[#00674f] hover:bg-gray-100 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+            >
+              Start Free Today
+              <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
+            </Button>
+              </Link>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+            >
               Schedule Demo
             </Button>
           </div>
@@ -372,12 +418,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#0C201B] text-white py-12">
+      <footer className="bg-[#0C201B] text-white py-12 animate-fadeInUp">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <BrainCircuit className="w-4 h-4 text-[#3ebb9e]" />
+                <BrainCircuit className="w-4 h-4 text-[#3ebb9e] animate-pulse" />
                 <span className="text-base font-bold">PROMPT FORGE</span>
               </div>
               <p className="text-gray-400 text-sm">Empowering the future of AI through better prompts.</p>
@@ -386,24 +432,24 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Marketplace
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Testing Ground
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Analytics
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     API
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -411,24 +457,24 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     About
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Blog
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Careers
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Contact
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -436,24 +482,24 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Documentation
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Help Center
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Community
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a href="#" className="hover:text-white transition-colors duration-300">
                     Status
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
