@@ -7,7 +7,7 @@ import { Input } from "../components/ui/Input"
 
 // Test users array - moved outside component to persist during session
 const TEST_USERS = [
-  { email: "test@example.com", password: "password123", username: "testuser" },
+  { email: "navendrannaidoo1309@gmail.com", password: "1309", username: "nn7" },
   { email: "admin@promptforge.com", password: "admin123", username: "admin" },
 ]
 
