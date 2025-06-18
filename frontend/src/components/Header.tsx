@@ -82,13 +82,13 @@ export default function Header() {
         {/* Theme/User controls */}
         <div className="flex items-center space-x-2">
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-full"
-          >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="rounded-full hover:rotate-180 transition-transform duration-500"
+              >
+                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
           <Button variant="ghost" size="icon" className="rounded-full">
             <Link
               to="/cart"

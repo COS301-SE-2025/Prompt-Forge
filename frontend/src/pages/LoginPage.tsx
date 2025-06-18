@@ -155,8 +155,7 @@ export default function LoginPage() {
         <div 
           className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
           style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #000000
-            )`,
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
             backgroundSize: "400% 400%",
           }}
         >
