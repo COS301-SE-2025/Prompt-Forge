@@ -19,7 +19,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
     List<Prompt> findByTitleContainingIgnoreCase(String title);
     @Query("SELECT p FROM Prompt p WHERE " +
            "LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
-           "AND p.visibility = 'PUBLIC'")
+           "AND p.visibility = 'public'")
     List<Prompt> searchPublicByTitle(@Param("searchTerm") String searchTerm);
     
     @Query(value = "SELECT * FROM prompts WHERE :tagId = ANY(prompt_tags)", 
