@@ -441,7 +441,7 @@ export default function SubmitPromptPage() {
                       }
                     }}
                   />
-                  <Button onClick={addTag} size="sm" disabled={!currentTag.trim() || formData.tags.length >= 10}>
+                  <Button onClick={addTag} size="sm" disabled={!currentTag.trim() || formData.tags.length >= 10} className="bg-[#3ebb9e] hover:bg-[#00674f]">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>

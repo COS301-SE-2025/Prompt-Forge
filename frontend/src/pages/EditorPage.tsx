@@ -2,8 +2,12 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star } from "lucide-react"
 import { useState } from "react"
+import { ChevronUp, ChevronDown } from "lucide-react"
+import { jsPDF } from 'jspdf';
+
+type ViewType = "test" | "rate" | "suggest";
 
 const defaultPrompt = `Write your prompt here...
 
@@ -20,7 +24,7 @@ export default function EditorPage() {
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
   const [selectedModel, setSelectedModel] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [currentView, setCurrentView] = useState<"test" | "rate" | "suggest">("test")
+  const [currentView, setCurrentView] = useState<ViewType>("test")
   const [currentPage, setCurrentPage] = useState(1)
   const [ratingResponse, setRatingResponse] = useState("")
   const [isLoadingRating, setIsLoadingRating] = useState(false)
@@ -28,6 +32,7 @@ export default function EditorPage() {
   const [suggestionResponse, setSuggestionResponse] = useState("")
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
   const [lastSuggestedPrompt, setLastSuggestedPrompt] = useState("")
+  const [modelsCollapsed, setModelsCollapsed] = useState(false)
 
   const aiModels = [
     {
@@ -266,13 +271,54 @@ Please:
     }
   }
 
+  const downloadAsPDF = (promptText: string, aiResponse: string, modelName: string) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const lineHeight = 7;
+
+    // Add title and metadata
+    doc.setFontSize(16);
+    doc.text('Prompt Forge - Generated Response', margin, margin);
+
+    // Add timestamp and model info
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, margin + lineHeight);
+    doc.text(`Model: ${modelName}`, margin, margin + (lineHeight * 2));
+
+    // Add prompt section
+    doc.setFontSize(12);
+    doc.text('Prompt:', margin, margin + (lineHeight * 4));
+    doc.setFontSize(10);
+    const promptLines = doc.splitTextToSize(promptText, pageWidth - (margin * 2));
+    doc.text(promptLines, margin, margin + (lineHeight * 5));
+
+    // Add response section
+    const responseStartY = margin + (lineHeight * (6 + promptLines.length));
+    doc.setFontSize(12);
+    doc.text('Response:', margin, responseStartY);
+    doc.setFontSize(10);
+    const responseLines = doc.splitTextToSize(aiResponse, pageWidth - (margin * 2));
+    doc.text(responseLines, margin, responseStartY + lineHeight);
+
+    // Save the PDF
+    doc.save(`prompt-response-${new Date().toISOString().slice(0,10)}.pdf`);
+  };
+
   const selectedModelData = aiModels[selectedModel]
+
+  // First, create a viewTitles mapping object
+  const viewTitles: Record<ViewType, string> = {
+    "test": "AI Models",
+    "rate": "Rating Models",
+    "suggest": "Suggestion Models"
+  };
 
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
         {/* Left Panel - Prompt Editor */}
-        <div className="bg-muted border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
+        <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
@@ -314,23 +360,25 @@ Please:
               </Button>
               <Button
                 size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
                 onClick={() => {
                   setCurrentView("rate");
                   setCurrentPage(2);
                 }}
               >
+                <Star className="h-3 w-3 mr-1" />
                 Rate
               </Button>
               <Button
                 size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
                 onClick={() => {
                   getSuggested(promptText, aiResponse);
                   setCurrentView("suggest");
                   setCurrentPage(3);
                 }}
               >
+                <HelpCircle className="h-3 w-3 mr-1" />
                 Suggest
               </Button>
             </div>
@@ -359,12 +407,21 @@ Please:
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => downloadAsPDF(promptText, aiResponse, aiModels[selectedModel].name)}
+                      >
                         <Download className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoading ? (
                         <div className="flex items-center space-x-2">
@@ -382,8 +439,37 @@ Please:
 
                 {/* AI Models */}
                 <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">AI Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      <div className="transform transition-transform duration-300">
+                        {modelsCollapsed ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronUp className="h-3 w-3" />
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+
+                  <div 
+                    className={`
+                      grid grid-cols-2 gap-2
+                      transform-gpu transition-all duration-300 ease-in-out
+                      origin-top
+                      ${modelsCollapsed 
+                        ? 'opacity-0 max-h-0 scale-y-95 overflow-hidden' 
+                        : 'opacity-100 max-h-[500px] scale-y-100'
+                      }
+                    `}
+                  >
                     {aiModels.map((model, index) => (
                       <Card
                         key={index}
@@ -447,7 +533,11 @@ Please:
               <>
                 {/* Rating Response Area */}
                 <div className="flex-1 min-h-0 flex flex-col">
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingRating ? (
                         <div className="flex items-center space-x-2">
@@ -465,8 +555,37 @@ Please:
 
                 {/* Rating Models (same as AI Models) */}
                 <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Rating Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      <div className="transform transition-transform duration-300">
+                        {modelsCollapsed ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronUp className="h-3 w-3" />
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+
+                  <div 
+                    className={`
+                      grid grid-cols-2 gap-2
+                      transform-gpu transition-all duration-300 ease-in-out
+                      origin-top
+                      ${modelsCollapsed 
+                        ? 'opacity-0 max-h-0 scale-y-95 overflow-hidden' 
+                        : 'opacity-100 max-h-[500px] scale-y-100'
+                      }
+                    `}
+                  >
                     {aiModels.map((model, index) => (
                       <Card
                         key={index}
@@ -530,7 +649,11 @@ Please:
               <>
                 {/* Suggestion Response Area */}
                 <div className="flex-1 min-h-0 flex flex-col">
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative h-[calc(100vh-220px)]">
+                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                    style={{ 
+                      height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
+                    }}
+                  >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingSuggestion ? (
                         <div className="flex items-center space-x-2">
@@ -548,8 +671,37 @@ Please:
 
                 {/* Suggestion Models */}
                 <div className="flex-shrink-0 mt-auto">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">Suggestion Models</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      {viewTitles[currentView]}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setModelsCollapsed(!modelsCollapsed)}
+                    >
+                      <div className="transform transition-transform duration-300">
+                        {modelsCollapsed ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronUp className="h-3 w-3" />
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+
+                  <div 
+                    className={`
+                      grid grid-cols-2 gap-2
+                      transform-gpu transition-all duration-300 ease-in-out
+                      origin-top
+                      ${modelsCollapsed 
+                        ? 'opacity-0 max-h-0 scale-y-95 overflow-hidden' 
+                        : 'opacity-100 max-h-[500px] scale-y-100'
+                      }
+                    `}
+                  >
                     {aiModels.map((model, index) => (
                       <Card
                         key={index}
