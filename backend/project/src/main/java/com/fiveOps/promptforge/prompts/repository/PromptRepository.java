@@ -1,7 +1,5 @@
 package com.fiveOps.promptforge.prompts.repository;
 
-
-
 import java.util.List;
 import java.util.UUID;
 
@@ -15,29 +13,23 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
 
-    // Find all public prompts
-    List<Prompt> findByIsPublicTrue();
-
-    // Find prompts by category
-    List<Prompt> findByCategory(String category);
-
-    // Find public prompts by category
-    List<Prompt> findByCategoryAndIsPublicTrue(String category);
-
-    // Find prompts by author
+    List<Prompt> findByVisibility(String visibility);
+    //List<Prompt> findByCategoryAndVisibility(String category, String visibility);
     List<Prompt> findByAuthorId(UUID authorId);
-
-    // Search prompts by title (case-insensitive)
     List<Prompt> findByTitleContainingIgnoreCase(String title);
+    @Query("SELECT p FROM Prompt p WHERE " +
+           "LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "AND p.visibility = 'public'")
+    List<Prompt> searchPublicByTitle(@Param("searchTerm") String searchTerm);
+    
+    @Query(value = "SELECT * FROM prompts WHERE :tagId = ANY(prompt_tags)", 
+           nativeQuery = true)
+    List<Prompt> findByTagId(@Param("tagId") UUID tagId);
 
-    // // Custom query to find top-rated prompts
-    // @Query("SELECT p FROM Prompt p WHERE p.isPublic = true ORDER BY p.rating DESC")
-    // List<Prompt> findTopRatedPrompts();
-
-    // Custom query with native SQL
-    @Query(value = "SELECT * FROM prompts WHERE is_public = true AND price <= :maxPrice", nativeQuery = true)
+    @Query(value = "SELECT * FROM prompts WHERE visibility = 'public' AND price <= :maxPrice", nativeQuery = true)
     List<Prompt> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice);
 
-    // Count prompts by category
-    long countByCategory(String category);
+    
+
+    //long countByCategory(String category);
 }
