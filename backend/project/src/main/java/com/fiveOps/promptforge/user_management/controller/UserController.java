@@ -1,10 +1,12 @@
-package com.fiveOps.promptforge.user_profile.controller;
+package com.fiveOps.promptforge.user_management.controller;
 import java.util.UUID;
-import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
-import com.fiveOps.promptforge.user_profile.dto.UserDto;
-import com.fiveOps.promptforge.user_profile.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.fiveOps.promptforge.user_management.dto.UpdateProfileDto;
+import com.fiveOps.promptforge.user_management.dto.UserDto;
+import com.fiveOps.promptforge.user_management.service.UserService;
 
 @RestController
 @RequestMapping("/user")

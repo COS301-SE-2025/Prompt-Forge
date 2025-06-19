@@ -1,13 +1,14 @@
-package com.fiveOps.promptforge.user_profile.service;
+package com.fiveOps.promptforge.user_management.service;
 
-import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
-import com.fiveOps.promptforge.user_profile.dto.UserDto;
-import com.fiveOps.promptforge.user_profile.model.User;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.fiveOps.promptforge.user_management.dto.UpdateProfileDto;
+import com.fiveOps.promptforge.user_management.dto.UserDto;
+import com.fiveOps.promptforge.user_management.model.User;
+import com.fiveOps.promptforge.user_management.repository.UserRepository;
 
 @Service
 public class UserService {

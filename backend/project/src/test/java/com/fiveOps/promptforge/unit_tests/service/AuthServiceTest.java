@@ -12,8 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
-import com.fiveOps.promptforge.user_profile.model.User;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
+import com.fiveOps.promptforge.user_management.model.User;
+import com.fiveOps.promptforge.user_management.repository.UserRepository;
 
 class AuthServiceTest {
 

@@ -1,7 +1,9 @@
-package com.fiveOps.promptforge.user_profile.repository;
+package com.fiveOps.promptforge.user_management.repository;
 
-import com.fiveOps.promptforge.user_profile.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.fiveOps.promptforge.user_management.model.User;
+
 import java.util.Optional;
 import java.util.UUID;
 

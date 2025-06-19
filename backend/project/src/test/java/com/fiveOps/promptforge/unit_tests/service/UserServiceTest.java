@@ -1,10 +1,4 @@
 package com.fiveOps.promptforge.unit_tests.service;
-import com.fiveOps.promptforge.user_profile.service.UserService;
-import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
-import com.fiveOps.promptforge.user_profile.dto.UserDto;
-import com.fiveOps.promptforge.user_profile.model.User;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +7,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.fiveOps.promptforge.user_management.dto.UpdateProfileDto;
+import com.fiveOps.promptforge.user_management.dto.UserDto;
+import com.fiveOps.promptforge.user_management.model.User;
+import com.fiveOps.promptforge.user_management.repository.UserRepository;
+import com.fiveOps.promptforge.user_management.service.UserService;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;

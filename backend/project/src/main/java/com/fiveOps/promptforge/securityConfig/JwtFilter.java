@@ -1,5 +1,4 @@
 package com.fiveOps.promptforge.securityConfig;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.fiveOps.promptforge.user_management.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.Collections;

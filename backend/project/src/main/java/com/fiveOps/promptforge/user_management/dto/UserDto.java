@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.user_profile.dto;
+package com.fiveOps.promptforge.user_management.dto;
 
 public class UserDto {
     private String username;

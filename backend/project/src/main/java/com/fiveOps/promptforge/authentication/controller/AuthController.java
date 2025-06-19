@@ -14,7 +14,7 @@ import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.dto.GoogleLoginRequest;
 import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
-import com.fiveOps.promptforge.user_profile.model.User;
+import com.fiveOps.promptforge.user_management.model.User;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 
 @RestController

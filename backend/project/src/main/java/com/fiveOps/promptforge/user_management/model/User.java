@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.user_profile.model;
+package com.fiveOps.promptforge.user_management.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
