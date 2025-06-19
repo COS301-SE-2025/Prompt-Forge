@@ -434,7 +434,7 @@ export default function SubmitPromptPage() {
                     placeholder="Add a tag and press Enter"
                     value={currentTag}
                     onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault()
                         addTag()
