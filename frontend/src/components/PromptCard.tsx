@@ -40,7 +40,7 @@ return <Card key={id} className="overflow-hidden hover:shadow-lg transition-shad
                 <span>{uses.toLocaleString()} uses</span>
             </div>
             <div className="border-l border-border">
-                <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
+                <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f]bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
                     Buy Now
                 </Button>
             </div>
