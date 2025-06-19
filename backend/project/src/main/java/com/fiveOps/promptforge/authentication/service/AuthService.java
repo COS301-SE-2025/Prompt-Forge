@@ -10,6 +10,7 @@ import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -27,23 +28,29 @@ public class AuthService {
     }
 
     public void signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        User user = new User();
-        user.setUserId(UUID.randomUUID());
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setIsVerified(false);
-        user.setIsActive(true);
-        user.setRole("buyer"); // Default role
-        user.setBadges(new UUID[]{}); // Empty badges array
-
-        // username, bio, avatar_url, profile_picture_url can be set later
-
-        userRepository.save(user);
+    if (userRepository.existsByEmail(request.getEmail())) {
+        throw new IllegalArgumentException("Email already exists");
     }
+
+    if (userRepository.existsByUsername(request.getUsername())) {
+        throw new IllegalArgumentException("Username already taken");
+    }
+
+    User user = new User();
+    user.setUserId(UUID.randomUUID());
+    user.setEmail(request.getEmail());
+    user.setUsername(request.getUsername());
+    user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+    user.setIsVerified(false);
+    user.setIsActive(true);
+    user.setRole("buyer");
+    user.setBadges(new UUID[]{});
+    user.setCreatedAt(LocalDateTime.now());
+    user.setUpdatedAt(LocalDateTime.now());
+
+    userRepository.save(user);
+}
+
 
     public String login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
