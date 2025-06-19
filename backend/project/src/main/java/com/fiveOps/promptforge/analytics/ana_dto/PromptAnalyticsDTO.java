@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.analytics.ana_dto;
+package main.java.com.fiveOps.promptforge.analytics.ana_dto;
 
 import java.time.LocalDate;
 import java.util.UUID;
