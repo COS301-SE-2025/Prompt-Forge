@@ -1,4 +1,5 @@
-package com.fiveOps.promptforge.authentication.service;    
+package com.fiveOps.promptforge.authentication.service;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,8 @@ import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
+
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -24,16 +27,21 @@ public class AuthService {
     }
 
     public void signup(SignupRequest request) {
-        boolean emailExists = userRepository.existsByEmail(request.getEmail());
-        if (emailExists) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUserId(UUID.randomUUID());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole("admin"); 
+        user.setIsVerified(false);
+        user.setIsActive(true);
+        user.setRole("buyer"); // Default role
+        user.setBadges(new UUID[]{}); // Empty badges array
+
+        // username, bio, avatar_url, profile_picture_url can be set later
+
         userRepository.save(user);
     }
 
@@ -41,8 +49,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPasswordHash());
-        if (!passwordMatches) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 

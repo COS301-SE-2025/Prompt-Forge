@@ -1,18 +1,10 @@
 package com.fiveOps.promptforge.authentication.dto;
 
 public class SignupRequest {
-    public String username;
-    public String email;
-    public String password;
-   // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
+    private String email;
+    private String password;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
+    // Getters and Setters
     public String getEmail() {
         return email;
     }
