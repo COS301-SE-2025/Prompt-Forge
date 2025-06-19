@@ -97,7 +97,7 @@ public class PromptStoreService {
     }
 
     public List<Prompt> getRecentlyPublishedPrompts() {
-    return promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("PUBLIC")
+    return promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("public")
             .stream()
             .limit(10) // Get top 10 most recent
             .collect(Collectors.toList());
