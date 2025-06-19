@@ -17,6 +17,11 @@ import {
   FileText,
   User,
   Zap,
+  AlertCircleIcon,
+  WalletIcon,
+  CreditCardIcon,
+  BitcoinIcon,
+  Landmark,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -28,11 +33,30 @@ interface PromptSubmission {
   promptText: string
   instructions: string
   expectedOutput: string
-  difficulty: string
+  // difficulty: string
   useCase: string
 }
 
 export default function SubmitPromptPage() {
+
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('');
+  const [bankingInfoNeeded, setBankingInfoNeeded] = useState(true);
+  const [accountName, setAccountName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bank');
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [stripeAccount, setStripeAccount] = useState('');
+  const [cryptoAddress, setCryptoAddress] = useState('');
+  const [cryptoNetwork, setCryptoNetwork] = useState('');
+
+
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
     description: "",
@@ -41,7 +65,7 @@ export default function SubmitPromptPage() {
     promptText: "",
     instructions: "",
     expectedOutput: "",
-    difficulty: "beginner",
+    // difficulty: "beginner",
     useCase: "",
   })
 
@@ -64,11 +88,11 @@ export default function SubmitPromptPage() {
     "Other",
   ]
 
-  const difficulties = [
-    { value: "beginner", label: "Beginner", color: "bg-green-500" },
-    { value: "intermediate", label: "Intermediate", color: "bg-yellow-500" },
-    { value: "advanced", label: "Advanced", color: "bg-red-500" },
-  ]
+  // const difficulties = [
+  //   { value: "beginner", label: "Beginner", color: "bg-green-500" },
+  //   { value: "intermediate", label: "Intermediate", color: "bg-yellow-500" },
+  //   { value: "advanced", label: "Advanced", color: "bg-red-500" },
+  // ]
 
   const handleInputChange = (field: keyof PromptSubmission, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -94,6 +118,112 @@ export default function SubmitPromptPage() {
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }))
   }
+
+
+  type PaymentMethod = 'bank' | 'paypal' | 'stripe' | 'crypto';
+
+
+
+  const renderPaymentMethodForm = () => {
+    
+    switch (paymentMethod) {
+      case 'bank':
+        return <div className="space-y-6">
+          <div>
+            <label htmlFor="accountName" className="block mb-2 text-sm font-medium">
+              Account Holder Name
+            </label>
+            <input type="text" id="accountName" value={accountName} onChange={e => setAccountName(e.target.value)} className={`w-full bg-background border ${errors.accountName ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="Full name on account" />
+            {errors.accountName && <p className="text-red-500 text-sm mt-1 flex items-center">
+              <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+              {errors.accountName}
+            </p>}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="accountNumber" className="block mb-2 text-sm font-medium">
+                Account Number
+              </label>
+              <input type="text" id="accountNumber" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className={`w-full bg-background border ${errors.accountNumber ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="Your account number" />
+              {errors.accountNumber && <p className="text-red-500 text-sm mt-1 flex items-center">
+                <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+                {errors.accountNumber}
+              </p>}
+            </div>
+            <div>
+              <label htmlFor="routingNumber" className="block mb-2 text-sm font-medium">
+                Routing Number
+              </label>
+              <input type="text" id="routingNumber" value={routingNumber} onChange={e => setRoutingNumber(e.target.value)} className={`w-full bg-background border ${errors.routingNumber ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="Your bank's routing number" />
+              {errors.routingNumber && <p className="text-red-500 text-sm mt-1 flex items-center">
+                <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+                {errors.routingNumber}
+              </p>}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="bankName" className="block mb-2 text-sm font-medium">
+              Bank Name
+            </label>
+            <input type="text" id="bankName" value={bankName} onChange={e => setBankName(e.target.value)} className={`w-full bg-background border ${errors.bankName ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="Your bank's name" />
+            {errors.bankName && <p className="text-red-500 text-sm mt-1 flex items-center">
+              <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.bankName}
+            </p>}
+          </div>
+        </div>;
+      case 'paypal':
+        return <div>
+          <label htmlFor="paypalEmail" className="block mb-2 text-sm font-medium">
+            PayPal Email Address
+          </label>
+          <input type="email" id="paypalEmail" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className={`w-full bg-background border ${errors.paypalEmail ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="your-email@example.com" />
+          {errors.paypalEmail && <p className="text-red-500 text-sm mt-1 flex items-center">
+            <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+            {errors.paypalEmail}
+          </p>}
+        </div>;
+      case 'stripe':
+        return <div>
+          <label htmlFor="stripeAccount" className="block mb-2 text-sm font-medium">
+            Stripe Account ID
+          </label>
+          <input type="text" id="stripeAccount" value={stripeAccount} onChange={e => setStripeAccount(e.target.value)} className={`w-full bg-background border ${errors.stripeAccount ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="acct_..." />
+          {errors.stripeAccount && <p className="text-red-500 text-sm mt-1 flex items-center">
+            <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+            {errors.stripeAccount}
+          </p>}
+        </div>;
+      case 'crypto':
+        return <div className="space-y-6">
+          <div>
+            <label htmlFor="cryptoNetwork" className="block mb-2 text-sm font-medium">
+              Network
+            </label>
+            <select id="cryptoNetwork" value={cryptoNetwork} onChange={e => setCryptoNetwork(e.target.value)} className={`w-full bg-background border ${errors.cryptoNetwork ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`}>
+              <option value="">Select a network</option>
+              <option value="ethereum">Ethereum (ETH)</option>
+              <option value="bitcoin">Bitcoin (BTC)</option>
+              <option value="usdc">USDC</option>
+              <option value="usdt">USDT</option>
+            </select>
+            {errors.cryptoNetwork && <p className="text-red-500 text-sm mt-1 flex items-center">
+              <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+              {errors.cryptoNetwork}
+            </p>}
+          </div>
+          <div>
+            <label htmlFor="cryptoAddress" className="block mb-2 text-sm font-medium">
+              Wallet Address
+            </label>
+            <input type="text" id="cryptoAddress" value={cryptoAddress} onChange={e => setCryptoAddress(e.target.value)} className={`w-full bg-background border ${errors.cryptoAddress ? 'border-red-500' : 'border-border'} rounded p-3 focus:outline-none focus:border-blue-500`} placeholder="Your wallet address" />
+            {errors.cryptoAddress && <p className="text-red-500 text-sm mt-1 flex items-center">
+              <AlertCircleIcon className="w-4 h-4 mr-1" />{' '}
+              {errors.cryptoAddress}
+            </p>}
+          </div>
+        </div>;
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -128,7 +258,7 @@ export default function SubmitPromptPage() {
           promptText: "",
           instructions: "",
           expectedOutput: "",
-          difficulty: "beginner",
+          // difficulty: "beginner",
           useCase: "",
         })
         setShowSuccess(false)
@@ -173,7 +303,7 @@ export default function SubmitPromptPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Submit New Prompt</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Publish Prompt</h1>
                 <p className="text-muted-foreground">Share your prompt with the community</p>
               </div>
             </div>
@@ -261,111 +391,30 @@ export default function SubmitPromptPage() {
                   <p className="text-xs text-muted-foreground mt-1">{formData.description.length}/500 characters</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
-                        errors.category ? "border-red-500" : "border-border"
-                      }`}
-                      value={formData.category}
-                      onChange={(e) => handleInputChange("category", e.target.value)}
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.category && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        {errors.category}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Difficulty Level</label>
-                    <select
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-                      value={formData.difficulty}
-                      onChange={(e) => handleInputChange("difficulty", e.target.value)}
-                    >
-                      {difficulties.map((diff) => (
-                        <option key={diff.value} value={diff.value}>
-                          {diff.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Prompt Content */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                Prompt Content
-              </h2>
-
-              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Prompt Text <span className="text-red-500">*</span>
+                    Category <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
-                      errors.promptText ? "border-red-500" : "border-border"
+                  <select
+                    className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                      errors.category ? "border-red-500" : "border-border"
                     }`}
-                    rows={8}
-                    placeholder="Enter your complete prompt here. Be specific and clear about what you want the AI to do."
-                    value={formData.promptText}
-                    onChange={(e) => handleInputChange("promptText", e.target.value)}
-                  />
-                  {errors.promptText && (
+                    value={formData.category}
+                    onChange={(e) => handleInputChange("category", e.target.value)}
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.category && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      {errors.promptText}
+                      {errors.category}
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Usage Instructions</label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={4}
-                    placeholder="Provide instructions on how to use this prompt effectively (optional)"
-                    value={formData.instructions}
-                    onChange={(e) => handleInputChange("instructions", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Expected Output</label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={4}
-                    placeholder="Describe what kind of output users should expect from this prompt (optional)"
-                    value={formData.expectedOutput}
-                    onChange={(e) => handleInputChange("expectedOutput", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Use Case</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-                    placeholder="What specific problem does this prompt solve? (optional)"
-                    value={formData.useCase}
-                    onChange={(e) => handleInputChange("useCase", e.target.value)}
-                  />
                 </div>
               </div>
             </Card>
@@ -392,7 +441,7 @@ export default function SubmitPromptPage() {
                       }
                     }}
                   />
-                  <Button onClick={addTag} size="sm" disabled={!currentTag.trim() || formData.tags.length >= 10}>
+                  <Button onClick={addTag} size="sm" disabled={!currentTag.trim() || formData.tags.length >= 10} className="bg-[#3ebb9e] hover:bg-[#00674f]">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -423,6 +472,37 @@ export default function SubmitPromptPage() {
                 </p>
               </div>
             </Card>
+            
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+                <Landmark className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                Payment Details <span className="text-red-500">*</span>
+              </h2>
+
+              {bankingInfoNeeded && <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button type="button" onClick={() => setPaymentMethod('bank')} className={`p-4 rounded-lg border ${paymentMethod === 'bank' ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'} flex flex-col items-center space-y-2 transition-colors`}>
+                    <Landmark className="w-6 h-6" />
+                    <span className="text-sm font-medium">Bank Account</span>
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('paypal')} className={`p-4 rounded-lg border ${paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'} flex flex-col items-center space-y-2 transition-colors`}>
+                    <WalletIcon className="w-6 h-6" />
+                    <span className="text-sm font-medium">PayPal</span>
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('stripe')} className={`p-4 rounded-lg border ${paymentMethod === 'stripe' ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'} flex flex-col items-center space-y-2 transition-colors`}>
+                    <CreditCardIcon className="w-6 h-6" />
+                    <span className="text-sm font-medium">Stripe</span>
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('crypto')} className={`p-4 rounded-lg border ${paymentMethod === 'crypto' ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'} flex flex-col items-center space-y-2 transition-colors`}>
+                    <BitcoinIcon className="w-6 h-6" />
+                    <span className="text-sm font-medium">Crypto</span>
+                  </button>
+                </div>
+                <div className="mt-6">{renderPaymentMethodForm()}</div>
+              </>}
+            </Card>
+
+            
           </div>
 
           {/* Sidebar */}
@@ -433,11 +513,11 @@ export default function SubmitPromptPage() {
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
-              <Button
+              <Button id="preview"
                 variant="outline"
                 className="w-full"
                 onClick={() => setShowPreview(!showPreview)}
-                disabled={!formData.title || !formData.description}
+                // disabled={!formData.title || !formData.description}
               >
                 {showPreview ? "Hide Preview" : "Show Preview"}
               </Button>
@@ -452,13 +532,7 @@ export default function SubmitPromptPage() {
                     <span className="px-2 py-1 bg-muted rounded text-muted-foreground">
                       {formData.category || "No category"}
                     </span>
-                    <span
-                      className={`px-2 py-1 rounded text-white text-xs ${
-                        difficulties.find((d) => d.value === formData.difficulty)?.color || "bg-gray-500"
-                      }`}
-                    >
-                      {difficulties.find((d) => d.value === formData.difficulty)?.label}
-                    </span>
+                    
                   </div>
                 </div>
               )}
@@ -487,10 +561,10 @@ export default function SubmitPromptPage() {
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
                   <p>Test your prompt before submitting</p>
                 </div>
-                <div className="flex items-start space-x-2">
+                {/* <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
                   <p>Provide usage examples when helpful</p>
-                </div>
+                </div> */}
               </div>
             </Card>
 
@@ -521,10 +595,12 @@ export default function SubmitPromptPage() {
             <p>By submitting, you agree to our community guidelines and terms of service.</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
+            <Link to="#preview">
+              <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+            </Link>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
