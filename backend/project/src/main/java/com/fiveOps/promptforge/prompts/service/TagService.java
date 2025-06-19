@@ -42,11 +42,11 @@ public class TagService {
         tagRepository.incrementUsageCount(tagId);
     }
 
-    private String normalizeTagName(String name) {
+    public String normalizeTagName(String name) {
         return name.trim();
     }
 
-    private String generateSlug(String name) {
+    public String generateSlug(String name) {
         return name.toLowerCase()
             .replaceAll("[^a-z0-9-]", "-")
             .replaceAll("-+", "-");
