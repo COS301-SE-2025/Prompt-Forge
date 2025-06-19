@@ -6,6 +6,7 @@ import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star
 import { useState } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
 import { jsPDF } from 'jspdf';
+import { Editor } from "@/services/editorService"
 
 type ViewType = "test" | "rate" | "suggest";
 
@@ -20,6 +21,9 @@ When writing a prompt, always follow these guidelines:
 explain how the response should be adapted to fit.]`
 
 export default function EditorPage() {
+  
+  const editorService = new Editor();
+
   const [promptText, setPromptText] = useState(defaultPrompt)
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
   const [selectedModel, setSelectedModel] = useState(0)
@@ -103,22 +107,22 @@ export default function EditorPage() {
     setRatingResponse("Rating your prompt...")
 
     const ratingPrompt = `
-Given this prompt:
----
-${prompt}
----
+      Given this prompt:
+      ---
+      ${prompt}
+      ---
 
-And this AI response:
----
-${response}
----
+      And this AI response:
+      ---
+      ${response}
+      ---
 
-Please:
-1. Rate the effectiveness of the prompt (1-10)
-2. Explain why you gave this rating
-3. Provide specific suggestions to improve the prompt
-4. Point out any potential issues or ambiguities
-`
+      Please:
+      1. Rate the effectiveness of the prompt (1-10)
+      2. Explain why you gave this rating
+      3. Provide specific suggestions to improve the prompt
+      4. Point out any potential issues or ambiguities
+      `
 
     try {
       const requestBody = {
@@ -130,15 +134,17 @@ Please:
         ],
       }
 
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
+      // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(requestBody),
+      // })
 
-      const data = await response.json()
+
+
+      const data = await editorService.promptOpenRouter(requestBody);
       if (data.choices && data.choices[0] && data.choices[0].message) {
         setRatingResponse(decodeUnicode(data.choices[0].message.content))
       }
@@ -161,14 +167,14 @@ Please:
     setSuggestionResponse("Analyzing your prompt...")
 
     const suggestionPrompt = `
-Given this prompt:
----
-${prompt}
----
+      Given this prompt:
+      ---
+      ${prompt}
+      ---
 
-Please:
-1. Rewrite the prompt to improve its effectiveness
-`
+      Please:
+      1. Rewrite the prompt to improve its effectiveness
+      `
     try {
       const requestBody = {
         messages: [
@@ -179,15 +185,15 @@ Please:
         ],
       }
 
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
+      // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(requestBody),
+      // })
 
-      const data = await response.json()
+      const data = await editorService.promptOpenRouter(requestBody);
       if (data.choices && data.choices[0] && data.choices[0].message) {
         setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
         setLastSuggestedPrompt(prompt)  // Store the suggested prompt
@@ -219,15 +225,15 @@ Please:
       }]
     }
 
-    const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
-    })
+    // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify(requestBody)
+    // })
 
-    const data = await response.json()
+    const data = await editorService.promptOpenRouter(requestBody);
 
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const aiResponseText = data.choices[0].message.content
