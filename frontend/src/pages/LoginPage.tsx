@@ -4,6 +4,7 @@ import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
+import { AuthService } from "@/services/authService"
 
 // Test users array - moved outside component to persist during session
 const TEST_USERS = [
@@ -12,6 +13,7 @@ const TEST_USERS = [
 ]
 
 export default function LoginPage() {
+  const authService = new AuthService();
   const [activeTab, setActiveTab] = useState("login")
   const navigate = useNavigate()
   const [toggleLoginPassword,setToggleLoginPassword] = useState(false);
@@ -48,23 +50,24 @@ export default function LoginPage() {
 
   const handleLogin = () => {
     const user = TEST_USERS.find(u => u.email === loginEmail)
-    
-    if (!user) {
-      setError("User not found")
-      return
-    }
+    authService.login({ email: loginEmail, password: loginPassword })
+    .then(res=>{
+      console.log("results login");
+      console.log(res);
+      if(res.status == "success")
+      {
+        setError("")
+        navigate('/home')
+      }
 
-    if (user.password !== loginPassword) {
-      setError("Invalid password")
+    })
+    .catch(err=>{
+      console.log("err in login");
+      console.log(err);
+      setError(err.message)
       return
-    }
-
-    // Save user data to localStorage
-    localStorage.setItem('username', user.username)
-    localStorage.setItem('userEmail', user.email)
-    
-    setError("")
-    navigate('/home')
+      
+    })
   }
 
   const handleSignUp = () => {
