@@ -20,11 +20,11 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-muted-foreground text-sm lg:text-base mb-4 lg:mb-6 leading-relaxed">
-                  Test, rank, and evaluate AI prompts in a
+                  Write it. Test it. Refine it. Repeat.
                   <br className="hidden sm:block" />
-                  structured and collaborative environment.
+                  A creative playground for building and perfecting AI prompts.
                   <br className="hidden sm:block" />
-                  Unlock the full potential of AI with better prompts.
+                  Because smarter prompts mean smarter AI.
                 </p>
               </div>
 
@@ -65,7 +65,7 @@ export default function HomePage() {
               </Link>
 
               {/* Prompt Comparison */}
-              <Link to="/construction">
+              <Link to="/comparison">
                 <Card className="bg-green-500/20 border-green-500/30 p-3 lg:p-4 hover:bg-green-500/30 transition-colors cursor-pointer h-full">
                   <div className="bg-green-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Scale className="text-white h-4 w-4 lg:h-5 lg:w-5" />
