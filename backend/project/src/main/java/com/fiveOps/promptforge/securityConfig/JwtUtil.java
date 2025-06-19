@@ -1,9 +1,11 @@
 package com.fiveOps.promptforge.securityConfig;
 
+import java.util.Base64;
 import java.util.Date;
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
 
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Jwts;
@@ -13,10 +15,11 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "5vP1fXqW9NlmX8bOIjkS6XqWVoYdZ1sVunTR8R4joxA="; // Use sufficiently long secret
+    @Value("${jwt.secret}")
+    private String secret;
 
-    private Key getSigningKey() {
-        byte[] keyBytes = SECRET.getBytes(StandardCharsets.UTF_8);
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
