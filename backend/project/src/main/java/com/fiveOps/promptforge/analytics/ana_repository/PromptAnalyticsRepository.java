@@ -34,16 +34,16 @@ import java.util.UUID;
 
 public interface PromptAnalyticsRepository extends CrudRepository<PromptAnalytics, UUID> {
 
-    @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO(a.promptId, p.title, SUM(a.viewCount)) " +
-           "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.promptId " +
-           "WHERE a.date >= CURRENT_DATE - 7 " +
+    @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO(a.promptId, p.title, CAST(SUM(a.viewCount) AS int)) " +
+           "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+           "WHERE a.date >= :sevenDaysAgo " +
            "GROUP BY a.promptId, p.title " +
            "ORDER BY SUM(a.viewCount) DESC")
     List<TrendingPromptDTO> findTrendingPrompts();
 
     @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
-           "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.promptId " +
-           "GROUP BY a.promptId, p.title " +
-           "ORDER BY AVG(a.avgRating) DESC")
+       "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+       "GROUP BY a.promptId, p.title " +
+       "ORDER BY AVG(a.avgRating) DESC")
     List<TopRankingPromptDTO> findTopRankingPrompts();
 }
