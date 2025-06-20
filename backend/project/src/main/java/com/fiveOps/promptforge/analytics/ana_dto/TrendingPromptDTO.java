@@ -1,4 +1,4 @@
-package main.java.com.fiveOps.promptforge.analytics.ana_dto;
+package com.fiveOps.promptforge.analytics.ana_dto;
 
 import java.util.UUID;
 
