@@ -45,8 +45,7 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(name = "avatar_url", length = 255)
-    private String avatarUrl;
+   
 
     // === Getters ===
 
@@ -98,9 +97,7 @@ public class User {
         return isActive;
     }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
+    
 
     // === Setters ===
 
@@ -152,7 +149,5 @@ public class User {
         this.isActive = isActive;
     }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
+   
 }
