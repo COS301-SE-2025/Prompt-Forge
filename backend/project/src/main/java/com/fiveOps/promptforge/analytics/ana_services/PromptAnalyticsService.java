@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.analytics.ana_service;
+package com.fiveOps.promptforge.analytics.ana_services;
 
 // import com.yourapp.analytics.dto.*;
 // import com.yourapp.analytics.repository.PromptAnalyticsRepository;
