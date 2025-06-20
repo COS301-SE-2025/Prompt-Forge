@@ -31,7 +31,7 @@ public class Prompt {
 
     @Column(name = "featured")
     private Boolean featured;
-    public Boolean getFeatured() { return featured; }
+public Boolean getFeatured() { return featured; }
     public void setFeatured(Boolean featured) { this.featured = featured; }
 
     @Column(nullable = false, length = 100)
