@@ -74,7 +74,7 @@ public class DashboardController {
         result.put("averageRating", dashboardService.getAverageRating(userId));
         result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
         result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
-        result.put("monthlyUsage", dashboardService.getMonthlyUsage(userId));
+        result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
         // If you implement recent activity in your service, add it here:
         // result.put("recentActivity", dashboardService.getRecentActivity(userId, 5));
         return result;

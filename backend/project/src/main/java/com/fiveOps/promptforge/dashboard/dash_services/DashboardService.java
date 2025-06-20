@@ -59,8 +59,10 @@ public class DashboardService {
     }
 
     // Monthly usage for all prompts (public and private)
-    public Long getMonthlyUsage(UUID userId) {
-        LocalDate now = LocalDate.now();
-        return dashboardRepository.monthlyUsageByUser(userId, now.getYear(), now.getMonthValue());
+    public Long getMonthlyPromptCount(UUID userId) {
+    LocalDate now = LocalDate.now();
+    Long count = dashboardRepository.monthlyPromptCountByUser(userId, now.getYear(), now.getMonthValue());
+    return count != null ? count : 0L;
     }
+
 }
