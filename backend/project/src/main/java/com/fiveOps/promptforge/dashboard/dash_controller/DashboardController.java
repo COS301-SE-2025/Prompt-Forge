@@ -73,6 +73,7 @@ public class DashboardController {
         result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
         result.put("averageRating", dashboardService.getAverageRating(userId));
         result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
+        result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
         return result;
     }
 
