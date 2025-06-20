@@ -26,22 +26,23 @@ public class SecurityConfig {
   }
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-    .cors(cors -> cors.configure(http)) 
-      .csrf(csrf -> csrf.disable())
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/login", "/signup", "/public/**").permitAll()
-        .anyRequest().authenticated()
-      )
-      .sessionManagement(sm -> sm
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-      )
-      .httpBasic(httpBasic -> httpBasic.disable())
-      .formLogin(formLogin -> formLogin.disable())
-      .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+      http
+          .cors(cors -> cors.configure(http))
+          .csrf(csrf -> csrf.disable())
+          .authorizeHttpRequests(auth -> auth
+              .requestMatchers("/auth/**", "/public/**").permitAll() // ✅ Allow your real routes
+              .anyRequest().authenticated()
+          )
+          .sessionManagement(sm -> sm
+              .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          )
+          .httpBasic(httpBasic -> httpBasic.disable())
+          .formLogin(formLogin -> formLogin.disable())
+          .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
   
-    return http.build();
+      return http.build();
   }
+  
   
 
   @Bean

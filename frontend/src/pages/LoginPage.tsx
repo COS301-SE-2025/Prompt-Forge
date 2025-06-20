@@ -39,26 +39,31 @@ export default function LoginPage() {
   }, []);
 
   const handleLogin = async () => {
-    try {
-      if (!loginEmail || !loginPassword) {
-        setError("All fields are required");
-        return;
-      }
+  
 
-      const result = await authService.login({ email: loginEmail, password: loginPassword });
+  if (!loginEmail || !loginPassword) {
+    setError("All fields are required");
+    return;
+  }
 
-      if (result.status === "success") {
-        localStorage.setItem("username", result.username || "User");
-        localStorage.setItem("userEmail", loginEmail);
-        setError("");
-        navigate("/home");
-      } else {
-        setError("Login failed");
-      }
-    } catch (err: any) {
-      setError(err.message || "Login error");
+  try {
+    const result = await authService.login({ email: loginEmail, password: loginPassword });
+    
+    if (result?.token) {
+      localStorage.setItem("username", result.username || "User");
+      localStorage.setItem("userEmail", loginEmail);
+      setError("");
+      navigate("/home");
+    } else {
+      console.warn("Unexpected login result:", result); // Debug
+      setError("Login failed");
     }
-  };
+  } catch (err: any) {
+    console.error("Login error caught:", err); // Debug
+    setError(err.message || "Login error");
+  }
+};
+
 
   const handleSignUp = async () => {
     try {
