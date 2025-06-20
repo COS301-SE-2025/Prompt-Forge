@@ -17,6 +17,7 @@ import {
   FileText,
   User,
   Zap,
+
 } from "lucide-react"
 import { useState } from "react"
 
@@ -28,11 +29,12 @@ interface PromptSubmission {
   promptText: string
   instructions: string
   expectedOutput: string
-  difficulty: string
+
   useCase: string
 }
 
 export default function SubmitPromptPage() {
+
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
     description: "",
@@ -41,7 +43,7 @@ export default function SubmitPromptPage() {
     promptText: "",
     instructions: "",
     expectedOutput: "",
-    difficulty: "beginner",
+
     useCase: "",
   })
 
@@ -64,11 +66,7 @@ export default function SubmitPromptPage() {
     "Other",
   ]
 
-  const difficulties = [
-    { value: "beginner", label: "Beginner", color: "bg-green-500" },
-    { value: "intermediate", label: "Intermediate", color: "bg-yellow-500" },
-    { value: "advanced", label: "Advanced", color: "bg-red-500" },
-  ]
+
 
   const handleInputChange = (field: keyof PromptSubmission, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -128,7 +126,7 @@ export default function SubmitPromptPage() {
           promptText: "",
           instructions: "",
           expectedOutput: "",
-          difficulty: "beginner",
+
           useCase: "",
         })
         setShowSuccess(false)
@@ -173,7 +171,7 @@ export default function SubmitPromptPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Submit New Prompt</h1>
+
                 <p className="text-muted-foreground">Share your prompt with the community</p>
               </div>
             </div>
@@ -261,112 +259,7 @@ export default function SubmitPromptPage() {
                   <p className="text-xs text-muted-foreground mt-1">{formData.description.length}/500 characters</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
-                        errors.category ? "border-red-500" : "border-border"
-                      }`}
-                      value={formData.category}
-                      onChange={(e) => handleInputChange("category", e.target.value)}
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.category && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        {errors.category}
-                      </p>
-                    )}
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Difficulty Level</label>
-                    <select
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-                      value={formData.difficulty}
-                      onChange={(e) => handleInputChange("difficulty", e.target.value)}
-                    >
-                      {difficulties.map((diff) => (
-                        <option key={diff.value} value={diff.value}>
-                          {diff.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Prompt Content */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                Prompt Content
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Prompt Text <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
-                      errors.promptText ? "border-red-500" : "border-border"
-                    }`}
-                    rows={8}
-                    placeholder="Enter your complete prompt here. Be specific and clear about what you want the AI to do."
-                    value={formData.promptText}
-                    onChange={(e) => handleInputChange("promptText", e.target.value)}
-                  />
-                  {errors.promptText && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      {errors.promptText}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Usage Instructions</label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={4}
-                    placeholder="Provide instructions on how to use this prompt effectively (optional)"
-                    value={formData.instructions}
-                    onChange={(e) => handleInputChange("instructions", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Expected Output</label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={4}
-                    placeholder="Describe what kind of output users should expect from this prompt (optional)"
-                    value={formData.expectedOutput}
-                    onChange={(e) => handleInputChange("expectedOutput", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Use Case</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-                    placeholder="What specific problem does this prompt solve? (optional)"
-                    value={formData.useCase}
-                    onChange={(e) => handleInputChange("useCase", e.target.value)}
-                  />
-                </div>
               </div>
             </Card>
 
@@ -385,14 +278,14 @@ export default function SubmitPromptPage() {
                     placeholder="Add a tag and press Enter"
                     value={currentTag}
                     onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyPress={(e) => {
+
                       if (e.key === "Enter") {
                         e.preventDefault()
                         addTag()
                       }
                     }}
                   />
-                  <Button onClick={addTag} size="sm" disabled={!currentTag.trim() || formData.tags.length >= 10}>
+
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -423,6 +316,7 @@ export default function SubmitPromptPage() {
                 </p>
               </div>
             </Card>
+
           </div>
 
           {/* Sidebar */}
@@ -433,11 +327,7 @@ export default function SubmitPromptPage() {
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowPreview(!showPreview)}
-                disabled={!formData.title || !formData.description}
+
               >
                 {showPreview ? "Hide Preview" : "Show Preview"}
               </Button>
@@ -452,13 +342,7 @@ export default function SubmitPromptPage() {
                     <span className="px-2 py-1 bg-muted rounded text-muted-foreground">
                       {formData.category || "No category"}
                     </span>
-                    <span
-                      className={`px-2 py-1 rounded text-white text-xs ${
-                        difficulties.find((d) => d.value === formData.difficulty)?.color || "bg-gray-500"
-                      }`}
-                    >
-                      {difficulties.find((d) => d.value === formData.difficulty)?.label}
-                    </span>
+
                   </div>
                 </div>
               )}
@@ -487,10 +371,7 @@ export default function SubmitPromptPage() {
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
                   <p>Test your prompt before submitting</p>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Provide usage examples when helpful</p>
-                </div>
+
               </div>
             </Card>
 
@@ -521,10 +402,7 @@ export default function SubmitPromptPage() {
             <p>By submitting, you agree to our community guidelines and terms of service.</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
+
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
