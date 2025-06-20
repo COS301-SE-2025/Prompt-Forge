@@ -43,7 +43,7 @@
 //     }
 // }
 
-package com.fiveOps.promptforge.analytics.ana_services;
+package main.java.com.fiveOps.promptforge.analytics.ana_services;
 
 import com.fiveOps.promptforge.analytics.ana_dto.*;
 import com.fiveOps.promptforge.analytics.ana_repository.PromptAnalyticsRepository;
