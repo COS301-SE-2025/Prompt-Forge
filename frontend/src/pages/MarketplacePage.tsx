@@ -3,19 +3,20 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
 import { Sparkles, Star, User, Search, Filter } from "lucide-react"
+import { PromptCard } from "@/components/PromptCard"
+import { Category, Prompt } from "@/Models/Prompt"
 
 // Mock data for prompts
 const PROMPTS_PER_PAGE = 12
 // const TOTAL_PROMPTS = 48
 
-const MOCK_PROMPTS = [
+const MOCK_PROMPTS:Prompt[] = [
   {
     id: 1,
     title: "Expert Content Writer",
     description:
       "A professional prompt for generating high-quality blog posts and articles on any topic with SEO optimization.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.8,
     uses: 1245,
     price: 4.99,
@@ -28,7 +29,6 @@ const MOCK_PROMPTS = [
     description:
       "Optimize your content for search engines with this advanced SEO prompt that covers keywords, meta descriptions, and more.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.9,
     uses: 2389,
     price: 6.99,
@@ -41,7 +41,6 @@ const MOCK_PROMPTS = [
     description:
       "Generate comprehensive documentation for your code with detailed explanations, examples, and best practices.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.7,
     uses: 987,
     price: 5.99,
@@ -53,7 +52,6 @@ const MOCK_PROMPTS = [
     title: "UI/UX Design Assistant",
     description: "Get professional UI/UX design suggestions and feedback for your projects with detailed analysis.",
     category: "Design",
-    categoryColor: "pink",
     rating: 4.6,
     uses: 1567,
     price: 7.99,
@@ -65,7 +63,6 @@ const MOCK_PROMPTS = [
     title: "Email Marketing Wizard",
     description: "Create compelling email marketing campaigns that convert with this comprehensive email prompt.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.5,
     uses: 1876,
     price: 5.49,
@@ -77,7 +74,6 @@ const MOCK_PROMPTS = [
     title: "Fiction Story Generator",
     description: "Generate creative fiction stories with detailed plots, characters, and settings for any genre.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.7,
     uses: 2145,
     price: 3.99,
@@ -89,7 +85,6 @@ const MOCK_PROMPTS = [
     title: "React Component Creator",
     description: "Generate clean, efficient React components with proper TypeScript typing and best practices.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.8,
     uses: 1432,
     price: 8.99,
@@ -101,7 +96,6 @@ const MOCK_PROMPTS = [
     title: "Social Media Content Planner",
     description: "Plan and create engaging social media content for multiple platforms with scheduling suggestions.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.6,
     uses: 2567,
     price: 6.49,
@@ -113,7 +107,6 @@ const MOCK_PROMPTS = [
     title: "Technical Documentation Writer",
     description: "Create clear and comprehensive technical documentation for software and products.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.9,
     uses: 987,
     price: 7.99,
@@ -125,7 +118,6 @@ const MOCK_PROMPTS = [
     title: "Product Description Expert",
     description: "Write compelling product descriptions that convert browsers into buyers with persuasive copy.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.7,
     uses: 1876,
     price: 5.99,
@@ -137,7 +129,6 @@ const MOCK_PROMPTS = [
     title: "API Documentation Generator",
     description: "Generate comprehensive API documentation with examples, endpoints, and detailed explanations.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.8,
     uses: 1245,
     price: 9.99,
@@ -149,7 +140,6 @@ const MOCK_PROMPTS = [
     title: "Logo Design Consultant",
     description: "Get professional logo design suggestions and feedback for your brand with creative concepts.",
     category: "Design",
-    categoryColor: "pink",
     rating: 4.5,
     uses: 876,
     price: 8.49,
@@ -161,7 +151,6 @@ const MOCK_PROMPTS = [
     title: "Resume Builder Pro",
     description: "Create professional resumes tailored to specific job positions and industries with ATS optimization.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.9,
     uses: 3245,
     price: 4.99,
@@ -173,7 +162,6 @@ const MOCK_PROMPTS = [
     title: "Email Subject Line Generator",
     description: "Generate high-converting email subject lines that increase open rates and engagement.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.6,
     uses: 2189,
     price: 3.49,
@@ -185,7 +173,6 @@ const MOCK_PROMPTS = [
     title: "SQL Query Optimizer",
     description: "Optimize your SQL queries for better performance and efficiency with detailed explanations.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.7,
     uses: 987,
     price: 7.99,
@@ -197,7 +184,6 @@ const MOCK_PROMPTS = [
     title: "UX Research Assistant",
     description: "Plan and structure user research studies with comprehensive methodologies and analysis.",
     category: "Design",
-    categoryColor: "pink",
     rating: 4.8,
     uses: 765,
     price: 9.99,
@@ -210,7 +196,6 @@ const MOCK_PROMPTS = [
     description:
       "Generate well-structured academic papers with proper citations, formatting, and research methodology.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.9,
     uses: 1432,
     price: 8.99,
@@ -222,7 +207,6 @@ const MOCK_PROMPTS = [
     title: "Ad Copy Generator",
     description: "Create compelling ad copy for various platforms that drives conversions and engagement.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.7,
     uses: 2345,
     price: 6.49,
@@ -234,7 +218,6 @@ const MOCK_PROMPTS = [
     title: "Docker Configuration Expert",
     description: "Generate optimized Docker configurations for your applications with security best practices.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.8,
     uses: 876,
     price: 9.99,
@@ -246,7 +229,6 @@ const MOCK_PROMPTS = [
     title: "UI Animation Creator",
     description: "Design smooth and engaging UI animations with detailed CSS and JavaScript implementations.",
     category: "Design",
-    categoryColor: "pink",
     rating: 4.6,
     uses: 987,
     price: 7.49,
@@ -259,7 +241,6 @@ const MOCK_PROMPTS = [
     description:
       "Create comprehensive business plans with market analysis, financial projections, and strategic planning.",
     category: "Writing",
-    categoryColor: "blue",
     rating: 4.9,
     uses: 1876,
     price: 12.99,
@@ -271,7 +252,6 @@ const MOCK_PROMPTS = [
     title: "Social Media Strategy Expert",
     description: "Develop comprehensive social media strategies tailored to your business goals and target audience.",
     category: "Marketing",
-    categoryColor: "purple",
     rating: 4.8,
     uses: 2145,
     price: 9.99,
@@ -283,7 +263,6 @@ const MOCK_PROMPTS = [
     title: "GraphQL Schema Designer",
     description: "Design efficient GraphQL schemas with proper types, resolvers, and optimization techniques.",
     category: "Development",
-    categoryColor: "green",
     rating: 4.7,
     uses: 765,
     price: 8.49,
@@ -295,7 +274,6 @@ const MOCK_PROMPTS = [
     title: "Brand Identity Creator",
     description: "Develop comprehensive brand identity guidelines with color schemes, typography, and visual elements.",
     category: "Design",
-    categoryColor: "pink",
     rating: 4.9,
     uses: 1432,
     price: 14.99,
@@ -306,7 +284,7 @@ const MOCK_PROMPTS = [
 
 // Generate more prompts to reach 48 total
 for (let i = 25; i <= 48; i++) {
-  const categories = ["Writing", "Marketing", "Development", "Design"]
+  const categories:Category[] = ["Writing", "Marketing", "Development", "Design"]
   const categoryColors = ["blue", "purple", "green", "pink"]
   const randomCategory = categories[i % 4]
   const randomCategoryColor = categoryColors[i % 4]
@@ -316,7 +294,6 @@ for (let i = 25; i <= 48; i++) {
     title: `Professional ${randomCategory} Assistant ${i}`,
     description: `Advanced ${randomCategory.toLowerCase()} prompt that helps you create high-quality content with professional results.`,
     category: randomCategory,
-    categoryColor: randomCategoryColor,
     rating: 4.3 + Math.random() * 0.6,
     uses: Math.floor(Math.random() * 3000) + 500,
     price: Math.floor(Math.random() * 10) + 2.99,
@@ -325,20 +302,7 @@ for (let i = 25; i <= 48; i++) {
   })
 }
 
-const getCategoryColorClasses = (color: string) => {
-  switch (color) {
-    case "blue":
-      return "bg-blue-500/20 text-blue-400"
-    case "purple":
-      return "bg-purple-500/20 text-purple-400"
-    case "green":
-      return "bg-green-500/20 text-green-400"
-    case "pink":
-      return "bg-pink-500/20 text-pink-400"
-    default:
-      return "bg-blue-500/20 text-blue-400"
-  }
-}
+
 
 export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1)
@@ -497,47 +461,9 @@ export default function MarketplacePage() {
                   <h2 className="text-lg font-medium">Featured Prompts</h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   {featuredPrompts.map((prompt) => (
-                    <Card key={prompt.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div
-                            className={`text-xs font-medium px-2 py-1 rounded ${getCategoryColorClasses(prompt.categoryColor)}`}
-                          >
-                            {prompt.category}
-                          </div>
-                          <div className="flex items-center">
-                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs ml-1">{prompt.rating.toFixed(1)}</span>
-                          </div>
-                        </div>
-
-                        <h3 className="font-medium mb-1 line-clamp-1">{prompt.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{prompt.description}</p>
-
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center">
-                            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                              <User className="h-3 w-3" />
-                            </div>
-                            <span className="text-xs ml-1 text-muted-foreground">@{prompt.author}</span>
-                          </div>
-                          <div className="text-xs font-medium">${prompt.price.toFixed(2)}</div>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-border flex">
-                        <div className="flex-1 py-2 text-center text-xs text-muted-foreground">
-                          <span>{prompt.uses.toLocaleString()} uses</span>
-                        </div>
-                        <div className="border-l border-border">
-                          <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
-                            Buy Now
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
+                    <PromptCard id={prompt.id} category={prompt.category} rating={prompt.rating} title={prompt.title} description={prompt.description} author={prompt.author} price={prompt.price} uses={prompt.uses} featured={prompt.featured}/>
                   ))}
                 </div>
               </div>
@@ -563,47 +489,10 @@ export default function MarketplacePage() {
             </div>
 
             {/* Prompts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
               {currentPrompts.map((prompt) => (
-                <Card key={prompt.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div
-                        className={`text-xs font-medium px-2 py-1 rounded ${getCategoryColorClasses(prompt.categoryColor)}`}
-                      >
-                        {prompt.category}
-                      </div>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                        <span className="text-xs ml-1">{prompt.rating.toFixed(1)}</span>
-                      </div>
-                    </div>
+                <PromptCard id={prompt.id} category={prompt.category} rating={prompt.rating} title={prompt.title} description={prompt.description} author={prompt.author} price={prompt.price} uses={prompt.uses} featured={prompt.featured} />
 
-                    <h3 className="font-medium mb-1 line-clamp-1">{prompt.title}</h3>
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{prompt.description}</p>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                          <User className="h-3 w-3" />
-                        </div>
-                        <span className="text-xs ml-1 text-muted-foreground">@{prompt.author}</span>
-                      </div>
-                      <div className="text-xs font-medium">${prompt.price.toFixed(2)}</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border flex">
-                    <div className="flex-1 py-2 text-center text-xs text-muted-foreground">
-                      <span>{prompt.uses.toLocaleString()} uses</span>
-                    </div>
-                    <div className="border-l border-border">
-                      <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
-                        Buy Now
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
               ))}
             </div>
 
