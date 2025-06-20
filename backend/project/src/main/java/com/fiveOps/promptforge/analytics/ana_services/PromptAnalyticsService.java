@@ -33,7 +33,9 @@ package com.fiveOps.promptforge.analytics.ana_service;
 //     }
 // }
 
-import com.fiveOps.promptforge.analytics.dto.*;
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.FeaturedPromptDTO;
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO;
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO;
 import java.util.List;
 
 public interface PromptAnalyticsService {

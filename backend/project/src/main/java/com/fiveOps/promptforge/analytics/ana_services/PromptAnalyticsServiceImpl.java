@@ -1,17 +1,28 @@
 package main.java.com.fiveOps.promptforge.analytics.ana_services;
 
+import com.fiveOps.promptforge.analytics.ana_service.PromptAnalyticsService;
 import com.fiveOps.promptforge.analytics.dto.*;
 import com.fiveOps.promptforge.analytics.repository.PromptAnalyticsRepository;
+import com.fiveOps.promptforge.prompts.repository.PromptRepository;
+
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.FeaturedPromptDTO;
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO;
+import main.java.com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO;
+
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PromptAnalyticsServiceImpl implements PromptAnalyticsService {
 
     private final PromptAnalyticsRepository analyticsRepository;
+    private final PromptRepository promptRepository;
 
-    public PromptAnalyticsServiceImpl(PromptAnalyticsRepository analyticsRepository) {
+
+    public PromptAnalyticsServiceImpl(PromptAnalyticsRepository analyticsRepository, PromptRepository promptRepository) {
         this.analyticsRepository = analyticsRepository;
+        this.promptRepository = promptRepository;
     }
 
     @Override
@@ -21,8 +32,9 @@ public class PromptAnalyticsServiceImpl implements PromptAnalyticsService {
 
     @Override
     public List<FeaturedPromptDTO> getFeaturedPrompts() {
-        // TODO: Implement logic to fetch featured prompts, e.g. from PromptRepository
-        return List.of(); // Placeholder
+        return promptRepository.findByFeaturedTrue().stream()
+            .map(p -> new FeaturedPromptDTO(p.getPromptId(), p.getTitle(), p.getDescription()))
+            .collect(Collectors.toList());
     }
 
     @Override
