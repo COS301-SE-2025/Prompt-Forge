@@ -66,7 +66,7 @@ public class DashboardController {
             userId = UUID.fromString(userIdStr);
         } else {
             // fallback for dev
-            userId = UUID.fromString("000e8699-276e-4f52-8fe0-8a71b4bcbb7f");
+            userId = UUID.fromString("706d87a3-b874-4b37-a041-e67201f4ed22");
         }
     
         Map<String, Object> result = new HashMap<>();
@@ -74,6 +74,9 @@ public class DashboardController {
         result.put("averageRating", dashboardService.getAverageRating(userId));
         result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
         result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
+        result.put("monthlyUsage", dashboardService.getMonthlyUsage(userId));
+        // If you implement recent activity in your service, add it here:
+        // result.put("recentActivity", dashboardService.getRecentActivity(userId, 5));
         return result;
     }
 
