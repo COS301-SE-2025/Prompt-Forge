@@ -12,8 +12,6 @@ import HomePage from "./pages/HomePage"
 import ProfileSettingsPage from "./pages/ProfileSettingsPage"
 import UnderConstructionPage from "./pages/UnderConstructionPage"
 import CartPage from "./pages/CartPage"
-import { PromptPage } from "./pages/PromptPage"
-import ComparisonPage from "./pages/ComparisonPage"
 
 
 function App() {
@@ -37,8 +35,7 @@ function App() {
           <Route path="/construction" element={<UnderConstructionPage />} />
           <Route path="/submit" element={<SubmitPromptPage />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/prompt/:id" element={<PromptPage />} />
-          <Route path="/comparison" element={<ComparisonPage />} />
+
         </Routes>
       </main>
     </div>
