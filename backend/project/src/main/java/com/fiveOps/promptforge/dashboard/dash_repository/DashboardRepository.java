@@ -9,15 +9,15 @@ import org.springframework.data.domain.Pageable;
 
 public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
 
-    @Query("SELECT COUNT(p) FROM Prompt p WHERE p.author.id = :userId AND p.published = true")
+    @Query("SELECT COUNT(p) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
     long countPublishedByUser(UUID userId);
 
-    @Query("SELECT AVG(p.avgRating) FROM Prompt p WHERE p.author.id = :userId AND p.published = true")
+    @Query("SELECT AVG(p.avgRating) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
     Double averageRatingByUser(UUID userId);
 
-    @Query("SELECT SUM(p.downloads) FROM Prompt p WHERE p.author.id = :userId AND p.published = true")
+    @Query("SELECT SUM(p.downloads) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
     Long totalDownloadsByUser(UUID userId);
 
-    @Query("SELECT p FROM Prompt p WHERE p.author.id = :userId AND p.published = true ORDER BY p.downloads DESC")
+    @Query("SELECT p FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC' ORDER BY p.downloads DESC")
     List<Prompt> findTopPromptsByUser(UUID userId, Pageable pageable);
 }
