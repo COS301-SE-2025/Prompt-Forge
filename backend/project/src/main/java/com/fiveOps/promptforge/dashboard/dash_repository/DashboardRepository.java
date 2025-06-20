@@ -9,15 +9,35 @@ import org.springframework.data.domain.Pageable;
 
 public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
 
+    // Total prompts by user (published/public)
     @Query("SELECT COUNT(p) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
     long countPublishedByUser(UUID userId);
 
-    @Query("SELECT AVG(p.avgRating) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
+    // Average rating for all user's prompts (from analytics)
+    @Query("""
+        SELECT AVG(a.avgRating)
+        FROM Prompt p
+        JOIN PromptAnalytics a ON p.id = a.promptId
+        WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'
+    """)
     Double averageRatingByUser(UUID userId);
 
-    @Query("SELECT SUM(p.downloads) FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'")
+    // Total downloads for all user's prompts (from analytics)
+    @Query("""
+        SELECT SUM(a.downloadCount)
+        FROM Prompt p
+        JOIN PromptAnalytics a ON p.id = a.promptId
+        WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'
+    """)
     Long totalDownloadsByUser(UUID userId);
 
-    @Query("SELECT p FROM Prompt p WHERE p.authorId = :userId AND p.visibility = 'PUBLIC' ORDER BY p.downloads DESC")
+    // Top performing prompts by downloads (from analytics)
+    @Query("""
+        SELECT p
+        FROM Prompt p
+        JOIN PromptAnalytics a ON p.id = a.promptId
+        WHERE p.authorId = :userId AND p.visibility = 'PUBLIC'
+        ORDER BY a.downloadCount DESC
+    """)
     List<Prompt> findTopPromptsByUser(UUID userId, Pageable pageable);
 }
