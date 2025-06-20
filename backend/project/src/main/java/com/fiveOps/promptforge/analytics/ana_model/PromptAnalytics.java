@@ -1,4 +1,4 @@
-package main.java.com.fiveOps.promptforge.analytics.model;
+package main.java.com.fiveOps.promptforge.analytics.ana_model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
