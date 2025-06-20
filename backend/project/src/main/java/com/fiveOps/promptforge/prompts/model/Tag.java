@@ -37,4 +37,7 @@ public class Tag {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 }
