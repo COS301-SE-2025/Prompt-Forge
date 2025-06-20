@@ -44,7 +44,11 @@ public class Prompt {
     private Double price= 0.0;
 
     @Column(name = "visibility", nullable = false, length = 20)
-    private String visibility = "PRIVATE";
+    private String visibility = "private";
+
+    @Column(name="featured",columnDefinition= "boolean")
+    private Boolean featured;
+
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
