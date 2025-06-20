@@ -8,19 +8,26 @@ export class AuthService {
     async login(userData: User) {
         try {
             const response = await this.httpClient.post(`${this.baseUrl}/login`, userData);
-            const data = await response.json(); //
+    
+            // Only try to parse JSON if response has content
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+    
+            let data = null;
+            if (isJson) {
+                data = await response.json();
+            }
+    
             if (!response.ok) {
-               
-                throw new Error(data.message || "Login failed");
+                throw new Error(data?.message || `Login failed with status ${response.status}`);
             }
     
             return data;
-        } catch (error : any) {
+        } catch (error: any) {
             console.error("Login failed:", error);
-        throw new Error(error.message || "Login error");
+            throw new Error(error.message || "Login error");
         }
     }
-
+    
     async signup(userData: User) {
         try {
             
