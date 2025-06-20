@@ -51,29 +51,32 @@ public class AuthController {
                 .headers(headers)
                 .body(Map.of("message", "Signup successful"));
     }
-
+    
     @PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-    try {
-        String token = authService.login(request);
-
-        ResponseCookie cookie = ResponseCookie.from("token", token)
-            .httpOnly(true)
-            .secure(true) // set to false only in local dev without HTTPS
-            .path("/")
-            .maxAge(7 * 24 * 60 * 60) // 7 days
-            .sameSite("Lax") // or "Strict" / "None" depending on use
-            .build();
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(new AuthResponse(token)); // optional body
-    } catch (RuntimeException e) {
-        return ResponseEntity
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            String token = authService.login(request);
+    
+            ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(true) // false if not using HTTPS locally
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7 days
+                .sameSite("Lax")
+                .build();
+    
+            return ResponseEntity
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of("message", "Login successful"));
+    
+        } catch (RuntimeException e) {
+            return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", e.getMessage()));
+        }
     }
-}
+    
 
 
     @PostMapping("/google")

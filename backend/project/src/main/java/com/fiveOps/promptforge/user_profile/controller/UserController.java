@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.user_profile.controller;
 import java.util.Map;
+import org.springframework.http.MediaType;
 
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
@@ -10,7 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/user")
@@ -82,4 +85,22 @@ public class UserController {
     }
     throw new RuntimeException("Token not found");
   }
+
+  
+@PostMapping(value = "/upload-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Map<String, String>> uploadProfilePicture(
+    @RequestParam("file") MultipartFile file,
+    HttpServletRequest request
+) {
+    String email = extractEmailFromCookie(request);
+    String imageUrl = userService.saveProfilePicture(email, file);
+    return ResponseEntity.ok(Map.of("url", imageUrl));
+}
+
+@DeleteMapping("/delete-picture")
+public ResponseEntity<Map<String, String>> deleteProfilePicture(HttpServletRequest request) {
+    String email = extractEmailFromCookie(request);
+    userService.deleteProfilePicture(email);
+    return ResponseEntity.ok(Map.of("message", "Profile picture deleted"));
+}
 }

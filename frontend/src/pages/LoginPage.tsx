@@ -49,7 +49,7 @@ export default function LoginPage() {
   try {
     const result = await authService.login({ email: loginEmail, password: loginPassword });
     
-    if (result?.token) {
+    if (result?.message === "Login successful") {
       localStorage.setItem("username", result.username || "User");
       localStorage.setItem("userEmail", loginEmail);
       setError("");
