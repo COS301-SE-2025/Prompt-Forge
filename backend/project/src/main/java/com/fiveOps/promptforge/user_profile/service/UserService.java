@@ -13,13 +13,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
+    private final Path uploadDir = Paths.get("uploads/profile-pictures");
     private final PasswordEncoder passwordEncoder;
 
     public UserService(
@@ -119,4 +125,55 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("User not found"));
     }
     
+    public String saveProfilePicture(String email, MultipartFile file) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (file.isEmpty()) {
+            throw new RuntimeException("Empty file");
+        }
+
+        try {
+            // You can generate a unique filename, e.g. userId + timestamp + original filename
+            String filename = user.getUserId().toString() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = uploadDir.resolve(filename);
+            Files.write(filePath, file.getBytes());
+
+            // Save the URL or relative path in the user profile
+            // For simplicity, just use the filename (adjust as needed for your front-end)
+            user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            return user.getProfilePictureUrl();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save profile picture", e);
+        }
+    }
+
+    public void deleteProfilePicture(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String pictureUrl = user.getProfilePictureUrl();
+        if (pictureUrl == null || pictureUrl.isBlank()) {
+            throw new RuntimeException("No profile picture to delete");
+        }
+
+        try {
+            // Assuming pictureUrl is something like "/uploads/profile-pictures/filename.jpg"
+            String filename = Paths.get(pictureUrl).getFileName().toString();
+            Path filePath = uploadDir.resolve(filename);
+
+            Files.deleteIfExists(filePath);
+
+            user.setProfilePictureUrl(null);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete profile picture", e);
+        }
+    }
 }

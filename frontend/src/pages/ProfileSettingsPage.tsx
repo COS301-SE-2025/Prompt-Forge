@@ -8,54 +8,87 @@ import { Switch } from "../components/ui/Switch"
 import { Textarea } from "../components/ui/Textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select"
 import { Camera, Check, Save, Trash, Upload, X, Plus } from "lucide-react"
+import { profileService } from "../services/profileServices"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [profileImage, setProfileImage] = useState<string>(() => {
-    // Initialize from localStorage if exists
-    return localStorage.getItem('userProfileImage') || "/placeholder.svg?height=100&width=100"
-  })
+  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
-  const [bio, setBio] = useState(() => {
-    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
-  })
-  // Add username state
-  const [username, setUsername] = useState(() => {
-    return localStorage.getItem('username') || "theo_unknown"
-  })
+  const [bio, setBio] = useState<string>("")
+  const [username, setUsername] = useState<string>("")
+  const [loading, setLoading] = useState<boolean>(true)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        setProfileImage(base64String)
-        localStorage.setItem('userProfileImage', base64String)
+  // Load profile data on mount
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setLoading(true)
+        const profile = await profileService.getCurrentProfile()
+        setUsername(profile.username || "")
+        setBio(profile.bio || "")
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+      } catch (error) {
+        console.error("Failed to load profile", error)
+      } finally {
+        setLoading(false)
       }
-      reader.readAsDataURL(file)
+    }
+    fetchProfile()
+  }, [])
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    try {
+      setSaveStatus("saving")
+      const imageUrl = await profileService.uploadProfilePicture(file)
+      setProfileImage(imageUrl)
+      setSaveStatus("success")
+      setTimeout(() => setSaveStatus(null), 2000)
+    } catch (error) {
+      console.error("Upload failed", error)
+      setSaveStatus("error")
+      setTimeout(() => setSaveStatus(null), 2000)
     }
   }
 
-  const handleRemoveImage = () => {
-    setProfileImage("/placeholder.svg?height=100&width=100")
-    localStorage.removeItem('userProfileImage')
+  const handleRemoveImage = async () => {
+    try {
+      setSaveStatus("saving")
+      await profileService.deleteProfilePicture()
+      setProfileImage("/placeholder.svg?height=100&width=100")
+      setSaveStatus("success")
+      setTimeout(() => setSaveStatus(null), 2000)
+    } catch (error) {
+      console.error("Delete failed", error)
+      setSaveStatus("error")
+      setTimeout(() => setSaveStatus(null), 2000)
+    }
   }
 
   const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setBio(e.target.value)
   }
 
-  const handleSave = () => {
-    setSaveStatus("saving")
-    // Add username to existing save handler
-    localStorage.setItem('username', username)
-    localStorage.setItem('userBio', bio)
-    
-    setTimeout(() => {
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving")
+      await profileService.updateCurrentProfile({ username, bio })
       setSaveStatus("success")
       setTimeout(() => setSaveStatus(null), 2000)
-    }, 1000)
+    } catch (error) {
+      console.error("Save failed", error)
+      setSaveStatus("error")
+      setTimeout(() => setSaveStatus(null), 2000)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full">
+        <p>Loading profile...</p>
+      </div>
+    )
   }
 
   return (
@@ -95,7 +128,7 @@ export default function ProfileSettingsPage() {
                           accept="image/*"
                           className="hidden"
                         />
-                        <div 
+                        <div
                           className="absolute -bottom-2 -right-2"
                           onClick={() => fileInputRef.current?.click()}
                         >
@@ -105,9 +138,9 @@ export default function ProfileSettingsPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="text-xs"
                           onClick={() => fileInputRef.current?.click()}
                         >
@@ -130,8 +163,8 @@ export default function ProfileSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="username">Username</Label>
-                          <Input 
-                            id="username" 
+                          <Input
+                            id="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="bg-muted"
@@ -187,7 +220,6 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
                 </Card>
-
               </div>
             </TabsContent>
 
