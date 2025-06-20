@@ -43,13 +43,11 @@ List<Prompt> findTopPromptsByUser(UUID userId, Pageable pageable);
 
 
     @Query("""
-    SELECT SUM(a.downloadCount)
+    SELECT COUNT(p)
     FROM Prompt p
-    JOIN PromptAnalytics a ON p.id = a.promptId
     WHERE p.authorId = :userId
-      AND p.visibility = 'PUBLIC'
-      AND EXTRACT(YEAR FROM a.createdAt) = :year
-      AND EXTRACT(MONTH FROM a.createdAt) = :month
+      AND EXTRACT(YEAR FROM p.createdAt) = :year
+      AND EXTRACT(MONTH FROM p.createdAt) = :month
 """)
-Long monthlyUsageByUser(UUID userId, int year, int month);
+Long monthlyPromptCountByUser(UUID userId, int year, int month);
 }
