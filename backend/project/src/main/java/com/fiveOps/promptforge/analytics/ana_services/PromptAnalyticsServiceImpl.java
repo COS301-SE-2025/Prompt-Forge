@@ -49,6 +49,8 @@ import com.fiveOps.promptforge.analytics.ana_dto.*;
 import com.fiveOps.promptforge.analytics.ana_repository.PromptAnalyticsRepository;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,7 +67,9 @@ public class PromptAnalyticsServiceImpl implements PromptAnalyticsService {
 
     @Override
     public List<TrendingPromptDTO> getTrendingPrompts() {
-        return analyticsRepository.findTrendingPrompts();
+        // return analyticsRepository.findTrendingPrompts();
+        LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
+    return analyticsRepository.findTrendingPrompts(sevenDaysAgo);
     }
 
     @Override

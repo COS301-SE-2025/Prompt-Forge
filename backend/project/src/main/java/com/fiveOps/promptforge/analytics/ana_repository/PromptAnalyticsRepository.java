@@ -29,6 +29,8 @@ import com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO;
 import com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +41,7 @@ public interface PromptAnalyticsRepository extends CrudRepository<PromptAnalytic
            "WHERE a.date >= :sevenDaysAgo " +
            "GROUP BY a.promptId, p.title " +
            "ORDER BY SUM(a.viewCount) DESC")
-    List<TrendingPromptDTO> findTrendingPrompts();
+    List<TrendingPromptDTO> findTrendingPrompts(LocalDate sevenDaysAgo);
 
     @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
        "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
