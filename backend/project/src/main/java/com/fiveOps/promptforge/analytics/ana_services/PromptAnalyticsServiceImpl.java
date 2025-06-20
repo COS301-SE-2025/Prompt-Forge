@@ -1,13 +1,13 @@
-package main.java.com.fiveOps.promptforge.analytics.ana_services;
+package com.fiveOps.promptforge.analytics.ana_service;
 
 import com.fiveOps.promptforge.analytics.ana_service.PromptAnalyticsService;
-import com.fiveOps.promptforge.analytics.dto.*;
+import com.fiveOps.promptforge.analytics.ana_dto.*;
 import com.fiveOps.promptforge.analytics.repository.PromptAnalyticsRepository;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
-import main.java.com.fiveOps.promptforge.analytics.ana_dto.FeaturedPromptDTO;
-import main.java.com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO;
-import main.java.com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO;
+import com.fiveOps.promptforge.analytics.ana_dto.FeaturedPromptDTO;
+import com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO;
+import com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO;
 
 import org.springframework.stereotype.Service;
 import java.util.List;
