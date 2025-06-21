@@ -97,14 +97,6 @@ export default function Header() {
               <ShoppingCart className="h-5 w-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Link
-              to="/cart"
-              className="rounded-full"
-            >
-              <ShoppingCart className="h-5 w-5" />
-            </Link>
-          </Button>
 
           <div className="relative" ref={dropdownRef}>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setDropdownOpen(!dropdownOpen)}>
