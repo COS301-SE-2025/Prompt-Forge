@@ -1,5 +1,5 @@
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, Review } from "@/models/Prompt";
+import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/models/Prompt";
 
 export class PromptService {
     private httpClient = HttpClient;
@@ -39,96 +39,51 @@ export class PromptService {
       //   { id: tagId, name: 'Unknown', slug: 'unknown' }
       // );
       const promptResponse = await this.httpClient.get(`/prompts/${promptId}`);
-    const prompt: Prompt = await promptResponse.json();
+      const prompt: Prompt = await promptResponse.json();
     
-    // Ensure tagIds exists and is an array
-    const tagIds = prompt.tagIds || [];
-    
-    // Fetch tags only if we have tagIds
-    let tags: Tag[] = [];
-    if (tagIds.length > 0) {
-      const tagsResponse = await this.httpClient.get('/store/prompts/tags');
-      const allTags: Tag[] = await tagsResponse.json();
-      
-      tags = tagIds.map(tagId => 
-        allTags.find(tag => tag.id === tagId) || 
-        { id: tagId, name: 'Unknown', slug: 'unknown' }
-      );
-    }
-      
-      
-      
-      return { ...prompt, tags };
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
-  // async getMarketplacePrompts(): Promise<Prompt[]> {
-  //   try {
-  //     const response = await this.httpClient.get('/store/prompts');
-  //   const data = await response.json();
-  //   // Ensure the API returns proper Prompt objects with tagIds
-  //   // return data.map((item: any) => ({
-  //   //   ...item,
-  //   //   tagIds: item.tagIds || [] // Ensure tagIds exists
-  //   // }));
-  //   // } catch (error) {
-  //   //   console.error(error);
-  //   //   throw error;
-  //   // }
-  //   if (!Array.isArray(data)) {
-  //           console.warn('Expected array but got:', data);
-  //           return [];
-  //       }
-        
-  //       return data as Prompt[];
-  //   } catch (error) {
-  //       console.error('Fetch error:', error);
-  //       return []; // Return empty array as fallback
-  //   }
-  // }
-
-async getMarketplacePrompts(): Promise<PromptWithTags[]> {
-  try {
-    const [promptsResponse, tagsResponse] = await Promise.all([
-      this.httpClient.get('/store/prompts'),
-      this.httpClient.get('/store/prompts/tags')
-    ]);
-
-    const prompts: Prompt[] = await promptsResponse.json();
-    const allTags: Tag[] = await tagsResponse.json();
-
-    // Create a lookup map for O(1) tag access
-    const tagMap = new Map<string, Tag>();
-    allTags.forEach(tag => tagMap.set(tag.id, tag));
-
-    return prompts.map(prompt => {
       // Ensure tagIds exists and is an array
       const tagIds = prompt.tagIds || [];
       
-      // Map each tagId to its corresponding Tag object
-      const tags = tagIds.map(tagId => {
-        const foundTag = tagMap.get(tagId);
-        return foundTag || {
-          id: tagId,
-          name: 'Unknown',
-          slug: 'unknown',
-          usageCount: 0
-        };
-      });
+      // Fetch tags only if we have tagIds
+      //This is supposed to be done by the DB
+      let tags: Tag[] = [];
+      if (tagIds.length > 0) {
+        const tagsResponse = await this.httpClient.get('/store/prompts/tags');
+        const allTags: Tag[] = await tagsResponse.json();
+        
+        tags = tagIds.map(tagId => 
+          allTags.find(tag => tag.id === tagId) || 
+          { id: tagId, name: 'Unknown', slug: 'unknown' }
+        );
+      }
+        return { ...prompt, tags };
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    }
 
-      return {
-        ...prompt,
-        tags
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching marketplace prompts:', error);
-    throw error;
+  async getMarketplacePrompts(page: number): Promise<{ prompts: any, tagNames: any, promptCount:number }> {
+    try {
+      const [promptsResponse, tagsResponse, promptCountResponse] = await Promise.all([
+        this.httpClient.get(`/store/prompts/page?page=${page}&pageSize=12`),
+        this.httpClient.get('/store/prompts/tags'),
+        this.httpClient.get('/store/prompts/count?pageSize=12'),
+      ]);
+
+      const prompts = await promptsResponse.json();
+      var tags = await tagsResponse.json();
+      const promptCount = await promptCountResponse.json();
+      const tagNames = await tags.map((tag:Tag)=>
+        tag.name
+      )
+
+      return { prompts, tagNames, promptCount };
+    } catch (error) {
+      console.error('Error fetching prompt from marketplace prompts:', error);
+      throw error;
+    }
   }
-}
 
 
     async searchPrompts(query: string) {
