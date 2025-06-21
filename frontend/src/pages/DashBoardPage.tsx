@@ -548,6 +548,7 @@ type DashboardData = {
   monthlyUsage: number;
   totalDownloads: number;
   averageRating: number;
+  totalPrompts: number;
   topPrompts: TopPromptType[];
 };
 
@@ -634,19 +635,19 @@ export default function DashboardPage() {
             </div>
             <div className="w-full mt-6">
               <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-muted-foreground">Avg. Rating</div>
-                <div className="flex items-center">
+                <div className="font-medium">Badges</div>
+                {/* <div className="flex items-center">
                   <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
                   <span className="text-sm font-medium">{dashboard.averageRating}</span>
-                </div>
+                </div> */}
               </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              {/* <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-[#3ebb9e] rounded-full" style={{ width: `${Math.min(100, (dashboard.averageRating / 5) * 100)}%` }}></div>
-              </div>
-              <div className="flex justify-between text-xs mt-1">
+              </div> */}
+              {/* <div className="flex justify-between text-xs mt-1">
                 <span className="text-green-500">+0.2 this week</span>
                 <span className="text-muted-foreground">Last month</span>
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="space-y-4">
@@ -663,10 +664,10 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <Card className="p-4">
-                <DashboardCard heading='Total Prompts' headingIcon={<Rocket size={20} color="#60A5FA" />} value={dashboard.totalDownloads} change="gain" changeValue={12.5} />
+                <DashboardCard heading='Total Prompts' headingIcon={<Rocket size={20} color="#60A5FA" />} value={dashboard.totalPrompts} change="gain" changeValue={12.5} />
               </Card>
               <Card className="p-4">
-                <DashboardCard heading='Total Users' headingIcon={<User size={20} color="#60A5FA" />} value={175} change="none" changeValue={12.5} />
+                <DashboardCard heading='Total Users' headingIcon={<User size={20} color="#60A5FA" />} value={dashboard.totalDownloads} change="none" changeValue={12.5} />
               </Card>
               <Card className="p-4">
                 <DashboardCard heading='Average Rating' headingIcon={<Star size={20} color="#60A5FA" />} value={dashboard.averageRating} change="loss" changeValue={12.5} />
@@ -703,8 +704,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="items-center text-xs">
-                  <RecentActivity  username='JohnDoe' activity='rated your prompt' time='2h'   />
-                  <RecentActivity  username='MarryDoe' activity='followed you' time='1.5h'   />
+                  <RecentActivity  username='Boityyyyy' activity='followed you' time='1.5h'   />
+                  <RecentActivity  username='Riri_ww' activity='followed you' time='1.5h'   />
+                  <RecentActivity  username='NavD' activity='rated your prompt' time='5h'   />
+                  <RecentActivity  username='MK' activity='rated your prompt' time='1 days'/>
                 </div>
               </Card>
             </div>
