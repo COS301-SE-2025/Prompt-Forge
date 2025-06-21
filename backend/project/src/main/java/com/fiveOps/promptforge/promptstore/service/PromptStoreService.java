@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.promptstore.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
@@ -28,11 +30,27 @@ public class PromptStoreService {
     private final PromptService promptService;
     private final PromptPurchaseRepository purchaseRepository;
     private final PromptReviewRepository reviewRepository;
-    private final TagService tagService;
+    private final TagService tagService;    
 
 
     public List<Prompt> getAllPublicPrompts() {
         return promptStoreRepository.findByVisibility("public");
+    }
+    
+    public List<Map<String, PromptWithAuthorDTO>> getPage(String page, String size) {
+        int pageSize = Integer.parseInt(size);
+        int offset = pageSize * Integer.parseInt(page);
+
+        return promptStoreRepository.findPublicPromptsWithAuthorAndTags(pageSize, offset);
+    }
+
+    public long getPageCount(String pageSize) {
+        long promptCount = promptStoreRepository.count();
+        return Math.floorDiv(promptCount, Integer.parseInt(pageSize));
+    }
+
+    public long getPromptCount() {
+        return promptStoreRepository.count();
     }
     
     public List<Prompt> searchPublic(String query) {
