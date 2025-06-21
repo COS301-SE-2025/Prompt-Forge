@@ -58,8 +58,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const authorId = localStorage.getItem("userId"); // or get from auth context
+    console.log("Author ID:", authorId);
     if (!authorId) return;
-    fetch(`/api/prompts/author/${authorId}`)
+    console.log(authorId);
+    fetch(`/prompts/author/${authorId}`)
       .then(res => res.json())
       .then(setMyPrompts)
       .finally(() => setLoadingPrompts(false));
