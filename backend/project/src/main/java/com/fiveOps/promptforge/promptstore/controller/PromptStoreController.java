@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
@@ -21,7 +22,7 @@ import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/store/prompts")
+@RequestMapping("/store/prompts")
 @RequiredArgsConstructor
 public class PromptStoreController {
     private final PromptStoreService storeService;
@@ -86,6 +87,16 @@ public class PromptStoreController {
     @GetMapping("/filter/recent")
     public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
     return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    }
+
+    @GetMapping("/tags")
+    public List<Tag> getAllTags() {
+        return storeService.getAllTags();
+    }
+
+    @GetMapping("/tags/popular")
+    public List<Tag> getPopularTags(@RequestParam(defaultValue = "10") int limit) {
+        return storeService.getPopularTags(limit);
     }
 
 

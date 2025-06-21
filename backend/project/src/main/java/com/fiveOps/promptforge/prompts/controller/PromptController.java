@@ -19,7 +19,7 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 
 @RestController
-@RequestMapping("/api/prompts")
+@RequestMapping("/prompts")
 public class PromptController {
     private final PromptService promptService;
 
@@ -93,6 +93,8 @@ public class PromptController {
         }
         return ResponseEntity.ok(promptService.searchByTitle(query));
     }
+    
+
 
 
     // Removed metadata/analytics endpoints endpoints
