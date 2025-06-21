@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-react"
+import { Link } from 'react-router-dom';
 
 export default function DashboardPage() {
   // Add state for profile image
@@ -166,10 +167,12 @@ export default function DashboardPage() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">My Prompts</h2>
-              <Button variant="outline" size="sm" className="h-8">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <Link to="/my-prompts">
+                <Button variant="outline" size="sm" className="flex items-center">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
