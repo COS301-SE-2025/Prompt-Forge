@@ -90,7 +90,7 @@ public ResponseEntity<?> logout(HttpServletResponse response) {
     // Clear the cookie by setting maxAge=0
     Cookie cookie = new Cookie("token", null);
     cookie.setHttpOnly(true);
-    cookie.setSecure(true);  // if using HTTPS
+    cookie.setSecure(false);  // if using HTTPS
     cookie.setPath("/");
     cookie.setMaxAge(0);     // delete cookie
     response.addCookie(cookie);

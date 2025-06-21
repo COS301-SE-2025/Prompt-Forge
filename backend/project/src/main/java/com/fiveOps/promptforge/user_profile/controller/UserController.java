@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/user")
@@ -38,11 +41,11 @@ public class UserController {
     return userService.updateUser(id, dto);
   }
 
-  // Get own user profile
   @GetMapping("/me")
-  public UserDto getCurrentUser(HttpServletRequest request) {
+  public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
     String email = extractEmailFromCookie(request);
-    return userService.getUserByEmail(email);
+    UserDto user = userService.getUserByEmail(email);
+    return ResponseEntity.ok(user);
   }
 
   // Update own profile
@@ -83,7 +86,10 @@ public class UserController {
         return jwtUtil.extractUsername(cookie.getValue()); // email stored as subject
       }
     }
-    throw new RuntimeException("Token not found");
+    throw new ResponseStatusException(
+      HttpStatus.UNAUTHORIZED,
+      "Authentication token not found"
+    );
   }
 
   @PostMapping(
@@ -126,24 +132,29 @@ public class UserController {
   }
 
   @GetMapping("/me/card")
-public ResponseEntity<Map<String, Object>> getDashboardCardData(
-  HttpServletRequest request
-) {
+  public ResponseEntity<Map<String, Object>> getDashboardCardData(
+    HttpServletRequest request
+  ) {
     String email = extractEmailFromCookie(request);
     UserDto user = userService.getUserByEmail(email);
 
     Map<String, Object> cardData = Map.of(
-        "username", user.getUsername(),
-        "bio", user.getBio(),
-        "profilePicture", user.getProfilePicture(),
-        "followersCount", user.getFollowers() != null ? user.getFollowers().size() : 0,
-        "followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0,
-        "badges", user.getBadges() != null ? user.getBadges() : List.of() // add badges
+      "username",
+      user.getUsername(),
+      "bio",
+      user.getBio(),
+      "profilePicture",
+      user.getProfilePicture(),
+      "followersCount",
+      user.getFollowers() == null ? 0 : user.getFollowers().size(),
+      "followingCount",
+      user.getFollowing() == null ? 0 : user.getFollowing().size(),
+      "badges",
+      user.getBadges() == null ? List.of() : user.getBadges()
     );
 
     return ResponseEntity.ok(cardData);
-}
-
+  }
 
   @GetMapping("/me/full")
   public ResponseEntity<UserDto> getFullCurrentUser(
