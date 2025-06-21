@@ -5,14 +5,15 @@ import { Input } from "../components/ui/Input"
 import { Sparkles, Star, User, Search, Filter } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Prompt, Tag,PromptWithTags} from "@/models/Prompt"
+import { Prompt, Tag,PromptWithTags, MarketplacePrompt} from "@/models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
 export default function MarketplacePage() {
   const promptService = new PromptService()
-const [enrichedPrompts, setEnrichedPrompts] = useState<PromptWithTags[]>([]);
-const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
+  const [enrichedPrompts, setEnrichedPrompts] = useState<MarketplacePrompt[]>([]);
+  const [currentPrompts, setCurrentPrompts] = useState<MarketplacePrompt[]>([]);
+const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -30,19 +31,25 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
         setTagsLoading(true)
         setError(null)
         
-        const promptsWithTags = await promptService.getMarketplacePrompts()
-        setEnrichedPrompts(promptsWithTags)
-        setFilteredPrompts(promptsWithTags)
+        const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage-1)
+        console.log("promptsWithTags");
+        console.log(promptsWithTagsAndCount);
+     
         
-        // Extract unique categories from resolved tags
-        const categories = ['all', ...new Set(
-          promptsWithTags.flatMap(p => 
-            p.tags
-              .filter(tag => tag.name !== 'Unknown')
-              .map(t => t.name)
-          )
-        )]
-        setAvailableCategories(categories)
+        setCurrentPrompts(promptsWithTagsAndCount.prompts)
+        setFilteredPrompts(promptsWithTagsAndCount.prompts)
+        setAvailableCategories(["all",...promptsWithTagsAndCount.tagNames])
+        setTotalPages(promptsWithTagsAndCount.promptCount)
+        
+        // // Extract unique categories from resolved tags
+        // const categories = ['all', ...new Set(
+        //   promptsWithTags.flatMap(p => 
+        //     p.tags
+        //       .filter(tag => tag.name !== 'Unknown')
+        //       .map(t => t.name)
+        //   )
+        // )]
+        // setAvailableCategories(promptsWithTags.allTags)
         
       } catch (err) {
         setError('Failed to load data')
@@ -56,46 +63,64 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
     fetchData()
   }, [])
 
-  useEffect(() => {
-    if (enrichedPrompts.length === 0) return
+  // useEffect(() => {
+  //   if (enrichedPrompts.length === 0) return
     
-    const filtered = enrichedPrompts.filter(prompt => {
-      // Search filter
-      const matchesSearch = searchQuery 
-        ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
-        : true
+  //   // const filtered = enrichedPrompts.filter(prompt => {
+  //   //   // Search filter
+  //   //   const matchesSearch = searchQuery 
+  //   //     ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  //   //       prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
+  //   //     : true
       
-      // Category filter (only show known tags)
-      const matchesCategory = selectedCategory === 'all' 
-        ? true 
-        : prompt.tags.some(tag => tag.name !== 'Unknown' && tag.name === selectedCategory)
+  //   //   // Category filter (only show known tags)
+  //   //   const matchesCategory = selectedCategory === 'all' 
+  //   //     ? true 
+  //   //     : prompt.tags.some(tag => tag.name !== 'Unknown' && tag.name === selectedCategory)
       
-      // Additional filters
-      const oneWeekAgo = new Date()
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      const isNew = new Date(prompt.publishedAt) > oneWeekAgo
+  //   //   // Additional filters
+  //   //   const oneWeekAgo = new Date()
+  //   //   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  //   //   const isNew = new Date(prompt.publishedAt) > oneWeekAgo
       
-      const matchesFilter = 
-        selectedFilter === "all" ||
-        (selectedFilter === "featured" && prompt.featured) ||
-        (selectedFilter === "popular" && prompt.usageCount > 2000) ||
-        (selectedFilter === "new" && isNew)
+  //   //   const matchesFilter = 
+  //   //     selectedFilter === "all" ||
+  //   //     (selectedFilter === "featured" && prompt.featured) ||
+  //   //     (selectedFilter === "popular" && prompt.usageCount > 2000) ||
+  //   //     (selectedFilter === "new" && isNew)
       
-      return matchesSearch && matchesCategory && matchesFilter
-    })
+  //   //   return matchesSearch && matchesCategory && matchesFilter
+  //   // })
     
-    setFilteredPrompts(filtered)
-    setCurrentPage(1)
-  }, [searchQuery, selectedCategory, selectedFilter, enrichedPrompts])
+  //   // setFilteredPrompts(filtered)
+  //   setCurrentPage(1)
+  // }, [searchQuery, selectedCategory, selectedFilter, enrichedPrompts])
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       setLoading(true)
+  //       setTagsLoading(true)
+  //       setError(null)
+
+  //       const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage)
+  //       setEnrichedPrompts(promptsWithTagsAndCount.prompts)
+  //       setFilteredPrompts(promptsWithTagsAndCount.prompts)
+  //       setTotalPages(promptsWithTagsAndCount.promptCount)
+  //     } catch (err) {
+  //       setError('Failed to load data')
+  //       console.error(err)
+  //     } finally {
+  //       setLoading(false)
+  //       setTagsLoading(false)
+  //     }
+  //   }
+
+  //   fetchData()
+  // }, [currentPage])
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
-  const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
-  const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
-  const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
-  const featuredPrompts = enrichedPrompts.filter(prompt => prompt.featured).slice(0, 4)
-
+  const [totalPages, setTotalPages] = useState<number>(1)
   const filters = [
     { value: "all", label: "All" },
     { value: "featured", label: "Featured" },
@@ -106,6 +131,21 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
   if (loading) return <div className="flex justify-center p-8">Loading prompts...</div>
   if (error) return <div className="text-red-500 p-8">{error}</div>
 
+  const changePage=(pageNumber:number)=>{
+    setLoading(true)
+    setTagsLoading(true)
+    setError(null)
+    setCurrentPage(pageNumber);
+    promptService.getMarketplacePrompts(pageNumber-1)
+    .then(res=>{
+      setCurrentPrompts(res.prompts)
+      setFilteredPrompts(res.prompts)
+    })
+    .finally(()=>{
+      setLoading(false)
+      setTagsLoading(false)
+    })
+  }
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex">
@@ -189,13 +229,7 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
                   <h2 className="text-lg font-medium">Featured Prompts</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  {featuredPrompts.map((prompt) => (
-                    <PromptCard 
-                      key={prompt.id} 
-                      {...prompt}
-                      tagsLoading={tagsLoading}
-                    />
-                  ))}
+                  
                 </div>
               </div>
             )}
@@ -225,7 +259,8 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
                 <PromptCard 
                   key={prompt.id} 
                   {...prompt}
-                  tagsLoading={tagsLoading}
+                  tags={prompt.tagnames}
+                  // tagsLoading={tagsLoading}
                 />
               ))}
             </div>
@@ -257,7 +292,7 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => changePage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -280,7 +315,7 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
                       key={pageNumber}
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(pageNumber)}
+                      onClick={() => changePage(pageNumber)}
                       className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
                     >
                       {pageNumber}
@@ -291,7 +326,7 @@ const [filteredPrompts, setFilteredPrompts] = useState<PromptWithTags[]>([]);
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                 >
                   Next
