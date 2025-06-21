@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
+import com.fiveOps.promptforge.prompts.service.TagService;
+import com.fiveOps.promptforge.promptstore.dto.PromptWithTagsDTO;
 import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
@@ -25,6 +28,7 @@ public class PromptStoreService {
     private final PromptService promptService;
     private final PromptPurchaseRepository purchaseRepository;
     private final PromptReviewRepository reviewRepository;
+    private final TagService tagService;
 
 
     public List<Prompt> getAllPublicPrompts() {
@@ -101,5 +105,31 @@ public class PromptStoreService {
             .stream()
             .limit(10) // Get top 10 most recent
             .collect(Collectors.toList());
+    }
+
+    public List<Tag> getAllTags() {
+        return tagService.getAllTags();
+    }
+
+    public List<Tag> getPopularTags(int limit) {
+        return tagService.getPopularTags(limit);
+    }
+
+    public List<PromptWithTagsDTO> getPromptsWithTags() {
+    List<Prompt> prompts = promptStoreRepository.findByVisibility("public");
+    return prompts.stream()
+            .map(this::mapToPromptWithTagsDTO)
+            .collect(Collectors.toList());
+}
+
+    private PromptWithTagsDTO mapToPromptWithTagsDTO(Prompt prompt) {
+    List<Tag> tags = tagService.getTagsByIds(prompt.getTagIds());
+    return PromptWithTagsDTO.builder()
+            .id(prompt.getId())
+            .title(prompt.getTitle())
+            .description(prompt.getDescription())
+            .price(prompt.getPrice())
+            .tags(tags)
+            .build();
 }
 }
