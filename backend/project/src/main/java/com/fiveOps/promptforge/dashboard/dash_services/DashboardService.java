@@ -17,26 +17,6 @@ public class DashboardService {
     @Autowired
     private DashboardRepository dashboardRepository;
 
-    // public long getTotalPrompts(UUID userId) {
-    //     return dashboardRepository.countPublishedByUser(userId);
-    // }
-
-    // public Double getAverageRating(UUID userId) {
-    //     return dashboardRepository.averageRatingByUser(userId);
-    // }
-
-    // public Long getTotalDownloads(UUID userId) {
-    //     return dashboardRepository.totalDownloadsByUser(userId);
-    // }
-
-    // public List<Prompt> getTopPrompts(UUID userId, int limit) {
-    //     return dashboardRepository.findTopPromptsByUser(userId, PageRequest.of(0, limit));
-    // }
-
-    // public Long getMonthlyUsage(UUID userId) {
-    // LocalDate now = LocalDate.now();
-    // return dashboardRepository.monthlyUsageByUser(userId, now.getYear(), now.getMonthValue());
-    // }
 
         // Now counts all prompts (public and private)
     public long getTotalPrompts(UUID userId) {
