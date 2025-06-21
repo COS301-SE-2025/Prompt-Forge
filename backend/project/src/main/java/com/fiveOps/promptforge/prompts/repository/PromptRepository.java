@@ -13,6 +13,8 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
 
+     List<Prompt> findByFeaturedTrue();
+
     List<Prompt> findByVisibility(String visibility);
     //List<Prompt> findByCategoryAndVisibility(String category, String visibility);
     List<Prompt> findByAuthorId(UUID authorId);

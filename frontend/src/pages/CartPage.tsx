@@ -55,7 +55,7 @@ export default function CartPage(){
                         <p className="text-gray-400 mb-6">
                             Browse the marketplace to find prompts you'll love
                         </p>
-                        <Link to="/marketplace" className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 rounded-md font-medium transition-colors">
+
                             Explore Marketplace
                         </Link>
                     </div>
