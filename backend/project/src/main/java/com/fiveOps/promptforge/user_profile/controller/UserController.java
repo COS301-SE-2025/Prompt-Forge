@@ -1,6 +1,4 @@
 package com.fiveOps.promptforge.user_profile.controller;
-import java.util.Map;
-import org.springframework.http.MediaType;
 
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
@@ -9,8 +7,10 @@ import com.fiveOps.promptforge.user_profile.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -86,21 +86,70 @@ public class UserController {
     throw new RuntimeException("Token not found");
   }
 
-  
-@PostMapping(value = "/upload-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-public ResponseEntity<Map<String, String>> uploadProfilePicture(
+  @PostMapping(
+    value = "/upload-picture",
+    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+  )
+  public ResponseEntity<Map<String, String>> uploadProfilePicture(
     @RequestParam("file") MultipartFile file,
     HttpServletRequest request
-) {
+  ) {
     String email = extractEmailFromCookie(request);
     String imageUrl = userService.saveProfilePicture(email, file);
     return ResponseEntity.ok(Map.of("url", imageUrl));
-}
+  }
 
-@DeleteMapping("/delete-picture")
-public ResponseEntity<Map<String, String>> deleteProfilePicture(HttpServletRequest request) {
+  @DeleteMapping("/delete-picture")
+  public ResponseEntity<Map<String, String>> deleteProfilePicture(
+    HttpServletRequest request
+  ) {
     String email = extractEmailFromCookie(request);
     userService.deleteProfilePicture(email);
     return ResponseEntity.ok(Map.of("message", "Profile picture deleted"));
+  }
+
+  @GetMapping("/search")
+  public List<UserDto> searchUsers(@RequestParam String query) {
+    return userService.searchUsers(query);
+  }
+
+  @GetMapping("/me/followers")
+  public List<UserDto> getFollowers(HttpServletRequest request) {
+    String email = extractEmailFromCookie(request);
+    return userService.getFollowersByEmail(email);
+  }
+
+  @GetMapping("/me/following")
+  public List<UserDto> getFollowing(HttpServletRequest request) {
+    String email = extractEmailFromCookie(request);
+    return userService.getFollowingByEmail(email);
+  }
+
+  @GetMapping("/me/card")
+public ResponseEntity<Map<String, Object>> getDashboardCardData(
+  HttpServletRequest request
+) {
+    String email = extractEmailFromCookie(request);
+    UserDto user = userService.getUserByEmail(email);
+
+    Map<String, Object> cardData = Map.of(
+        "username", user.getUsername(),
+        "bio", user.getBio(),
+        "profilePicture", user.getProfilePicture(),
+        "followersCount", user.getFollowers() != null ? user.getFollowers().size() : 0,
+        "followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0,
+        "badges", user.getBadges() != null ? user.getBadges() : List.of() // add badges
+    );
+
+    return ResponseEntity.ok(cardData);
 }
+
+
+  @GetMapping("/me/full")
+  public ResponseEntity<UserDto> getFullCurrentUser(
+    HttpServletRequest request
+  ) {
+    String email = extractEmailFromCookie(request);
+    return ResponseEntity.ok(userService.getUserByEmail(email));
+  }
 }
