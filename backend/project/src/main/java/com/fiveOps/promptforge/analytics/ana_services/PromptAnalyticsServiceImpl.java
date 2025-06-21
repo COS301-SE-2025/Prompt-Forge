@@ -37,6 +37,8 @@ public class PromptAnalyticsServiceImpl implements PromptAnalyticsService {
 
     @Override
     public List<TopRankingPromptDTO> getTopRankingPrompts() {
-        return analyticsRepository.findTopRankingPrompts();
+        // You can customize the page size and sort as needed
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        return analyticsRepository.findTopRankingPrompts(pageable);
     }
 }
