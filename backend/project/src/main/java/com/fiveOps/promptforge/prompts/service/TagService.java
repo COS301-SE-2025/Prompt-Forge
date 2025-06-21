@@ -52,13 +52,21 @@ public class TagService {
             .replaceAll("-+", "-");
     }
 
-    public List<Tag> getPopularTags(int limit) {
-        return tagRepository.findPopularTags(limit);
-    }
-
     public UUID getTagIdByName(String tagName) {
     return tagRepository.findByName(tagName)
         .orElseThrow(() -> new RuntimeException("Tag not found: " + tagName))
         .getId();
+    }
+
+    // Add to TagService.java
+    public List<Tag> getAllTags() {
+        return tagRepository.findAll();
+    }
+
+    public List<Tag> getPopularTags(int limit) {
+        return tagRepository.findPopularTags(limit);
+    }
+    public List<Tag> getTagsByIds(List<UUID> tagIds) {
+    return tagRepository.findAllById(tagIds);
     }
 }
