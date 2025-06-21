@@ -19,38 +19,6 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
-//     @GetMapping
-//     public Map<String, Object> getDashboard(Principal principal) {
-//     //     // Replace this with your actual user ID resolution logic
-//     //     UUID userId = UUID.fromString(principal.getName());
-
-//     //     Map<String, Object> result = new HashMap<>();
-//     //     result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
-//     //     result.put("averageRating", dashboardService.getAverageRating(userId));
-//     //     result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
-//     //     result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
-//     //     return result;
-//     // }
-
-
-//     //Need to work with the user management system to get the user ID
-//      UUID userId;
-//     if (principal == null || principal.getName() == null || principal.getName().isEmpty()) {
-//         // Use a test UUID for development/testing
-//         userId = UUID.fromString("000e8699-276e-4f52-8fe0-8a71b4bcbb7f");
-//     } else {
-//         userId = UUID.fromString(principal.getName());
-//     }
-//     Map<String, Object> result = new HashMap<>();
-//     result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
-//     result.put("averageRating", dashboardService.getAverageRating(userId));
-//     result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
-//     result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
-//     return result;
-// }
-
-
-
         @GetMapping
         public Map<String, Object> getDashboard(
             Principal principal,
