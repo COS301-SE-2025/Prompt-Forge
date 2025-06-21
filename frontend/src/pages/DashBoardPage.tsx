@@ -6,6 +6,38 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-react"
 
+type TopPromptType = {
+  heading: string;
+  rating: number;
+  usesCount: number;
+  promptId: string;
+};
+
+type RecentActivityType = {
+  username: string;
+  activity: string;
+  time: string;
+};
+
+type MyPromptType = {
+  title: string;
+  description: string;
+  rating: number;
+  uses: number;
+  price: number;
+  author: string;
+};
+
+type DashboardData = {
+  totalPrompts: number;
+  totalUsers: number;
+  averageRating: number;
+  monthlyUsage: number;
+  topPrompts: TopPromptType[];
+  recentActivity: RecentActivityType[];
+  myPrompts: MyPromptType[];
+};
+
 export default function DashboardPage() {
   // Add state for profile image
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
