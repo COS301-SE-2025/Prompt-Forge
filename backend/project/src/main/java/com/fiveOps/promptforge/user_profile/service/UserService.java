@@ -7,7 +7,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import java.util.UUID;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -176,4 +176,42 @@ public class UserService {
             throw new RuntimeException("Failed to delete profile picture", e);
         }
     }
+
+    public List<UserDto> searchUsers(String query) {
+        List<User> matchedUsers = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+        return matchedUsers.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> getFollowersByEmail(String email) {
+        User user = getUserEntityByEmail(email);
+        List<UUID> followerIds = user.getFollowers() != null
+            ? Arrays.asList(user.getFollowers())
+            : List.of(); // handle nulls safely
+    
+        List<User> followers = userRepository.findAllById(followerIds);
+        return followers.stream().map(this::mapToDto).toList();
+    }
+    private User getUserEntityByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+    public List<UserDto> getFollowingByEmail(String email) {
+        User user = getUserEntityByEmail(email);
+        List<UUID> followingIds = user.getFollowing() != null
+            ? Arrays.asList(user.getFollowing())
+            : List.of();
+    
+        List<User> following = userRepository.findAllById(followingIds);
+        return following.stream().map(this::mapToDto).toList();
+    }   
+    
+   
+    public UserDto getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return mapToDto(user);
+    }
+    
 }
