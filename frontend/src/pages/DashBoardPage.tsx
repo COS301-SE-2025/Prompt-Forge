@@ -1,5 +1,3 @@
-
-
 import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
@@ -8,16 +6,24 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { StandardPromptCard } from "../components/StandardPromptCard"
 
 // Types matching your backend JSON
-type Prompt = {
+type MyPrompt = {
   id: string;
   title: string;
   description: string;
+  content: string;
+  category: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
   rating: number;
   uses: number;
-  price: number;
   featured: boolean;
+  price: number;
+  isPrivate: boolean;
+  isFavorite: boolean;
 };
 
 type TopPromptType = {
@@ -53,19 +59,53 @@ export default function DashboardPage() {
     return localStorage.getItem('username') || "theo_unknown";
   });
 
-  //Prompts data states
-  const [myPrompts, setMyPrompts] = useState<Prompt[]>([]);
+  // Prompts data states - using same structure as MyPromptsPage
+  const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Fetch prompts using same endpoint and mapping as MyPromptsPage
   useEffect(() => {
-    const authorId = localStorage.getItem("userId"); // or get from auth context
-    console.log("Author ID:", authorId);
-    if (!authorId) return;
-    console.log(authorId);
-    fetch(`/prompts/author/${authorId}`)
-      .then(res => res.json())
-      .then(setMyPrompts)
-      .finally(() => setLoadingPrompts(false));
+    const fetchMyPrompts = async () => {
+      setLoadingPrompts(true);
+      const authorId = "706d87a3-b874-4b37-a041-e67201f4ed22"; // Use the specific author ID
+      if (!authorId) {
+        setMyPrompts([]);
+        setLoadingPrompts(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/prompts/author/${authorId}`);
+        let prompts = await res.json();
+        if (!Array.isArray(prompts)) prompts = [];
+        
+        // Map backend fields to frontend MyPrompt interface - same as MyPromptsPage
+        const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description || "",
+          content: p.content || "",
+          category: "General", // Default, backend does not provide
+          tags: p.tagNames || [],
+          createdAt: p.createdAt,
+          updatedAt: p.publishedAt || p.createdAt,
+          rating: 0, // Default, backend does not provide
+          uses: 0,   // Default, backend does not provide
+          featured: p.featured || false,
+          price: p.price || 0,
+          isPrivate: p.visibility !== "public",
+          isFavorite: false // Default, backend does not provide
+        }));
+        
+        setMyPrompts(mappedPrompts);
+      } catch (error) {
+        console.error("Failed to fetch prompts:", error);
+        setMyPrompts([]);
+      }
+      setLoadingPrompts(false);
+    };
+    
+    fetchMyPrompts();
   }, []);
 
   // Dashboard data states
@@ -106,9 +146,57 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  // Handlers for StandardPromptCard - same as MyPromptsPage
+  const handleDeletePrompt = (id: string) => {
+    setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+  };
+
+  const handleCopyPrompt = async (content: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      setCopiedId(null);
+    }
+  };
+
+  const handleEditPrompt = (prompt: MyPrompt) => {
+    const editData = {
+      id: prompt.id,
+      title: prompt.title,
+      description: prompt.description,
+      category: prompt.category,
+      tags: prompt.tags,
+      promptText: prompt.content,
+      instructions: "",
+      expectedOutput: "",
+      useCase: "",
+      isPrivate: prompt.isPrivate
+    };
+    sessionStorage.setItem("editPromptData", JSON.stringify(editData));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+  
   if (error) return <div>Error: {error}</div>;
   if (!dashboard) return <div>No data</div>;
+
+  // Get first few prompts for dashboard display
+  const displayPrompts = myPrompts.slice(0, 4);
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
@@ -127,7 +215,7 @@ export default function DashboardPage() {
             <h3 className="font-medium">{username}</h3>
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
-                <div className="font-semibold">2</div>
+                <div className="font-semibold">{myPrompts.length}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div className="text-center">
@@ -142,18 +230,7 @@ export default function DashboardPage() {
             <div className="w-full mt-6">
               <div className="flex items-center justify-between mb-1">
                 <div className="font-medium">Badges</div>
-                {/* <div className="flex items-center">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                  <span className="text-sm font-medium">{dashboard.averageRating}</span>
-                </div> */}
               </div>
-              {/* <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-[#3ebb9e] rounded-full" style={{ width: `${Math.min(100, (dashboard.averageRating / 5) * 100)}%` }}></div>
-              </div> */}
-              {/* <div className="flex justify-between text-xs mt-1">
-                <span className="text-green-500">+0.2 this week</span>
-                <span className="text-muted-foreground">Last month</span>
-              </div> */}
             </div>
           </div>
           <div className="space-y-4">
@@ -231,64 +308,45 @@ export default function DashboardPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {loadingPrompts ? (
-                <div>Loading prompts...</div>
+                <div className="flex justify-center items-center h-32 col-span-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Loading prompts...</p>
+                  </div>
+                </div>
               ) : myPrompts.length === 0 ? (
-                <div>No prompts found.</div>
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground mb-4">No prompts found.</p>
+                  <Link to="/submit">
+                    <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+                      Create Your First Prompt
+                    </Button>
+                  </Link>
+                </div>
               ) : (
-                myPrompts.map((prompt) => (
-                  <Card key={prompt.id} className="overflow-hidden">
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        {prompt.featured && (
-                          <div className="bg-green-500/20 text-green-500 text-xs font-medium px-2 py-1 rounded">
-                            Featured
-                          </div>
-                        )}
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                          <span className="text-xs ml-1">{prompt.rating}</span>
-                        </div>
-                      </div>
-                      <h3 className="font-medium mb-1">{prompt.title}</h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {prompt.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                            <User className="h-3 w-3" />
-                          </div>
-                          <span className="text-xs ml-1 text-muted-foreground">@{username}</span>
-                        </div>
-                        <div className="text-xs font-medium">${prompt.price}</div>
-                      </div>
-                    </div>
-                    <div className="border-t border-border flex">
-                      <div className="flex-1 py-2 text-center text-xs text-muted-foreground">
-                        <span>{prompt.uses} uses</span>
-                      </div>
-                      <div className="border-l border-border">
-                        <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                            <path d="M3 6h18" />
-                            <path d="M16 10a4 4 0 0 1-8 0" />
-                          </svg>
-                          <span className="ml-1">Add to store</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                displayPrompts.map((prompt) => (
+                  <StandardPromptCard
+                    key={prompt.id}
+                    id={prompt.id}
+                    title={prompt.title}
+                    description={prompt.description}
+                    rating={prompt.rating}
+                    uses={prompt.uses}
+                    price={prompt.price}
+                    featured={prompt.featured}
+                    isPrivate={prompt.isPrivate}
+                    isFavorite={prompt.isFavorite}
+                    tags={prompt.tags}
+                    category={prompt.category}
+                    authorName={username}
+                    isOwned={true}
+                    onEdit={handleEditPrompt}
+                    onDelete={handleDeletePrompt}
+                    onToggleFavorite={handleToggleFavorite}
+                    onCopy={handleCopyPrompt}
+                    copiedId={copiedId}
+                    content={prompt.content}
+                  />
                 ))
               )}
             </div>
