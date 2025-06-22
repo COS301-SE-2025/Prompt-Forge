@@ -1,9 +1,11 @@
 
 package com.fiveOps.promptforge.prompts.controller;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,13 +30,23 @@ public class PromptController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Prompt>> getAllPrompts() {
-        return ResponseEntity.ok(promptService.getAllPrompts());
+    public ResponseEntity<Page<Prompt>> getAllPrompts(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+        Pageable pageable = PageRequest.of(page, size);
+
+        return ResponseEntity.ok(promptService.getAllPrompts(pageable));
     }
 
     @GetMapping("/author/{authorId}")
-    public ResponseEntity<List<Prompt>> getPromptsByAuthor(@PathVariable UUID authorId) {
-        return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId));
+    public ResponseEntity<Page<Prompt>> getPromptsByAuthor(@PathVariable UUID authorId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+        Pageable pageable = PageRequest.of(page, size);
+
+        return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId,pageable));
     }
 
     @GetMapping("/{id}")
@@ -79,19 +91,27 @@ public class PromptController {
     }
 
     @GetMapping("/by-tag/{tagName}")
-    public ResponseEntity<List<Prompt>> getByTagName(@PathVariable String tagName) {
-        return ResponseEntity.ok(promptService.getPromptsByTagName(tagName));
+    public ResponseEntity<Page<Prompt>> getByTagName(@PathVariable String tagName,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(promptService.getPromptsByTagName(tagName,pageable));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Prompt>> searchPrompts(
+    public ResponseEntity<Page<Prompt>> searchPrompts(
             @RequestParam String query,
-            @RequestParam(required = false) Boolean onlyPublic) {
+            @RequestParam(required = false) Boolean onlyPublic,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+    
+        Pageable pageable = PageRequest.of(page, size);
         
         if (onlyPublic != null && onlyPublic) {
-            return ResponseEntity.ok(promptService.searchPublicByTitle(query));
+            return ResponseEntity.ok(promptService.searchPublicByTitle(query,pageable));
         }
-        return ResponseEntity.ok(promptService.searchByTitle(query));
+        return ResponseEntity.ok(promptService.searchByTitle(query,pageable));
     }
     
 
