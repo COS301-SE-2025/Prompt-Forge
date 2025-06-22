@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,13 +33,19 @@ public class PromptStoreController {
     private final PromptStoreService storeService;
 
     @GetMapping // ← Handles GET /api/store/prompts
-    public List<Prompt> getAllPublicPrompts() {
-        return storeService.getAllPublicPrompts();
+    public Page<Prompt> getAllPublicPrompts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.getAllPublicPrompts(pageable);
     }
     
     @GetMapping ("/page")// ← returns a page (a list of prom)
-    public List<Map<String, PromptWithAuthorDTO>> getPage(@RequestParam String page, @RequestParam String pageSize){
-        return storeService.getPage(page, pageSize);
+    public Page<Map<String, PromptWithAuthorDTO>> getPage(
+            @RequestParam String page, 
+            @RequestParam String pageSize) {
+        Pageable pageable = PageRequest.of(Integer.parseInt(page), Integer.parseInt(pageSize));
+        return storeService.getPage(page, pageSize, pageable);
     }
     
     @GetMapping ("/pages")// ← gets the number of pages needed for the prompts in the db
@@ -50,9 +59,13 @@ public class PromptStoreController {
     }
 
     @GetMapping ("/featured")// ← number of prompts
-    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(){
-        return storeService.getFeaturedPrompts();
+    public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.getFeaturedPrompts(pageable);
     }
+
 
 
     @PostMapping("/{promptId}/purchase")
@@ -63,9 +76,12 @@ public class PromptStoreController {
     }//////user id???
 
     @GetMapping("/{promptId}/reviews")
-    public ResponseEntity<List<PromptReview>> getPromptReviews(
-            @PathVariable UUID promptId) {
-        return ResponseEntity.ok(storeService.getPromptReviews(promptId));
+    public ResponseEntity<Page<PromptReview>> getPromptReviews(
+            @PathVariable UUID promptId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(storeService.getPromptReviews(promptId, pageable));
     }
 
     // @PostMapping("/reviews")
@@ -79,27 +95,42 @@ public class PromptStoreController {
 
 
     @GetMapping("/search")
-    public List<Prompt> searchPublic(@RequestParam String query) {
-        return storeService.searchPublic(query);
+    public Page<Prompt> searchPublic(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.searchPublic(query, pageable);
     }
 
     @GetMapping("/filter/price")
-    public List<Prompt> getUnderPrice(@RequestParam double maxPrice) {
-        return storeService.getPublicUnderPrice(maxPrice);
+    public Page<Prompt> getUnderPrice(
+            @RequestParam double maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.getPublicUnderPrice(maxPrice, pageable);
     }
 
     @GetMapping("/filter/tag/{tagName}")
-    public List<Prompt> getByTagName(@PathVariable String tagName) {
-        return storeService.getPublicByTagName(tagName);
+    public Page<Prompt> getByTagName(
+            @PathVariable String tagName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.getPublicByTagName(tagName, pageable);
     }
 
 
     // Get public prompts by author
     @GetMapping("/filter/author/{authorId}")
-    public List<Prompt> getPublicPromptsByAuthor(@PathVariable UUID authorId) {
-        return storeService.getPublicPromptsByAuthor(authorId);
+    public Page<Prompt> getPublicPromptsByAuthor(
+            @PathVariable UUID authorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return storeService.getPublicPromptsByAuthor(authorId, pageable);
     }
-
     // Delete (unpublish) listing
     @DeleteMapping("/{promptId}")
     public ResponseEntity<Void> deleteListing(@PathVariable UUID promptId) {
@@ -109,8 +140,11 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/recent")
-    public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
-    return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    public ResponseEntity<Page<Prompt>> getRecentlyPublishedPrompts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts(pageable));
     }
 
     @GetMapping("/tags")
@@ -129,6 +163,10 @@ public class PromptStoreController {
     /// top selling
 
     
-
+// @GetMapping("/{id}")
+//     public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id) {
+//         Prompt prompt = promptService.getPromptById(id);
+//         return prompt != null ? ResponseEntity.ok(prompt) : ResponseEntity.notFound().build();
+//     }
     
 }
