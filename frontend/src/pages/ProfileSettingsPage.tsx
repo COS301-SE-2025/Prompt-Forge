@@ -16,6 +16,7 @@ export default function ProfileSettingsPage() {
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
   const [bio, setBio] = useState<string>("")
   const [username, setUsername] = useState<string>("")
+  const [email, setEmail] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(true)
 
   // Load profile data on mount
@@ -25,6 +26,7 @@ export default function ProfileSettingsPage() {
         setLoading(true)
         const profile = await profileService.getCurrentProfile()
         setUsername(profile.username || "")
+        setEmail(profile.email || "")
         setBio(profile.bio || "")
         setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
       } catch (error) {
@@ -178,7 +180,13 @@ export default function ProfileSettingsPage() {
 
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue="markdavis@gmail.com" />
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-muted"
+                        />
                       </div>
 
                       <div className="space-y-2">
@@ -509,3 +517,7 @@ export default function ProfileSettingsPage() {
     </div>
   )
 }
+function setEmail(arg0: any) {
+  throw new Error("Function not implemented.")
+}
+
