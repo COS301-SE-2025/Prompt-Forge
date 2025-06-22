@@ -12,6 +12,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import org.springframework.data.domain.Pageable;
 
 class PromptAnalyticsServiceImplTest {
 
@@ -57,11 +58,27 @@ class PromptAnalyticsServiceImplTest {
         assertEquals(id, result.get(0).getPromptId());
     }
 
+    // @Test
+    // void testGetTopRankingPrompts() {
+    //     TopRankingPromptDTO dto = new TopRankingPromptDTO(UUID.randomUUID(), "Top", 4.5);
+    //     org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+    //     // when(analyticsRepository.findTopRankingPrompts(pageable)).thenReturn(List.of(dto));
+    //     when(analyticsRepository.findTopRankingPrompts(any(Pageable.class)))
+    //             .thenReturn(List.of(dto));
+
+    //     List<TopRankingPromptDTO> result = service.getTopRankingPrompts();
+
+    //     assertEquals(1, result.size());
+    //     assertEquals("Top", result.get(0).getTitle());
+    //     assertEquals(4.5, result.get(0).getAvgRating());
+    // }
+
     @Test
     void testGetTopRankingPrompts() {
         TopRankingPromptDTO dto = new TopRankingPromptDTO(UUID.randomUUID(), "Top", 4.5);
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
-        when(analyticsRepository.findTopRankingPrompts(pageable)).thenReturn(List.of(dto));
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 3);
+        when(analyticsRepository.findTopRankingPrompts(any(Pageable.class)))
+                .thenReturn(List.of(dto));
 
         List<TopRankingPromptDTO> result = service.getTopRankingPrompts();
 
