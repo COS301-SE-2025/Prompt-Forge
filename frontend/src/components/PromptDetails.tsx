@@ -259,12 +259,6 @@ export const PromptDetails = () => {
                   </p>
                 </div>
                 <div className="flex justify-center">
-                  <button
-                    onClick={handlePurchase}
-                    className="bg-[#3ebb9e] hover:bg-[#00674f] text-white font-medium py-2 px-6 rounded-lg transition-colors"
-                  >
-                    Purchase for ${prompt.price.toFixed(2)}
-                  </button>
                 </div>
               </div>
             </Card>
