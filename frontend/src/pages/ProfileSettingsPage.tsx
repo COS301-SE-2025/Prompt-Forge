@@ -12,11 +12,18 @@ import { profileService } from "../services/profileServices"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Saved state
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
-  const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
-  const [bio, setBio] = useState<string>("")
   const [username, setUsername] = useState<string>("")
   const [email, setEmail] = useState<string>("")
+  const [bio, setBio] = useState<string>("")
+  // Pending (unsaved) state
+  const [pendingProfileImage, setPendingProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
+  const [pendingUsername, setPendingUsername] = useState<string>("")
+  const [pendingEmail, setPendingEmail] = useState<string>("")
+  const [pendingBio, setPendingBio] = useState<string>("")
+  const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null)
+  const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
   const [loading, setLoading] = useState<boolean>(true)
 
   // Load profile data on mount
@@ -29,6 +36,11 @@ export default function ProfileSettingsPage() {
         setEmail(profile.email || "")
         setBio(profile.bio || "")
         setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+        // Set pending state to match loaded profile
+        setPendingUsername(profile.username || "")
+        setPendingEmail(profile.email || "")
+        setPendingBio(profile.bio || "")
+        setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
       } catch (error) {
         console.error("Failed to load profile", error)
       } finally {
@@ -38,44 +50,61 @@ export default function ProfileSettingsPage() {
     fetchProfile()
   }, [])
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Only update pending image, not saved
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
-    try {
-      setSaveStatus("saving")
-      const imageUrl = await profileService.uploadProfilePicture(file)
-      setProfileImage(imageUrl)
-      setSaveStatus("success")
-      setTimeout(() => setSaveStatus(null), 2000)
-    } catch (error) {
-      console.error("Upload failed", error)
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus(null), 2000)
+    // Show preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPendingProfileImage(e.target?.result as string)
     }
+    reader.readAsDataURL(file)
+    setPendingProfileImageFile(file)
   }
 
-  const handleRemoveImage = async () => {
-    try {
-      setSaveStatus("saving")
-      await profileService.deleteProfilePicture()
-      setProfileImage("/placeholder.svg?height=100&width=100")
-      setSaveStatus("success")
-      setTimeout(() => setSaveStatus(null), 2000)
-    } catch (error) {
-      console.error("Delete failed", error)
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus(null), 2000)
-    }
+  // Remove image in pending state
+  const handleRemoveImage = () => {
+    setPendingProfileImage("/placeholder.svg?height=100&width=100")
+    setPendingProfileImageFile(null)
   }
 
+  // Update pending state only
   const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setBio(e.target.value)
+    setPendingBio(e.target.value)
+  }
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingUsername(e.target.value)
+  }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingEmail(e.target.value)
   }
 
+  // Save changes: upload image if changed, then update profile
   const handleSave = async () => {
     try {
       setSaveStatus("saving")
-      await profileService.updateCurrentProfile({ username, bio })
+      let imageUrl = profileImage
+      if (pendingProfileImageFile) {
+        imageUrl = await profileService.uploadProfilePicture(pendingProfileImageFile)
+        setProfileImage(imageUrl)
+        setPendingProfileImageFile(null)
+      } else if (pendingProfileImage === "/placeholder.svg?height=100&width=100" && profileImage !== pendingProfileImage) {
+        await profileService.deleteProfilePicture()
+        imageUrl = "/placeholder.svg?height=100&width=100"
+        setProfileImage(imageUrl)
+      }
+      await profileService.updateCurrentProfile({
+        username: pendingUsername,
+        bio: pendingBio,
+        email: pendingEmail,
+        profilePicture: imageUrl,
+      })
+      // Update saved state
+      setUsername(pendingUsername)
+      setBio(pendingBio)
+      setEmail(pendingEmail)
+      setProfileImage(imageUrl)
       setSaveStatus("success")
       setTimeout(() => setSaveStatus(null), 2000)
     } catch (error) {
@@ -118,7 +147,7 @@ export default function ProfileSettingsPage() {
                       <div className="relative mb-4">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-muted">
                           <img
-                            src={profileImage}
+                            src={pendingProfileImage}
                             alt="Profile"
                             className="object-cover w-full h-full"
                           />
@@ -167,8 +196,8 @@ export default function ProfileSettingsPage() {
                           <Label htmlFor="username">Username</Label>
                           <Input
                             id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={pendingUsername}
+                            onChange={handleUsernameChange}
                             className="bg-muted"
                           />
                         </div>
@@ -183,8 +212,8 @@ export default function ProfileSettingsPage() {
                         <Input
                           id="email"
                           type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          value={pendingEmail}
+                          onChange={handleEmailChange}
                           className="bg-muted"
                         />
                       </div>
@@ -194,7 +223,7 @@ export default function ProfileSettingsPage() {
                         <Textarea
                           id="bio"
                           placeholder="Tell us about yourself"
-                          value={bio}
+                          value={pendingBio}
                           onChange={handleBioChange}
                           className="min-h-[100px]"
                         />
@@ -205,10 +234,7 @@ export default function ProfileSettingsPage() {
                   <div className="border-t border-border pt-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        {saveStatus === "saving" && (
-                          <span className="text-sm text-muted-foreground">Saving changes...</span>
-                        )}
-                        {saveStatus === "success" && (
+                      {saveStatus === "success" && (
                           <span className="text-sm text-green-500 flex items-center">
                             <Check className="h-4 w-4 mr-1" />
                             Changes saved successfully
