@@ -89,7 +89,7 @@ interface EditPromptData {
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 
 export default function SubmitPromptPage() {
-  const navigate = useNavigate() // Add this hook
+  const navigate = useNavigate()
   
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
@@ -114,6 +114,7 @@ export default function SubmitPromptPage() {
   // Payment-related state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank")
   const [bankingInfoNeeded, setBankingInfoNeeded] = useState(true)
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false) // Add this state
   const [accountName, setAccountName] = useState("")
   const [accountNumber, setAccountNumber] = useState("")
   const [bankName, setBankName] = useState("")
@@ -398,8 +399,8 @@ export default function SubmitPromptPage() {
     if (formData.title.length > 100) newErrors.title = "Title must be less than 100 characters"
     if (formData.description.length > 500) newErrors.description = "Description must be less than 500 characters"
 
-    // Payment validation (only for new prompts, not edits)
-    if (!isEditMode && bankingInfoNeeded) {
+    // Payment validation (only for new prompts, not edits, and only if payment details are shown)
+    if (!isEditMode && bankingInfoNeeded && showPaymentDetails) {
       switch (paymentMethod) {
         case "bank":
           if (!accountName.trim()) newErrors.accountName = "Account name is required"
@@ -832,52 +833,89 @@ export default function SubmitPromptPage() {
               </div>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <Landmark className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                Payment Details <span className="text-red-500">*</span>
-              </h2>
+            {/* Payment Details Card - Make it hideable */}
+            {!isEditMode && ( // Only show for new prompts, not edits
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-foreground flex items-center">
+                    <Landmark className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                    Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+                    className="flex items-center"
+                  >
+                    {showPaymentDetails ? (
+                      <>
+                        <X className="h-4 w-4 mr-1" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Payment Info
+                      </>
+                    )}
+                  </Button>
+                </div>
 
-              {bankingInfoNeeded && (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bank")}
-                      className={`p-4 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                    >
-                      <Landmark className="w-6 h-6" />
-                      <span className="text-sm font-medium">Bank Account</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("paypal")}
-                      className={`p-4 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                    >
-                      <WalletIcon className="w-6 h-6" />
-                      <span className="text-sm font-medium">PayPal</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("stripe")}
-                      className={`p-4 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                    >
-                      <CreditCardIcon className="w-6 h-6" />
-                      <span className="text-sm font-medium">Stripe</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("crypto")}
-                      className={`p-4 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                    >
-                      <BitcoinIcon className="w-6 h-6" />
-                      <span className="text-sm font-medium">Crypto</span>
-                    </button>
+                {!showPaymentDetails && (
+                  <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg border border-dashed">
+                    <p className="mb-2">💡 Payment details are optional but recommended</p>
+                    <p>Add your payment information to receive earnings from prompt sales. You can always add this later in your account settings.</p>
                   </div>
-                  <div className="mt-6">{renderPaymentMethodForm()}</div>
-                </>
-              )}
-            </Card>
+                )}
+
+                {showPaymentDetails && bankingInfoNeeded && (
+                  <>
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-700 dark:text-blue-400">
+                        <AlertCircle className="h-4 w-4 inline mr-1" />
+                        This information is securely stored and used only for payment processing.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("bank")}
+                        className={`p-4 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
+                      >
+                        <Landmark className="w-6 h-6" />
+                        <span className="text-sm font-medium">Bank Account</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("paypal")}
+                        className={`p-4 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
+                      >
+                        <WalletIcon className="w-6 h-6" />
+                        <span className="text-sm font-medium">PayPal</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("stripe")}
+                        className={`p-4 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
+                      >
+                        <CreditCardIcon className="w-6 h-6" />
+                        <span className="text-sm font-medium">Stripe</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("crypto")}
+                        className={`p-4 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
+                      >
+                        <BitcoinIcon className="w-6 h-6" />
+                        <span className="text-sm font-medium">Crypto</span>
+                      </button>
+                    </div>
+                    <div>{renderPaymentMethodForm()}</div>
+                  </>
+                )}
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
