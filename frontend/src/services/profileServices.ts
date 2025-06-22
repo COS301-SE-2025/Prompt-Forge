@@ -1,7 +1,7 @@
 import HttpClient from "./httpClient";
 class ProfileService {
     private baseUrl = "/user";
-    private httpClient = HttpClient;
+   
 
     async getCurrentProfile(): Promise<any> {
   const response = await fetch(`${HttpClient.apiUrl}${this.baseUrl}/me`, {

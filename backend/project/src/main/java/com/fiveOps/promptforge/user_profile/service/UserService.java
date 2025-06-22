@@ -28,7 +28,8 @@ public class UserService {
 
   private final Path uploadDir = Paths.get("uploads/profile-pictures");
   private final PasswordEncoder passwordEncoder;
-
+  private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png", "image/gif");
+  private static final List<String> ALLOWED_EXTENSIONS = List.of(".jpg", ".jpeg", ".png", ".gif");
   public UserService(
     UserRepository userRepository,
     PasswordEncoder passwordEncoder
@@ -147,36 +148,28 @@ public class UserService {
   }
 
   public String saveProfilePicture(String email, MultipartFile file) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
 
-    if (file.isEmpty()) {
-      throw new RuntimeException("Empty file");
-    }
+    // 🔒 Validate the file first
+    validateImageFile(file);
 
     try {
-      // You can generate a unique filename, e.g. userId + timestamp + original filename
-      String filename =
-        user.getUserId().toString() +
-        "_" +
-        System.currentTimeMillis() +
-        "_" +
-        file.getOriginalFilename();
-      Path filePath = uploadDir.resolve(filename);
-      Files.write(filePath, file.getBytes());
+        Files.createDirectories(uploadDir); // safe if exists
+        String filename = user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = uploadDir.resolve(filename);
+        Files.write(filePath, file.getBytes());
 
-      // Save the URL or relative path in the user profile
-      // For simplicity, just use the filename (adjust as needed for your front-end)
-      user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
-      user.setUpdatedAt(LocalDateTime.now());
-      userRepository.save(user);
+        user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
-      return user.getProfilePictureUrl();
+        return user.getProfilePictureUrl();
     } catch (IOException e) {
-      throw new RuntimeException("Failed to save profile picture", e);
+        throw new RuntimeException("Failed to save profile picture", e);
     }
-  }
+}
+
 
   public void deleteProfilePicture(String email) {
     User user = userRepository
@@ -246,4 +239,28 @@ public class UserService {
       .orElseThrow(() -> new RuntimeException("User not found"));
     return mapToDto(user);
   }
+
+  private void validateImageFile(MultipartFile file) {
+    String contentType = file.getContentType();
+    String filename = file.getOriginalFilename();
+
+    if (file.isEmpty()) {
+        throw new RuntimeException("File is empty");
+    }
+
+    // Check MIME type
+    if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
+        throw new RuntimeException("Unsupported file type: " + contentType);
+    }
+
+    // Check file extension
+    if (filename == null || ALLOWED_EXTENSIONS.stream().noneMatch(filename.toLowerCase()::endsWith)) {
+        throw new RuntimeException("Invalid file extension");
+    }
+
+    // Optionally: max size (e.g., 5MB)
+    if (file.getSize() > 5 * 1024 * 1024) {
+        throw new RuntimeException("File size exceeds 5MB limit");
+    }
+}
 }
