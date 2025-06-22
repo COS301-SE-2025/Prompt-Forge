@@ -13,22 +13,37 @@ import org.springframework.data.domain.Pageable;
 
 public interface PromptAnalyticsRepository extends CrudRepository<PromptAnalytics, UUID> {
 
-    @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO(a.promptId, p.title, CAST(SUM(a.viewCount) AS int)) " +
-           "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
-           "WHERE a.date >= :sevenDaysAgo " +
-           "GROUP BY a.promptId, p.title " +
-           "ORDER BY SUM(a.viewCount) DESC")
-    List<TrendingPromptDTO> findTrendingPrompts(LocalDate sevenDaysAgo);
+    // @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO(a.promptId, p.title, CAST(SUM(a.viewCount) AS int)) " +
+    //        "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+    //        "WHERE a.date >= :sevenDaysAgo " +
+    //        "GROUP BY a.promptId, p.title " +
+    //        "ORDER BY SUM(a.viewCount) DESC")
+    // List<TrendingPromptDTO> findTrendingPrompts(LocalDate sevenDaysAgo);
+
+    // // @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
+    // //    "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+    // //    "GROUP BY a.promptId, p.title " +
+    // //    "ORDER BY AVG(a.avgRating) DESC")
+    // // List<TopRankingPromptDTO> findTopRankingPrompts();
 
     // @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
-    //    "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
-    //    "GROUP BY a.promptId, p.title " +
-    //    "ORDER BY AVG(a.avgRating) DESC")
-    // List<TopRankingPromptDTO> findTopRankingPrompts();
+    //     "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+    //     "GROUP BY a.promptId, p.title " +
+    //     "ORDER BY AVG(a.avgRating) DESC")
+    // List<TopRankingPromptDTO> findTopRankingPrompts(Pageable pageable);
+//////////////////////////////////////////////////
+/// NOW PUBLIC PROMPTS ONLY
+    @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TrendingPromptDTO(a.promptId, p.title, CAST(SUM(a.viewCount) AS int)) " +
+       "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+       "WHERE a.date >= :sevenDaysAgo AND p.visibility = 'PUBLIC' " +
+       "GROUP BY a.promptId, p.title " +
+       "ORDER BY SUM(a.viewCount) DESC")
+List<TrendingPromptDTO> findTrendingPrompts(LocalDate sevenDaysAgo);
 
-    @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
-        "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
-        "GROUP BY a.promptId, p.title " +
-        "ORDER BY AVG(a.avgRating) DESC")
-    List<TopRankingPromptDTO> findTopRankingPrompts(Pageable pageable);
+@Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
+    "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+    "WHERE p.visibility = 'PUBLIC' " +
+    "GROUP BY a.promptId, p.title " +
+    "ORDER BY AVG(a.avgRating) DESC")
+List<TopRankingPromptDTO> findTopRankingPrompts(Pageable pageable);
 }
