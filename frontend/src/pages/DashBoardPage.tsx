@@ -235,7 +235,7 @@ export default function DashboardPage() {
               ) : myPrompts.length === 0 ? (
                 <div>No prompts found.</div>
               ) : (
-                myPrompts.map((prompt) => (
+                myPrompts.slice(0, 4).map((prompt) => ( // Only show top 4
                   <Card key={prompt.id} className="overflow-hidden">
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-2">
