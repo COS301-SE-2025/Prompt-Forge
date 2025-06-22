@@ -1,5 +1,3 @@
-
-
 import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
@@ -8,6 +6,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { StandardPromptCard } from "../components/StandardPromptCard"
 
 // Types matching your backend JSON
 type Prompt = {
@@ -106,7 +105,17 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+  
   if (error) return <div>Error: {error}</div>;
   if (!dashboard) return <div>No data</div>;
 
@@ -231,64 +240,28 @@ export default function DashboardPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {loadingPrompts ? (
-                <div>Loading prompts...</div>
+                <div className="flex justify-center items-center h-32 col-span-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Loading prompts...</p>
+                  </div>
+                </div>
               ) : myPrompts.length === 0 ? (
                 <div>No prompts found.</div>
               ) : (
                 myPrompts.map((prompt) => (
-                  <Card key={prompt.id} className="overflow-hidden">
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        {prompt.featured && (
-                          <div className="bg-green-500/20 text-green-500 text-xs font-medium px-2 py-1 rounded">
-                            Featured
-                          </div>
-                        )}
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                          <span className="text-xs ml-1">{prompt.rating}</span>
-                        </div>
-                      </div>
-                      <h3 className="font-medium mb-1">{prompt.title}</h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {prompt.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                            <User className="h-3 w-3" />
-                          </div>
-                          <span className="text-xs ml-1 text-muted-foreground">@{username}</span>
-                        </div>
-                        <div className="text-xs font-medium">${prompt.price}</div>
-                      </div>
-                    </div>
-                    <div className="border-t border-border flex">
-                      <div className="flex-1 py-2 text-center text-xs text-muted-foreground">
-                        <span>{prompt.uses} uses</span>
-                      </div>
-                      <div className="border-l border-border">
-                        <Button className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                            <path d="M3 6h18" />
-                            <path d="M16 10a4 4 0 0 1-8 0" />
-                          </svg>
-                          <span className="ml-1">Add to store</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                  <StandardPromptCard
+                    key={prompt.id}
+                    id={prompt.id}
+                    title={prompt.title}
+                    description={prompt.description}
+                    rating={prompt.rating}
+                    uses={prompt.uses}
+                    price={prompt.price}
+                    featured={prompt.featured}
+                    authorName={username}
+                    isOwned={true}
+                  />
                 ))
               )}
             </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom" // Add this import
 import { 
   Save, Eye, Send, Plus, X, AlertCircle, CheckCircle, Lightbulb, 
   Tag, FileText, User, AlertCircleIcon, WalletIcon, CreditCardIcon, 
@@ -21,13 +22,16 @@ const Button = ({ children, variant = "default", size = "default", disabled = fa
     id={id}
     onClick={onClick}
     disabled={disabled}
-    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-      variant === "outline" 
-        ? "border border-border bg-transparent hover:bg-muted" 
-        : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-    } ${size === "sm" ? "px-3 py-1 text-sm" : ""} ${className} ${
-      disabled ? "opacity-50 cursor-not-allowed" : ""
-    }`}
+    className={`
+      inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2
+      ${variant === "outline" 
+        ? "border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" 
+        : "bg-[#3ebb9e] hover:bg-[#00674f] text-white border border-transparent"
+      } 
+      ${size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm"} 
+      ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"} 
+      ${className}
+    `}
   >
     {children}
   </button>
@@ -85,6 +89,8 @@ interface EditPromptData {
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 
 export default function SubmitPromptPage() {
+  const navigate = useNavigate() // Add this hook
+  
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
     description: "",
@@ -190,7 +196,7 @@ export default function SubmitPromptPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label htmlFor="accountName" className="block mb-2 text-sm font-medium">
+              <label htmlFor="accountName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Account Holder Name
               </label>
               <input
@@ -198,18 +204,21 @@ export default function SubmitPromptPage() {
                 id="accountName"
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
-                className={`w-full bg-muted border ${errors.accountName ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                  errors.accountName ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                }`}
                 placeholder="Full name on account"
               />
               {errors.accountName && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.accountName}
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircleIcon className="h-3 w-3 mr-1" />
+                  {errors.accountName}
                 </p>
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="accountNumber" className="block mb-2 text-sm font-medium">
+                <label htmlFor="accountNumber" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                   Account Number
                 </label>
                 <input
@@ -217,17 +226,20 @@ export default function SubmitPromptPage() {
                   id="accountNumber"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  className={`w-full bg-muted border ${errors.accountNumber ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                  className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                    errors.accountNumber ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  }`}
                   placeholder="Your account number"
                 />
                 {errors.accountNumber && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.accountNumber}
+                  <p className="text-red-500 text-xs mt-1 flex items-center">
+                    <AlertCircleIcon className="h-3 w-3 mr-1" />
+                    {errors.accountNumber}
                   </p>
                 )}
               </div>
               <div>
-                <label htmlFor="routingNumber" className="block mb-2 text-sm font-medium">
+                <label htmlFor="routingNumber" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                   Routing Number
                 </label>
                 <input
@@ -235,18 +247,21 @@ export default function SubmitPromptPage() {
                   id="routingNumber"
                   value={routingNumber}
                   onChange={(e) => setRoutingNumber(e.target.value)}
-                  className={`w-full bg-muted border ${errors.routingNumber ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                  className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                    errors.routingNumber ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  }`}
                   placeholder="Your bank's routing number"
                 />
                 {errors.routingNumber && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.routingNumber}
+                  <p className="text-red-500 text-xs mt-1 flex items-center">
+                    <AlertCircleIcon className="h-3 w-3 mr-1" />
+                    {errors.routingNumber}
                   </p>
                 )}
               </div>
             </div>
             <div>
-              <label htmlFor="bankName" className="block mb-2 text-sm font-medium">
+              <label htmlFor="bankName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Bank Name
               </label>
               <input
@@ -254,12 +269,15 @@ export default function SubmitPromptPage() {
                 id="bankName"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                className={`w-full bg-muted border ${errors.bankName ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                  errors.bankName ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                }`}
                 placeholder="Your bank's name"
               />
               {errors.bankName && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.bankName}
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircleIcon className="h-3 w-3 mr-1" />
+                  {errors.bankName}
                 </p>
               )}
             </div>
@@ -268,7 +286,7 @@ export default function SubmitPromptPage() {
       case "paypal":
         return (
           <div>
-            <label htmlFor="paypalEmail" className="block mb-2 text-sm font-medium">
+            <label htmlFor="paypalEmail" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               PayPal Email Address
             </label>
             <input
@@ -276,12 +294,15 @@ export default function SubmitPromptPage() {
               id="paypalEmail"
               value={paypalEmail}
               onChange={(e) => setPaypalEmail(e.target.value)}
-              className={`w-full bg-muted border ${errors.paypalEmail ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                errors.paypalEmail ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              }`}
               placeholder="your-email@example.com"
             />
             {errors.paypalEmail && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.paypalEmail}
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircleIcon className="h-3 w-3 mr-1" />
+                {errors.paypalEmail}
               </p>
             )}
           </div>
@@ -289,7 +310,7 @@ export default function SubmitPromptPage() {
       case "stripe":
         return (
           <div>
-            <label htmlFor="stripeAccount" className="block mb-2 text-sm font-medium">
+            <label htmlFor="stripeAccount" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Stripe Account ID
             </label>
             <input
@@ -297,12 +318,15 @@ export default function SubmitPromptPage() {
               id="stripeAccount"
               value={stripeAccount}
               onChange={(e) => setStripeAccount(e.target.value)}
-              className={`w-full bg-muted border ${errors.stripeAccount ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                errors.stripeAccount ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              }`}
               placeholder="acct_..."
             />
             {errors.stripeAccount && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.stripeAccount}
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircleIcon className="h-3 w-3 mr-1" />
+                {errors.stripeAccount}
               </p>
             )}
           </div>
@@ -311,14 +335,16 @@ export default function SubmitPromptPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label htmlFor="cryptoNetwork" className="block mb-2 text-sm font-medium">
+              <label htmlFor="cryptoNetwork" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Network
               </label>
               <select
                 id="cryptoNetwork"
                 value={cryptoNetwork}
                 onChange={(e) => setCryptoNetwork(e.target.value)}
-                className={`w-full bg-muted border ${errors.cryptoNetwork ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                  errors.cryptoNetwork ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                }`}
               >
                 <option value="">Select a network</option>
                 <option value="ethereum">Ethereum (ETH)</option>
@@ -327,13 +353,14 @@ export default function SubmitPromptPage() {
                 <option value="usdt">USDT</option>
               </select>
               {errors.cryptoNetwork && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.cryptoNetwork}
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircleIcon className="h-3 w-3 mr-1" />
+                  {errors.cryptoNetwork}
                 </p>
               )}
             </div>
             <div>
-              <label htmlFor="cryptoAddress" className="block mb-2 text-sm font-medium">
+              <label htmlFor="cryptoAddress" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Wallet Address
               </label>
               <input
@@ -341,12 +368,15 @@ export default function SubmitPromptPage() {
                 id="cryptoAddress"
                 value={cryptoAddress}
                 onChange={(e) => setCryptoAddress(e.target.value)}
-                className={`w-full bg-muted border ${errors.cryptoAddress ? "border-red-500" : "border-border"} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e]`}
+                className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
+                  errors.cryptoAddress ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                }`}
                 placeholder="Your wallet address"
               />
               {errors.cryptoAddress && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircleIcon className="w-4 h-4 mr-1" /> {errors.cryptoAddress}
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircleIcon className="h-3 w-3 mr-1" />
+                  {errors.cryptoAddress}
                 </p>
               )}
             </div>
@@ -404,30 +434,37 @@ export default function SubmitPromptPage() {
       setShowSuccess(true)
       
       setTimeout(() => {
-        setFormData({
-          title: "",
-          description: "",
-          category: "",
-          tags: [],
-          promptText: "",
-          instructions: "",
-          expectedOutput: "",
-          useCase: "",
-          isPrivate: false,
-        })
-        setShowSuccess(false)
-        setIsEditMode(false)
-        setEditingPromptId(null)
+        // Only clear form and navigate if it's a new submission, not an edit
+        if (!isEditMode) {
+          setFormData({
+            title: "",
+            description: "",
+            category: "",
+            tags: [],
+            promptText: "",
+            instructions: "",
+            expectedOutput: "",
+            useCase: "",
+            isPrivate: false,
+          })
+          
+          // Reset payment fields for new submissions
+          setAccountName("")
+          setAccountNumber("")
+          setBankName("")
+          setRoutingNumber("")
+          setPaypalEmail("")
+          setStripeAccount("")
+          setCryptoAddress("")
+          setCryptoNetwork("")
+        } else {
+          // For edits, just navigate back to my prompts page after showing success
+          setTimeout(() => {
+            navigate('/my-prompts')
+          }, 1000)
+        }
         
-        // Reset payment fields
-        setAccountName("")
-        setAccountNumber("")
-        setBankName("")
-        setRoutingNumber("")
-        setPaypalEmail("")
-        setStripeAccount("")
-        setCryptoAddress("")
-        setCryptoNetwork("")
+        setShowSuccess(false)
       }, 3000)
     } catch (error) {
       console.error("Submission error:", error)
@@ -441,16 +478,22 @@ export default function SubmitPromptPage() {
     const draftData = JSON.stringify(formData)
     console.log("Draft saved:", draftData) // In a real app, you'd save this to your backend
     
-    const button = document.getElementById("save-draft-btn")
-    if (button) {
-      const originalText = button.textContent
-      button.textContent = "Saved!"
-      setTimeout(() => {
-        if (button && originalText) {
-          button.textContent = originalText
-        }
-      }, 2000)
+    // Update both save draft buttons
+    const updateButton = (buttonId: string) => {
+      const button = document.getElementById(buttonId)
+      if (button) {
+        const originalText = button.innerHTML
+        button.innerHTML = '<svg class="h-4 w-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Saved!'
+        setTimeout(() => {
+          if (button) {
+            button.innerHTML = originalText
+          }
+        }, 2000)
+      }
     }
+    
+    updateButton("save-draft-btn")
+    updateButton("save-draft-btn-bottom")
   }
 
   const loadDraft = () => {
@@ -483,6 +526,11 @@ export default function SubmitPromptPage() {
     setStripeAccount("")
     setCryptoAddress("")
     setCryptoNetwork("")
+    
+    // Navigate back to my prompts page if we were editing
+    if (isEditMode) {
+      navigate('/my-prompts')
+    }
   }
 
   return (
@@ -490,7 +538,7 @@ export default function SubmitPromptPage() {
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div>
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
@@ -501,16 +549,31 @@ export default function SubmitPromptPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               {isEditMode && (
-                <Button variant="outline" onClick={clearForm}>
+                <Button 
+                  variant="outline" 
+                  onClick={clearForm}
+                  className="flex items-center px-4 py-2 text-sm font-medium"
+                >
+                  <X className="h-4 w-4 mr-2" />
                   Cancel Edit
                 </Button>
               )}
-              <Button variant="outline" onClick={loadDraft}>
+              <Button 
+                variant="outline" 
+                onClick={loadDraft} 
+                className="flex items-center px-4 py-2 text-sm font-medium"
+              >
+                <FileText className="h-4 w-4 mr-2" />
                 Load Draft
               </Button>
-              <Button variant="outline" onClick={saveDraft} id="save-draft-btn">
+              <Button 
+                variant="outline" 
+                onClick={saveDraft} 
+                id="save-draft-btn"
+                className="flex items-center px-4 py-2 text-sm font-medium"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Save Draft
               </Button>
@@ -720,7 +783,7 @@ export default function SubmitPromptPage() {
                 <div className="flex space-x-2">
                   <input
                     type="text"
-                    className="flex-1 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
+                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
                     placeholder="Add a tag and press Enter"
                     value={currentTag}
                     onChange={(e) => setCurrentTag(e.target.value)}
@@ -731,6 +794,7 @@ export default function SubmitPromptPage() {
                       }
                     }}
                   />
+
                   <Button
                     onClick={addTag}
                     size="sm"
@@ -824,7 +888,12 @@ export default function SubmitPromptPage() {
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
-              <Button id="preview" variant="outline" className="w-full" onClick={() => setShowPreview(!showPreview)}>
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center py-2" 
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
                 {showPreview ? "Hide Preview" : "Show Preview"}
               </Button>
 
@@ -891,34 +960,47 @@ export default function SubmitPromptPage() {
         </div>
 
         {/* Submit Actions */}
-        <div className="mt-8 flex items-center justify-between p-6 bg-muted/30 rounded-lg border border-border">
-          <div className="text-sm text-muted-foreground">
-            <p>By submitting, you agree to our community guidelines and terms of service.</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Link to="#preview">
-              <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+        <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="text-sm text-muted-foreground flex-1">
+              <p>By submitting, you agree to our community guidelines and terms of service.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowPreview(!showPreview)}
+                className="flex items-center justify-center px-6 py-2 text-sm font-medium"
+              >
                 <Eye className="h-4 w-4 mr-2" />
-                Preview
+                {showPreview ? "Hide Preview" : "Show Preview"}
               </Button>
-            </Link>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Submit Prompt
-                </>
-              )}
-            </Button>
+              <Button
+                variant="outline"
+                onClick={saveDraft}
+                id="save-draft-btn-bottom"
+                className="flex items-center justify-center px-6 py-2 text-sm font-medium"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-8 py-2 text-sm font-medium flex items-center justify-center min-w-[140px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {isEditMode ? "Updating..." : "Submitting..."}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    {isEditMode ? "Update Prompt" : "Submit Prompt"}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
