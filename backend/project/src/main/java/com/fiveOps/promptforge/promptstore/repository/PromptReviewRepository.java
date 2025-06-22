@@ -1,16 +1,18 @@
 package com.fiveOps.promptforge.promptstore.repository;
 
-import com.fiveOps.promptforge.promptstore.model.PromptReview;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import com.fiveOps.promptforge.promptstore.model.PromptReview;
 
 @Repository
 public interface PromptReviewRepository extends JpaRepository<PromptReview, UUID> {
-    List<PromptReview> findByPromptId(UUID promptId);
+    Page<PromptReview> findByPromptId(UUID promptId,Pageable pageable);
     boolean existsByPromptIdAndUserId(UUID promptId, UUID userId);
     
     @Query("SELECT AVG(r.rating) FROM PromptReview r WHERE r.promptId = :promptId")
