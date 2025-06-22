@@ -9,14 +9,21 @@ import { Link } from 'react-router-dom';
 import { StandardPromptCard } from "../components/StandardPromptCard"
 
 // Types matching your backend JSON
-type Prompt = {
+type MyPrompt = {
   id: string;
   title: string;
   description: string;
+  content: string;
+  category: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
   rating: number;
   uses: number;
-  price: number;
   featured: boolean;
+  price: number;
+  isPrivate: boolean;
+  isFavorite: boolean;
 };
 
 type TopPromptType = {
@@ -52,19 +59,53 @@ export default function DashboardPage() {
     return localStorage.getItem('username') || "theo_unknown";
   });
 
-  //Prompts data states
-  const [myPrompts, setMyPrompts] = useState<Prompt[]>([]);
+  // Prompts data states - using same structure as MyPromptsPage
+  const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Fetch prompts using same endpoint and mapping as MyPromptsPage
   useEffect(() => {
-    const authorId = localStorage.getItem("userId"); // or get from auth context
-    console.log("Author ID:", authorId);
-    if (!authorId) return;
-    console.log(authorId);
-    fetch(`/prompts/author/${authorId}`)
-      .then(res => res.json())
-      .then(setMyPrompts)
-      .finally(() => setLoadingPrompts(false));
+    const fetchMyPrompts = async () => {
+      setLoadingPrompts(true);
+      const authorId = "706d87a3-b874-4b37-a041-e67201f4ed22"; // Use the specific author ID
+      if (!authorId) {
+        setMyPrompts([]);
+        setLoadingPrompts(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/prompts/author/${authorId}`);
+        let prompts = await res.json();
+        if (!Array.isArray(prompts)) prompts = [];
+        
+        // Map backend fields to frontend MyPrompt interface - same as MyPromptsPage
+        const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description || "",
+          content: p.content || "",
+          category: "General", // Default, backend does not provide
+          tags: p.tagNames || [],
+          createdAt: p.createdAt,
+          updatedAt: p.publishedAt || p.createdAt,
+          rating: 0, // Default, backend does not provide
+          uses: 0,   // Default, backend does not provide
+          featured: p.featured || false,
+          price: p.price || 0,
+          isPrivate: p.visibility !== "public",
+          isFavorite: false // Default, backend does not provide
+        }));
+        
+        setMyPrompts(mappedPrompts);
+      } catch (error) {
+        console.error("Failed to fetch prompts:", error);
+        setMyPrompts([]);
+      }
+      setLoadingPrompts(false);
+    };
+    
+    fetchMyPrompts();
   }, []);
 
   // Dashboard data states
@@ -105,6 +146,41 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Handlers for StandardPromptCard - same as MyPromptsPage
+  const handleDeletePrompt = (id: string) => {
+    setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+  };
+
+  const handleCopyPrompt = async (content: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      setCopiedId(null);
+    }
+  };
+
+  const handleEditPrompt = (prompt: MyPrompt) => {
+    const editData = {
+      id: prompt.id,
+      title: prompt.title,
+      description: prompt.description,
+      category: prompt.category,
+      tags: prompt.tags,
+      promptText: prompt.content,
+      instructions: "",
+      expectedOutput: "",
+      useCase: "",
+      isPrivate: prompt.isPrivate
+    };
+    sessionStorage.setItem("editPromptData", JSON.stringify(editData));
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -118,6 +194,9 @@ export default function DashboardPage() {
   
   if (error) return <div>Error: {error}</div>;
   if (!dashboard) return <div>No data</div>;
+
+  // Get first few prompts for dashboard display
+  const displayPrompts = myPrompts.slice(0, 4);
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
@@ -136,7 +215,7 @@ export default function DashboardPage() {
             <h3 className="font-medium">{username}</h3>
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
-                <div className="font-semibold">2</div>
+                <div className="font-semibold">{myPrompts.length}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div className="text-center">
@@ -151,18 +230,7 @@ export default function DashboardPage() {
             <div className="w-full mt-6">
               <div className="flex items-center justify-between mb-1">
                 <div className="font-medium">Badges</div>
-                {/* <div className="flex items-center">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                  <span className="text-sm font-medium">{dashboard.averageRating}</span>
-                </div> */}
               </div>
-              {/* <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-[#3ebb9e] rounded-full" style={{ width: `${Math.min(100, (dashboard.averageRating / 5) * 100)}%` }}></div>
-              </div> */}
-              {/* <div className="flex justify-between text-xs mt-1">
-                <span className="text-green-500">+0.2 this week</span>
-                <span className="text-muted-foreground">Last month</span>
-              </div> */}
             </div>
           </div>
           <div className="space-y-4">
@@ -247,9 +315,16 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : myPrompts.length === 0 ? (
-                <div>No prompts found.</div>
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground mb-4">No prompts found.</p>
+                  <Link to="/submit">
+                    <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+                      Create Your First Prompt
+                    </Button>
+                  </Link>
+                </div>
               ) : (
-                myPrompts.map((prompt) => (
+                displayPrompts.map((prompt) => (
                   <StandardPromptCard
                     key={prompt.id}
                     id={prompt.id}
@@ -259,8 +334,18 @@ export default function DashboardPage() {
                     uses={prompt.uses}
                     price={prompt.price}
                     featured={prompt.featured}
+                    isPrivate={prompt.isPrivate}
+                    isFavorite={prompt.isFavorite}
+                    tags={prompt.tags}
+                    category={prompt.category}
                     authorName={username}
                     isOwned={true}
+                    onEdit={handleEditPrompt}
+                    onDelete={handleDeletePrompt}
+                    onToggleFavorite={handleToggleFavorite}
+                    onCopy={handleCopyPrompt}
+                    copiedId={copiedId}
+                    content={prompt.content}
                   />
                 ))
               )}
