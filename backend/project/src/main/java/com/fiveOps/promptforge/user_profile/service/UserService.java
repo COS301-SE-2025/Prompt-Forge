@@ -121,12 +121,23 @@ public class UserService {
 
   private UserDto mapToDto(User user) {
     UserDto dto = new UserDto();
+    dto.setUserId(user.getUserId());
     dto.setUsername(user.getUsername());
     dto.setEmail(user.getEmail());
     dto.setProfilePicture(user.getProfilePictureUrl());
     dto.setBio(user.getBio());
+    dto.setRole(user.getRole());
+    dto.setVerified(Boolean.TRUE.equals(user.getIsVerified()));
+    dto.setActive(Boolean.TRUE.equals(user.getIsActive()));
+    dto.setCreatedAt(user.getCreatedAt());
+    dto.setUpdatedAt(user.getUpdatedAt());
+
+    dto.setBadges(user.getBadges() != null ? Arrays.asList(user.getBadges()) : List.of());
+    dto.setFollowers(user.getFollowers() != null ? Arrays.asList(user.getFollowers()) : List.of());
+    dto.setFollowing(user.getFollowing() != null ? Arrays.asList(user.getFollowing()) : List.of());
+
     return dto;
-  }
+}
 
   public UUID getUserIdByEmail(String email) {
     return userRepository
