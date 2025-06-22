@@ -9,6 +9,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 
 public interface PromptAnalyticsRepository extends CrudRepository<PromptAnalytics, UUID> {
 
@@ -19,9 +20,15 @@ public interface PromptAnalyticsRepository extends CrudRepository<PromptAnalytic
            "ORDER BY SUM(a.viewCount) DESC")
     List<TrendingPromptDTO> findTrendingPrompts(LocalDate sevenDaysAgo);
 
+    // @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
+    //    "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+    //    "GROUP BY a.promptId, p.title " +
+    //    "ORDER BY AVG(a.avgRating) DESC")
+    // List<TopRankingPromptDTO> findTopRankingPrompts();
+
     @Query("SELECT new com.fiveOps.promptforge.analytics.ana_dto.TopRankingPromptDTO(a.promptId, p.title, AVG(a.avgRating)) " +
-       "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
-       "GROUP BY a.promptId, p.title " +
-       "ORDER BY AVG(a.avgRating) DESC")
-    List<TopRankingPromptDTO> findTopRankingPrompts();
+        "FROM PromptAnalytics a JOIN Prompt p ON a.promptId = p.id " +
+        "GROUP BY a.promptId, p.title " +
+        "ORDER BY AVG(a.avgRating) DESC")
+    List<TopRankingPromptDTO> findTopRankingPrompts(Pageable pageable);
 }
