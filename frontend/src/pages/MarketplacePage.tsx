@@ -2,10 +2,10 @@ import { useEffect, useState } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
-import { Sparkles, Star, User, Search, Filter } from "lucide-react"
+import { Sparkles, Star, User, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Prompt, Tag,PromptWithTags, MarketplacePrompt} from "@/models/Prompt"
+import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
@@ -20,6 +20,7 @@ export default function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
+  const [showFeatured, setShowFeatured] = useState(true) // Add this state
   const [availableCategories, setAvailableCategories] = useState<string[]>(['all'])
   const [loading, setLoading] = useState(true)
   const [tagsLoading, setTagsLoading] = useState(true)
@@ -130,20 +131,30 @@ export default function MarketplacePage() {
     { value: "new", label: "New" },
   ]
 
-  if (loading) return <div className="flex justify-center p-8">Loading prompts...</div>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading prompts...</p>
+        </div>
+      </div>
+    )
+  }
+  
   if (error) return <div className="text-red-500 p-8">{error}</div>
 
-  const changePage=(pageNumber:number)=>{
+  const changePage = (pageNumber: number) => {
     setLoading(true)
     setTagsLoading(true)
     setError(null)
     setCurrentPage(pageNumber);
-    promptService.getMarketplacePrompts(pageNumber-1)
-    .then(res=>{
+    promptService.getMarketplacePrompts(pageNumber - 1)
+    .then(res => {
       setCurrentPrompts(res.prompts)
       setFilteredPrompts(res.prompts)
     })
-    .finally(()=>{
+    .finally(() => {
       setLoading(false)
       setTagsLoading(false)
     })
@@ -230,20 +241,39 @@ export default function MarketplacePage() {
             {/* Featured Prompts */}
             {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
               <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                  <h2 className="text-lg font-medium">Featured Prompts</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                    <h2 className="text-lg font-medium">Featured Prompts</h2>
+                    <span className="ml-2 text-sm text-muted-foreground">({featuredPromts.length})</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFeatured(!showFeatured)}
+                    className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {showFeatured ? "Hide" : "Show"}
+                    {showFeatured ? (
+                      <ChevronUp className="h-4 w-4 ml-1" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    )}
+                  </Button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  {featuredPromts.map((prompt) => (
-                    <PromptCard
-                      key={prompt.id}
-                      {...prompt}
-                      tags={prompt.tagnames}
-                    // tagsLoading={tagsLoading}
-                    />
-                  ))}
-                </div>
+                
+                {showFeatured && (
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-all duration-300 ease-in-out">
+                    {featuredPromts.map((prompt) => (
+                      <PromptCard
+                        key={prompt.id}
+                        {...prompt}
+                        tags={prompt.tagnames}
+                        // tagsLoading={tagsLoading}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
