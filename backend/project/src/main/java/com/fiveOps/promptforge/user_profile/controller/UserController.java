@@ -97,7 +97,7 @@ public class UserController {
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<Map<String, String>> uploadProfilePicture(
-    @RequestParam("file") MultipartFile file,
+    @RequestParam MultipartFile file,
     HttpServletRequest request
   ) {
     String email = extractEmailFromCookie(request);
@@ -138,13 +138,18 @@ public class UserController {
     String email = extractEmailFromCookie(request);
     UserDto user = userService.getUserByEmail(email);
 
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(Map.of("error", "User not found"));
+    }
+
     Map<String, Object> cardData = Map.of(
       "username",
-      user.getUsername(),
+      user.getUsername() != null ? user.getUsername() : "",
       "bio",
-      user.getBio(),
+      user.getBio() != null ? user.getBio() : "",
       "profilePicture",
-      user.getProfilePicture(),
+      user.getProfilePicture() != null ? user.getProfilePicture() : "",
       "followersCount",
       user.getFollowers() == null ? 0 : user.getFollowers().size(),
       "followingCount",
