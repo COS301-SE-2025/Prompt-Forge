@@ -37,7 +37,17 @@ class ProfileService {
       }
     }
 
-    const response = await HttpClient.patch(`${this.baseUrl}/me`, data);
+    const response = await fetch(
+      `${HttpClient.apiUrl}${this.baseUrl}/me`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      }
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to update profile");
