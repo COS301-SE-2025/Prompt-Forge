@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.promptstore.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
@@ -21,15 +24,37 @@ import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/store/prompts")
+@RequestMapping("/store/prompts")
 @RequiredArgsConstructor
 public class PromptStoreController {
     private final PromptStoreService storeService;
 
     @GetMapping // ← Handles GET /api/store/prompts
     public List<Prompt> getAllPublicPrompts() {
-    return storeService.getAllPublicPrompts();
-}
+        return storeService.getAllPublicPrompts();
+    }
+    
+    @GetMapping ("/page")// ← returns a page (a list of prom)
+    public List<Map<String, PromptWithAuthorDTO>> getPage(@RequestParam String page, @RequestParam String pageSize){
+        return storeService.getPage(page, pageSize);
+    }
+    
+    @GetMapping ("/pages")// ← gets the number of pages needed for the prompts in the db
+    public long getPageCount(@RequestParam String pageSize){
+        return storeService.getPageCount(pageSize);
+    }
+    
+    @GetMapping ("/count")// ← number of prompts
+    public long getPromptCount(){
+        return storeService.getPromptCount();
+    }
+
+    @GetMapping ("/featured")// ← number of prompts
+    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(){
+        return storeService.getFeaturedPrompts();
+    }
+
+
     @PostMapping("/{promptId}/purchase")
     public ResponseEntity<PromptPurchase> purchasePrompt(
             @PathVariable UUID promptId,
@@ -86,6 +111,16 @@ public class PromptStoreController {
     @GetMapping("/filter/recent")
     public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
     return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    }
+
+    @GetMapping("/tags")
+    public List<Tag> getAllTags() {
+        return storeService.getAllTags();
+    }
+
+    @GetMapping("/tags/popular")
+    public List<Tag> getPopularTags(@RequestParam(defaultValue = "10") int limit) {
+        return storeService.getPopularTags(limit);
     }
 
 

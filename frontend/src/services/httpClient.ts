@@ -1,5 +1,5 @@
 const HttpClient = {
-    apiUrl : 'http://localhost:8080/api',
+    apiUrl : 'http://localhost:8080',
     async get(endpoint:string) {
         return await fetch(`${this.apiUrl}${endpoint}`);
     },
