@@ -1,34 +1,70 @@
+"use client"
+
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom" // Add this import
-import { 
-  Save, Eye, Send, Plus, X, AlertCircle, CheckCircle, Lightbulb, 
-  Tag, FileText, User, AlertCircleIcon, WalletIcon, CreditCardIcon, 
-  BitcoinIcon, Landmark 
+import {
+  Save,
+  Eye,
+  Send,
+  Plus,
+  X,
+  AlertCircle,
+  CheckCircle,
+  Lightbulb,
+  FileText,
+  User,
+  AlertCircleIcon,
+  WalletIcon,
+  CreditCardIcon,
+  BitcoinIcon,
+  Landmark,
+  Star,
+  Edit,
+  Trash2,
+  Copy,
+  Play,
 } from "lucide-react"
 
 // Mock components - replace with your actual UI components
+// Update the ButtonProps interface to include title
 interface ButtonProps {
-  children: React.ReactNode;
-  variant?: string;
-  size?: string;
-  disabled?: boolean;
-  className?: string;
-  onClick?: () => void;
-  id?: string;
+  children: React.ReactNode
+  variant?: string
+  size?: string
+  disabled?: boolean
+  className?: string
+  onClick?: () => void
+  id?: string
+  title?: string // Add this line
 }
 
-const Button = ({ children, variant = "default", size = "default", disabled = false, className = "", onClick, id }: ButtonProps) => (
+const Button = ({
+  children,
+  variant = "default",
+  size = "default",
+  disabled = false,
+  className = "",
+  onClick,
+  id,
+  title,
+}: ButtonProps) => (
   <button
     id={id}
     onClick={onClick}
     disabled={disabled}
+    title={title} // Add this line
     className={`
       inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2
-      ${variant === "outline" 
-        ? "border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" 
-        : "bg-[#3ebb9e] hover:bg-[#00674f] text-white border border-transparent"
+      ${
+        variant === "outline"
+          ? "border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+          : variant === "ghost"
+            ? "border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+            : "bg-[#3ebb9e] hover:bg-[#00674f] text-white border border-transparent"
       } 
-      ${size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm"} 
+      ${size === "sm" ? "px-3 py-1.5 text-sm" : size === "icon" ? "p-2" : "px-4 py-2 text-sm"} 
       ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"} 
       ${className}
     `}
@@ -38,21 +74,19 @@ const Button = ({ children, variant = "default", size = "default", disabled = fa
 )
 
 interface CardProps {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }
 
 const Card = ({ children, className = "" }: CardProps) => (
-  <div className={`bg-card border border-border rounded-lg ${className}`}>
-    {children}
-  </div>
+  <div className={`bg-card border border-border rounded-lg ${className}`}>{children}</div>
 )
 
 // Mock Link component - replace with your actual router Link
 interface LinkProps {
-  to: string;
-  children: React.ReactNode;
-  className?: string;
+  to: string
+  children: React.ReactNode
+  className?: string
 }
 
 const Link = ({ to, children, className = "" }: LinkProps) => (
@@ -61,28 +95,24 @@ const Link = ({ to, children, className = "" }: LinkProps) => (
   </a>
 )
 
+// Update the PromptSubmission interface to remove instructions, useCase, and tags
 interface PromptSubmission {
   title: string
   description: string
   category: string
-  tags: string[]
   promptText: string
-  instructions: string
   expectedOutput: string
-  useCase: string
   isPrivate?: boolean
 }
 
+// Update the EditPromptData interface as well
 interface EditPromptData {
   id: string
   title: string
   description: string
   category: string
-  tags: string[]
   promptText: string
-  instructions: string
   expectedOutput: string
-  useCase: string
   isPrivate: boolean
 }
 
@@ -90,20 +120,17 @@ type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 
 export default function SubmitPromptPage() {
   const navigate = useNavigate()
-  
+
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
     description: "",
     category: "",
-    tags: [],
     promptText: "",
-    instructions: "",
     expectedOutput: "",
-    useCase: "",
     isPrivate: false,
   })
 
-  const [currentTag, setCurrentTag] = useState("")
+  // Remove currentTag state since we're removing tags
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -126,7 +153,7 @@ export default function SubmitPromptPage() {
 
   const categories = [
     "Development",
-    "Creative Writing", 
+    "Creative Writing",
     "Business",
     "Education",
     "Marketing",
@@ -149,16 +176,13 @@ export default function SubmitPromptPage() {
           title: parsedData.title,
           description: parsedData.description,
           category: parsedData.category,
-          tags: parsedData.tags,
           promptText: parsedData.promptText,
-          instructions: parsedData.instructions,
           expectedOutput: parsedData.expectedOutput,
-          useCase: parsedData.useCase,
           isPrivate: parsedData.isPrivate,
         })
         setIsEditMode(true)
         setEditingPromptId(parsedData.id)
-        
+
         // Clear the storage after loading
         sessionStorage.removeItem("editPromptData")
       } catch (error) {
@@ -172,23 +196,6 @@ export default function SubmitPromptPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
-  }
-
-  const addTag = () => {
-    if (currentTag.trim() && !formData.tags.includes(currentTag.trim()) && formData.tags.length < 10) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, currentTag.trim()],
-      }))
-      setCurrentTag("")
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }))
   }
 
   const renderPaymentMethodForm = () => {
@@ -395,7 +402,7 @@ export default function SubmitPromptPage() {
     if (!formData.description.trim()) newErrors.description = "Description is required"
     if (!formData.category) newErrors.category = "Category is required"
     if (!formData.promptText.trim()) newErrors.promptText = "Prompt text is required"
-    if (formData.tags.length === 0) newErrors.tags = "At least one tag is required"
+    // Remove tags validation
     if (formData.title.length > 100) newErrors.title = "Title must be less than 100 characters"
     if (formData.description.length > 500) newErrors.description = "Description must be less than 500 characters"
 
@@ -433,7 +440,7 @@ export default function SubmitPromptPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000))
       setShowSuccess(true)
-      
+
       setTimeout(() => {
         // Only clear form and navigate if it's a new submission, not an edit
         if (!isEditMode) {
@@ -441,14 +448,11 @@ export default function SubmitPromptPage() {
             title: "",
             description: "",
             category: "",
-            tags: [],
             promptText: "",
-            instructions: "",
             expectedOutput: "",
-            useCase: "",
             isPrivate: false,
           })
-          
+
           // Reset payment fields for new submissions
           setAccountName("")
           setAccountNumber("")
@@ -461,10 +465,10 @@ export default function SubmitPromptPage() {
         } else {
           // For edits, just navigate back to my prompts page after showing success
           setTimeout(() => {
-            navigate('/my-prompts')
+            navigate("/my-prompts")
           }, 1000)
         }
-        
+
         setShowSuccess(false)
       }, 3000)
     } catch (error) {
@@ -478,13 +482,14 @@ export default function SubmitPromptPage() {
     // Use a temporary variable to store draft data instead of localStorage
     const draftData = JSON.stringify(formData)
     console.log("Draft saved:", draftData) // In a real app, you'd save this to your backend
-    
+
     // Update both save draft buttons
     const updateButton = (buttonId: string) => {
       const button = document.getElementById(buttonId)
       if (button) {
         const originalText = button.innerHTML
-        button.innerHTML = '<svg class="h-4 w-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Saved!'
+        button.innerHTML =
+          '<svg class="h-4 w-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Saved!'
         setTimeout(() => {
           if (button) {
             button.innerHTML = originalText
@@ -492,7 +497,7 @@ export default function SubmitPromptPage() {
         }, 2000)
       }
     }
-    
+
     updateButton("save-draft-btn")
     updateButton("save-draft-btn-bottom")
   }
@@ -507,17 +512,14 @@ export default function SubmitPromptPage() {
       title: "",
       description: "",
       category: "",
-      tags: [],
       promptText: "",
-      instructions: "",
       expectedOutput: "",
-      useCase: "",
       isPrivate: false,
     })
     setIsEditMode(false)
     setEditingPromptId(null)
     setErrors({})
-    
+
     // Reset payment fields
     setAccountName("")
     setAccountNumber("")
@@ -527,10 +529,10 @@ export default function SubmitPromptPage() {
     setStripeAccount("")
     setCryptoAddress("")
     setCryptoNetwork("")
-    
+
     // Navigate back to my prompts page if we were editing
     if (isEditMode) {
-      navigate('/my-prompts')
+      navigate("/my-prompts")
     }
   }
 
@@ -538,7 +540,7 @@ export default function SubmitPromptPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div>
@@ -552,8 +554,8 @@ export default function SubmitPromptPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {isEditMode && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={clearForm}
                   className="flex items-center px-4 py-2 text-sm font-medium"
                 >
@@ -561,29 +563,42 @@ export default function SubmitPromptPage() {
                   Cancel Edit
                 </Button>
               )}
-              <Button 
-                variant="outline" 
-                onClick={loadDraft} 
-                className="flex items-center px-4 py-2 text-sm font-medium"
-              >
+              <Button variant="outline" onClick={loadDraft} className="flex items-center px-4 py-2 text-sm font-medium">
                 <FileText className="h-4 w-4 mr-2" />
                 Load Draft
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={saveDraft} 
+              <Button
+                variant="outline"
+                onClick={saveDraft}
                 id="save-draft-btn"
                 className="flex items-center px-4 py-2 text-sm font-medium"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Save Draft
               </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 text-sm font-medium flex items-center justify-center min-w-[120px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {isEditMode ? "Updating..." : "Submitting..."}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    {isEditMode ? "Update Prompt" : "Submit Prompt"}
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Success Message */}
         {showSuccess && (
           <Card className="p-4 mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
@@ -594,10 +609,9 @@ export default function SubmitPromptPage() {
               </span>
             </div>
             <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-              {isEditMode 
+              {isEditMode
                 ? "Your prompt changes have been saved."
-                : "Your prompt is now under review and will be published soon."
-              }
+                : "Your prompt is now under review and will be published soon."}
             </p>
           </Card>
         )}
@@ -615,9 +629,10 @@ export default function SubmitPromptPage() {
           </Card>
         )}
 
+        {/* Main Layout: Form on left, Sidebar on right */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Left Column - Basic Information Form (2/3 width) */}
+          <div className="lg:col-span-2">
             {/* Basic Information */}
             <Card className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -626,6 +641,7 @@ export default function SubmitPromptPage() {
               </h2>
 
               <div className="space-y-4">
+                {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Title <span className="text-red-500">*</span>
@@ -649,6 +665,7 @@ export default function SubmitPromptPage() {
                   <p className="text-xs text-gray-500 mt-1">{formData.title.length}/100 characters</p>
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Description <span className="text-red-500">*</span>
@@ -672,6 +689,7 @@ export default function SubmitPromptPage() {
                   <p className="text-xs text-gray-500 mt-1">{formData.description.length}/500 characters</p>
                 </div>
 
+                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Category <span className="text-red-500">*</span>
@@ -698,6 +716,7 @@ export default function SubmitPromptPage() {
                   )}
                 </div>
 
+                {/* Prompt Text */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Prompt Text <span className="text-red-500">*</span>
@@ -719,19 +738,7 @@ export default function SubmitPromptPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Instructions
-                  </label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={3}
-                    placeholder="Additional instructions for using this prompt..."
-                    value={formData.instructions}
-                    onChange={(e) => handleInputChange("instructions", e.target.value)}
-                  />
-                </div>
-
+                {/* Expected Output */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Expected Output
@@ -745,180 +752,53 @@ export default function SubmitPromptPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Use Case
-                  </label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                    rows={3}
-                    placeholder="Explain when and how this prompt would be useful..."
-                    value={formData.useCase}
-                    onChange={(e) => handleInputChange("useCase", e.target.value)}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isPrivate"
-                    checked={formData.isPrivate || false}
-                    onChange={(e) => handleInputChange("isPrivate", e.target.checked)}
-                    className="rounded border-gray-300 focus:ring-2 focus:ring-[#3ebb9e]"
-                  />
+                {/* Private checkbox - Convert to toggle */}
+                <div className="flex items-center justify-between">
                   <label htmlFor="isPrivate" className="text-sm font-medium text-gray-900 dark:text-white">
-                    Make this prompt private
+                    Visibility
                   </label>
-                </div>
-              </div>
-            </Card>
-
-            {/* Tags */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <Tag className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                Tags <span className="text-red-500">*</span>
-              </h2>
-
-              <div className="space-y-4">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-                    placeholder="Add a tag and press Enter"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault()
-                        addTag()
-                      }
-                    }}
-                  />
-
-                  <Button
-                    onClick={addTag}
-                    size="sm"
-                    disabled={!currentTag.trim() || formData.tags.length >= 10}
-                    className="bg-[#3ebb9e] hover:bg-[#00674f]"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {errors.tags && (
-                  <p className="text-red-500 text-xs flex items-center">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    {errors.tags}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center space-x-1 text-xs px-3 py-1 bg-[#3ebb9e]/10 text-[#3ebb9e] rounded-full border border-[#3ebb9e]/20"
-                    >
-                      <span>#{tag}</span>
-                      <button onClick={() => removeTag(tag)} className="hover:text-red-500">
-                        <X className="h-3 w-3" />
-                      </button>
+                  <div className="flex items-center space-x-3">
+                    <span className={`text-sm ${!formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      Public
                     </span>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange("isPrivate", !formData.isPrivate)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2 ${
+                        formData.isPrivate ? 'bg-red-500' : 'bg-[#3ebb9e]'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          formData.isPrivate ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-sm ${formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      Private
+                    </span>
+                  </div>
                 </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {formData.tags.length}/10 tags. Tags help users discover your prompt.
-                </p>
               </div>
             </Card>
 
-            {/* Payment Details Card - Make it hideable */}
-            {!isEditMode && ( // Only show for new prompts, not edits
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center">
-                    <Landmark className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                    Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
-                  </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPaymentDetails(!showPaymentDetails)}
-                    className="flex items-center"
-                  >
-                    {showPaymentDetails ? (
-                      <>
-                        <X className="h-4 w-4 mr-1" />
-                        Hide
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Payment Info
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {!showPaymentDetails && (
-                  <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg border border-dashed">
-                    <p className="mb-2">💡 Payment details are optional but recommended</p>
-                    <p>Add your payment information to receive earnings from prompt sales. You can always add this later in your account settings.</p>
-                  </div>
-                )}
-
-                {showPaymentDetails && bankingInfoNeeded && (
-                  <>
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <p className="text-sm text-blue-700 dark:text-blue-400">
-                        <AlertCircle className="h-4 w-4 inline mr-1" />
-                        This information is securely stored and used only for payment processing.
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("bank")}
-                        className={`p-4 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                      >
-                        <Landmark className="w-6 h-6" />
-                        <span className="text-sm font-medium">Bank Account</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("paypal")}
-                        className={`p-4 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                      >
-                        <WalletIcon className="w-6 h-6" />
-                        <span className="text-sm font-medium">PayPal</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("stripe")}
-                        className={`p-4 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                      >
-                        <CreditCardIcon className="w-6 h-6" />
-                        <span className="text-sm font-medium">Stripe</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("crypto")}
-                        className={`p-4 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-2 transition-colors`}
-                      >
-                        <BitcoinIcon className="w-6 h-6" />
-                        <span className="text-sm font-medium">Crypto</span>
-                      </button>
-                    </div>
-                    <div>{renderPaymentMethodForm()}</div>
-                  </>
-                )}
-              </Card>
-            )}
+            {/* Terms of Service */}
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                By submitting, you agree to our{" "}
+                <a href="#" className="text-[#3ebb9e] hover:text-[#00674f] underline">
+                  community guidelines
+                </a>{" "}
+                and{" "}
+                <a href="#" className="text-[#3ebb9e] hover:text-[#00674f] underline">
+                  terms of service
+                </a>
+                .
+              </p>
+            </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - All Sidebar Components (1/3 width) */}
           <div className="lg:col-span-1 space-y-6">
             {/* Preview */}
             <Card className="p-4">
@@ -926,9 +806,9 @@ export default function SubmitPromptPage() {
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center justify-center py-2" 
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center py-2 mb-4"
                 onClick={() => setShowPreview(!showPreview)}
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -936,15 +816,143 @@ export default function SubmitPromptPage() {
               </Button>
 
               {showPreview && (
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
-                  <h4 className="font-medium text-sm text-foreground mb-2">{formData.title || "Untitled Prompt"}</h4>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {formData.description || "No description provided"}
-                  </p>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="px-2 py-1 bg-muted rounded text-muted-foreground">
-                      {formData.category || "No category"}
-                    </span>
+                <div className="mt-4">
+                  {/* Preview container - adjusted for sidebar */}
+                  <div className="w-full">
+                    {/* Simulate StandardPromptCard appearance */}
+                    <div className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col border border-border rounded-lg bg-card min-h-[350px]">
+                      <div className="p-4 flex-1">
+                        {/* Header with category tag and rating */}
+                        <div className="flex justify-between items-start mb-2">
+                          {/* Category tag */}
+                          {formData.category && (
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">
+                                {formData.category}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Rating and favorite button */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                              <span className="text-xs ml-1">0.0</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 flex-shrink-0"
+                              disabled
+                              title="Add to favorites"
+                            >
+                              <Star className="h-3 w-3 text-gray-400" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Title and description */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-medium text-sm leading-tight">{formData.title || "Untitled Prompt"}</h3>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                          {formData.description || "No description provided"}
+                        </p>
+
+                        {/* Content preview if available */}
+                        {formData.promptText && (
+                          <div className="mb-3 p-2 bg-muted/50 rounded-lg border">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {formData.promptText.length > 100
+                                ? `${formData.promptText.substring(0, 100)}...`
+                                : formData.promptText}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Expected Output preview */}
+                        {formData.expectedOutput && (
+                          <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
+                              Expected Output:
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
+                              {formData.expectedOutput.length > 80
+                                ? `${formData.expectedOutput.substring(0, 80)}...`
+                                : formData.expectedOutput}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Author info */}
+                        <div className="flex items-center justify-between mt-auto pt-2">
+                          <div className="flex items-center">
+                            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                              <User className="h-3 w-3" />
+                            </div>
+                            <span className="text-xs ml-2 text-muted-foreground font-medium">@you</span>
+                          </div>
+
+                          {/* Private indicator */}
+                          {formData.isPrivate && (
+                            <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-0.5 rounded border border-red-200 dark:border-red-800">
+                              Private
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer with action buttons */}
+                      <div className="border-t border-border flex">
+                        <div className="flex-1 flex items-center justify-between p-3">
+                          <div className="flex items-center space-x-1">
+                            {/* Copy button */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              disabled
+                              title="Copy prompt content"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+
+                            {/* Test button - green play button next to copy */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              disabled
+                              title="Test this prompt"
+                            >
+                              <Play className="h-3 w-3" />
+                            </Button>
+
+                            {/* Edit button */}
+                            <Button variant="ghost" size="icon" className="h-7 w-7" disabled title="Edit prompt">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+
+                            {/* Delete button - red bin icon */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              disabled
+                              title="Delete prompt"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+
+                          {/* Right side - now empty since test button moved */}
+                          <div className="flex items-center space-x-2">
+                            {/* Empty - test button moved to left side */}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -963,11 +971,11 @@ export default function SubmitPromptPage() {
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Include specific instructions in your prompt</p>
+                  <p>Include specific instructions in your prompt text</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Add relevant tags for better discoverability</p>
+                  <p>Describe the expected output format</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
@@ -994,51 +1002,93 @@ export default function SubmitPromptPage() {
                 </p>
               </div>
             </Card>
-          </div>
-        </div>
 
-        {/* Submit Actions */}
-        <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="text-sm text-muted-foreground flex-1">
-              <p>By submitting, you agree to our community guidelines and terms of service.</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center justify-center px-6 py-2 text-sm font-medium"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {showPreview ? "Hide Preview" : "Show Preview"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={saveDraft}
-                id="save-draft-btn-bottom"
-                className="flex items-center justify-center px-6 py-2 text-sm font-medium"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save Draft
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-8 py-2 text-sm font-medium flex items-center justify-center min-w-[140px]"
-              >
-                {isSubmitting ? (
+            {/* Payment Details Card - existing code remains the same */}
+            {!isEditMode && (
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-semibold text-foreground flex items-center">
+                    <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e]" />
+                    Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+                    className="flex items-center text-xs"
+                  >
+                    {showPaymentDetails ? (
+                      <>
+                        <X className="h-3 w-3 mr-1" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Payment Info
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {!showPaymentDetails && (
+                  <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg border border-dashed">
+                    <p className="mb-2">💡 Payment details are optional but recommended</p>
+                    <p>
+                      Add your payment information to receive earnings from prompt sales. You can always add this later
+                      in your account settings.
+                    </p>
+                  </div>
+                )}
+
+                {showPaymentDetails && bankingInfoNeeded && (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isEditMode ? "Updating..." : "Submitting..."}
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    {isEditMode ? "Update Prompt" : "Submit Prompt"}
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        <AlertCircle className="w-4 h-4 inline mr-1" />
+                        This information is securely stored and used only for payment processing.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("bank")}
+                        className={`p-3 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                      >
+                        <Landmark className="w-4 h-4" />
+                        <span className="text-xs font-medium">Bank</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("paypal")}
+                        className={`p-3 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                      >
+                        <WalletIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium">PayPal</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("stripe")}
+                        className={`p-3 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                      >
+                        <CreditCardIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Stripe</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("crypto")}
+                        className={`p-3 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                      >
+                        <BitcoinIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Crypto</span>
+                      </button>
+                    </div>
+                    <div className="text-sm">{renderPaymentMethodForm()}</div>
                   </>
                 )}
-              </Button>
-            </div>
+              </Card>
+            )}
           </div>
         </div>
       </div>
