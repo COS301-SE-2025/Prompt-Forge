@@ -210,16 +210,20 @@ export default function MarketplacePage() {
               </div>
             )}
 
-            {/* Search */}
+            {/* Search Bar */}
             <div className="mb-8">
               <div className="relative">
                 <Input
-                  placeholder="Search for prompts..."
+                  placeholder="        Search for prompts..."
                   className="bg-muted border-muted pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                {!searchQuery && (
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
 

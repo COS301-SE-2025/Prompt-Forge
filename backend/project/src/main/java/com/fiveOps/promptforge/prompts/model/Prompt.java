@@ -8,6 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+// import java.beans.Transient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,11 @@ public class Prompt {
     @Column(name = "author_id", nullable = false)
     private UUID authorId;
 
+    @Column(name = "featured")
+    private Boolean featured;
+// public Boolean getFeatured() { return featured; }
+//     public void setFeatured(Boolean featured) { this.featured = featured; }
+
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -46,8 +52,8 @@ public class Prompt {
     @Column(name = "visibility", nullable = false, length = 20)
     private String visibility = "private";
 
-    @Column(name="featured",columnDefinition= "boolean")
-    private Boolean featured;
+    // @Column(name="featured",columnDefinition= "boolean")
+    // private Boolean featured;
 
 
     @CreationTimestamp
