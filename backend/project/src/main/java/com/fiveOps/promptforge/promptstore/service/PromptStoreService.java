@@ -5,6 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +17,6 @@ import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
-import com.fiveOps.promptforge.promptstore.dto.PromptWithTagsDTO;
 import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
@@ -30,18 +33,18 @@ public class PromptStoreService {
     private final PromptService promptService;
     private final PromptPurchaseRepository purchaseRepository;
     private final PromptReviewRepository reviewRepository;
-    private final TagService tagService;    
+    private final TagService tagService;   
 
-
-    public List<Prompt> getAllPublicPrompts() {
-        return promptStoreRepository.findByVisibility("public");
+    @Cacheable(value = "prompts", key = "{#root.methodName,#pageable}")
+    public Page<Prompt> getAllPublicPrompts(Pageable pageable) {
+        return promptStoreRepository.findByVisibility("public", pageable);
     }
     
-    public List<Map<String, PromptWithAuthorDTO>> getPage(String page, String size) {
+    public Page<Map<String, PromptWithAuthorDTO>> getPage(String page, String size, Pageable pageable) {
         int pageSize = Integer.parseInt(size);
         int offset = pageSize * Integer.parseInt(page);
 
-        return promptStoreRepository.findPublicPromptsWithAuthorAndTags(pageSize, offset);
+        return promptStoreRepository.findPublicPromptsWithAuthorAndTags(pageSize, offset, pageable);
     }
 
     public long getPageCount(String pageSize) {
@@ -53,25 +56,28 @@ public class PromptStoreService {
         return promptStoreRepository.count();
     }
     
-    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts() {
-        return promptStoreRepository.findByFeatured(true);
+    public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(Pageable pageable) {
+        return promptStoreRepository.findByFeatured(true, pageable);
     }
     
-    public List<Prompt> searchPublic(String query) {
-        return promptService.searchPublicByTitle(query);
+    
+    public Page<Prompt> searchPublic(String query, Pageable pageable) {
+        return promptStoreRepository.searchPublicByTitle(query, pageable);
     }
     
-    public List<Prompt> getPublicUnderPrice(double maxPrice) {
-        return promptStoreRepository.findPublicUnderPrice(maxPrice);
+    
+    public Page<Prompt> getPublicUnderPrice(double maxPrice, Pageable pageable) {
+        return promptStoreRepository.findPublicUnderPrice(maxPrice, pageable);
     }
     
-    public List<Prompt> getPublicByTagName(String tagName) {
-        return promptService.getPromptsByTagName(tagName)
-            .stream()
+    public Page<Prompt> getPublicByTagName(String tagName, Pageable pageable) {
+        Page<Prompt> allPrompts = promptService.getPromptsByTagName(tagName, pageable);
+        List<Prompt> filteredPrompts = allPrompts.getContent().stream()
             .filter(prompt -> "public".equals(prompt.getVisibility()))
             .collect(Collectors.toList());
+        
+        return new PageImpl<>(filteredPrompts, pageable, allPrompts.getTotalElements());
     }
-    
     
     @Transactional
     public PromptPurchase purchasePrompt(UUID promptId, UUID userId) {
@@ -91,8 +97,8 @@ public class PromptStoreService {
     }
 
     ///////// Review functionality from code2
-    public List<PromptReview> getPromptReviews(UUID promptId) {
-        return reviewRepository.findByPromptId(promptId);
+    public Page<PromptReview> getPromptReviews(UUID promptId, Pageable pageable) {
+        return reviewRepository.findByPromptId(promptId, pageable);
     }
 
     @Transactional
@@ -109,10 +115,13 @@ public class PromptStoreService {
     /////////////////////////////////////
     
     // Get PUBLIC prompts by author
-    public List<Prompt> getPublicPromptsByAuthor(UUID authorId) {
-        return promptService.getPromptsByAuthor(authorId).stream()
+    public Page<Prompt> getPublicPromptsByAuthor(UUID authorId, Pageable pageable) {
+        Page<Prompt> allPrompts = promptService.getPromptsByAuthor(authorId, pageable);
+        List<Prompt> filteredPrompts = allPrompts.getContent().stream()
                 .filter(p -> "public".equals(p.getVisibility()))
                 .collect(Collectors.toList());
+        
+        return new PageImpl<>(filteredPrompts, pageable, allPrompts.getTotalElements());
     }
 
     // Unpublish a listing (soft delete)
@@ -122,11 +131,13 @@ public class PromptStoreService {
         return unpublished != null;
     }
 
-    public List<Prompt> getRecentlyPublishedPrompts() {
-    return promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("public")
-            .stream()
-            .limit(10) // Get top 10 most recent
-            .collect(Collectors.toList());
+    public Page<Prompt> getRecentlyPublishedPrompts(Pageable pageable) {
+        Page<Prompt> allPrompts = promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("public", pageable);
+        List<Prompt> limitedPrompts = allPrompts.getContent().stream()
+                .limit(10) // Get top 10 most recent
+                .collect(Collectors.toList());
+        
+        return new PageImpl<>(limitedPrompts, pageable, Math.min(10, allPrompts.getTotalElements()));
     }
 
     public List<Tag> getAllTags() {
@@ -137,21 +148,23 @@ public class PromptStoreService {
         return tagService.getPopularTags(limit);
     }
 
-    public List<PromptWithTagsDTO> getPromptsWithTags() {
-    List<Prompt> prompts = promptStoreRepository.findByVisibility("public");
-    return prompts.stream()
-            .map(this::mapToPromptWithTagsDTO)
-            .collect(Collectors.toList());
-}
+    // public Page<PromptWithTagsDTO> getPromptsWithTags(Pageable pageable) {
+    //     Page<Prompt> prompts = promptStoreRepository.findByVisibility("public", pageable);
+    //     List<PromptWithTagsDTO> promptsWithTags = prompts.getContent().stream()
+    //             .map(prompt -> mapToPromptWithTagsDTO(prompt, pageable))
+    //             .collect(Collectors.toList());
+        
+    //     return new PageImpl<>(promptsWithTags, pageable, prompts.getTotalElements());
+    // }
 
-    private PromptWithTagsDTO mapToPromptWithTagsDTO(Prompt prompt) {
-    List<Tag> tags = tagService.getTagsByIds(prompt.getTagIds());
-    return PromptWithTagsDTO.builder()
-            .id(prompt.getId())
-            .title(prompt.getTitle())
-            .description(prompt.getDescription())
-            .price(prompt.getPrice())
-            .tags(tags)
-            .build();
-}
+    // private PromptWithTagsDTO mapToPromptWithTagsDTO(Prompt prompt) {
+    //     List<Tag> tags = tagService.getTagsByIds(prompt.getTagIds());
+    //     return PromptWithTagsDTO.builder()
+    //             .id(prompt.getId())
+    //             .title(prompt.getTitle())
+    //             .description(prompt.getDescription())
+    //             .price(prompt.getPrice())
+    //             .tags(tags)
+    //             .build();
+    // }
 }
