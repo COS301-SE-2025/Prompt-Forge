@@ -29,11 +29,7 @@ export default function DashboardPage() {
         setFollowers(profile.followers ?? 0)
         setFollowing(profile.following ?? 0)
       } catch (error) {
-        setProfileImage("/placeholder.svg?height=80&width=80")
-        setUserBio("AI prompt engineer specializing in creative writing and technical documentation.")
-        setUsername("theo_unknown")
-        setFollowers(0)
-        setFollowing(0)
+        
       } finally {
         setLoading(false)
       }

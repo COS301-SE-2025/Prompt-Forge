@@ -83,45 +83,51 @@ export default function ProfileSettingsPage() {
   // Save changes: upload image if changed, then update profile
   const handleSave = async () => {
     try {
-      setSaveStatus("saving")
-      let imageUrl = profileImage
+      setSaveStatus("saving");
+  
+      let imageUrl = pendingProfileImage;
+  
       if (pendingProfileImageFile) {
-        imageUrl = await profileService.uploadProfilePicture(pendingProfileImageFile)
-        setProfileImage(imageUrl)
-        setPendingProfileImageFile(null)
-      } else if (pendingProfileImage === "/placeholder.svg?height=100&width=100" && profileImage !== pendingProfileImage) {
-        await profileService.deleteProfilePicture()
-        imageUrl = "/placeholder.svg?height=100&width=100"
-        setProfileImage(imageUrl)
+        // If there's a new file, upload it and get the URL
+        imageUrl = await profileService.uploadProfilePicture(pendingProfileImageFile);
+      } else if (
+        pendingProfileImage === "/placeholder.svg?height=100&width=100" &&
+        profileImage !== pendingProfileImage
+      ) {
+        // If user removed the image
+        await profileService.deleteProfilePicture();
+        imageUrl = ""; // empty to trigger backend deletion logic
       }
+  
       await profileService.updateCurrentProfile({
         username: pendingUsername,
         bio: pendingBio,
         email: pendingEmail,
         profilePicture: imageUrl,
-      })
-      // Update saved state
-      setUsername(pendingUsername)
-      setBio(pendingBio)
-      setEmail(pendingEmail)
-      setProfileImage(imageUrl)
-      setSaveStatus("success")
-      setTimeout(() => setSaveStatus(null), 2000)
+      });
+  
+      // Update saved state only if successful
+      setUsername(pendingUsername);
+      setEmail(pendingEmail);
+      setBio(pendingBio);
+      setProfileImage(imageUrl);
+      setPendingProfileImageFile(null);
+  
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus(null), 2000);
     } catch (error) {
-      console.error("Save failed", error)
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus(null), 2000)
+      console.error("Save failed", error);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 2000);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center h-full">
-        <p>Loading profile...</p>
-      </div>
-    )
-  }
-
+    if (loading) {
+      return (
+        <div className="flex-1 flex items-center justify-center h-full">
+          <p>Loading profile...</p>
+        </div>
+      )}
+  };
+  //Show loading state while fetching profile
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex-1 p-6">

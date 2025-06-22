@@ -69,26 +69,28 @@ public class UserService {
   }
 
   private UserDto updateUserFields(User user, UpdateProfileDto dto) {
-    if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
+    // Email update (with uniqueness check)
+    if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(user.getEmail())) {
       if (userRepository.existsByEmail(dto.getEmail())) {
         throw new RuntimeException("Email is already in use");
       }
       user.setEmail(dto.getEmail());
     }
 
-    if (
-      dto.getUsername() != null && !dto.getUsername().equals(user.getUsername())
-    ) {
+    // Username update (with uniqueness check)
+    if (dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(user.getUsername())) {
       if (userRepository.existsByUsername(dto.getUsername())) {
         throw new RuntimeException("Username is already taken");
       }
       user.setUsername(dto.getUsername());
     }
 
+    // Bio update
     if (dto.getBio() != null) {
       user.setBio(dto.getBio());
     }
 
+    // Password update (only if new password is valid)
     if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
       if (dto.getPassword().length() < 6) {
         throw new RuntimeException("Password must be at least 6 characters");
@@ -96,14 +98,18 @@ public class UserService {
       user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
     }
 
+    // Profile picture update (URL only, not file upload)
     if (dto.getProfilePicture() != null) {
       user.setProfilePictureUrl(dto.getProfilePicture());
     }
 
+    // Update timestamp
     user.setUpdatedAt(LocalDateTime.now());
+
     User updatedUser = userRepository.save(user);
     return mapToDto(updatedUser);
   }
+
 
   public List<UserDto> getAllUsers() {
     return userRepository
