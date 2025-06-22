@@ -13,7 +13,8 @@ export default function MarketplacePage() {
   const promptService = new PromptService()
   const [enrichedPrompts, setEnrichedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPrompts, setCurrentPrompts] = useState<MarketplacePrompt[]>([]);
-const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
+  const [featuredPromts, setFeaturedPromts] = useState<MarketplacePrompt[]>([]);
+  const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -40,7 +41,8 @@ const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
         setFilteredPrompts(promptsWithTagsAndCount.prompts)
         setAvailableCategories(["all",...promptsWithTagsAndCount.tagNames])
         setTotalPages(promptsWithTagsAndCount.promptCount)
-        
+        setFeaturedPromts(promptsWithTagsAndCount.featuredPrompts)
+
         // // Extract unique categories from resolved tags
         // const categories = ['all', ...new Set(
         //   promptsWithTags.flatMap(p => 
@@ -229,7 +231,14 @@ const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
                   <h2 className="text-lg font-medium">Featured Prompts</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  
+                  {featuredPromts.map((prompt) => (
+                    <PromptCard
+                      key={prompt.id}
+                      {...prompt}
+                      tags={prompt.tagnames}
+                    // tagsLoading={tagsLoading}
+                    />
+                  ))}
                 </div>
               </div>
             )}

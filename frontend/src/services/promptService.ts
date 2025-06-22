@@ -63,12 +63,13 @@ export class PromptService {
       }
     }
 
-  async getMarketplacePrompts(page: number): Promise<{ prompts: any, tagNames: any, promptCount:number }> {
+  async getMarketplacePrompts(page: number): Promise<{ prompts: any, tagNames: any, promptCount:number, featuredPrompts:any }> {
     try {
-      const [promptsResponse, tagsResponse, promptCountResponse] = await Promise.all([
+      const [promptsResponse, tagsResponse, promptCountResponse, featuredResponse] = await Promise.all([
         this.httpClient.get(`/store/prompts/page?page=${page}&pageSize=12`),
         this.httpClient.get('/store/prompts/tags'),
         this.httpClient.get('/store/prompts/count?pageSize=12'),
+        this.httpClient.get('/store/prompts/featured'),
       ]);
 
       const prompts = await promptsResponse.json();
@@ -78,7 +79,10 @@ export class PromptService {
         tag.name
       )
 
-      return { prompts, tagNames, promptCount };
+      const featuredPrompts = await featuredResponse.json();
+
+
+      return { prompts, tagNames, promptCount, featuredPrompts };
     } catch (error) {
       console.error('Error fetching prompt from marketplace prompts:', error);
       throw error;
@@ -187,9 +191,5 @@ export class PromptService {
       throw error;
     }
   }
-
-  
-    
-
 }
 
