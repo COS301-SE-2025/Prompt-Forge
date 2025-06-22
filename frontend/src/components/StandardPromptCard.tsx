@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Button } from "./ui/Button"
 import { Card } from "./ui/Card"
-import { Star, User, Edit, Trash2, Copy, Check, ShoppingCart } from "lucide-react"
+import { Star, User, Edit, Trash2, Copy, Check, ShoppingCart, Play } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Category, CategoryColors } from "@/Models/Prompt"
 
@@ -78,18 +78,28 @@ export function StandardPromptCard({
           {/* Tags - Using same styling as PromptCard */}
           {displayTags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {displayTags.slice(0, 3).map((tag) => (
-                <span 
-                  key={tag}
-                  className={`text-xs font-medium px-2 py-1 rounded ${
-                    CategoryColors[tag as Category] ? CategoryColors[tag as Category] : CategoryColors["default"]
-                  }`}
-                >
-                  {tag}
-                </span>
-              ))}
+              {displayTags.slice(0, 3).map((tag, index) => {
+                // Simple color rotation based on index
+                const colors = [
+                  "bg-blue-100 text-blue-800",
+                  "bg-green-100 text-green-800", 
+                  "bg-purple-100 text-purple-800",
+                  "bg-orange-100 text-orange-800",
+                  "bg-pink-100 text-pink-800"
+                ];
+                const colorClass = colors[index % colors.length];
+                
+                return (
+                  <span 
+                    key={tag}
+                    className={`text-xs font-medium px-2 py-1 rounded ${colorClass}`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
               {displayTags.length > 3 && (
-                <span className={`text-xs font-medium px-2 py-1 rounded ${CategoryColors["default"]}`}>
+                <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
                   +{displayTags.length - 3}
                 </span>
               )}
@@ -183,6 +193,23 @@ export function StandardPromptCard({
                   <Copy className={`${isOwned ? "h-4 w-4" : "h-3 w-3"}`} />
                 )}
               </Button>
+            )}
+
+            {/* Test Prompt button - always visible if content is available */}
+            {content && (
+              <Link 
+                to="/editor" 
+                state={{ promptText: content }}
+                title="Test this prompt"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`${isOwned ? "h-8 w-8" : "h-6 w-6"} text-green-600 hover:text-green-700 hover:bg-green-50`}
+                >
+                  <Play className={`${isOwned ? "h-4 w-4" : "h-3 w-3"}`} />
+                </Button>
+              </Link>
             )}
             
             {/* Edit button - only for owned prompts */}
