@@ -7,7 +7,7 @@ import { StarRating } from './StarRating'
 import { Card } from './ui/Card'
 import { ReviewForm } from './ReviewForm'
 import { PromptService } from '@/services/promptService'
-import { PromptWithTags, Review } from '@/models/Prompt'
+import { PromptWithTags, Review } from '@/Models/Prompt'
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
@@ -103,7 +103,17 @@ export const PromptDetails = () => {
     }
   }
 
-  if (loading) return <div className="container p-8 text-center">Loading...</div>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading prompt...</p>
+        </div>
+      </div>
+    )
+  }
+  
   if (error) return <div className="container p-8 text-red-500">{error}</div>
   if (!prompt) return <div className="container p-8">Prompt not found</div>
 
@@ -172,7 +182,7 @@ export const PromptDetails = () => {
           {/* Prompt content */}
           <Card className="mb-5 p-5">
             <h2 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Prompt</h2>
-            <div className="p-4 rounded-md bg-card dark:bg-[#191919]">
+            <div className="p-4 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {prompt.content}
               </p>
@@ -221,6 +231,7 @@ export const PromptDetails = () => {
                 <PurchaseButton 
                   price={prompt.price} 
                   onClick={handlePurchase} 
+                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
                   // disabled={prompt.visibility !== 'public'}
                 />
               </div>

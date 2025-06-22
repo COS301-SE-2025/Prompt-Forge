@@ -17,6 +17,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
     setIsSubmitting(true);
     
     try {
+      // Get username from localStorage instead of just the ID
+      const username = localStorage.getItem('username') || 'Anonymous';
+      
       // Send review data to your API
       const response = await fetch('/api/store/prompts/reviews', {
         method: 'POST',
@@ -27,7 +30,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
         body: JSON.stringify({
           promptId,
           rating,
-          comment: review
+          comment: review,
+          author: username // Send username instead of authorId
         })
       });
 
@@ -35,7 +39,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
         throw new Error('Failed to submit review');
       }
 
-      // Show success message
+      // Show success message with brand green color
       setSubmitted(true);
       
       // Reset form after 3 seconds
@@ -56,7 +60,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
     <div className="mt-8">
       <h3 className="text-lg font-medium mb-4">Write a Review</h3>
       {submitted ? (
-        <div className="bg-green-900/30 text-green-400 p-4 rounded-lg">
+        <div className="bg-[#3ebb9e]/20 text-[#3ebb9e] p-4 rounded-lg border border-[#3ebb9e]/30">
           Thank you for your review! It will appear once approved.
         </div>
       ) : (
@@ -76,7 +80,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
             </label>
             <textarea
               id="review"
-              className="w-full bg-[#3c3c3c] border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
               rows={4}
               placeholder="Share your experience with this prompt..."
               value={review}
@@ -87,7 +91,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
           <Button 
             type="submit" 
             disabled={rating === 0 || !review || isSubmitting}
-            className="disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-[#3ebb9e] hover:bg-[#00674f] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </Button>
