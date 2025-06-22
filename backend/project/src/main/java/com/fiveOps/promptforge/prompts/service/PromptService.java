@@ -1,9 +1,12 @@
 
 package com.fiveOps.promptforge.prompts.service;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,14 +25,15 @@ public class PromptService {
         this.tagService = tagService;
     }
 
-    public List<Prompt> getAllPrompts() {
-        return promptRepository.findAll();
+    public Page<Prompt> getAllPrompts( Pageable pageable) {
+        return promptRepository.findAll(pageable);
     }
 
-    public List<Prompt> getPromptsByAuthor(UUID authorId) {
-        return promptRepository.findByAuthorId(authorId);
+    public Page<Prompt> getPromptsByAuthor(UUID authorId, Pageable pageable) {
+        return promptRepository.findByAuthorId(authorId,pageable);
     }
 
+    @Cacheable(value = "prompts", key = "#id")
     public Prompt getPromptById(UUID id) {
         return promptRepository.findById(id).orElse(null);
     }
@@ -45,13 +49,14 @@ public class PromptService {
         return promptRepository.save(prompt);
     }
 
-    public List<Prompt> getPromptsByTagName(String tagName) {
+    public Page<Prompt> getPromptsByTagName(String tagName, Pageable pageable) {
         // Delegate tag lookup to TagService
         UUID tagId = tagService.getTagIdByName(tagName);
-        return promptRepository.findByTagId(tagId);
+        return promptRepository.findByTagId(tagId,pageable);
     }
 
     @Transactional
+    @CacheEvict(value = "prompts", key = "#prompt.id")
     public Prompt updatePrompt(UUID id, Prompt promptDetails) {
         return promptRepository.findById(id)
                 .map(prompt -> {
@@ -68,6 +73,7 @@ public class PromptService {
     }
 
     @Transactional
+    @CacheEvict(value = "prompts", key = "#prompt.id")
     public Prompt publishPrompt(UUID id) {
         return promptRepository.findById(id)
                 .map(prompt -> {
@@ -79,6 +85,7 @@ public class PromptService {
     }
 
     @Transactional
+    @CacheEvict(value = "prompts", key = "#prompt.id")
     public Prompt unpublishPrompt(UUID id) {
         return promptRepository.findById(id)
                 .map(prompt -> {
@@ -89,6 +96,7 @@ public class PromptService {
     }
 
     @Transactional
+    @CacheEvict(value = "prompts", key = "#prompt.id")
     public boolean deletePrompt(UUID id) {
         return promptRepository.findById(id)
                 .map(prompt -> {
@@ -99,11 +107,13 @@ public class PromptService {
                 //////later add deleting analytics
     }
 
-     public List<Prompt> searchByTitle(String searchTerm) {
-        return promptRepository.findByTitleContainingIgnoreCase(searchTerm);
+    @Cacheable(value = "prompts", condition = "#result != null")
+     public Page<Prompt> searchByTitle(String searchTerm, Pageable pageable) {
+        return promptRepository.findByTitleContainingIgnoreCase(searchTerm,pageable);
     }
 
-    public List<Prompt> searchPublicByTitle(String searchTerm) {
-        return promptRepository.searchPublicByTitle(searchTerm);
+    @Cacheable(value = "prompts", condition = "#result != null")
+    public Page<Prompt> searchPublicByTitle(String searchTerm, Pageable pageable) {
+        return promptRepository.searchPublicByTitle(searchTerm,pageable);
     }
 }
