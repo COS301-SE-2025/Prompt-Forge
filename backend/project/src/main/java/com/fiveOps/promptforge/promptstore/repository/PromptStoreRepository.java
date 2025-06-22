@@ -1,7 +1,6 @@
 // src/main/java/com/fiveOps/promptforge/promptstore/repository/PromptStoreRepository.java
 package com.fiveOps.promptforge.promptstore.repository;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,7 +16,8 @@ import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 
 @Repository
 public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
-    List<Prompt> findByVisibility(String visibility);
+    Page<Prompt> findByVisibility(String visibility, Pageable pageable);
+    
     @Query(value = """
        SELECT
               p.prompt_id AS id,
@@ -36,7 +36,7 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        GROUP BY p.prompt_id, u.username
        LIMIT :size OFFSET :offset
        """, nativeQuery = true)
-    List<Map<String, PromptWithAuthorDTO>> findPublicPromptsWithAuthorAndTags(@Param("size") int size, @Param("offset") int offset);
+    Page<Map<String, PromptWithAuthorDTO>> findPublicPromptsWithAuthorAndTags(@Param("size") int size, @Param("offset") int offset, Pageable pageable);
 
     @Query(value = """
        SELECT
@@ -55,19 +55,19 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        WHERE p.featured = true
        GROUP BY p.prompt_id, u.username
        """, nativeQuery = true)
-    List<Map<String, PromptWithAuthorDTO>> findByFeatured(Boolean featured);
+    Page<Map<String, PromptWithAuthorDTO>> findByFeatured(Boolean featured, Pageable pageable);
 
     @Query("SELECT p FROM Prompt p WHERE " +
            "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "AND p.visibility = 'public'")
-    List<Prompt> searchPublicByTitle(@Param("query") String query);
+    Page<Prompt> searchPublicByTitle(@Param("query") String query, Pageable pageable);
     
     @Query("SELECT p FROM Prompt p WHERE " +
            "p.visibility = 'public' AND p.price <= :maxPrice")
-    List<Prompt> findPublicUnderPrice(@Param("maxPrice") double maxPrice);
+    Page<Prompt> findPublicUnderPrice(@Param("maxPrice") double maxPrice, Pageable pageable);
     
-    List<Prompt> findByIdAndVisibility(UUID id, String visibility);
+    Page<Prompt> findByIdAndVisibility(UUID id, String visibility, Pageable pageable);
 
     @Query("SELECT p FROM Prompt p WHERE p.visibility = 'public' AND p.publishedAt IS NOT NULL ORDER BY p.publishedAt DESC")
-List<Prompt> findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(String visibility);
+    Page<Prompt> findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(String visibility, Pageable pageable);
 }
