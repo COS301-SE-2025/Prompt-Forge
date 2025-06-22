@@ -60,7 +60,8 @@ class PromptAnalyticsServiceImplTest {
     @Test
     void testGetTopRankingPrompts() {
         TopRankingPromptDTO dto = new TopRankingPromptDTO(UUID.randomUUID(), "Top", 4.5);
-        when(analyticsRepository.findTopRankingPrompts()).thenReturn(List.of(dto));
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        when(analyticsRepository.findTopRankingPrompts(pageable)).thenReturn(List.of(dto));
 
         List<TopRankingPromptDTO> result = service.getTopRankingPrompts();
 
