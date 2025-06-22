@@ -53,6 +53,10 @@ public class PromptStoreService {
         return promptStoreRepository.count();
     }
     
+    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts() {
+        return promptStoreRepository.findByFeatured(true);
+    }
+    
     public List<Prompt> searchPublic(String query) {
         return promptService.searchPublicByTitle(query);
     }

@@ -44,9 +44,14 @@ public class PromptStoreController {
         return storeService.getPageCount(pageSize);
     }
     
-    @GetMapping ("/count")// ← Handles GET /api/store/prompts
+    @GetMapping ("/count")// ← number of prompts
     public long getPromptCount(){
         return storeService.getPromptCount();
+    }
+
+    @GetMapping ("/featured")// ← number of prompts
+    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(){
+        return storeService.getFeaturedPrompts();
     }
 
 

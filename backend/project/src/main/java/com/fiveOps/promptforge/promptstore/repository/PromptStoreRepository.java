@@ -38,6 +38,25 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        """, nativeQuery = true)
     List<Map<String, PromptWithAuthorDTO>> findPublicPromptsWithAuthorAndTags(@Param("size") int size, @Param("offset") int offset);
 
+    @Query(value = """
+       SELECT
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              u.username AS username,
+              array_agg(t.name) AS tagNames
+       FROM
+              prompts p
+       JOIN users u ON p.author_id = u.user_id
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE p.featured = true
+       GROUP BY p.prompt_id, u.username
+       """, nativeQuery = true)
+    List<Map<String, PromptWithAuthorDTO>> findByFeatured(Boolean featured);
+
     @Query("SELECT p FROM Prompt p WHERE " +
            "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "AND p.visibility = 'public'")
