@@ -4,54 +4,50 @@ import { TopPrompt } from '../components/TopPrompt';
 import { useState, useEffect } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { ArrowRight, Star, User, TrendingUp, Activity, Rocket, } from "lucide-react"
+import { ArrowRight, Star, User, TrendingUp, Activity, Rocket } from "lucide-react"
+// Import your dashboard profile service
+import { dashProfileService } from "../services/dashprofileService"
 
 export default function DashboardPage() {
-  // Add state for profile image
+  // State for dynamic profile data
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
-  const [userBio, setUserBio] = useState<string>(() => {
-    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation."
-  })
-  // Add username state
-  const [username, setUsername] = useState<string>(() => {
-    return localStorage.getItem('username') || "theo_unknown"
-  })
+  const [userBio, setUserBio] = useState<string>("AI prompt engineer specializing in creative writing and technical documentation.")
+  const [username, setUsername] = useState<string>("theo_unknown")
+  const [followers, setFollowers] = useState<number>(0)
+  const [following, setFollowing] = useState<number>(0)
+  const [loading, setLoading] = useState<boolean>(true)
 
   // Listen for changes to localStorage
   useEffect(() => {
-    // Initial load
-    const savedImage = localStorage.getItem('userProfileImage')
-    if (savedImage) {
-      setProfileImage(savedImage)
-    }
-
-    const savedBio = localStorage.getItem('userBio')
-    if (savedBio) {
-      setUserBio(savedBio)
-    }
-    // Add username to existing useEffect
-    const savedUsername = localStorage.getItem('username')
-    if (savedUsername) {
-      setUsername(savedUsername)
-    }
-
-    // Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'userProfileImage') {
-        setProfileImage(e.newValue || "/placeholder.svg?height=80&width=80")
-      }
-      if (e.key === 'userBio') {
-        setUserBio(e.newValue || "")
-      }
-      // Add username case to existing storage handler
-      if (e.key === 'username') {
-        setUsername(e.newValue || "theo_unknown")
+    async function fetchProfile() {
+      try {
+        setLoading(true)
+        const profile = await dashProfileService.getDashboardProfile()
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80")
+        setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.")
+        setUsername(profile.username || "theo_unknown")
+        setFollowers(profile.followers ?? 0)
+        setFollowing(profile.following ?? 0)
+      } catch (error) {
+        setProfileImage("/placeholder.svg?height=80&width=80")
+        setUserBio("AI prompt engineer specializing in creative writing and technical documentation.")
+        setUsername("theo_unknown")
+        setFollowers(0)
+        setFollowing(0)
+      } finally {
+        setLoading(false)
       }
     }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    fetchProfile()
   }, [])
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full">
+        <p>Loading dashboard...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
@@ -76,11 +72,11 @@ export default function DashboardPage() {
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">1</div>
+                <div className="font-semibold">{followers}</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">4</div>
+                <div className="font-semibold">{following}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>
             </div>
@@ -236,3 +232,7 @@ export default function DashboardPage() {
     </div>
   )
 }
+function setFollowers(arg0: any) {
+  throw new Error('Function not implemented.');
+}
+
