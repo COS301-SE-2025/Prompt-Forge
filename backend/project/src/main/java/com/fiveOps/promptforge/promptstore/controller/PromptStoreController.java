@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.promptstore.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
@@ -29,8 +31,30 @@ public class PromptStoreController {
 
     @GetMapping // ← Handles GET /api/store/prompts
     public List<Prompt> getAllPublicPrompts() {
-    return storeService.getAllPublicPrompts();
-}
+        return storeService.getAllPublicPrompts();
+    }
+    
+    @GetMapping ("/page")// ← returns a page (a list of prom)
+    public List<Map<String, PromptWithAuthorDTO>> getPage(@RequestParam String page, @RequestParam String pageSize){
+        return storeService.getPage(page, pageSize);
+    }
+    
+    @GetMapping ("/pages")// ← gets the number of pages needed for the prompts in the db
+    public long getPageCount(@RequestParam String pageSize){
+        return storeService.getPageCount(pageSize);
+    }
+    
+    @GetMapping ("/count")// ← number of prompts
+    public long getPromptCount(){
+        return storeService.getPromptCount();
+    }
+
+    @GetMapping ("/featured")// ← number of prompts
+    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(){
+        return storeService.getFeaturedPrompts();
+    }
+
+
     @PostMapping("/{promptId}/purchase")
     public ResponseEntity<PromptPurchase> purchasePrompt(
             @PathVariable UUID promptId,
