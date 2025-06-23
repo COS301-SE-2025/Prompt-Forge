@@ -1,4 +1,5 @@
 const HttpClient = {
+
     apiUrl: 'http://localhost:8080',
   
     async get(endpoint: string) {
@@ -16,6 +17,7 @@ const HttpClient = {
         },
         credentials: 'include', // include cookies
       });
+
     },
 
     async patch(endpoint: string, body: Object): Promise<Response> {
