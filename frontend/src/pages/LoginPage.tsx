@@ -107,42 +107,68 @@ export default function LoginPage() {
         return;
       }
 
-      const result = await authService.signup({
+      // First, sign up the user
+      const signupResult = await authService.signup({
         email: signupEmail,
         password: signupPassword,
         username: signupUsername,
         confirmPassword: confirmPassword,
       });
 
-      console.log("Signup result:", result); // Debug log to see what's returned
+      console.log("Signup result:", signupResult);
 
-      // Check for different possible success indicators
-      if (result?.message === "Signup successful" || 
-          result?.message === "User created successfully" ||
-          result?.status === "success" ||
-          result?.success === true ||
-          result?.token) { // Sometimes a token indicates success
+      // Check if signup was successful
+      if (signupResult?.message === "Signup successful" || 
+          signupResult?.message === "User created successfully" ||
+          signupResult?.status === "success" ||
+          signupResult?.success === true) {
         
-        // Store user data
-        localStorage.setItem("username", signupUsername);
-        localStorage.setItem("userEmail", signupEmail);
-        
-        // If there's a token and userId in the response, store them too
-        if (result.token) {
-          localStorage.setItem("token", result.token);
+        // If signup successful, automatically log them in
+        try {
+          const loginResult = await authService.login({ 
+            email: signupEmail, 
+            password: signupPassword 
+          });
+
+          console.log("Auto-login result:", loginResult);
+
+          if (loginResult?.message === "Login successful") {
+            // Store user data from login response
+            localStorage.setItem("username", loginResult.username || signupUsername);
+            localStorage.setItem("userEmail", signupEmail);
+            
+            // Store authentication tokens if provided
+            if (loginResult.token) {
+              localStorage.setItem("token", loginResult.token);
+            }
+            if (loginResult.userId || loginResult.user?.id) {
+              localStorage.setItem("userId", loginResult.userId || loginResult.user.id);
+            }
+            
+            setError("");
+            navigate("/home");
+          } else {
+            // Login failed after successful signup - still navigate but show a message
+            localStorage.setItem("username", signupUsername);
+            localStorage.setItem("userEmail", signupEmail);
+            setError("Account created successfully! Please log in.");
+            setActiveTab("login"); // Switch to login tab
+          }
+        } catch (loginErr: any) {
+          console.error("Auto-login error:", loginErr);
+          // Signup successful but auto-login failed
+          localStorage.setItem("username", signupUsername);
+          localStorage.setItem("userEmail", signupEmail);
+          setError("Account created successfully! Please log in.");
+          setActiveTab("login"); // Switch to login tab
+          setLoginEmail(signupEmail); // Pre-fill email for convenience
         }
-        if (result.userId || result.user?.id) {
-          localStorage.setItem("userId", result.userId || result.user.id);
-        }
-        
-        setError("");
-        navigate("/home");
       } else {
-        console.warn("Unexpected signup result:", result); // Debug
-        setError(result?.message || "Signup failed");
+        console.warn("Unexpected signup result:", signupResult);
+        setError(signupResult?.message || "Signup failed");
       }
     } catch (err: any) {
-      console.error("Signup error caught:", err); // Debug
+      console.error("Signup error caught:", err);
       setError(err.message || "Signup error");
     }
   };
@@ -366,7 +392,7 @@ export default function LoginPage() {
                         </div>
                         
                         {/* Password Requirements */}
-                        {showPasswordRequirements && signupPassword.length > 0 && (
+                        {showPasswordRequirements && signupPassword.length > 0 && !Object.values(passwordValidation).every(Boolean) && (
                           <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                             <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
                             <div className="space-y-1">
@@ -390,6 +416,16 @@ export default function LoginPage() {
                                 <span className="mr-2">{passwordValidation.hasSpecialChar ? '✓' : '○'}</span>
                                 One special character (!@#$%^&*...)
                               </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show success message when all requirements are met */}
+                        {showPasswordRequirements && signupPassword.length > 0 && Object.values(passwordValidation).every(Boolean) && (
+                          <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="flex items-center text-xs text-green-600 dark:text-green-400">
+                              <span className="mr-2">✓</span>
+                              Password meets all requirements
                             </div>
                           </div>
                         )}
