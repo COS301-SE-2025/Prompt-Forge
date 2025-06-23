@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
-import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 
 import lombok.RequiredArgsConstructor;
@@ -76,12 +77,12 @@ public class PromptStoreController {
     }//////user id???
 
     @GetMapping("/{promptId}/reviews")
-    public ResponseEntity<Page<PromptReview>> getPromptReviews(
-            @PathVariable UUID promptId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(storeService.getPromptReviews(promptId, pageable));
+    public ResponseEntity<Page<ReviewProjection>> getReviewsForPrompt(
+    @PathVariable UUID promptId,
+    @PageableDefault(size = 10) Pageable pageable) {
+    
+    Page<ReviewProjection> reviews = storeService.getReviewsForPrompt(promptId, pageable);
+    return ResponseEntity.ok(reviews);
     }
 
     // @PostMapping("/reviews")
