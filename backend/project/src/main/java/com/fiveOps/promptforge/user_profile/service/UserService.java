@@ -131,7 +131,7 @@ public class UserService {
     dto.setUserId(user.getUserId());
     dto.setUsername(user.getUsername());
     dto.setEmail(user.getEmail());
-    dto.setProfilePicture(user.getProfilePictureUrl());
+    dto.setProfilePicture(user.getProfilePictureUrl()); // ✅ Fixed
     dto.setBio(user.getBio());
     dto.setRole(user.getRole());
     dto.setVerified(Boolean.TRUE.equals(user.getIsVerified()));

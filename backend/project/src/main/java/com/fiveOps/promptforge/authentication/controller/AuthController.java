@@ -3,6 +3,7 @@ package com.fiveOps.promptforge.authentication.controller;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.Map;
+import java.util.HashMap;
 
 
 import org.springframework.http.ResponseEntity;
@@ -55,22 +56,37 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
+            System.out.println("🔍 Login attempt for email: " + request.getEmail());
+            
             String token = authService.login(request);
-    
+            System.out.println("🔍 Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
+
+            // Get user info for response
+            User user = authService.getUserByEmail(request.getEmail());
+            
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("message", "Login successful");
+            responseBody.put("userId", user.getUserId().toString());
+            responseBody.put("username", user.getUsername());
+            responseBody.put("email", user.getEmail());
+
             ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(true) // false if not using HTTPS locally
+                .secure(false) // ✅ CRITICAL: Must be false for localhost HTTP
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Lax")
                 .build();
-    
+
+            System.out.println("🔍 Setting cookie: " + cookie.toString());
+
             return ResponseEntity
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Map.of("message", "Login successful"));
-    
+                .body(responseBody);
+
         } catch (RuntimeException e) {
+            System.err.println("❌ Login failed: " + e.getMessage());
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", e.getMessage()));

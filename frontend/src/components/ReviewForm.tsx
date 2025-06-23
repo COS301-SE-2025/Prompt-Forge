@@ -1,102 +1,117 @@
-import React, { useState } from 'react';
-import { StarRating } from './StarRating';
-import { Button } from './ui/Button';
+import React, { useState } from 'react'
+import { Star } from 'lucide-react'
+import { Button } from './ui/Button'
 
 interface ReviewFormProps {
-  promptId: string;
+  onSubmit: (review: { rating: number; comment: string }) => Promise<void>
 }
 
-export const ReviewForm: React.FC<ReviewFormProps> = ({ promptId }) => {
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
+  const [rating, setRating] = useState(0)
+  const [hoveredRating, setHoveredRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
     
-    try {
-      // Get username from localStorage instead of just the ID
-      const username = localStorage.getItem('username') || 'Anonymous';
-      
-      // Send review data to your API
-      const response = await fetch('/api/store/prompts/reviews', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          promptId,
-          rating,
-          comment: review,
-          author: username // Send username instead of authorId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit review');
-      }
-
-      // Show success message with brand green color
-      setSubmitted(true);
-      
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setRating(0);
-        setReview('');
-        setSubmitted(false);
-      }, 3000);
-    } catch (error) {
-      console.error('Review submission error:', error);
-      // You might want to show an error message here
-    } finally {
-      setIsSubmitting(false);
+    if (rating === 0) {
+      alert('Please select a rating')
+      return
     }
-  };
+    
+    if (comment.trim().length < 10) {
+      alert('Please write a review of at least 10 characters')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await onSubmit({ rating, comment: comment.trim() })
+      setRating(0)
+      setComment('')
+    } catch (error) {
+      console.error('Review submission failed:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-    <div className="mt-8">
-      <h3 className="text-lg font-medium mb-4">Write a Review</h3>
-      {submitted ? (
-        <div className="bg-[#3ebb9e]/20 text-[#3ebb9e] p-4 rounded-lg border border-[#3ebb9e]/30">
-          Thank you for your review! It will appear once approved.
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Star Rating Input */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Rating
+        </label>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              className="p-1 hover:scale-110 transition-transform"
+              onClick={() => setRating(star)}
+              onMouseEnter={() => setHoveredRating(star)}
+              onMouseLeave={() => setHoveredRating(0)}
+            >
+              <Star
+                className={`h-6 w-6 ${
+                  star <= (hoveredRating || rating)
+                    ? 'text-yellow-400 fill-yellow-400'
+                    : 'text-gray-300 dark:text-gray-600'
+                }`}
+              />
+            </button>
+          ))}
+          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+            {rating > 0 ? `${rating} star${rating !== 1 ? 's' : ''}` : 'Select rating'}
+          </span>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-300 mb-2">Your Rating</label>
-            <StarRating 
-              rating={rating} 
-              onChange={setRating} 
-              interactive={true} 
-              size="lg" 
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="review" className="block text-gray-300 mb-2">
-              Your Review
-            </label>
-            <textarea
-              id="review"
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm"
-              rows={4}
-              placeholder="Share your experience with this prompt..."
-              value={review}
-              onChange={e => setReview(e.target.value)}
-              required
-            />
-          </div>
-          <Button 
-            type="submit" 
-            disabled={rating === 0 || !review || isSubmitting}
-            className="bg-[#3ebb9e] hover:bg-[#00674f] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
-          </Button>
-        </form>
-      )}
-    </div>
-  );
-};
+      </div>
+
+      {/* Comment Input */}
+      <div>
+        <label 
+          htmlFor="review-comment" 
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Review
+        </label>
+        <textarea
+          id="review-comment"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Share your experience with this prompt..."
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                     bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                     focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent
+                     placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+          maxLength={500}
+        />
+        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {comment.length}/500 characters
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting || rating === 0 || comment.trim().length < 10}
+          className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 text-sm
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Submitting...
+            </div>
+          ) : (
+            'Submit Review'
+          )}
+        </Button>
+      </div>
+    </form>
+  )
+}

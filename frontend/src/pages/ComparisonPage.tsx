@@ -118,9 +118,28 @@ export default function ComparisonsPage() {
 
       const data = await response.json()
 
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        const aiResponseText = data.choices[0].message.content
-        setAiResponse(decodeUnicode(aiResponseText))
+      // ✅ Enhanced response handling to unwrap JSON responses
+      if (data && data.choices && data.choices[0] && data.choices[0].message) {
+        let responseContent = data.choices[0].message.content;
+        
+        // Check if the response is JSON wrapped
+        try {
+          const parsedResponse = JSON.parse(responseContent);
+          if (parsedResponse.messages && parsedResponse.messages[0] && parsedResponse.messages[0].content) {
+            responseContent = parsedResponse.messages[0].content;
+          }
+        } catch (jsonError) {
+          // If it's not JSON, use the content as is
+          console.log("Response is not JSON, using as plain text");
+        }
+        
+        setAiResponse(decodeUnicode(responseContent))
+      } else if (data && data.messages && data.messages[0] && data.messages[0].content) {
+        // ✅ Handle direct messages array response
+        setAiResponse(decodeUnicode(data.messages[0].content))
+      } else {
+        console.warn("⚠️ Unexpected response structure:", data);
+        setAiResponse("Received unexpected response format");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
@@ -259,6 +278,7 @@ Please provide:
                 </div>
               </div>
 
+              {/* Prompt A Editor Section */}
               <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorACollapsed ? "flex-none" : "flex-1"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt A</h3>
@@ -274,9 +294,9 @@ Please provide:
                   </div>
                 </div>
                 {!editorACollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
                       placeholder="Write your first prompt here..."
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
@@ -313,7 +333,7 @@ Please provide:
                   </div>
                 </div>
                 {!responseACollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
                       {isLoadingA ? (
                         <div className="flex items-center space-x-2">
@@ -321,7 +341,7 @@ Please provide:
                           <span>Generating response...</span>
                         </div>
                       ) : (
-                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                           {aiResponseA}
                         </pre>
                       )}
@@ -352,6 +372,7 @@ Please provide:
                 </div>
               </div>
 
+              {/* Prompt B Editor Section */}
               <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorBCollapsed ? "flex-none" : "flex-1"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt B</h3>
@@ -367,9 +388,9 @@ Please provide:
                   </div>
                 </div>
                 {!editorBCollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
                       placeholder="Write your second prompt here..."
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
@@ -406,7 +427,7 @@ Please provide:
                   </div>
                 </div>
                 {!responseBCollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
                       {isLoadingB ? (
                         <div className="flex items-center space-x-2">
@@ -414,7 +435,7 @@ Please provide:
                           <span>Generating response...</span>
                         </div>
                       ) : (
-                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                           {aiResponseB}
                         </pre>
                       )}
@@ -485,14 +506,14 @@ Please provide:
             </div>
 
             <div className="flex-1 p-4 overflow-hidden"> {/* Changed from overflow-y-auto */}
-              <div className="bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
+              <div className="bg-gray-100 dark:bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
                 {isLoadingRating ? (
                   <div className="flex items-center space-x-2">
                     <RotateCcw className="h-4 w-4 animate-spin" />
                     <span>Analyzing responses...</span>
                   </div>
                 ) : (
-                  <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <pre className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                     {ratingResponse || "Click 'Rate' to compare both responses..."}
                   </pre>
                 )}

@@ -49,30 +49,39 @@ export default function LoginPage() {
   }, []);
 
   const handleLogin = async () => {
-  
-
-  if (!loginEmail || !loginPassword) {
-    setError("All fields are required");
-    return;
-  }
-
-  try {
-    const result = await authService.login({ email: loginEmail, password: loginPassword });
-    
-    if (result?.message === "Login successful") {
-      localStorage.setItem("username", result.username || "User");
-      localStorage.setItem("userEmail", loginEmail);
-      setError("");
-      navigate("/home");
-    } else {
-      console.warn("Unexpected login result:", result); // Debug
-      setError("Login failed");
+    if (!loginEmail || !loginPassword) {
+      setError("All fields are required");
+      return;
     }
-  } catch (err: any) {
-    console.error("Login error caught:", err); // Debug
-    setError(err.message || "Login error");
-  }
-};
+
+    try {
+      console.log("🔍 Attempting login with:", { email: loginEmail });
+      
+      const result = await authService.login({ 
+        email: loginEmail, 
+        password: loginPassword 
+      });
+      
+      console.log("🔍 Login result:", result);
+      
+      if (result?.message === "Login successful") {
+        // Store user data from response
+        if (result.username) localStorage.setItem("username", result.username);
+        if (result.userId) localStorage.setItem("userId", result.userId);
+        if (result.email) localStorage.setItem("userEmail", result.email);
+        
+        setError("");
+        console.log("✅ Login successful, navigating to dashboard");
+        navigate("/dashboard"); // ✅ Navigate to dashboard to test
+      } else {
+        console.warn("Unexpected login result:", result);
+        setError("Login failed");
+      }
+    } catch (err: any) {
+      console.error("Login error caught:", err);
+      setError(err.message || "Login error");
+    }
+  };
 
 
   // Password validation function
