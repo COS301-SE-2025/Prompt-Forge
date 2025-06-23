@@ -8,6 +8,7 @@ interface ReviewCardProps {
   comment: string;
 }
 export const ReviewCard = ({
+  
   author,
   date,
   rating,
