@@ -89,24 +89,28 @@ export default function DashboardPage() {
   // Check authentication status on component mount
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
+      const username = localStorage.getItem('username');
       
-      if (token && userId) {
+      console.log("🔍 Dashboard auth check:");
+      console.log("  - username:", username);
+      
+      // ✅ Simplified check - only require username for now
+      if (username && username !== 'Guest') {
         setIsAuthenticated(true);
-        setCurrentUserId(userId);
+        console.log("✅ User is authenticated with username:", username);
       } else {
+        console.log("❌ User not authenticated, redirecting to login");
         setIsAuthenticated(false);
-        navigate('/login'); // Redirect to login if not authenticated
+        navigate('/login');
       }
       setAuthLoading(false);
     };
 
     checkAuth();
 
-    // Listen for storage changes (login/logout in other tabs)
+    // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'token' || e.key === 'userId') {
+      if (e.key === 'username') {
         checkAuth();
       }
     };

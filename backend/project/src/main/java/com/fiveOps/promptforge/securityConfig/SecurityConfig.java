@@ -31,7 +31,7 @@ public class SecurityConfig {
           .cors(cors -> cors.configure(http))
           .csrf(csrf -> csrf.disable())
           .authorizeHttpRequests(auth -> auth
-              .requestMatchers("swagger-ui/**","/auth/**", "/public/**","/user/**").permitAll() // ✅ Allow your real routes
+              .requestMatchers("/swagger-ui/**", "/auth/**", "/public/**", "/user/**", "/store/**", "/api/**").permitAll() // ✅ Added /store/**
               .anyRequest().authenticated()
           )
           .sessionManagement(sm -> sm
