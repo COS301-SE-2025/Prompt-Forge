@@ -17,12 +17,14 @@ import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
+import com.fiveOps.promptforge.promptstore.dto.ReviewWithUsernameDTO;
 import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.repository.PromptPurchaseRepository;
 import com.fiveOps.promptforge.promptstore.repository.PromptReviewRepository;
 import com.fiveOps.promptforge.promptstore.repository.PromptStoreRepository;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 
 import lombok.RequiredArgsConstructor;
 
@@ -97,10 +99,9 @@ public class PromptStoreService {
     }
 
     ///////// Review functionality from code2
-    public Page<PromptReview> getPromptReviews(UUID promptId, Pageable pageable) {
-        return reviewRepository.findByPromptId(promptId, pageable);
-    }
-
+    public Page<ReviewProjection> getReviewsForPrompt(UUID promptId, Pageable pageable) {
+    return reviewRepository.findReviewsWithUsernameByPromptId(promptId, pageable);
+}
     @Transactional
     public PromptReview createReview(PromptReview review) {
         if (reviewRepository.existsByPromptIdAndUserId(review.getPromptId(), review.getUserId())) {

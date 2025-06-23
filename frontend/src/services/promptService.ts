@@ -1,5 +1,7 @@
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/models/Prompt";
+import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/models/Prompt";
+import { Review,ReviewsApiResponse } from '@/models/Review';
+
 
 export class PromptService {
     private httpClient = HttpClient;
@@ -120,53 +122,41 @@ export class PromptService {
         }
     }
 
-    async getPopularPrompts() {
-        try {
-            const response = await this.httpClient.get('/store/prompts/filter/recent');
-            return response.json();
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    }
-
-    async getPromptReviews(promptId: string): Promise<Review[]>  {
+async getPromptReviews(promptId: string): Promise<Review[]> {
     try {
-        const response = await fetch(`/prompts/${promptId}/reviews`);
-        
-        // if (!response.ok) {
-        //     throw new Error(`HTTP error! Status: ${response.status}`);
-        // }
-        
-        // const data = await response.json();
-        // return Array.isArray(data) ? data : [];
-        // Check for successful response
-        if (!response.ok) {
-            throw new Error(`Failed to fetch reviews: ${response.status}`);
-        }
-        
-        // Verify JSON content type
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Expected JSON but got: ${contentType}`);
-        }
-        
-        const reviews: Review[] = await response.json();
-        
-        // Validate the response structure
-        if (!Array.isArray(reviews)) {
-            console.warn('Expected array but got:', reviews);
-            return [];
-        }
-        
-        return reviews;
+      const response = await this.httpClient.get(
+        `/store/prompts/${promptId}/reviews`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Expected JSON but got: ${contentType}`);
+      }
+
+
+      const data: ReviewsApiResponse = await response.json();
+      
+
+      if (!data?.content) {
+        console.warn('Unexpected response structure:', data);
+        return [];
+      }
+
+      return data.content.map(review => ({
+        ...review,
+        date: new Date().toISOString() // Temporary date
+      }));
+      
     } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-        return []; // Return empty array as fallback
+      console.error('Failed to fetch reviews:', error);
+      return []; 
     }
 }
-
 
   async getAllTags(): Promise<Tag[]> {
     try {
@@ -192,4 +182,3 @@ export class PromptService {
     }
   }
 }
-
