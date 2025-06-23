@@ -13,9 +13,10 @@ export default function MarketplacePage() {
   const promptService = new PromptService()
   const [enrichedPrompts, setEnrichedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPrompts, setCurrentPrompts] = useState<MarketplacePrompt[]>([]);
-  const [featuredPromts, setFeaturedPromts] = useState<MarketplacePrompt[]>([]);
+  const [featuredPrompts, setFeaturedPromts] = useState<MarketplacePrompt[]>([]);
   const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
+  const [promptsFound, setPromptsFound] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
@@ -32,27 +33,17 @@ export default function MarketplacePage() {
         setTagsLoading(true)
         setError(null)
         
-        const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage-1)
-        console.log("promptsWithTags");
-        console.log(promptsWithTagsAndCount);
-     
+        const prompts = await promptService.fetchMarketplacePrompts({tag:"all",filter:"all",search:""},currentPage-1)
+        setCurrentPrompts(prompts.content)
+        setTotalPages(prompts.totalPages)
+        setPromptsFound(prompts.totalElements)
         
-        setCurrentPrompts(promptsWithTagsAndCount.prompts)
-        setFilteredPrompts(promptsWithTagsAndCount.prompts)
-        setAvailableCategories(["all",...promptsWithTagsAndCount.tagNames])
-        setTotalPages(promptsWithTagsAndCount.promptCount)
-        setFeaturedPromts(promptsWithTagsAndCount.featuredPrompts)
+        const tags = await promptService.getTags()
+        setAvailableCategories(["all", ...tags])
 
-        // // Extract unique categories from resolved tags
-        // const categories = ['all', ...new Set(
-        //   promptsWithTags.flatMap(p => 
-        //     p.tags
-        //       .filter(tag => tag.name !== 'Unknown')
-        //       .map(t => t.name)
-        //   )
-        // )]
-        // setAvailableCategories(promptsWithTags.allTags)
-        
+        const featuredPrompts = await promptService.getFeatured(0, 4)
+        setFeaturedPromts(featuredPrompts.content)
+
       } catch (err) {
         setError('Failed to load data')
         console.error(err)
@@ -64,62 +55,6 @@ export default function MarketplacePage() {
 
     fetchData()
   }, [])
-
-  // useEffect(() => {
-  //   if (enrichedPrompts.length === 0) return
-    
-  //   // const filtered = enrichedPrompts.filter(prompt => {
-  //   //   // Search filter
-  //   //   const matchesSearch = searchQuery 
-  //   //     ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-  //   //       prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
-  //   //     : true
-      
-  //   //   // Category filter (only show known tags)
-  //   //   const matchesCategory = selectedCategory === 'all' 
-  //   //     ? true 
-  //   //     : prompt.tags.some(tag => tag.name !== 'Unknown' && tag.name === selectedCategory)
-      
-  //   //   // Additional filters
-  //   //   const oneWeekAgo = new Date()
-  //   //   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  //   //   const isNew = new Date(prompt.publishedAt) > oneWeekAgo
-      
-  //   //   const matchesFilter = 
-  //   //     selectedFilter === "all" ||
-  //   //     (selectedFilter === "featured" && prompt.featured) ||
-  //   //     (selectedFilter === "popular" && prompt.usageCount > 2000) ||
-  //   //     (selectedFilter === "new" && isNew)
-      
-  //   //   return matchesSearch && matchesCategory && matchesFilter
-  //   // })
-    
-  //   // setFilteredPrompts(filtered)
-  //   setCurrentPage(1)
-  // }, [searchQuery, selectedCategory, selectedFilter, enrichedPrompts])
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true)
-  //       setTagsLoading(true)
-  //       setError(null)
-
-  //       const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage)
-  //       setEnrichedPrompts(promptsWithTagsAndCount.prompts)
-  //       setFilteredPrompts(promptsWithTagsAndCount.prompts)
-  //       setTotalPages(promptsWithTagsAndCount.promptCount)
-  //     } catch (err) {
-  //       setError('Failed to load data')
-  //       console.error(err)
-  //     } finally {
-  //       setLoading(false)
-  //       setTagsLoading(false)
-  //     }
-  //   }
-
-  //   fetchData()
-  // }, [currentPage])
 
   // Pagination calculations
   const [totalPages, setTotalPages] = useState<number>(1)
@@ -133,21 +68,56 @@ export default function MarketplacePage() {
   if (loading) return <div className="flex justify-center p-8">Loading prompts...</div>
   if (error) return <div className="text-red-500 p-8">{error}</div>
 
-  const changePage=(pageNumber:number)=>{
+  const handleFilterChange = (filter:string) =>{
+    setSelectedFilter(filter);
+    // setSearchQuery("");
+
+    fetchData(selectedCategory,filter,searchQuery)
+  }
+
+  const handleCategoryChange = (category:string) =>{
+    setSelectedCategory(category);
+    fetchData(category,selectedFilter,searchQuery)
+  }
+
+  const fetchData = (tag="all", filter="all", search="", page=1) =>{
     setLoading(true)
     setTagsLoading(true)
     setError(null)
-    setCurrentPage(pageNumber);
-    promptService.getMarketplacePrompts(pageNumber-1)
-    .then(res=>{
-      setCurrentPrompts(res.prompts)
-      setFilteredPrompts(res.prompts)
+    setCurrentPage(page);
+    promptService.fetchMarketplacePrompts({ tag, filter, search },page - 1)
+    .then(page => {
+      setCurrentPrompts(page.content)
+      setTotalPages(page.totalPages)
+      setPromptsFound(page.totalElements)
+
+      // setFilteredPrompts(res.prompts)
     })
-    .finally(()=>{
+    .finally(() => {
       setLoading(false)
       setTagsLoading(false)
     })
   }
+
+  const handleSearch = (query:string) =>{
+    setSearchQuery(query)
+    setSelectedCategory("all");
+    setSelectedFilter("all");
+
+    promptService.fetchMarketplacePrompts({ tag:selectedCategory, filter:selectedFilter, search:query }, currentPage - 1)
+    .then(page => {
+      setCurrentPrompts(page.content)
+      setTotalPages(page.totalPages)
+      setPromptsFound(page.totalElements)
+
+      // setFilteredPrompts(res.prompts)
+    })
+    .finally(() => {
+      setLoading(false)
+      setTagsLoading(false)
+    })
+  }
+
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex">
@@ -162,7 +132,7 @@ export default function MarketplacePage() {
                 className={`w-full justify-start text-sm h-8 px-2 ${
                   selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                 }`}
-                onClick={() => setSelectedFilter(filter.value)}
+                onClick={() => handleFilterChange(filter.value)}
               >
                 {filter.label}
               </Button>
@@ -178,7 +148,7 @@ export default function MarketplacePage() {
                 className={`w-full justify-start text-sm h-8 px-2 ${
                   selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                 }`}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => handleCategoryChange(category)}
               >
                 {category === "all" ? "All" : category}
               </Button>
@@ -217,7 +187,7 @@ export default function MarketplacePage() {
                   placeholder="        Search for prompts..."
                   className="bg-muted border-muted pl-10"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
                 {!searchQuery && (
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -228,14 +198,14 @@ export default function MarketplacePage() {
             </div>
 
             {/* Featured Prompts */}
-            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
+            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && currentPage==1 && (
               <div className="mb-8">
                 <div className="flex items-center mb-4">
                   <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                   <h2 className="text-lg font-medium">Featured Prompts</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  {featuredPromts.map((prompt) => (
+                  {featuredPrompts.map((prompt) => (
                     <PromptCard
                       key={prompt.id}
                       {...prompt}
@@ -262,7 +232,7 @@ export default function MarketplacePage() {
                 </h2>
               </div>
               <div className="text-sm text-muted-foreground">
-                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
+                {promptsFound+" "} prompt{promptsFound !== 1 ? "s" : ""} found
               </div>
             </div>
 
@@ -278,34 +248,13 @@ export default function MarketplacePage() {
               ))}
             </div>
 
-            {/* Empty State */}
-            {filteredPrompts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No prompts found</h3>
-                  <p>Try adjusting your search terms or filters</p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("")
-                    setSelectedCategory("all")
-                    setSelectedFilter("all")
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center space-x-2 mt-8">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => changePage(Math.max(1, currentPage - 1))}
+                  onClick={() => fetchData(selectedCategory,selectedFilter,searchQuery,Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -328,7 +277,7 @@ export default function MarketplacePage() {
                       key={pageNumber}
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
-                      onClick={() => changePage(pageNumber)}
+                      onClick={() => fetchData(selectedCategory, selectedFilter, searchQuery, pageNumber)}
                       className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
                     >
                       {pageNumber}
@@ -339,7 +288,7 @@ export default function MarketplacePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() => fetchData(selectedCategory, selectedFilter, searchQuery, Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                 >
                   Next

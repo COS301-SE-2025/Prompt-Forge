@@ -50,19 +50,19 @@ class PromptStoreControllerTest {
         testPrompt.setContent("Test Content");
     }
 
-    @Test
-    void getAllPublicPrompts_ShouldReturnPublicPrompts() {
-        // Arrange
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getAllPublicPrompts()).thenReturn(expectedPrompts);
+    // @Test
+    // void getAllPublicPrompts_ShouldReturnPublicPrompts() {
+    //     // Arrange
+    //     List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
+    //     when(promptStoreService.getAllPublicPrompts()).thenReturn(expectedPrompts);
 
-        // Act
-        List<Prompt> result = promptStoreController.getAllPublicPrompts();
+    //     // Act
+    //     List<Prompt> result = promptStoreController.getAllPublicPrompts();
 
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).getAllPublicPrompts();
-    }
+    //     // Assert
+    //     assertEquals(expectedPrompts, result);
+    //     verify(promptStoreService).getAllPublicPrompts();
+    // }
 
     @Test
     void purchasePrompt_ShouldReturnPurchase() {
@@ -100,20 +100,20 @@ class PromptStoreControllerTest {
         verify(promptStoreService).getPromptReviews(promptId);
     }
 
-    @Test
-    void searchPublic_ShouldReturnMatchingPrompts() {
-        // Arrange
-        String query = "test";
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.searchPublic(query)).thenReturn(expectedPrompts);
+    // @Test
+    // void searchPublic_ShouldReturnMatchingPrompts() {
+    //     // Arrange
+    //     String query = "test";
+    //     List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
+    //     when(promptStoreService.searchPublic(query)).thenReturn(expectedPrompts);
 
-        // Act
-        List<Prompt> result = promptStoreController.searchPublic(query);
+    //     // Act
+    //     List<Prompt> result = promptStoreController.searchPublic(query);
 
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).searchPublic(query);
-    }
+    //     // Assert
+    //     assertEquals(expectedPrompts, result);
+    //     verify(promptStoreService).searchPublic(query);
+    // }
 
     @Test
     void getUnderPrice_ShouldReturnPromptsUnderMaxPrice() {

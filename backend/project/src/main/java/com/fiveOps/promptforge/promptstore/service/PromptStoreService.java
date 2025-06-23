@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,11 +39,8 @@ public class PromptStoreService {
         return promptStoreRepository.findByVisibility("public");
     }
     
-    public List<Map<String, PromptWithAuthorDTO>> getPage(String page, String size) {
-        int pageSize = Integer.parseInt(size);
-        int offset = pageSize * Integer.parseInt(page);
-
-        return promptStoreRepository.findPublicPromptsWithAuthorAndTags(pageSize, offset);
+    public Page<Map<String, PromptWithAuthorDTO>> getPublicPromptsWithAuthorAndTags(Pageable pageable) {
+        return promptStoreRepository.getPublicPromptsWithAuthorAndTags(pageable);
     }
 
     public long getPageCount(String pageSize) {
@@ -53,12 +52,16 @@ public class PromptStoreService {
         return promptStoreRepository.count();
     }
     
-    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts() {
-        return promptStoreRepository.findByFeatured(true);
+    public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(Pageable pageable) {
+        return promptStoreRepository.findByFeatured(pageable);
     }
     
     public List<Prompt> searchPublic(String query) {
         return promptService.searchPublicByTitle(query);
+    }
+    
+    public Page<Map<String, PromptWithAuthorDTO>> searchPublic(String query,Pageable pageable) {
+        return promptStoreRepository.searchPublicByTitle(query, pageable);
     }
     
     public List<Prompt> getPublicUnderPrice(double maxPrice) {
@@ -70,6 +73,34 @@ public class PromptStoreService {
             .stream()
             .filter(prompt -> "public".equals(prompt.getVisibility()))
             .collect(Collectors.toList());
+    }
+
+    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagName(String tagName, Pageable pageable) {
+        UUID tagId = tagService.getTagIdByName(tagName);
+        return promptStoreRepository.findPublicByTagId(tagId, pageable);
+    }
+    
+    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagNameAndFilter(String tagName, String filter, Pageable pageable) {  
+        UUID tagId = tagService.getTagIdByName(tagName);
+        if(filter.toLowerCase().equals("featured")){
+            return promptStoreRepository.findPublicByTagIdAndFeatured(tagId, pageable);
+        }
+        
+        // if(filter =="new"){
+        return promptStoreRepository.findByTagAndNew(tagId, pageable);
+        // }
+        
+        // if(filter =="top-ranked"){
+
+        // }
+
+        // if
+        // UUID tagId = tagService.getTagIdByName(tagName);
+        // return promptStoreRepository.findPublicByTagId(tagId, pageable);
+    }
+    
+    public Page<Map<String, PromptWithAuthorDTO>> getNew( Pageable pageable) {  
+        return promptStoreRepository.findNew(pageable);
     }
     
     

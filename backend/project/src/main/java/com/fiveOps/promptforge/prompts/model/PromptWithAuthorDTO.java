@@ -12,8 +12,8 @@ public interface PromptWithAuthorDTO {
     String getSlug();
     String getDescription();
     Double getPrice();
-    LocalDateTime getCreatedAt();
-    LocalDateTime getPublishedAt();
-    List<UUID> getTagIds();
+    // LocalDateTime getCreatedAt();
+    // LocalDateTime getPublishedAt();
+    String[] getTagNames();
     String getUsername(); // (JOINed)
 }

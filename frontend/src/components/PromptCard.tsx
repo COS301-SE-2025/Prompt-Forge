@@ -30,14 +30,15 @@ export const PromptCard = ({
     <Card className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col">
       <Link to={`/prompt/${id}`} className="flex flex-col flex-1">
         <div className="p-4 flex-1">
+          
           <div className="flex justify-between items-start mb-2">
             {/* Tags with loading state */}
-            { (
+            {!(tags.length === 1 && tags[0] !== "null") && (
               <div className="flex flex-wrap gap-1">
                 {tags.map(tag => (
-                  <span 
+                  <span
                     key={tag}
-                    className={`text-xs font-medium px-2 py-1 rounded ${CategoryColors[tag] ? CategoryColors[tag] : CategoryColors["default"] }`}
+                    className={`text-xs font-medium px-2 py-1 rounded ${CategoryColors[tag] ? CategoryColors[tag] : CategoryColors["default"]}`}
                   >
                     {tag}
                   </span>

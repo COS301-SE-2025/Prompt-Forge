@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,29 +32,19 @@ import lombok.RequiredArgsConstructor;
 public class PromptStoreController {
     private final PromptStoreService storeService;
 
-    @GetMapping // ← Handles GET /api/store/prompts
-    public List<Prompt> getAllPublicPrompts() {
-        return storeService.getAllPublicPrompts();
-    }
+    // @GetMapping // ← Handles GET /api/store/prompts
+    // public List<Prompt> getAllPublicPrompts() {
+    //     return storeService.getAllPublicPrompts();
+    // }
     
-    @GetMapping ("/page")// ← returns a page (a list of prom)
-    public List<Map<String, PromptWithAuthorDTO>> getPage(@RequestParam String page, @RequestParam String pageSize){
-        return storeService.getPage(page, pageSize);
-    }
-    
-    @GetMapping ("/pages")// ← gets the number of pages needed for the prompts in the db
-    public long getPageCount(@RequestParam String pageSize){
-        return storeService.getPageCount(pageSize);
-    }
-    
-    @GetMapping ("/count")// ← number of prompts
-    public long getPromptCount(){
-        return storeService.getPromptCount();
+    @GetMapping // ← returns a page (a list of prom)
+    public Page<Map<String, PromptWithAuthorDTO>> getAllPublicPrompts(Pageable pageable){
+        return storeService.getPublicPromptsWithAuthorAndTags(pageable);
     }
 
     @GetMapping ("/featured")// ← number of prompts
-    public List<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(){
-        return storeService.getFeaturedPrompts();
+    public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(@PageableDefault(size = 10) Pageable pageable){
+        return storeService.getFeaturedPrompts(pageable);
     }
 
 
@@ -78,9 +71,14 @@ public class PromptStoreController {
 
 
 
+    // @GetMapping("/search")
+    // public List<Prompt> searchPublic(@RequestParam String query) {
+    //     return storeService.searchPublic(query);
+    // }
+    
     @GetMapping("/search")
-    public List<Prompt> searchPublic(@RequestParam String query) {
-        return storeService.searchPublic(query);
+    public Page<Map<String, PromptWithAuthorDTO>> searchPublic(@RequestParam String query,Pageable pageable) {
+        return storeService.searchPublic(query,pageable);
     }
 
     @GetMapping("/filter/price")
@@ -91,6 +89,27 @@ public class PromptStoreController {
     @GetMapping("/filter/tag/{tagName}")
     public List<Prompt> getByTagName(@PathVariable String tagName) {
         return storeService.getPublicByTagName(tagName);
+    }
+
+    @GetMapping("/filter/tag/tag/{tagName}") //filter by tagname only
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagName(
+            @PathVariable String tagName,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getPublicByTagName(tagName.substring(0, 1).toUpperCase() +tagName.substring(1).toLowerCase(), pageable);
+    }
+    
+    @GetMapping("/filter") // filter by tagname and filters(new, featured, etc.)
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagNameAndFilter(
+            @RequestParam String tagName,
+            @RequestParam String filter,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getPublicByTagNameAndFilter(
+                tagName.substring(0, 1).toUpperCase() + tagName.substring(1).toLowerCase(), filter, pageable);
+    }
+
+    @GetMapping("/new")
+    public Page<Map<String, PromptWithAuthorDTO>> getNew(@PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getNew(pageable);
     }
 
 
