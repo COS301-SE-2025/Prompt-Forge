@@ -34,7 +34,7 @@ public class PromptStoreController {
     private final PromptStoreService storeService;
 
     @GetMapping // ← Handles GET /api/store/prompts
-    public Page<Prompt> getAllPublicPrompts(
+    public Page<PromptWithAuthorDTO> getAllPublicPrompts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -96,7 +96,7 @@ public class PromptStoreController {
 
 
     @GetMapping("/search")
-    public Page<Prompt> searchPublic(
+    public Page<PromptWithAuthorDTO> searchPublic(
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -105,7 +105,7 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/price")
-    public Page<Prompt> getUnderPrice(
+    public Page<PromptWithAuthorDTO> getUnderPrice(
             @RequestParam double maxPrice,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -114,7 +114,7 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/tag/{tagName}")
-    public Page<Prompt> getByTagName(
+    public Page<PromptWithAuthorDTO> getByTagName(
             @PathVariable String tagName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -125,7 +125,7 @@ public class PromptStoreController {
 
     // Get public prompts by author
     @GetMapping("/filter/author/{authorId}")
-    public Page<Prompt> getPublicPromptsByAuthor(
+    public Page<PromptWithAuthorDTO> getPublicPromptsByAuthor(
             @PathVariable UUID authorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -141,7 +141,7 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/recent")
-    public ResponseEntity<Page<Prompt>> getRecentlyPublishedPrompts(
+    public ResponseEntity<Page<PromptWithAuthorDTO>> getRecentlyPublishedPrompts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
