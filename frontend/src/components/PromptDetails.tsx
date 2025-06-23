@@ -16,6 +16,8 @@ export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
@@ -350,8 +352,8 @@ export const PromptDetails = () => {
                 {reviews.map((review) => (
                   <ReviewCard
                     key={review.id}
-                    author={review.userId}
-                    date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
+                    username={review.username}
+                    // date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
                     rating={review.rating}
                     comment={review.comment}
                   />
@@ -367,7 +369,14 @@ export const PromptDetails = () => {
             {canViewContent && (
               <ReviewForm
                 promptId={id!}
-                // onSubmit={handleReviewSubmit}
+                onSubmitSuccess={() => {
+                  // Refresh reviews after successful submission
+                  const fetchReviews = async () => {
+                    const reviewsData = await promptService.getPromptReviews(id!)
+                    setReviews(reviewsData)
+                  }
+                  fetchReviews()
+                }}
               />
             )}
           </Card>
