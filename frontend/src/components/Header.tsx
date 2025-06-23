@@ -6,6 +6,7 @@ import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart } from "lucide-re
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
+import { AuthService } from "@/services/authService";
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
@@ -26,11 +27,18 @@ export default function Header() {
     { name: "Community", href: "/community" },
   ]
 
-  const handleLogout = () => {
-    // Add any logout logic here (clear tokens, etc.)
-    setDropdownOpen(false)
-    navigate('/login')
-  }
+  const handleLogout = async () => {
+    try {
+      const authService = new AuthService();
+      await authService.logout();
+      localStorage.removeItem("userEmail");
+      setDropdownOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Optional: Show toast or error message
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
