@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.PageRequest;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class PromptStoreController {
     private final PromptStoreService storeService;
 
+
     @GetMapping // ← Handles GET /api/store/prompts
     public Page<PromptWithAuthorDTO> getAllPublicPrompts(
             @RequestParam(defaultValue = "0") int page,
@@ -48,23 +51,20 @@ public class PromptStoreController {
         Pageable pageable = PageRequest.of(Integer.parseInt(page), Integer.parseInt(pageSize));
         return storeService.getPage(page, pageSize, pageable);
     }
+
     
-    @GetMapping ("/pages")// ← gets the number of pages needed for the prompts in the db
-    public long getPageCount(@RequestParam String pageSize){
-        return storeService.getPageCount(pageSize);
-    }
-    
-    @GetMapping ("/count")// ← number of prompts
-    public long getPromptCount(){
-        return storeService.getPromptCount();
+    @GetMapping // ← returns a page (a list of prom)
+    public Page<Map<String, PromptWithAuthorDTO>> getAllPublicPrompts(Pageable pageable){
+        return storeService.getPublicPromptsWithAuthorAndTags(pageable);
     }
 
     @GetMapping ("/featured")// ← number of prompts
+
     public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return storeService.getFeaturedPrompts(pageable);
+
     }
 
 
@@ -95,13 +95,20 @@ public class PromptStoreController {
 
 
 
+    // @GetMapping("/search")
+    // public List<Prompt> searchPublic(@RequestParam String query) {
+    //     return storeService.searchPublic(query);
+    // }
+    
     @GetMapping("/search")
+
     public Page<PromptWithAuthorDTO> searchPublic(
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return storeService.searchPublic(query, pageable);
+
     }
 
     @GetMapping("/filter/price")
@@ -120,6 +127,27 @@ public class PromptStoreController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return storeService.getPublicByTagName(tagName, pageable);
+    }
+
+    @GetMapping("/filter/tag/tag/{tagName}") //filter by tagname only
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagName(
+            @PathVariable String tagName,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getPublicByTagName(tagName.substring(0, 1).toUpperCase() +tagName.substring(1).toLowerCase(), pageable);
+    }
+    
+    @GetMapping("/filter") // filter by tagname and filters(new, featured, etc.)
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagNameAndFilter(
+            @RequestParam String tagName,
+            @RequestParam String filter,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getPublicByTagNameAndFilter(
+                tagName.substring(0, 1).toUpperCase() + tagName.substring(1).toLowerCase(), filter, pageable);
+    }
+
+    @GetMapping("/new")
+    public Page<Map<String, PromptWithAuthorDTO>> getNew(@PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getNew(pageable);
     }
 
 

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-// Option 1: Traditional POJO
+
 public class PromptWithAuthorDTO {
     private final UUID id;
     private final UUID authorId;
@@ -59,5 +59,6 @@ public class PromptWithAuthorDTO {
     public LocalDateTime getPublishedAt() { return publishedAt; }
     public List<UUID> getTagIds() { return tagIds; }
     public String getUsername() { return username; }
+
 }
 

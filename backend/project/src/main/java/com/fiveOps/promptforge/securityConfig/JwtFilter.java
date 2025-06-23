@@ -1,7 +1,9 @@
 package com.fiveOps.promptforge.securityConfig;
+
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -28,25 +31,77 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
                                     throws ServletException, IOException {
+        
+        String requestPath = request.getRequestURI();
+        String method = request.getMethod();
+        
+        System.out.println("🔍 JWT Filter - " + method + " " + requestPath);
+
+        // ✅ Skip JWT validation for auth endpoints only
+        if (shouldSkipFilter(requestPath)) {
+            System.out.println("✅ Skipping JWT filter for: " + requestPath);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = null;
+        String email = null;
+
+        // ✅ First try to get token from Authorization header
         String authHeader = request.getHeader("Authorization");
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            String email = jwtUtil.extractUsername(token);
-
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtUtil.validateToken(token)) {
-                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                        email, "", Collections.emptyList());
-
-                    UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+            token = authHeader.substring(7);
+        }
+        
+        // ✅ If no Authorization header, try to get token from cookie
+        if (token == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    System.out.println("🍪 Found JWT token in cookie");
+                    break;
                 }
             }
         }
 
+        // ✅ Process token if found and set authentication
+        if (token != null && !token.trim().isEmpty()) {
+            try {
+                email = jwtUtil.extractUsername(token);
+                System.out.println("🔍 Extracted email from JWT: " + email);
+                
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    if (jwtUtil.validateToken(token)) {
+                        // ✅ Create UserDetails with the email as username
+                        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            email, "", Collections.emptyList());
+
+                        // ✅ Set authentication in SecurityContext
+                        UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        System.out.println("✅ JWT authentication successful for: " + email);
+                    } else {
+                        System.out.println("❌ JWT token validation failed");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("❌ JWT parsing error: " + e.getMessage());
+                // Continue without authentication
+            }
+        } else {
+            System.out.println("⚠️ No JWT token found in request");
+        }
+
         filterChain.doFilter(request, response);
+    }
+
+    // ✅ Only skip auth endpoints - let JWT filter process dashboard
+    private boolean shouldSkipFilter(String requestPath) {
+        return requestPath.startsWith("/auth/") ||
+               requestPath.startsWith("/public/") ||
+               requestPath.startsWith("/swagger-ui/") ||
+               requestPath.startsWith("/v3/api-docs");
     }
 }
