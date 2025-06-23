@@ -11,116 +11,18 @@ const PROMPTS_PER_PAGE = 12
 
 export default function MarketplacePage() {
   const promptService = new PromptService()
-  const [enrichedPrompts, setEnrichedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPrompts, setCurrentPrompts] = useState<MarketplacePrompt[]>([]);
-  const [featuredPromts, setFeaturedPromts] = useState<MarketplacePrompt[]>([]);
-  const [filteredPrompts, setFilteredPrompts] = useState<MarketplacePrompt[]>([]);
+  const [featuredPrompts, setFeaturedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
+  const [promptsFound, setPromptsFound] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
-  const [showFeatured, setShowFeatured] = useState(true) // Add this state
+  const [showFeatured, setShowFeatured] = useState(true) // Featured prompts are collapsible
   const [availableCategories, setAvailableCategories] = useState<string[]>(['all'])
-  const [loading, setLoading] = useState(true)
-  const [tagsLoading, setTagsLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setTagsLoading(true)
-        setError(null)
-        
-        const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage-1)
-        console.log("promptsWithTags");
-        console.log(promptsWithTagsAndCount);
-     
-        
-        setCurrentPrompts(promptsWithTagsAndCount.prompts)
-        setFilteredPrompts(promptsWithTagsAndCount.prompts)
-        setAvailableCategories(["all",...promptsWithTagsAndCount.tagNames])
-        setTotalPages(promptsWithTagsAndCount.promptCount)
-        setFeaturedPromts(promptsWithTagsAndCount.featuredPrompts)
-
-        // // Extract unique categories from resolved tags
-        // const categories = ['all', ...new Set(
-        //   promptsWithTags.flatMap(p => 
-        //     p.tags
-        //       .filter(tag => tag.name !== 'Unknown')
-        //       .map(t => t.name)
-        //   )
-        // )]
-        // setAvailableCategories(promptsWithTags.allTags)
-        
-      } catch (err) {
-        setError('Failed to load data')
-        console.error(err)
-      } finally {
-        setLoading(false)
-        setTagsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  // useEffect(() => {
-  //   if (enrichedPrompts.length === 0) return
-    
-  //   // const filtered = enrichedPrompts.filter(prompt => {
-  //   //   // Search filter
-  //   //   const matchesSearch = searchQuery 
-  //   //     ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-  //   //       prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
-  //   //     : true
-      
-  //   //   // Category filter (only show known tags)
-  //   //   const matchesCategory = selectedCategory === 'all' 
-  //   //     ? true 
-  //   //     : prompt.tags.some(tag => tag.name !== 'Unknown' && tag.name === selectedCategory)
-      
-  //   //   // Additional filters
-  //   //   const oneWeekAgo = new Date()
-  //   //   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  //   //   const isNew = new Date(prompt.publishedAt) > oneWeekAgo
-      
-  //   //   const matchesFilter = 
-  //   //     selectedFilter === "all" ||
-  //   //     (selectedFilter === "featured" && prompt.featured) ||
-  //   //     (selectedFilter === "popular" && prompt.usageCount > 2000) ||
-  //   //     (selectedFilter === "new" && isNew)
-      
-  //   //   return matchesSearch && matchesCategory && matchesFilter
-  //   // })
-    
-  //   // setFilteredPrompts(filtered)
-  //   setCurrentPage(1)
-  // }, [searchQuery, selectedCategory, selectedFilter, enrichedPrompts])
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true)
-  //       setTagsLoading(true)
-  //       setError(null)
-
-  //       const promptsWithTagsAndCount = await promptService.getMarketplacePrompts(currentPage)
-  //       setEnrichedPrompts(promptsWithTagsAndCount.prompts)
-  //       setFilteredPrompts(promptsWithTagsAndCount.prompts)
-  //       setTotalPages(promptsWithTagsAndCount.promptCount)
-  //     } catch (err) {
-  //       setError('Failed to load data')
-  //       console.error(err)
-  //     } finally {
-  //       setLoading(false)
-  //       setTagsLoading(false)
-  //     }
-  //   }
-
-  //   fetchData()
-  // }, [currentPage])
 
   // Pagination calculations
   const [totalPages, setTotalPages] = useState<number>(1)
@@ -131,251 +33,350 @@ export default function MarketplacePage() {
     { value: "new", label: "New" },
   ]
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading prompts...</p>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter);
+    fetchData(selectedCategory, filter, searchQuery)
   }
-  
-  if (error) return <div className="text-red-500 p-8">{error}</div>
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    fetchData(category, selectedFilter, searchQuery)
+  }
+
+  const fetchData = (tag = "all", filter = "all", search = "", page = 1) => {
+    setLoading(true)
+    setError(null)
+    setCurrentPage(page);
+    
+    // Fetch categories/tags if not already loaded
+    if (availableCategories.length <= 1) {
+      promptService.getTags()
+        .then(tags => {
+          setAvailableCategories(["all", ...tags])
+        })
+        .catch(err => console.error("Failed to load categories:", err))
+    }
+
+    // Fetch featured prompts if not already loaded
+    if (featuredPrompts.length === 0) {
+      promptService.getFeatured(0, 100) // Load more featured prompts
+        .then(pageData => {
+          setFeaturedPrompts(pageData.content || [])
+        })
+        .catch(err => console.error("Failed to load featured prompts:", err))
+    }
+    
+    promptService.fetchMarketplacePrompts({ tag, filter, search }, page - 1)
+      .then(pageData => {
+        setCurrentPrompts(pageData.content || [])
+        setTotalPages(pageData.totalPages || 1)
+        setPromptsFound(pageData.totalElements || 0)
+      })
+      .catch(err => {
+        setError('Failed to load prompts')
+        console.error(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    
+    // Reset to page 1 when searching
+    promptService.fetchMarketplacePrompts({ tag: selectedCategory, filter: selectedFilter, search: query }, 0)
+      .then(pageData => {
+        setCurrentPrompts(pageData.content || [])
+        setTotalPages(pageData.totalPages || 1)
+        setPromptsFound(pageData.totalElements || 0)
+        setCurrentPage(1)
+      })
+      .catch(err => {
+        setError('Failed to search prompts')
+        console.error(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
 
   const changePage = (pageNumber: number) => {
-    setLoading(true)
-    setTagsLoading(true)
-    setError(null)
-    setCurrentPage(pageNumber);
-    promptService.getMarketplacePrompts(pageNumber - 1)
-    .then(res => {
-      setCurrentPrompts(res.prompts)
-      setFilteredPrompts(res.prompts)
-    })
-    .finally(() => {
-      setLoading(false)
-      setTagsLoading(false)
-    })
+    fetchData(selectedCategory, selectedFilter, searchQuery, pageNumber)
   }
-  return (
-    <div className="flex-1 flex flex-col w-full h-full">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block">
-          <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-          <div className="space-y-1">
-            {filters.map((filter) => (
-              <Button
-                key={filter.value}
-                variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${
-                  selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                }`}
-                onClick={() => setSelectedFilter(filter.value)}
-              >
-                {filter.label}
-              </Button>
-            ))}
-          </div>
 
-          <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
-          <div className="space-y-1">
-            {availableCategories.map((category) => (
-              <Button
-                key={category}
-                variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${
-                  selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                }`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category === "all" ? "All" : category}
-              </Button>
-            ))}
+  // Load initial data when component mounts or when needed
+  if (currentPrompts.length === 0 && !loading && !error) {
+    fetchData()
+  }
+
+  if (error) return <div className="text-red-500 p-8">{error}</div>
+
+  return (
+    <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar */}
+        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+            <div className="space-y-1 mb-6">
+              {filters.map((filter) => (
+                <Button
+                  key={filter.value}
+                  variant="ghost"
+                  className={`w-full justify-start text-sm h-8 px-2 ${
+                    selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                  }`}
+                  onClick={() => handleFilterChange(filter.value)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+
+            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
+            <div className="space-y-1">
+              {availableCategories.map((category) => (
+                <Button
+                  key={category}
+                  variant="ghost"
+                  className={`w-full justify-start text-sm h-8 px-2 ${
+                    selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                  }`}
+                  onClick={() => handleCategoryChange(category)}
+                >
+                  {category === "all" ? "All" : category}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
-            {/* Header and Mobile Filters */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold mb-4 md:mb-0">Prompt Marketplace</h1>
-              <Button 
-                variant="outline" 
-                className="md:hidden mb-4" 
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </div>
-
-            {showFilters && (
-              <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Mobile filter UI would go here */}
-                </div>
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-6xl mx-auto">
+              {/* Header and Mobile Filters */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold mb-4 md:mb-0">Prompt Marketplace</h1>
+                <Button 
+                  variant="outline" 
+                  className="md:hidden mb-4" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
               </div>
-            )}
 
-            {/* Search Bar */}
-            <div className="mb-8">
-              <div className="relative">
-                <Input
-                  placeholder="        Search for prompts..."
-                  className="bg-muted border-muted pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {!searchQuery && (
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
+              {showFilters && (
+                <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Filters</h4>
+                      {filters.map((filter) => (
+                        <Button
+                          key={filter.value}
+                          variant="ghost"
+                          size="sm"
+                          className={`w-full justify-start ${
+                            selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                          }`}
+                          onClick={() => handleFilterChange(filter.value)}
+                        >
+                          {filter.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Categories</h4>
+                      {availableCategories.slice(0, 5).map((category) => (
+                        <Button
+                          key={category}
+                          variant="ghost"
+                          size="sm"
+                          className={`w-full justify-start ${
+                            selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                          }`}
+                          onClick={() => handleCategoryChange(category)}
+                        >
+                          {category === "all" ? "All" : category}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              )}
 
-            {/* Featured Prompts */}
-            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
+              {/* Search Bar */}
               <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                    <h2 className="text-lg font-medium">Featured Prompts</h2>
-                    <span className="ml-2 text-sm text-muted-foreground">({featuredPromts.length})</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFeatured(!showFeatured)}
-                    className="flex items-center text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    {showFeatured ? "Hide" : "Show"}
-                    {showFeatured ? (
-                      <ChevronUp className="h-4 w-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    )}
-                  </Button>
+                <div className="relative">
+                  <Input
+                    placeholder="        Search for prompts..."
+                    className="bg-muted border-muted pl-10"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                  />
+                  {!searchQuery && (
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                
-                {showFeatured && (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-all duration-300 ease-in-out">
-                    {featuredPromts.map((prompt) => (
-                      <PromptCard
-                        key={prompt.id}
+              </div>
+
+              {/* Featured Prompts - Always show when available */}
+              {featuredPrompts.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                      <h2 className="text-lg font-medium">Featured Prompts</h2>
+                      <span className="ml-2 text-sm text-muted-foreground">({featuredPrompts.length})</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFeatured(!showFeatured)}
+                      className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      {showFeatured ? "Hide" : "Show"}
+                      {showFeatured ? (
+                        <ChevronUp className="h-4 w-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {showFeatured && (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-all duration-300 ease-in-out">
+                      {featuredPrompts.map((prompt) => (
+                        <PromptCard
+                          key={`featured-${prompt.id}`}
+                          {...prompt}
+                          tags={prompt.tagnames}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Loading State */}
+              {loading && (
+                <div className="flex justify-center items-center h-32">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading prompts...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Results */}
+              {!loading && (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Star className="h-5 w-5 mr-2 text-yellow-400" />
+                      <h2 className="text-lg font-medium">
+                        {searchQuery
+                          ? `Search Results for "${searchQuery}"`
+                          : selectedCategory !== "all"
+                            ? `${selectedCategory} Prompts`
+                            : selectedFilter !== "all"
+                              ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
+                              : "All Prompts"}
+                      </h2>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {promptsFound} prompt{promptsFound !== 1 ? "s" : ""} found
+                    </div>
+                  </div>
+
+                  {/* Prompts Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                    {currentPrompts.map((prompt) => (
+                      <PromptCard 
+                        key={`prompt-${prompt.id}`}
                         {...prompt}
                         tags={prompt.tagnames}
-                        // tagsLoading={tagsLoading}
                       />
                     ))}
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* Results */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                <h2 className="text-lg font-medium">
-                  {searchQuery
-                    ? `Search Results for "${searchQuery}"`
-                    : selectedCategory !== "all"
-                      ? `${selectedCategory} Prompts`
-                      : selectedFilter !== "all"
-                        ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
-                        : "All Prompts"}
-                </h2>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
-              </div>
+                  {/* Empty State */}
+                  {currentPrompts.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="text-muted-foreground mb-4">
+                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <h3 className="text-lg font-medium mb-2">No prompts found</h3>
+                        <p>Try adjusting your search terms or filters</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSearchQuery("")
+                          setSelectedCategory("all")
+                          setSelectedFilter("all")
+                          fetchData("all", "all", "", 1)
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mt-8">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+
+                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                        let pageNumber
+                        if (totalPages <= 5) {
+                          pageNumber = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNumber = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNumber = totalPages - 4 + i
+                        } else {
+                          pageNumber = currentPage - 2 + i
+                        }
+
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => changePage(pageNumber)}
+                            className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
+                          >
+                            {pageNumber}
+                          </Button>
+                        )
+                      })}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-
-            {/* Prompts Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-              {currentPrompts.map((prompt) => (
-                <PromptCard 
-                  key={prompt.id} 
-                  {...prompt}
-                  tags={prompt.tagnames}
-                  // tagsLoading={tagsLoading}
-                />
-              ))}
-            </div>
-
-            {/* Empty State */}
-            {filteredPrompts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No prompts found</h3>
-                  <p>Try adjusting your search terms or filters</p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("")
-                    setSelectedCategory("all")
-                    setSelectedFilter("all")
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                  let pageNumber
-                  if (totalPages <= 5) {
-                    pageNumber = i + 1
-                  } else if (currentPage <= 3) {
-                    pageNumber = i + 1
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNumber = totalPages - 4 + i
-                  } else {
-                    pageNumber = currentPage - 2 + i
-                  }
-
-                  return (
-                    <Button
-                      key={pageNumber}
-                      variant={currentPage === pageNumber ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => changePage(pageNumber)}
-                      className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                })}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </div>

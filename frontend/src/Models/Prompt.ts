@@ -3,9 +3,9 @@ export interface Prompt {
   authorId: string;
   title: string;
   slug: string;
+  price: number;
   content: string;
   description: string;
-  price: number;
   visibility: 'public' | 'private';
   createdAt: string;
   publishedAt: string;
@@ -13,6 +13,21 @@ export interface Prompt {
   usageCount: number;
   rating?: number;
   featured?: boolean;
+}
+
+export interface MarketplacePrompt {
+  id: string;
+  authorId: string;
+  username: string;
+  title: string;
+  slug: string;
+  price: number;
+  description: string;
+  tagnames: Category[];
+  usageCount: number;
+  publishedAt: string;
+  featured?: boolean;
+  
 }
 
 export interface Tag {
@@ -47,23 +62,11 @@ export enum CategoryColors {
     "Design" = "bg-pink-500/20 text-pink-400",
     "SEO"= "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
     "Content"= "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-    "default" = "bg-blue-500/20 text-blue-400"
+    "default" = "bg-blue-500/20 text-blue-400",
+    "null" = "bg-transparent"
   
 }
 
 export type Category = keyof typeof CategoryColors;
 
-export interface MarketplacePrompt {
-  id: string;
-  authorId: string;
-  username: string;
-  title: string;
-  price: number;
-  tagnames: Category[];
-  slug: string;
-  description: string;
-  featured?: boolean;
-  usageCount: number;
-  publishedAt: string;
 
-}
