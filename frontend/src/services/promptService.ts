@@ -1,5 +1,5 @@
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/models/Prompt";
+import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/Models/Prompt";
 
 export class PromptService {
     private httpClient = HttpClient;

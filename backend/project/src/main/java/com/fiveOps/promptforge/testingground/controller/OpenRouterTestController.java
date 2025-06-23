@@ -22,7 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
 
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/test/openrouter")
 public class OpenRouterTestController {
 

@@ -29,40 +29,23 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
       .csrf(csrf -> csrf.disable())
-      .authorizeHttpRequests(auth ->
-        auth
-        //   .requestMatchers("/")
-        //   .permitAll()
-        //   .requestMatchers("/auth/")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.GET, "/user/")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.PATCH, "/user/")
-        //   .authenticated()
-        //   .requestMatchers("/swagger-ui/", "/v3/api-docs/")
-        //   .permitAll()
-        //   // other security rules
-          .anyRequest().permitAll()
-      )
-      .sessionManagement(sm ->
-        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-      )
+      .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
 
   @Bean
-   public WebMvcConfigurer corsConfigurer() {
+  public WebMvcConfigurer corsConfigurer() {
     return new WebMvcConfigurer() {
         @Override
         public void addCorsMappings(CorsRegistry registry) {
             registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173") // frontend URL
-                .allowedMethods("*") // GET, POST, etc.
-                .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowedOrigins("http://localhost:5173", "http://localhost:3000") // ✅ Added multiple origins
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // ✅ Explicit methods
+                .allowedHeaders("*");
         }
     };
-}
+  }
 }
