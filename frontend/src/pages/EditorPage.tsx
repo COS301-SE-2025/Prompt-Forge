@@ -134,34 +134,28 @@ export default function EditorPage() {
 
     try {
       const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: ratingPrompt,
-          },
-        ],
-      }
-
-      // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(requestBody),
-      // })
-
-
-
-      const data = await editorService.promptOpenRouter(requestBody);
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        setRatingResponse(decodeUnicode(data.choices[0].message.content))
-      }
-    } catch (error) {
-      setRatingResponse("Error generating rating: " + error)
-    } finally {
-      setIsLoadingRating(false)
+        messages: [{
+          role: "user",
+          content: ratingPrompt,
+        }]
     }
+
+    console.log("🚀 Rating request:", requestBody);
+    const data = await editorService.promptOpenRouter(requestBody);
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      // ✅ Display rating immediately when ready
+      setRatingResponse(decodeUnicode(data.choices[0].message.content))
+    } else {
+      setRatingResponse("Could not generate rating - unexpected response format")
+    }
+  } catch (error) {
+    console.error("❌ Rating error:", error);
+    setRatingResponse("Error generating rating: " + error)
+  } finally {
+    setIsLoadingRating(false) // ✅ Stop loading immediately when rating is ready
   }
+}
 
   const getSuggested = async (prompt: string, response: string) => {
     // Check if prompt has changed
@@ -182,36 +176,35 @@ export default function EditorPage() {
 
       Please:
       1. Rewrite the prompt to improve its effectiveness
+      2. Explain what improvements were made and why
+      3. Provide alternative versions if applicable
       `
-    try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: suggestionPrompt,
-          },
-        ],
-      }
-
-      // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(requestBody),
-      // })
-
-      const data = await editorService.promptOpenRouter(requestBody);
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
-        setLastSuggestedPrompt(prompt)  // Store the suggested prompt
-      }
-    } catch (error) {
-      setSuggestionResponse("Error analyzing rating: " + error)
-    } finally {
-      setIsLoadingSuggestion(false)
+    
+  try {
+    const requestBody = {
+      messages: [{
+        role: "user",
+        content: suggestionPrompt,
+      }]
     }
+
+    console.log("🚀 Suggestion request:", requestBody);
+    const data = await editorService.promptOpenRouter(requestBody);
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      // ✅ Display suggestion immediately when ready
+      setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
+      setLastSuggestedPrompt(prompt)
+    } else {
+      setSuggestionResponse("Could not generate suggestions - unexpected response format")
+    }
+  } catch (error) {
+    console.error("❌ Suggestion error:", error);
+    setSuggestionResponse("Error analyzing prompt: " + error)
+  } finally {
+    setIsLoadingSuggestion(false) // ✅ Stop loading immediately when suggestion is ready
   }
+}
 
   const testPrompt = async () => {
   if (promptText === lastTestedPrompt) {
@@ -233,14 +226,6 @@ export default function EditorPage() {
       }]
     }
 
-    // const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    //   body: JSON.stringify(requestBody)
-    // })
-
     const data = await editorService.promptOpenRouter(requestBody);
 
     if (data.choices && data.choices[0] && data.choices[0].message) {
@@ -248,16 +233,16 @@ export default function EditorPage() {
       setAiResponse(decodeUnicode(aiResponseText))
       setLastTestedPrompt(promptText)
       
-      await Promise.all([
-        getRating(promptText, decodeUnicode(aiResponseText)),
-        getSuggested(promptText, decodeUnicode(aiResponseText))
-      ])
+      // ✅ Start rating and suggestion immediately WITHOUT waiting
+      // Fire and forget - they'll update UI when ready
+      getRating(promptText, decodeUnicode(aiResponseText))
+      getSuggested(promptText, decodeUnicode(aiResponseText))
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     setAiResponse(`Error: ${errorMessage}`)
   } finally {
-    setIsLoading(false)
+    setIsLoading(false) // ✅ This will stop loading immediately after test response
   }
 }
 
@@ -348,9 +333,9 @@ export default function EditorPage() {
             </div>
           </div>
 
-          <div className="flex-1 bg-card rounded-lg p-3 mb-3 min-h-0">
+          <div className="flex-1 bg-gray-100 dark:bg-card rounded-lg p-3 mb-3 min-h-0">
             <textarea
-              className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
+              className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
               placeholder="Write your prompt here..."
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
@@ -555,12 +540,12 @@ export default function EditorPage() {
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingRating ? (
                         <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Rating your prompt...</span>
+                          <RotateCcw className="h-4 w-4 animate-spin text-amber-500" />
+                          <span className="text-amber-500">Rating your prompt...</span>
                         </div>
                       ) : (
                         <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
-                          {ratingResponse || "Rating will appear here..."}
+                          {ratingResponse || "Click 'Rate' button to analyze your prompt..."}
                         </pre>
                       )}
                     </div>
@@ -671,12 +656,12 @@ export default function EditorPage() {
                     <div className="absolute inset-0 p-3 overflow-y-auto">
                       {isLoadingSuggestion ? (
                         <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating suggestions...</span>
+                          <RotateCcw className="h-4 w-4 animate-spin text-violet-500" />
+                          <span className="text-violet-500">Generating suggestions...</span>
                         </div>
                       ) : (
                         <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
-                          {suggestionResponse || "Suggestions will appear here..."}
+                          {suggestionResponse || "Click 'Suggest' button to get prompt improvements..."}
                         </pre>
                       )}
                     </div>

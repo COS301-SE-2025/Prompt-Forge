@@ -31,29 +31,69 @@ export interface MarketplacePrompt {
 }
 
 export interface Tag {
-  id: string;
-  name: string;
-  slug: string;
-  usageCount?: number;
-  category?: string;
-  createdAt?: string;
-  autosuggest?: boolean;
+  id: string
+  name: string
 }
 
 export interface Review {
-  id: string;
-  promptId: string;
-  userId: string;
-  rating: number;
-  comment: string;
-  createdAt?: string; // Add if available from backend
+  id: string
+  promptId: string
+  userId: string
+  userName?: string
+  rating: number
+  comment: string
+  createdAt?: string
+  date?: string     
 }
 
-export interface PromptWithTags extends Omit<MarketplacePrompt[], 'tags'> {
-  tags: Tag[];
+export interface ReviewsApiResponse {
+  content: Review[]
+  pageable: {
+    pageNumber: number
+    pageSize: number
+    sort: {
+      empty: boolean
+      sorted: boolean
+      unsorted: boolean
+    }
+    offset: number
+    paged: boolean
+    unpaged: boolean
+  }
+  last: boolean
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+  sort: {
+    empty: boolean
+    sorted: boolean
+    unsorted: boolean
+  }
+  first: boolean
+  numberOfElements: number
+  empty: boolean
 }
 
-
+// Update existing PromptWithTags interface to include reviews
+export interface PromptWithTags {
+  id: string
+  authorId: string
+  title: string
+  slug: string
+  price: number
+  content: string
+  description: string
+  visibility: "public" | "private"
+  createdAt: string
+  publishedAt: string
+  tags: Tag[]
+  tagIds: string[]
+  usageCount: number
+  rating?: number
+  featured?: boolean
+  reviews?: Review[] // Add reviews property
+}
 
 export enum CategoryColors {
     "Writing" = "bg-blue-500/20 text-blue-400",

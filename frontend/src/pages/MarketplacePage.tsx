@@ -106,11 +106,47 @@ export default function MarketplacePage() {
   }
 
   // Load initial data when component mounts or when needed
-  if (currentPrompts.length === 0 && !loading && !error) {
+  useEffect(() => {
     fetchData()
+  }, []) // Empty dependency array means it runs once on mount
+
+  // Show loading screen (full screen like other pages)
+  if (loading && currentPrompts.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading marketplace...</p>
+        </div>
+      </div>
+    )
   }
 
-  if (error) return <div className="text-red-500 p-8">{error}</div>
+  // Show error screen
+  if (error && currentPrompts.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Error Loading Marketplace</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button 
+            onClick={() => {
+              setError(null)
+              fetchData()
+            }} 
+            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
@@ -264,17 +300,17 @@ export default function MarketplacePage() {
               )}
 
               {/* Loading State */}
-              {loading && (
+              {loading && currentPrompts.length > 0 && (
                 <div className="flex justify-center items-center h-32">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading prompts...</p>
+                    <p className="text-muted-foreground">Updating results...</p>
                   </div>
                 </div>
               )}
 
-              {/* Results */}
-              {!loading && (
+              {/* Results - only show when not loading initial data */}
+              {!loading || currentPrompts.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
@@ -306,7 +342,7 @@ export default function MarketplacePage() {
                   </div>
 
                   {/* Empty State */}
-                  {currentPrompts.length === 0 && (
+                  {currentPrompts.length === 0 && !loading && (
                     <div className="text-center py-12">
                       <div className="text-muted-foreground mb-4">
                         <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -375,7 +411,7 @@ export default function MarketplacePage() {
                     </div>
                   )}
                 </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

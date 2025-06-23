@@ -26,6 +26,7 @@ import {
   Copy,
   Play,
 } from "lucide-react"
+import promptSubmissionService, { PromptSubmissionData } from '../services/promptSubmissionService'
 
 // Mock components - replace with your actual UI components
 // Update the ButtonProps interface to include title
@@ -95,25 +96,20 @@ const Link = ({ to, children, className = "" }: LinkProps) => (
   </a>
 )
 
-// Update the PromptSubmission interface to remove instructions, useCase, and tags
+// Update the interfaces at the top of the file
+
 interface PromptSubmission {
   title: string
   description: string
   category: string
   promptText: string
   expectedOutput: string
-  isPrivate?: boolean
+  isPrivate: boolean
+  tags?: string[] // Add tags support
 }
 
-// Update the EditPromptData interface as well
-interface EditPromptData {
+interface EditPromptData extends PromptSubmission {
   id: string
-  title: string
-  description: string
-  category: string
-  promptText: string
-  expectedOutput: string
-  isPrivate: boolean
 }
 
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
@@ -437,13 +433,53 @@ export default function SubmitPromptPage() {
 
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Get user info for authorId
+      const userId = localStorage.getItem('userId')
+      if (!userId) {
+        setErrors({ submit: 'You must be logged in to submit a prompt' })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Prepare submission data for backend
+      const submissionData: PromptSubmissionData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        content: formData.promptText, // Backend expects 'content'
+        price: 0, // Default price for now
+        visibility: formData.isPrivate ? 'private' : 'private', // Start as private, publish later if needed
+        tagNames: formData.category ? [formData.category] : [] // Use category as tag for now
+      }
+
+      let result
+      if (isEditMode && editingPromptId) {
+        // Update existing prompt
+        result = await promptSubmissionService.updatePrompt(editingPromptId, submissionData)
+        
+        // If the original was public, republish it
+        if (!formData.isPrivate) {
+          await promptSubmissionService.publishPrompt(editingPromptId)
+        }
+      } else {
+        // Create new prompt
+        result = await promptSubmissionService.submitPrompt(submissionData)
+        
+        // If user wants it public, publish it immediately
+        if (!formData.isPrivate && result.id) {
+          await promptSubmissionService.publishPrompt(result.id)
+        }
+      }
+
+      // Show success message
       setShowSuccess(true)
+      
+      // Clear any existing errors
+      setErrors({})
 
       setTimeout(() => {
-        // Only clear form and navigate if it's a new submission, not an edit
         if (!isEditMode) {
+          // Clear form for new submissions
           setFormData({
             title: "",
             description: "",
@@ -462,17 +498,19 @@ export default function SubmitPromptPage() {
           setStripeAccount("")
           setCryptoAddress("")
           setCryptoNetwork("")
-        } else {
-          // For edits, just navigate back to my prompts page after showing success
-          setTimeout(() => {
-            navigate("/my-prompts")
-          }, 1000)
         }
 
         setShowSuccess(false)
-      }, 3000)
-    } catch (error) {
-      console.error("Submission error:", error)
+        
+        // Navigate to My Prompts page
+        navigate("/my-prompts")
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('❌ Submission error:', error)
+      setErrors({ 
+        submit: error.message || 'Failed to submit prompt. Please try again.' 
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -612,6 +650,19 @@ export default function SubmitPromptPage() {
               {isEditMode
                 ? "Your prompt changes have been saved."
                 : "Your prompt is now under review and will be published soon."}
+            </p>
+          </Card>
+        )}
+
+        {/* Submission Error Message */}
+        {errors.submit && (
+          <Card className="p-4 mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+            <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">Submission Failed</span>
+            </div>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+              {errors.submit}
             </p>
           </Card>
         )}
@@ -967,19 +1018,19 @@ export default function SubmitPromptPage() {
               <div className="space-y-2 text-xs text-muted-foreground">
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Make your title clear and descriptive</p>
+                  <p className="flex-1">Make your title clear and descriptive</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Include specific instructions in your prompt text</p>
+                  <p className="flex-1">Include specific instructions in your prompt text</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Describe the expected output format</p>
+                  <p className="flex-1">Describe the expected output format</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1 h-1 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Test your prompt before submitting</p>
+                  <p className="flex-1">Test your prompt before submitting</p>
                 </div>
               </div>
             </Card>

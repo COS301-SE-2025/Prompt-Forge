@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
 import { Star, Search, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
+import httpClient from "../services/httpClient"
 
 interface MyPrompt {
   id: string
@@ -25,9 +27,17 @@ interface MyPrompt {
   isFavorite: boolean
 }
 
+interface UserProfile {
+  userId: string
+  username: string
+  email: string
+  // Add other user fields as needed
+}
+
 const PROMPTS_PER_PAGE = 12
 
 export default function MyPromptsPage() {
+  const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
   const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -38,51 +48,139 @@ export default function MyPromptsPage() {
   const [availableCategories, setAvailableCategories] = useState<string[]>(["all"])
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Fetch prompts from API and map backend fields to frontend model
+  // Check authentication and get user profile
+  useEffect(() => {
+    const checkAuthAndGetProfile = async () => {
+      try {
+        // Check if user is logged in (you can also check localStorage)
+        const username = localStorage.getItem('username')
+        if (!username || username === 'Guest') {
+          console.log("❌ User not authenticated, redirecting to login")
+          navigate('/login')
+          return
+        }
+
+        setIsAuthenticated(true)
+
+        // ✅ Get user profile using JWT token (sent via cookies)
+        console.log("🔍 Fetching user profile...")
+        const response = await httpClient.get('/user/me')
+
+        if (response.ok) {
+          const userData: UserProfile = await response.json()
+          setUserProfile(userData)
+          console.log("✅ User profile loaded:", userData)
+        } else if (response.status === 401) {
+          console.log("❌ Unauthorized, redirecting to login")
+          localStorage.removeItem('username')
+          localStorage.removeItem('userId')
+          navigate('/login')
+          return
+        } else {
+          throw new Error('Failed to fetch user profile')
+        }
+      } catch (error) {
+        console.error("❌ Auth check failed:", error)
+        // Don't redirect on network errors, just continue without profile
+        setIsAuthenticated(true) // Allow fallback behavior
+      }
+    }
+
+    checkAuthAndGetProfile()
+  }, [navigate])
+
+  // Fetch user's prompts when authentication is confirmed
   useEffect(() => {
     const fetchMyPrompts = async () => {
-      setLoading(true)
-      const authorId = "706d87a3-b874-4b37-a041-e67201f4ed22" // Use the specific author ID
-      if (!authorId) {
-        setMyPrompts([])
-        setFilteredPrompts([])
+      if (!isAuthenticated) {
         setLoading(false)
         return
       }
+
+      setLoading(true)
+      
       try {
-        const res = await fetch(`/prompts/author/${authorId}`)
-        let prompts = await res.json()
-        if (!Array.isArray(prompts)) prompts = []
-        // Map backend fields to frontend MyPrompt interface
-        const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          description: p.description || "",
-          content: p.content || "",
-          category: "General", // Default, backend does not provide
-          tags: p.tagNames || [],
-          createdAt: p.createdAt,
-          updatedAt: p.publishedAt || p.createdAt,
-          rating: 0, // Default, backend does not provide
-          uses: 0,   // Default, backend does not provide
-          featured: p.featured || false,
-          price: p.price || 0,
-          isPrivate: p.visibility !== "public",
-          isFavorite: false // Default, backend does not provide
-        }))
-        setMyPrompts(mappedPrompts)
-        setFilteredPrompts(mappedPrompts)
-        const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
-        setAvailableCategories(categories)
-      } catch {
+        let authorId: string | null = null
+
+        // ✅ Try to get authorId from user profile (preferred)
+        if (userProfile?.userId) {
+          authorId = userProfile.userId
+          console.log("🔍 Using authorId from profile:", authorId)
+        } 
+        // ✅ Fallback: get from localStorage if profile not loaded yet
+        else {
+          authorId = localStorage.getItem('userId')
+          console.log("🔍 Using authorId from localStorage:", authorId)
+        }
+
+        if (!authorId) {
+          console.log("⚠️ No authorId available, using empty prompts")
+          setMyPrompts([])
+          setFilteredPrompts([])
+          setLoading(false)
+          return
+        }
+
+        console.log("🔍 Fetching prompts for authorId:", authorId)
+        
+        // ✅ Fetch prompts using JWT authentication (cookies)
+        const response = await httpClient.get(`/prompts/author/${authorId}`)
+        
+        if (response.ok) {
+          let prompts = await response.json()
+          if (!Array.isArray(prompts)) prompts = []
+          
+          console.log(`✅ Fetched ${prompts.length} prompts for user`)
+
+          // Map backend fields to frontend MyPrompt interface
+          const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            content: p.content || "",
+            category: "General", // Default, backend does not provide
+            tags: p.tagNames || [],
+            createdAt: p.createdAt,
+            updatedAt: p.publishedAt || p.createdAt,
+            rating: 0, // Default, backend does not provide
+            uses: 0,   // Default, backend does not provide
+            featured: p.featured || false,
+            price: p.price || 0,
+            isPrivate: p.visibility !== "public",
+            isFavorite: false // Default, backend does not provide
+          }))
+
+          setMyPrompts(mappedPrompts)
+          setFilteredPrompts(mappedPrompts)
+          
+          const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
+          setAvailableCategories(categories)
+        } else if (response.status === 401) {
+          console.log("❌ Unauthorized, redirecting to login")
+          localStorage.removeItem('username')
+          localStorage.removeItem('userId')
+          navigate('/login')
+          return
+        } else {
+          throw new Error(`Failed to fetch prompts: ${response.status}`)
+        }
+      } catch (error) {
+        console.error("❌ Error fetching prompts:", error)
         setMyPrompts([])
         setFilteredPrompts([])
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
-    fetchMyPrompts()
-  }, [])
+
+    // ✅ Only fetch prompts when authenticated AND we have either profile or localStorage userId
+    if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
+      fetchMyPrompts()
+    }
+  }, [isAuthenticated, navigate]) // ✅ Remove userProfile from dependencies
 
   // Filtering logic
   useEffect(() => {
@@ -135,12 +233,26 @@ export default function MyPromptsPage() {
     { value: "public", label: "Public" },
   ]
 
-  const handleDeletePrompt = (id: string) => {
-    setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+  const handleDeletePrompt = async (id: string) => {
+    try {
+      const response = await httpClient.delete(`/prompts/${id}`)
+      if (response.ok) {
+        setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+        console.log("✅ Prompt deleted successfully")
+      } else {
+        throw new Error("Failed to delete prompt")
+      }
+    } catch (error) {
+      console.error("❌ Error deleting prompt:", error)
+      // For now, still remove from UI even if backend fails
+      setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+    }
   }
 
-  const handleToggleFavorite = (id: string) => {
+  const handleToggleFavorite = async (id: string) => {
+    // For now, just update locally since backend doesn't support favorites yet
     setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)))
+    console.log("✅ Favorite toggled (local only)")
   }
 
   const handleCopyPrompt = async (content: string, id: string) => {
@@ -167,14 +279,33 @@ export default function MyPromptsPage() {
       isPrivate: prompt.isPrivate
     }
     sessionStorage.setItem("editPromptData", JSON.stringify(editData))
+    navigate("/submit") // Navigate to submit page for editing
   }
 
+  // Show loading while checking authentication
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your prompts...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show authentication required message
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+          <p className="text-muted-foreground mb-4">Please log in to view your prompts</p>
+          <Link to="/login">
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+              Go to Login
+            </Button>
+          </Link>
         </div>
       </div>
     )
@@ -218,6 +349,17 @@ export default function MyPromptsPage() {
                 ))}
               </div>
             </div>
+
+            {/* User Info Section */}
+            {userProfile && (
+              <div className="border-t border-border pt-4 mt-4">
+                <div className="text-xs font-medium uppercase text-muted-foreground mb-2">User</div>
+                <div className="text-sm">
+                  <div className="font-medium">{userProfile.username}</div>
+                  <div className="text-muted-foreground text-xs">{myPrompts.length} prompts</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -228,7 +370,9 @@ export default function MyPromptsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold mb-2">My Prompts</h1>
-                <p className="text-muted-foreground">Manage and organize your AI prompts</p>
+                <p className="text-muted-foreground">
+                  {userProfile ? `Manage and organize your AI prompts, ${userProfile.username}` : "Manage and organize your AI prompts"}
+                </p>
               </div>
               <div className="flex items-center space-x-2 mt-4 md:mt-0">
                 <Button variant="outline" className="md:hidden" onClick={() => setShowFilters(!showFilters)}>
@@ -243,6 +387,7 @@ export default function MyPromptsPage() {
                 </Link>
               </div>
             </div>
+
             {/* Search Bar */}
             <div className="mb-8">
               <div className="relative">
@@ -259,6 +404,7 @@ export default function MyPromptsPage() {
                 )}
               </div>
             </div>
+
             {/* Favorite Prompts */}
             {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && favoritePrompts.length > 0 && (
               <div className="mb-8">
@@ -281,6 +427,7 @@ export default function MyPromptsPage() {
                       isFavorite={prompt.isFavorite}
                       tags={prompt.tags}
                       category={prompt.category}
+                      authorName={userProfile?.username || "You"}
                       isOwned={true}
                       onEdit={handleEditPrompt}
                       onDelete={handleDeletePrompt}
@@ -293,6 +440,7 @@ export default function MyPromptsPage() {
                 </div>
               </div>
             )}
+
             {/* Results */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium">
@@ -308,6 +456,7 @@ export default function MyPromptsPage() {
                 {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
               </div>
             </div>
+
             {/* Prompts Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {currentPrompts.map((prompt) => (
@@ -324,6 +473,7 @@ export default function MyPromptsPage() {
                   isFavorite={prompt.isFavorite}
                   tags={prompt.tags}
                   category={prompt.category}
+                  authorName={userProfile?.username || "You"}
                   isOwned={true}
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
@@ -334,6 +484,7 @@ export default function MyPromptsPage() {
                 />
               ))}
             </div>
+
             {/* Empty State */}
             {filteredPrompts.length === 0 && !loading && (
               <div className="text-center py-12">
@@ -369,6 +520,7 @@ export default function MyPromptsPage() {
                 )}
               </div>
             )}
+
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center space-x-2 mt-8">

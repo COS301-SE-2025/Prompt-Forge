@@ -110,6 +110,10 @@ public class User {
         return followers;
     }
     
+    public String getAvatarUrl() {
+        return this.profilePictureUrl;
+    }
+    
 
     // === Setters ===
 
@@ -167,6 +171,10 @@ public class User {
 
     public void setFollowers(UUID[] followers) {
         this.followers = followers;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.profilePictureUrl = avatarUrl;
     }
 
    

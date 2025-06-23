@@ -1,18 +1,50 @@
 import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from './ui/Button';
+
 interface PurchaseButtonProps {
-  price: number;
-  onClick: () => void;
+  price: number
+  onClick: () => Promise<void> | void
+  disabled?: boolean
+  loading?: boolean
 }
-export const PurchaseButton = ({
-  price,
-  onClick
+
+export const PurchaseButton = ({ 
+  price, 
+  onClick, 
+  disabled = false,
+  loading = false 
 }: PurchaseButtonProps) => {
-  return <Button 
+  const getButtonClasses = () => {
+    let classes = "purchase-button"
+    
+    if (price === 0) {
+      classes += " free"
+    }
+    
+    if (loading) {
+      classes += " loading"
+    }
+    
+    return classes
+  }
+
+  return (
+    <Button
       onClick={onClick}
-      className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+      disabled={disabled || loading}
+      className={getButtonClasses()}
     >
-      Purchase for ${price.toFixed(2)}
-    </Button>;
-};
+      {loading ? (
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          Processing...
+        </div>
+      ) : (
+        <>
+          {price === 0 ? "Get Free" : `Buy for $${price.toFixed(2)}`}
+        </>
+      )}
+    </Button>
+  )
+}

@@ -10,6 +10,7 @@ import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
 import type { PromptWithTags, Review } from "@/Models/Prompt"
+import { Button } from "./ui/Button"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
@@ -138,10 +139,10 @@ export const PromptDetails = () => {
 
   if (loading || checkingOwnership) {
     return (
-      <div className="flex justify-center items-center h-48">
+      <div className="flex justify-center items-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-3"></div>
-          <p className="text-sm text-muted-foreground">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">
             {loading ? "Loading prompt..." : "Checking access..."}
           </p>
         </div>
@@ -149,8 +150,65 @@ export const PromptDetails = () => {
     )
   }
 
-  if (error) return <div className="container p-6 text-red-500 text-sm">{error}</div>
-  if (!prompt) return <div className="container p-6 text-sm">Prompt not found</div>
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Error Loading Prompt</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!prompt) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <svg
+              className="h-12 w-12 mx-auto mb-4 opacity-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Prompt Not Found</h3>
+          <p className="text-muted-foreground mb-4">
+            This prompt may have been removed or doesn't exist
+          </p>
+          <a href="/marketplace">
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+              Back to Marketplace
+            </Button>
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   // Check if this is a paid prompt that the user doesn't own
   const isPaidPrompt = prompt.price > 0
@@ -161,7 +219,10 @@ export const PromptDetails = () => {
       {/* Breadcrumb - More compact */}
       <div className="mb-4">
         <nav className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
-          <a href="/marketplace" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <a
+            href="/marketplace"
+            className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >
             Marketplace
           </a>
           {prompt.tags.length > 0 && (
@@ -205,7 +266,9 @@ export const PromptDetails = () => {
                 ))}
               </div>
             )}
-            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white leading-tight">{prompt.title}</h1>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+              {prompt.title}
+            </h1>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
               <div className="flex items-center gap-1">
@@ -226,7 +289,9 @@ export const PromptDetails = () => {
               <Info className="h-4 w-4 text-[#3ebb9e]" />
               Description
             </h2>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{prompt.description}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {prompt.description}
+            </p>
           </Card>
 
           {/* Prompt content - Only visible if user owns it or it's free */}
@@ -253,13 +318,14 @@ export const PromptDetails = () => {
                   <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
                     <BookOpen className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Premium Content</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Premium Content
+                  </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     This prompt is premium content. Purchase it to view the full prompt text and unlock its potential.
                   </p>
                 </div>
-                <div className="flex justify-center">
-                </div>
+                <div className="flex justify-center"></div>
               </div>
             </Card>
           )}
@@ -328,7 +394,6 @@ export const PromptDetails = () => {
                   <PurchaseButton
                     price={prompt.price}
                     onClick={handlePurchase}
-                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white font-medium py-2.5 text-sm transition-colors"
                   />
                 )}
               </div>

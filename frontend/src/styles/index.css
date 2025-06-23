@@ -99,7 +99,6 @@ input:-webkit-autofill:active {
     animation: gradient 15s ease infinite;
   }
 
-  /* ...rest of your animation utilities... */
   /* Rocket Animation */
   @keyframes rocket {
     0%,
@@ -277,6 +276,45 @@ input:-webkit-autofill:active {
 
   .animate-spin-slow {
     animation: spinSlow 8s linear infinite;
+  }
+
+  /* PurchaseButton Styling */
+  .purchase-button {
+    @apply w-full font-medium py-2.5 text-sm transition-colors;
+    background-color: #3ebb9e !important;
+    color: white !important;
+  }
+
+  .purchase-button:hover {
+    background-color: #00674f !important;
+  }
+
+  .purchase-button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    background-color: #9ca3af !important;
+  }
+
+  .purchase-button:disabled:hover {
+    background-color: #9ca3af !important;
+  }
+
+  /* Free prompt button variant */
+  .purchase-button.free {
+    background-color: #059669 !important;
+  }
+
+  .purchase-button.free:hover {
+    background-color: #047857 !important;
+  }
+
+  /* Loading state */
+  .purchase-button.loading {
+    @apply cursor-not-allowed;
+    background-color: #6b7280 !important;
+  }
+
+  .purchase-button.loading:hover {
+    background-color: #6b7280 !important;
   }
 
   /* Animation Delays */

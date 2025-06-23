@@ -164,17 +164,29 @@ export default function DashboardPage() {
   // Fetch user's prompts
   useEffect(() => {
     const fetchMyPrompts = async () => {
-      if (!isAuthenticated || !currentUserId) {
+      if (!isAuthenticated) {
         setLoadingPrompts(false);
         return;
       }
 
       setLoadingPrompts(true);
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/prompts/author/${currentUserId}`, {
+        // ✅ Get userId from localStorage (set during login)
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          console.log("⚠️ No userId found in localStorage");
+          setMyPrompts([]);
+          setLoadingPrompts(false);
+          return;
+        }
+
+        console.log("🔍 Fetching prompts for userId:", userId);
+
+        // ✅ Use cookie-based auth (same as dashboard)
+        const response = await fetch(`http://localhost:8080/prompts/author/${userId}`, {
+          method: 'GET',
+          credentials: 'include', // ✅ Use cookies instead of Authorization header
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -183,6 +195,8 @@ export default function DashboardPage() {
           let prompts = await response.json();
           if (!Array.isArray(prompts)) prompts = [];
           
+          console.log(`✅ Fetched ${prompts.length} prompts for user`);
+
           // Map backend fields to frontend MyPrompt interface
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
             id: p.id,
@@ -203,10 +217,14 @@ export default function DashboardPage() {
           
           setMyPrompts(mappedPrompts);
         } else if (response.status === 401) {
-          localStorage.removeItem('token');
+          console.log("❌ Unauthorized, redirecting to login");
+          localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
           navigate('/login');
+        } else {
+          console.error("Failed to fetch prompts:", response.status);
+          setMyPrompts([]);
         }
       } catch (error) {
         console.error("Failed to fetch prompts:", error);
@@ -216,21 +234,26 @@ export default function DashboardPage() {
     };
 
     fetchMyPrompts();
-  }, [isAuthenticated, currentUserId, navigate]);
+  }, [isAuthenticated, navigate]); // Remove currentUserId dependency since we're using localStorage
 
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!isAuthenticated) {
-        setLoading(false);
+        // Don't set loading to false here - let the auth check handle it
         return;
       }
 
+      setLoading(true); // ✅ Ensure loading is true when starting fetch
+      setError(null);   // ✅ Clear any previous errors
+
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch("/api/dashboard", {
+        console.log("🔍 Fetching dashboard data...");
+        
+        const response = await fetch("http://localhost:8080/api/dashboard", {
+          method: 'GET',
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -238,22 +261,29 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json();
           setDashboard(data);
+          console.log("✅ Dashboard data loaded:", data);
         } else if (response.status === 401) {
-          localStorage.removeItem('token');
+          console.log("❌ Unauthorized, redirecting to login");
+          localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
           navigate('/login');
+          return; // Don't set loading to false, let redirect handle it
         } else {
-          throw new Error("Failed to fetch dashboard data");
+          throw new Error(`Failed to fetch dashboard data: ${response.status}`);
         }
       } catch (err) {
+        console.error("❌ Dashboard fetch error:", err);
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ Always set loading to false when done
       }
     };
 
-    fetchDashboardData();
+    // Only fetch when authenticated
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
   }, [isAuthenticated, navigate]);
 
   // Load profile info from localStorage and listen for changes
@@ -280,19 +310,20 @@ export default function DashboardPage() {
   // Handlers for StandardPromptCard
   const handleDeletePrompt = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/prompts/${id}`, {
+      // ✅ Use cookie-based auth
+      const response = await fetch(`http://localhost:8080/prompts/${id}`, {
         method: 'DELETE',
+        credentials: 'include', // ✅ Use cookies
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+        console.log("✅ Prompt deleted successfully");
       } else {
-        console.error("Failed to delete prompt");
+        console.error("Failed to delete prompt:", response.status);
       }
     } catch (error) {
       console.error("Error deleting prompt:", error);
@@ -301,20 +332,23 @@ export default function DashboardPage() {
 
   const handleToggleFavorite = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/prompts/${id}/favorite`, {
+      // ✅ Use cookie-based auth
+      const response = await fetch(`http://localhost:8080/prompts/${id}/favorite`, {
         method: 'POST',
+        credentials: 'include', // ✅ Use cookies
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (response.ok) {
         setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+        console.log("✅ Favorite toggled");
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
+      // Still update UI optimistically
+      setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
     }
   };
 
@@ -345,10 +379,10 @@ export default function DashboardPage() {
   // Show loading state while checking authentication
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
@@ -356,12 +390,20 @@ export default function DashboardPage() {
 
   // Redirect will happen in useEffect if not authenticated
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
+  // Show loading while fetching dashboard data
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading dashboard...</p>
@@ -370,8 +412,51 @@ export default function DashboardPage() {
     );
   }
   
-  if (error) return <div className="text-center text-red-500 p-8">Error: {error}</div>;
-  if (!dashboard) return <div className="text-center p-8">No data available</div>;
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Error Loading Dashboard</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show fallback if no dashboard data (shouldn't happen now)
+  if (!dashboard) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">No Dashboard Data</h3>
+          <p className="text-muted-foreground mb-4">Unable to load dashboard information</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+          >
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Get first few prompts for dashboard display
   const displayPrompts = myPrompts.slice(0, 4);

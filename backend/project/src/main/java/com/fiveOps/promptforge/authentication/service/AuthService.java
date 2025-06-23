@@ -125,4 +125,9 @@ public class AuthService {
             throw new RuntimeException("Failed to verify Google token", e);
         }
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
 }

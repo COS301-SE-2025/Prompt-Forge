@@ -8,8 +8,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -24,14 +29,22 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
       http
-          .cors(cors -> cors.configure(http))
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
           .csrf(csrf -> csrf.disable())
           .authorizeHttpRequests(auth -> auth
-              .requestMatchers("/swagger-ui/**", "/auth/**", "/public/**", "/user/**", "/store/**", "/api/**").permitAll() // ✅ Added /store/**
+              .requestMatchers(
+                  "swagger-ui/**", 
+                  "/auth/**", 
+                  "/public/**", 
+                  "/user/**",
+                  "/api/test/**",          // ✅ Allow editor/comparison endpoints without auth
+                  "/api/editor/**",        // ✅ Future editor-specific endpoints
+                  "/api/comparison/**"     // ✅ Future comparison-specific endpoints
+              ).permitAll()
               .anyRequest().authenticated()
           )
           .sessionManagement(sm -> sm
@@ -43,22 +56,35 @@ public class SecurityConfig {
   
       return http.build();
   }
-  
 
-
+  // ✅ Custom CORS configuration with path-specific rules
   @Bean
-   public WebMvcConfigurer corsConfigurer() {
-    return new WebMvcConfigurer() {
-        @Override
-        public void addCorsMappings(CorsRegistry registry) {
-            registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173") // frontend URL
-                .allowedMethods("*") // GET, POST, etc.
-                .allowedHeaders("*")
-                .allowCredentials(true);
-        }
-    };
+  public CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration defaultConfig = new CorsConfiguration();
+      defaultConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+      defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      defaultConfig.setAllowedHeaders(Arrays.asList("*"));
+      defaultConfig.setAllowCredentials(true); // ✅ Default: allow credentials
+      defaultConfig.setMaxAge(3600L);
 
-}
+      // ✅ Editor/Comparison pages configuration (no credentials)
+      CorsConfiguration noCredentialsConfig = new CorsConfiguration();
+      noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("*")); // ✅ Wildcard allowed without credentials
+      noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
+      noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
+      noCredentialsConfig.setMaxAge(3600L);
 
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      
+      // ✅ Apply no-credentials config to editor/comparison endpoints
+      source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
+      source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
+      source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
+      
+      // ✅ Apply default config (with credentials) to all other endpoints
+      source.registerCorsConfiguration("/**", defaultConfig);
+      
+      return source;
+  }
 }
