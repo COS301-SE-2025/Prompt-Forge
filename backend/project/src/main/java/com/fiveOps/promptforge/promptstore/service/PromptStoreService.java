@@ -17,14 +17,13 @@ import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
-import com.fiveOps.promptforge.promptstore.dto.ReviewWithUsernameDTO;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.repository.PromptPurchaseRepository;
 import com.fiveOps.promptforge.promptstore.repository.PromptReviewRepository;
 import com.fiveOps.promptforge.promptstore.repository.PromptStoreRepository;
-import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,8 +37,8 @@ public class PromptStoreService {
     private final TagService tagService;   
 
     @Cacheable(value = "prompts", key = "{#root.methodName,#pageable}")
-    public Page<Prompt> getAllPublicPrompts(Pageable pageable) {
-        return promptStoreRepository.findByVisibility("public", pageable);
+    public Page<PromptWithAuthorDTO> getAllPublicPrompts(Pageable pageable) {
+    return promptStoreRepository.findByVisibility("public", pageable);
     }
     
     public Page<Map<String, PromptWithAuthorDTO>> getPage(String page, String size, Pageable pageable) {
@@ -63,22 +62,18 @@ public class PromptStoreService {
     }
     
     
-    public Page<Prompt> searchPublic(String query, Pageable pageable) {
-        return promptStoreRepository.searchPublicByTitle(query, pageable);
+    public Page<PromptWithAuthorDTO> searchPublic(String query, Pageable pageable) {
+    return promptStoreRepository.searchPublicByTitle(query, pageable);
     }
     
     
-    public Page<Prompt> getPublicUnderPrice(double maxPrice, Pageable pageable) {
-        return promptStoreRepository.findPublicUnderPrice(maxPrice, pageable);
+    public Page<PromptWithAuthorDTO> getPublicUnderPrice(double maxPrice, Pageable pageable) {
+    return promptStoreRepository.findPublicUnderPrice(maxPrice, pageable);
     }
     
-    public Page<Prompt> getPublicByTagName(String tagName, Pageable pageable) {
-        Page<Prompt> allPrompts = promptService.getPromptsByTagName(tagName, pageable);
-        List<Prompt> filteredPrompts = allPrompts.getContent().stream()
-            .filter(prompt -> "public".equals(prompt.getVisibility()))
-            .collect(Collectors.toList());
-        
-        return new PageImpl<>(filteredPrompts, pageable, allPrompts.getTotalElements());
+    public Page<PromptWithAuthorDTO> getPublicByTagName(String tagName, Pageable pageable) {
+    UUID tagId = tagService.getTagIdByName(tagName);
+    return promptStoreRepository.findByTagId(tagId, pageable);
     }
     
     @Transactional
@@ -116,14 +111,9 @@ public class PromptStoreService {
     /////////////////////////////////////
     
     // Get PUBLIC prompts by author
-    public Page<Prompt> getPublicPromptsByAuthor(UUID authorId, Pageable pageable) {
-        Page<Prompt> allPrompts = promptService.getPromptsByAuthor(authorId, pageable);
-        List<Prompt> filteredPrompts = allPrompts.getContent().stream()
-                .filter(p -> "public".equals(p.getVisibility()))
-                .collect(Collectors.toList());
-        
-        return new PageImpl<>(filteredPrompts, pageable, allPrompts.getTotalElements());
-    }
+    public Page<PromptWithAuthorDTO> getPublicPromptsByAuthor(UUID authorId, Pageable pageable) {
+    return promptStoreRepository.findByAuthorId(authorId, pageable);
+}
 
     // Unpublish a listing (soft delete)
     @Transactional
@@ -132,13 +122,8 @@ public class PromptStoreService {
         return unpublished != null;
     }
 
-    public Page<Prompt> getRecentlyPublishedPrompts(Pageable pageable) {
-        Page<Prompt> allPrompts = promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("public", pageable);
-        List<Prompt> limitedPrompts = allPrompts.getContent().stream()
-                .limit(10) // Get top 10 most recent
-                .collect(Collectors.toList());
-        
-        return new PageImpl<>(limitedPrompts, pageable, Math.min(10, allPrompts.getTotalElements()));
+    public Page<PromptWithAuthorDTO> getRecentlyPublishedPrompts(Pageable pageable) {
+    return promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc("public", pageable);
     }
 
     public List<Tag> getAllTags() {
