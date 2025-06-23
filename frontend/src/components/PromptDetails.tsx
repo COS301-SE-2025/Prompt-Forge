@@ -1,255 +1,384 @@
-import { ReviewCard } from './ReviewCard';
-import { User, Share2, BookOpen, MessageSquare, Info, Star } from 'lucide-react';
-import { PurchaseButton } from './PurchaseButton';
-import { StarRating } from './StarRating';
-import { Card } from './ui/Card';
-import { ReviewForm } from './ReviewForm';
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
+import { ReviewCard } from "./ReviewCard"
+import { BookOpen, MessageSquare, Info } from "lucide-react"
+import { PurchaseButton } from "./PurchaseButton"
+import { StarRating } from "./StarRating"
+import { Card } from "./ui/Card"
+import { ReviewForm } from "./ReviewForm"
+import { PromptService } from "@/services/promptService"
+import type { PromptWithTags, Review } from "@/Models/Prompt"
+
 export const PromptDetails = () => {
-  // Mock data for the prompt
-  const prompt = {
-    id: '1',
-    title: 'Advanced SEO Content Optimizer',
-    category: 'Marketing',
-    tags: ['SEO', 'Content', 'Marketing'],
-    rating: 4.8,
-    price: 6.99,
-    author: '@seomaster',
-    uses: 2389,
-    description: 'Optimize your content for search engines with this advanced SEO prompt that covers keyword research, content structure, meta descriptions, and more.',
-    promptText: 'Create SEO-optimized content for [TOPIC] targeting the keyword [KEYWORD]. Include proper H1, H2, and H3 structure, meta description, and ensure keyword density is between 1-2%. Add relevant LSI keywords and suggest internal linking opportunities.',
-    exampleResponse: `# Ultimate Guide to Sustainable Gardening\n\nMeta Description: Learn sustainable gardening practices with our comprehensive guide. Discover eco-friendly techniques, water conservation methods, and organic pest control for a thriving garden.\n\n## What is Sustainable Gardening?\nSustainable gardening focuses on environmentally friendly practices that conserve resources while creating a beautiful and productive garden ecosystem...\n\n## 7 Essential Sustainable Gardening Techniques\n\n### 1. Composting Basics\nTurn kitchen scraps and yard waste into nutrient-rich soil amendment...\n\n### 2. Water Conservation Methods\nImplement drip irrigation and rainwater harvesting to reduce water usage...\n\n## Recommended Internal Links:\n- Organic Pest Control Methods\n- Beginner's Guide to Composting\n- Water-Wise Garden Design`,
-    createdAt: '2023-05-15'
-  };
-  // Mock data for reviews
-  const reviews = [{
-    id: '1',
-    author: 'ContentCreator123',
-    date: 'July 15, 2023',
-    rating: 5,
-    comment: 'This prompt has completely transformed my content strategy. The SEO suggestions are spot on and have helped me rank higher for my target keywords. Worth every penny!'
-  }, {
-    id: '2',
-    author: 'MarketingPro',
-    date: 'June 28, 2023',
-    rating: 4.5,
-    comment: 'Very comprehensive prompt that helps create well-structured content. I would have given it 5 stars if it had more suggestions for featured snippet optimization.'
-  }, {
-    id: '3',
-    author: 'BloggerExpert',
-    date: 'August 2, 2023',
-    rating: 5,
-    comment: 'The LSI keyword suggestions are incredibly valuable. My content is ranking better than ever before. Highly recommend to anyone serious about SEO.'
-  }];
-  const handlePurchase = () => {
-    alert('Purchase functionality would go here!');
-  };
-  const handleShare = (platform: string) => {
-    alert(`Sharing to ${platform}...`);
-  };
-  const sections = [{
-    id: 'description',
-    label: 'Description',
-    icon: Info
-  }, {
-    id: 'prompt',
-    label: 'Prompt',
-    icon: BookOpen
-  }, {
-    id: 'example',
-    label: 'Example',
-    icon: MessageSquare
-  }, {
-    id: 'reviews',
-    label: 'Reviews',
-    icon: Star
-  }];
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: 'smooth'
-    });
-  };
-  return <div className="container px-4 py-8 mx-auto max-w-7xl">
-      {/* Breadcrumb */}
-      <div className="mb-6">
-        <nav className="flex text-sm text-gray-500 dark:text-gray-400">
-          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">
+  const { id } = useParams<{ id: string }>()
+  const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
+  const [checkingOwnership, setCheckingOwnership] = useState(true)
+  const promptService = new PromptService()
+
+  useEffect(() => {
+    const fetchPromptData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // First fetch prompt, then reviews (sequential to avoid 405 errors)
+        const promptData = await promptService.getPromptById(id!)
+        setPrompt(promptData)
+
+        // Check if user owns the prompt (for paid prompts)
+        if (promptData.price > 0) {
+          setCheckingOwnership(true)
+          try {
+            const token = localStorage.getItem("token")
+            if (token) {
+              const response = await fetch(`/api/store/prompts/${id}/ownership`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+
+              if (response.ok) {
+                const ownershipData = await response.json()
+                setUserOwnsPrompt(ownershipData.owns || false)
+              }
+            }
+          } catch (ownershipError) {
+            console.warn("Could not check prompt ownership:", ownershipError)
+            setUserOwnsPrompt(false)
+          } finally {
+            setCheckingOwnership(false)
+          }
+        } else {
+          // Free prompts are always accessible
+          setUserOwnsPrompt(true)
+          setCheckingOwnership(false)
+        }
+
+        // Only try to fetch reviews if we got a prompt successfully
+        const reviewsData = await promptService.getPromptReviews(id!)
+        setReviews(reviewsData)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPromptData()
+  }, [id])
+
+  const averageRating =
+    reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
+
+  const handlePurchase = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+
+      const response = await fetch(`/api/store/prompts/${id}/purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Purchase failed")
+      }
+
+      // Update ownership status after successful purchase
+      setUserOwnsPrompt(true)
+      alert("Purchase successful!")
+    } catch (err) {
+      console.error("Purchase error:", err)
+      alert(err instanceof Error ? err.message : "Purchase failed. Please try again.")
+    }
+  }
+
+  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+
+      const response = await fetch(`/api/store/prompts/${id}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          rating: review.rating,
+          comment: review.comment,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to submit review")
+      }
+
+      const newReview = await response.json()
+      setReviews((prev) => [...prev, newReview])
+    } catch (err) {
+      console.error("Review submission error:", err)
+      alert("Failed to submit review")
+    }
+  }
+
+  if (loading || checkingOwnership) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">
+            {loading ? "Loading prompt..." : "Checking access..."}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) return <div className="container p-6 text-red-500 text-sm">{error}</div>
+  if (!prompt) return <div className="container p-6 text-sm">Prompt not found</div>
+
+  // Check if this is a paid prompt that the user doesn't own
+  const isPaidPrompt = prompt.price > 0
+  const canViewContent = !isPaidPrompt || userOwnsPrompt
+
+  return (
+    <div className="container px-4 py-6 mx-auto max-w-6xl">
+      {/* Breadcrumb - More compact */}
+      <div className="mb-4">
+        <nav className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
+          <a href="/marketplace" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             Marketplace
           </a>
-          <span className="mx-2">/</span>
-          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">
-            Marketing
-          </a>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 dark:text-white">{prompt.title}</span>
+          {prompt.tags.length > 0 && (
+            <>
+              <span className="mx-1.5">/</span>
+              <div className="flex flex-wrap items-center gap-1">
+                {prompt.tags.slice(0, 2).map((tag, index) => (
+                  <span key={tag.id} className="flex items-center">
+                    <a
+                      href={`/marketplace?tag=${tag.name}`}
+                      className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    >
+                      {tag.name}
+                    </a>
+                    {index < Math.min(prompt.tags.length, 2) - 1 && <span className="mx-1">,</span>}
+                  </span>
+                ))}
+                {prompt.tags.length > 2 && <span className="text-gray-400">+{prompt.tags.length - 2}</span>}
+              </div>
+            </>
+          )}
+          <span className="mx-1.5">/</span>
+          <span className="text-gray-900 dark:text-white font-medium">{prompt.title}</span>
         </nav>
       </div>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2">
-          {/* Prompt header */}
-          <div className="mb-6">
-            <div className="flex items-center mb-2">
-              <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                {prompt.category}
-              </span>
-              <div className="ml-3">
-                <StarRating rating={prompt.rating} size="md" />
+        <div className="lg:col-span-2 space-y-4">
+          {/* Prompt header - More compact */}
+          <div className="mb-4">
+            {prompt.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {prompt.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
-            </div>
-            <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">
-              {prompt.title}
-            </h1>
-          </div>
-          {/* Table of Contents - Mobile Only */}
-          <div className="p-4 mb-6 border rounded-lg lg:hidden bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-            <h3 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
-              Quick Navigation
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {sections.map(section => <button key={section.id} onClick={() => scrollToSection(section.id)} className="flex items-center px-3 py-2 text-sm text-gray-600 transition-colors rounded-md dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <section.icon className="w-4 h-4 mr-2" />
-                  {section.label}
-                </button>)}
+            )}
+            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white leading-tight">{prompt.title}</h1>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-1">
+                <StarRating rating={averageRating} size="sm" />
+                <span>({reviews.length})</span>
+              </div>
+              {isPaidPrompt && (
+                <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-xs font-medium">
+                  Premium
+                </span>
+              )}
             </div>
           </div>
-          {/* Prompt description */}
-            <Card id='description' className='mb-5 p-5 '>
-              <h2 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
-                Description
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300">
-                {prompt.description}
-              </p>
-            </Card>
-          {/* Prompt text */}
-        <Card className='mb-5 p-5'>
-            <h2 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
-              Prompt
+
+          {/* Prompt description - Always visible */}
+          <Card className="p-4">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <Info className="h-4 w-4 text-[#3ebb9e]" />
+              Description
             </h2>
-          <div className="p-4 rounded-md bg-card dark:bg-[#191919]">
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {prompt.promptText}
-              </p>
-            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{prompt.description}</p>
           </Card>
-          {/* Example response */}
-          {/* Reviews */}
-          <Card id="reviews" className="p-5 border rounded-lg">
+
+          {/* Prompt content - Only visible if user owns it or it's free */}
+          {canViewContent ? (
+            <Card className="p-4">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
+                Prompt
+              </h2>
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-mono">
+                  {prompt.content}
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-4">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
+                Prompt
+              </h2>
+              <div className="p-6 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-center">
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <BookOpen className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Premium Content</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    This prompt is premium content. Purchase it to view the full prompt text and unlock its potential.
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Reviews - Always visible */}
+          <Card className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-[#3ebb9e]" />
                 Reviews
               </h2>
-              <div className="flex items-center">
-                <StarRating rating={prompt.rating} size="lg" />
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                  from {reviews.length} reviews
+              <div className="flex items-center gap-2">
+                <StarRating rating={averageRating} size="sm" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  {reviews.length} review{reviews.length !== 1 ? "s" : ""}
                 </span>
               </div>
             </div>
-            <div className="space-y-4">
-              {reviews.map(review => <ReviewCard key={review.id} author={review.author} date={review.date} rating={review.rating} comment={review.comment} />)}
-            </div>
-            <ReviewForm/>
+
+            {reviews.length > 0 ? (
+              <div className="space-y-3 mb-4">
+                {reviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    author={review.userId}
+                    date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
+                    rating={review.rating}
+                    comment={review.comment}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+                No reviews yet. Be the first to review this prompt!
+              </div>
+            )}
+
+            {/* Only allow reviews if user owns the prompt or it's free */}
+            {canViewContent && (
+              <ReviewForm
+                promptId={id!}
+                // onSubmit={handleReviewSubmit}
+              />
+            )}
           </Card>
         </div>
+
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Purchase Card */}
-            <Card className="sticky p-5 border rounded-lg top-20 ">
-              <div className="mb-6">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
-                  Pricing
-                </h3>
-                <p className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-                  ${prompt.price.toFixed(2)}
-                </p>
-                <PurchaseButton price={prompt.price} onClick={handlePurchase} />
-                {/* button below to be used when the user is the creator of the prompt*/}
-                {/* <Button onClick={handlePurchase} className='w-full mt-3 bg-transparent text-[#3ebb9e] hover:text-[#00674f] hover:bg-transparent'>
-                  <Pencil className="w-5 h-5 mr-2 text" />
-                  Edit prompt
-                </Button> */}
+            <Card className="sticky top-4 p-4 shadow-lg border-2 border-gray-100 dark:border-gray-800">
+              <div className="mb-4">
+                <div className="flex items-baseline justify-between mb-3">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">Price</h3>
+                  <p className="text-2xl font-bold text-[#3ebb9e]">
+                    {prompt.price === 0 ? "Free" : `$${prompt.price.toFixed(2)}`}
+                  </p>
+                </div>
+
+                {userOwnsPrompt ? (
+                  <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
+                    <span className="text-sm font-medium">✓ Owned</span>
+                  </div>
+                ) : (
+                  <PurchaseButton
+                    price={prompt.price}
+                    onClick={handlePurchase}
+                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white font-medium py-2.5 text-sm transition-colors"
+                  />
+                )}
               </div>
-              {/* Author Info */}
-              <div className="pt-6 mb-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-                  Creator
-                </h3>
+
+              {/* Author Info - More compact */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Author</h3>
                 <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {prompt.author}
-                    </p>
-                    
-                  </div>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    @{prompt.authorId.substring(0, 8)}
+                  </span>
                 </div>
               </div>
+
               {/* Stats */}
-              <div className="pt-6 mb-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-                  Stats
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-green-100 text-blue-800 dark:bg-green-900 dark:text-green-300">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Total Uses
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {prompt.uses}
-                    </p>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Stats</h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="font-semibold text-gray-900 dark:text-white">{reviews.length}</div>
+                    <div className="text-gray-500 dark:text-gray-400">Reviews</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Rating
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {prompt.rating}/5
-                    </p>
+                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="font-semibold text-gray-900 dark:text-white">{averageRating.toFixed(1)}</div>
+                    <div className="text-gray-500 dark:text-gray-400">Rating</div>
                   </div>
                 </div>
               </div>
-              {/* Share */}
-              <div className="pt-6 mb-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-                  Share
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Twitter', 'LinkedIn'].map(platform => <button key={platform} onClick={() => handleShare(platform)} className="flex items-center justify-center px-3 py-2 text-sm text-gray-600 transition-colors border rounded-md dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600">
-                      <Share2 className="w-4 h-4 mr-2" />
-                      {platform}
-                    </button>)}
+
+              {/* Tags - More compact */}
+              {prompt.tags.length > 0 && (
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Tags</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {prompt.tags.map((tag) => (
+                      <a
+                        key={tag.id}
+                        href={`/marketplace?tag=${tag.name}`}
+                        className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        {tag.name}
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {/* Tags */}
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {prompt.tags.map((tag, index) => <span key={index} className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                      {tag}
-                    </span>)}
-                </div>
-              </div>
+              )}
             </Card>
-            {/* Table of Contents - Desktop Only */}
-            {/* <div className="sticky hidden p-4 border rounded-lg top-96 lg:block bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-              <h3 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
-                On this page
-              </h3>
-              <nav className="space-y-1">
-                {sections.map(section => <button key={section.id} onClick={() => scrollToSection(section.id)} className="flex items-center w-full px-3 py-2 text-sm text-gray-600 transition-colors rounded-md dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <section.icon className="w-4 h-4 mr-2" />
-                    {section.label}
-                  </button>)}
-              </nav>
-            </div> */}
           </div>
         </div>
       </div>
-    </div>;
-};
+    </div>
+  )
+}

@@ -207,20 +207,18 @@ export default function ProfileSettingsPage() {
                             className="bg-muted"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="display-name">Display Name</Label>
-                          <Input id="display-name" defaultValue="Theo" />
-                        </div>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
+
                         <Input
                           id="email"
                           type="email"
                           value={pendingEmail}
                           onChange={handleEmailChange}
                           className="bg-muted"
+
                         />
                       </div>
 
@@ -231,7 +229,7 @@ export default function ProfileSettingsPage() {
                           placeholder="Tell us about yourself"
                           value={pendingBio}
                           onChange={handleBioChange}
-                          className="min-h-[100px]"
+                          className="min-h-[100px] bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#3ebb9e]"
                         />
                       </div>
                     </div>

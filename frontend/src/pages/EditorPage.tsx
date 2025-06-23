@@ -3,7 +3,8 @@
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
 import { jsPDF } from 'jspdf';
 import { Editor } from "@/services/editorService"
@@ -21,7 +22,7 @@ When writing a prompt, always follow these guidelines:
 explain how the response should be adapted to fit.]`
 
 export default function EditorPage() {
-  
+  const location = useLocation()
   const editorService = new Editor();
 
   const [promptText, setPromptText] = useState(defaultPrompt)
@@ -37,6 +38,13 @@ export default function EditorPage() {
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
   const [lastSuggestedPrompt, setLastSuggestedPrompt] = useState("")
   const [modelsCollapsed, setModelsCollapsed] = useState(false)
+
+  // Auto-fill prompt if coming from a card
+  useEffect(() => {
+    if (location.state?.promptText) {
+      setPromptText(location.state.promptText)
+    }
+  }, [location.state])
 
   const aiModels = [
     {
