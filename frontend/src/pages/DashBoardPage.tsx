@@ -1,7 +1,6 @@
 import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
-import { dashProfileService } from "../services/dashprofileService"
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -51,14 +50,14 @@ type DashboardData = {
 };
 
 export default function DashboardPage() {
-    // State for dynamic profile data
-  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
-  const [userBio, setUserBio] = useState<string>("AI prompt engineer specializing in creative writing and technical documentation.")
-  const [username, setUsername] = useState<string>("theo_unknown")
-  const [followers, setFollowers] = useState<number>(0)
-  const [following, setFollowing] = useState<number>(0)
-  const [loading, setLoading] = useState<boolean>(true)
-
+  // Profile states
+  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80");
+  const [userBio, setUserBio] = useState<string>(() => {
+    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation.";
+  });
+  const [username, setUsername] = useState<string>(() => {
+    return localStorage.getItem('username') || "theo_unknown";
+  });
 
   // Prompts data states - using same structure as MyPromptsPage
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
@@ -67,25 +66,6 @@ export default function DashboardPage() {
 
   // Fetch prompts using same endpoint and mapping as MyPromptsPage
   useEffect(() => {
-
-    async function fetchProfile() {
-      try {
-        setLoading(true)
-        const profile = await dashProfileService.getDashboardProfile()
-        setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80")
-        setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.")
-        setUsername(profile.username || "theo_unknown")
-        setFollowers(profile.followers ?? 0)
-        setFollowing(profile.following ?? 0)
-      } catch (error) {
-        
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProfile()
-  }, [])
-
     const fetchMyPrompts = async () => {
       setLoadingPrompts(true);
       const authorId = "706d87a3-b874-4b37-a041-e67201f4ed22"; // Use the specific author ID
@@ -218,15 +198,6 @@ export default function DashboardPage() {
   // Get first few prompts for dashboard display
   const displayPrompts = myPrompts.slice(0, 4);
 
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center h-full">
-        <p>Loading dashboard...</p>
-      </div>
-    )
-  }
-
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex flex-col md:flex-row flex-1">
@@ -248,11 +219,11 @@ export default function DashboardPage() {
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">{followers}</div>
+                <div className="font-semibold">1</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">{following}</div>
+                <div className="font-semibold">4</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>
             </div>
@@ -383,11 +354,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-
-  )
+  );
 }
-function setFollowers(arg0: any) {
-  throw new Error('Function not implemented.');
-}
-
-

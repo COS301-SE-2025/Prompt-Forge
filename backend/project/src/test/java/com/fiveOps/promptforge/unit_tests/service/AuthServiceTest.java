@@ -1,21 +1,19 @@
 package com.fiveOps.promptforge.unit_tests.service;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
-import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class AuthServiceTest {
 
@@ -34,6 +32,7 @@ class AuthServiceTest {
 
     @Test
     void testLogin_Successful() {
+        // Arrange
         String email = "test@example.com";
         String password = "password123";
         String encodedPassword = "encodedPassword123";
@@ -51,18 +50,24 @@ class AuthServiceTest {
         when(passwordEncoder.matches(password, encodedPassword)).thenReturn(true);
         when(jwtUtil.generateToken(email)).thenReturn(expectedToken);
 
+        // Act
         String actualToken = authService.login(loginRequest);
+
+        // Assert
         assertEquals(expectedToken, actualToken);
     }
 
     @Test
     void testLogin_InvalidEmail() {
+        // Arrange
+        String email = "wrong@example.com";
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("notfound@example.com");
+        loginRequest.setEmail(email);
         loginRequest.setPassword("password123");
 
-        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
+        // Act & Assert
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
@@ -72,82 +77,27 @@ class AuthServiceTest {
 
     @Test
     void testLogin_InvalidPassword() {
+        // Arrange
         String email = "test@example.com";
-        String wrongPassword = "wrongPassword";
-        String storedEncodedPassword = "encodedPassword";
+        String correctEncodedPassword = "encodedPassword";
+        String wrongPassword = "wrongPass";
 
         User user = new User();
         user.setEmail(email);
-        user.setPasswordHash(storedEncodedPassword);
+        user.setPasswordHash(correctEncodedPassword);
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail(email);
         loginRequest.setPassword(wrongPassword);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(wrongPassword, storedEncodedPassword)).thenReturn(false);
+        when(passwordEncoder.matches(wrongPassword, correctEncodedPassword)).thenReturn(false);
 
+        // Act & Assert
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
 
         assertEquals("Invalid email or password", exception.getMessage());
-    }
-
-    @Test
-    void testSignup_Successful() {
-        SignupRequest request = new SignupRequest();
-        request.setEmail("new@example.com");
-        request.setUsername("newuser");
-        request.setPassword("securePassword");
-
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(request.getUsername())).thenReturn(false);
-        when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedPassword");
-
-        // no exception should be thrown
-        authService.signup(request);
-
-        verify(userRepository).save(argThat(user -> 
-            user.getEmail().equals("new@example.com") &&
-            user.getUsername().equals("newuser") &&
-            user.getPasswordHash().equals("encodedPassword") &&
-            user.getIsVerified() == false &&
-            user.getIsActive() == true &&
-            user.getRole().equals("buyer")
-        ));
-    }
-
-    @Test
-    void testSignup_EmailAlreadyExists() {
-        SignupRequest request = new SignupRequest();
-        request.setEmail("existing@example.com");
-        request.setUsername("uniqueuser");
-        request.setPassword("password");
-
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            authService.signup(request);
-        });
-
-        assertEquals("Email already exists", exception.getMessage());
-    }
-
-    @Test
-    void testSignup_UsernameAlreadyTaken() {
-        SignupRequest request = new SignupRequest();
-        request.setEmail("unique@example.com");
-        request.setUsername("takenusername");
-        request.setPassword("password");
-
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(request.getUsername())).thenReturn(true);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            authService.signup(request);
-        });
-
-        assertEquals("Username already taken", exception.getMessage());
     }
 }

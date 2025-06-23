@@ -1,69 +1,67 @@
 import HttpClient from "./httpClient";
-import { User } from "../Models/User";
+import { User } from "../models/User";
 
 export class AuthService {
-  private httpClient = HttpClient;
-  private baseUrl = "/auth";
+    private httpClient = HttpClient;
 
-  async login(userData: User) {
-    try {
-      const response = await this.httpClient.post(`${this.baseUrl}/login`, userData);
+    async login(userData:User){
+        try {
+            // const response = await this.httpClient.post(`/login`,userData)
+            // return response.json()
+            const mock_response = await fetch('/data/users.json');
+            if (!mock_response.ok) {
+                throw new Error('Failed to fetch data');
+            }
 
-      const isJson = response.headers.get("content-type")?.includes("application/json");
-      let data = null;
-      if (isJson) {
-        data = await response.json();
-      }
+           const users = await mock_response.json()
+           const user = users.find((u:User) => u.email === userData.email)
+            
+           if (!user) {
+                throw new Error('User not found');
+            }
+            if (user.password !== userData.password) {
+                throw new Error("Invalid password");
+            }
 
-      if (!response.ok) {
-        throw new Error(data?.message || `Login failed with status ${response.status}`);
-      }
-
-      return data;
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      throw new Error(error.message || "Login error");
+            return {status:"success",message:"Login successful"}
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     }
-  }
 
-  async signup(userData: User) {
-    try {
-      if (
-        !userData.email?.trim() ||
-        !userData.password?.trim() ||
-        !userData.username?.trim() ||
-        !userData.confirmPassword?.trim()
-      ) {
-        throw new Error("All fields are required");
-      }
+    async signup(userData:User){
+        try {
+            // const response = await this.httpClient.post(`/signup`,userData)
+            // return response.json()
+            // const response = await this.httpClient.post(`/login`,userData)
+            // return response.json()
 
-      const response = await this.httpClient.post(`${this.baseUrl}/signup`, userData);
-      const data = await response.json();
+            if (!userData.email || !userData.password || !userData.username || !userData.confirmPassword) {
+                throw new Error("All fields are required")
+            }
+            const mock_response = await fetch('/data/users.json');
+            if (!mock_response.ok) {
+                throw new Error('Failed to fetch data');
+            }
 
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
+           const users = await mock_response.json()
+           const user = users.find((u:User) => u.email === userData.email)
+            
+           if (!user) {
+                throw new Error('User not found');
+            }
+            if (user.password !== userData.password) {
+                throw new Error("Invalid password");
+            }
 
-      return data;
-    } catch (error: any) {
-      console.error("Signup failed:", error);
-      throw new Error(error.message || "Signup error");
+            return {status:"success",message:"Login successful"}
+            
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     }
-  }
 
-  async logout() {
-    try {
-      const response = await this.httpClient.post(`${this.baseUrl}/logout`, {}); // no body needed
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.message || `Logout failed with status ${response.status}`);
-      }
-
-      return data; // { message: "Logout successful" }
-    } catch (error: any) {
-      console.error("Logout failed:", error);
-      throw new Error(error.message || "Logout error");
-    }
-  }
 }
+

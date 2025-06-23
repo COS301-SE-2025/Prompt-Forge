@@ -45,12 +45,8 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(columnDefinition = "uuid[]")
-    private UUID[] followers = new UUID[]{};
-    
-    @Column(columnDefinition = "uuid[]")
-    private UUID[] following = new UUID[]{};
-    
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
 
     // === Getters ===
 
@@ -102,14 +98,9 @@ public class User {
         return isActive;
     }
 
-    public UUID[] getFollowers() {
-        return followers;
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
-
-    public UUID[] getFollowing() {
-        return followers;
-    }
-    
 
     // === Setters ===
 
@@ -161,13 +152,7 @@ public class User {
         this.isActive = isActive;
     }
 
-    public void setFollowing(UUID[] following) {
-        this.following = following;
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
-
-    public void setFollowers(UUID[] followers) {
-        this.followers = followers;
-    }
-
-   
 }

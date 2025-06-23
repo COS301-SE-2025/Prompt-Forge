@@ -1,124 +1,161 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
-import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { AuthService } from "@/services/authService";
+import { useState, useEffect } from "react"
+import { Link, useNavigate, Navigate } from "react-router-dom"
+import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { Button } from "../components/ui/Button"
+import { Card } from "../components/ui/Card"
+import { Input } from "../components/ui/Input"
+import { AuthService } from "@/services/authService"
+
+// Test users array - moved outside component to persist during session
+const TEST_USERS = [
+  { email: "navendrannaidoo1309@gmail.com", password: "1309", username: "nn7" },
+  { email: "admin@promptforge.com", password: "admin123", username: "admin" },
+]
 
 export default function LoginPage() {
   const authService = new AuthService();
-  const [activeTab, setActiveTab] = useState("login");
-  const navigate = useNavigate();
-  const [toggleLoginPassword, setToggleLoginPassword] = useState(false);
-  const [togglePassword, setTogglePassword] = useState(false);
-  const [toggleConfirmPassword, setToggleConfirmPassword] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupUsername, setSignupUsername] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [username, setUsername] = useState(() => localStorage.getItem("username") || "Guest");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
+  const [activeTab, setActiveTab] = useState("login")
+  const navigate = useNavigate()
+  const [toggleLoginPassword,setToggleLoginPassword] = useState(false);
+  const [togglePassword,setTogglePassword] = useState(false);
+  const [toggleConfirmPassword,setToggleConfirmPassword] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+  const [signupEmail, setSignupEmail] = useState("")
+  const [signupPassword, setSignupPassword] = useState("")
+  const [signupUsername, setSignupUsername] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState("")
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('username') || "Guest"
+  })
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
 
   useEffect(() => {
-    const savedUsername = localStorage.getItem("username");
-    if (savedUsername) setUsername(savedUsername);
+    const savedUsername = localStorage.getItem('username')
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "username") {
-        setUsername(e.newValue || "Guest");
+      if (e.key === 'username') {
+        setUsername(e.newValue || "Guest")
       }
-    };
+    }
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
-  const handleLogin = async () => {
-  
+  const handleLogin = () => {
+    const user = TEST_USERS.find(u => u.email === loginEmail)
+    authService.login({ email: loginEmail, password: loginPassword })
+    .then(res=>{
+      console.log("results login");
+      console.log(res);
+      if(res.status == "success")
+      {
+        setError("")
+        navigate('/home')
+      }
 
-  if (!loginEmail || !loginPassword) {
-    setError("All fields are required");
-    return;
+    })
+    .catch(err=>{
+      console.log("err in login");
+      console.log(err);
+      setError(err.message)
+      return
+      
+    })
   }
 
-  try {
-    const result = await authService.login({ email: loginEmail, password: loginPassword });
+  const handleSignUp = () => {
+    // Validation
+    if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
+      setError("All fields are required")
+      return
+    }
+
+    if (signupPassword !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (TEST_USERS.some(u => u.email === signupEmail)) {
+      setError("Email already exists")
+      return
+    }
+
+    if (TEST_USERS.some(u => u.username === signupUsername)) {
+      setError("Username already taken")
+      return
+    }
+
+    // Add new user
+    TEST_USERS.push({
+      email: signupEmail,
+      password: signupPassword,
+      username: signupUsername
+    })
+
+    // Save user data to localStorage
+    localStorage.setItem('username', signupUsername)
+    localStorage.setItem('userEmail', signupEmail)
+
+    setError("")
+    navigate('/home')
+  }
+
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('username')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userProfileImage')
+    localStorage.removeItem('userBio')
     
-    if (result?.message === "Login successful") {
-      localStorage.setItem("username", result.username || "User");
-      localStorage.setItem("userEmail", loginEmail);
-      setError("");
-      navigate("/home");
-    } else {
-      console.warn("Unexpected login result:", result); // Debug
-      setError("Login failed");
-    }
-  } catch (err: any) {
-    console.error("Login error caught:", err); // Debug
-    setError(err.message || "Login error");
+    // Navigate to login page
+    navigate('/login')
   }
-};
-
-
-  const handleSignUp = async () => {
-    try {
-      if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
-        setError("All fields are required");
-        return;
-      }
-
-      if (signupPassword !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
-
-      const result = await authService.signup({
-        email: signupEmail,
-        password: signupPassword,
-        username: signupUsername,
-        confirmPassword: confirmPassword,
-      });
-
-      if (result.status === "success") {
-        localStorage.setItem("username", signupUsername);
-        localStorage.setItem("userEmail", signupEmail);
-        setError("");
-        navigate("/home");
-      } else {
-        setError("Signup failed");
-      }
-    } catch (err: any) {
-      setError(err.message || "Signup error");
-    }
-  };
 
   const handleForgotPassword = () => {
     if (!forgotEmail) {
-      setError("Email is required");
-      return;
+      setError("Email is required")
+      return
     }
 
-    setError("");
-    alert(`If this were real, password reset instructions would be sent to ${forgotEmail}`);
-    setShowForgotPassword(false);
-    setForgotEmail("");
-  };
+    const user = TEST_USERS.find(u => u.email === forgotEmail)
+    
+    if (!user) {
+      setError("No account found with this email address")
+      return
+    }
 
+    // Mock password reset
+    setError("")
+    alert(`Password reset instructions sent to ${forgotEmail}
+    \nFor demo purposes:
+    Username: ${user.username}
+    Password: ${user.password}`)
+    setShowForgotPassword(false)
+    setForgotEmail("")
+  }
+
+  // Add this to routes that require authentication
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-    const username = localStorage.getItem("username");
-    if (!username) return <Navigate to="/login" replace />;
-    return <>{children}</>;
-  };
+    const username = localStorage.getItem('username')
+    
+    if (!username) {
+      return <Navigate to="/login" replace />
+    }
+
+    return <>{children}</>
+  }
 
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col md:flex-row">
-        <div
+        <div 
           className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
           style={{
             backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
@@ -132,20 +169,24 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white">
+            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white dark:text-white">
               Prompt Forge
             </h1>
-            <p className="text-sm text-white/70 uppercase tracking-widest mb-8">
+            <p className="text-sm text-white/70 dark:text-white/70 uppercase tracking-widest mb-8">
               Forge the future
             </p>
 
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              Discover, Test & Master <br /> AI Prompts
+            <h2 className="text-xl font-semibold mb-4 text-white dark:text-white">
+              Discover, Test & Master
+              <br />
+              AI Prompts
             </h2>
 
-            <p className="text-sm text-white/80 mb-6">
-              The marketplace for high-quality, tested AI prompts. <br />
-              Buy, sell, test, and compare prompts to maximize <br />
+            <p className="text-sm text-white/80 dark:text-labelText/80 mb-6">
+              The marketplace for high-quality, tested AI prompts.
+              <br />
+              Buy, sell, test, and compare prompts to maximize
+              <br />
               your AI potential.
             </p>
           </div>
@@ -158,8 +199,8 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <button
                     onClick={() => {
-                      setShowForgotPassword(false);
-                      setError("");
+                      setShowForgotPassword(false)
+                      setError("")
                     }}
                     className="flex items-center text-sm text-muted-foreground hover:text-forge-green mb-4"
                   >
@@ -174,16 +215,19 @@ export default function LoginPage() {
 
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Email</label>
-                    <Input
-                      type="email"
-                      placeholder="you@example.com"
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
                       className="bg-muted border-muted h-11"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                     />
                   </div>
 
-                  <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleForgotPassword}>
+                  <Button 
+                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
+                    onClick={handleForgotPassword}
+                  >
                     Send Reset Instructions
                   </Button>
                 </div>
@@ -212,9 +256,9 @@ export default function LoginPage() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="you@example.com"
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
                           className="bg-muted border-muted h-11"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
@@ -223,7 +267,7 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Password</label>
                         <div className="relative">
-                          <Input
+                          <Input 
                             type={toggleLoginPassword ? "text" : "password"}
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
@@ -232,19 +276,23 @@ export default function LoginPage() {
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {toggleLoginPassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(false)} />
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleLoginPassword(false)} 
+                              />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(true)} />
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleLoginPassword(true)} 
+                              />
                             )}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                        <button
+                        <button 
                           onClick={() => {
-                            setShowForgotPassword(true);
-                            setError("");
+                            setShowForgotPassword(true)
+                            setError("")
                           }}
                           className="hover:text-forge-green-dark text-forge-green text-sm"
                         >
@@ -252,7 +300,10 @@ export default function LoginPage() {
                         </button>
                       </div>
 
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleLogin}>
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
+                        onClick={handleLogin}
+                      >
                         Login
                       </Button>
 
@@ -266,6 +317,8 @@ export default function LoginPage() {
                         <Chrome className="mr-2 h-4 w-4" />
                         Continue with Google
                       </Button>
+
+                      
                     </div>
                   )}
 
@@ -273,9 +326,9 @@ export default function LoginPage() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <label className="text-labelText px-1 text-sm">Username</label>
-                        <Input
-                          type="text"
-                          placeholder="Username"
+                        <Input 
+                          type="text" 
+                          placeholder="Username" 
                           className="bg-muted border-muted h-11"
                           value={signupUsername}
                           onChange={(e) => setSignupUsername(e.target.value)}
@@ -283,9 +336,9 @@ export default function LoginPage() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-labelText px-1 text-sm">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="you@example.com"
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
                           className="bg-muted border-muted h-11"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
@@ -294,8 +347,8 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Password</label>
                         <div className="relative">
-                          <Input
-                            type={togglePassword ? "text" : "password"}
+                          <Input 
+                            type={togglePassword ? "text" : "password"} 
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
                             value={signupPassword}
@@ -303,9 +356,13 @@ export default function LoginPage() {
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {togglePassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(false)} />
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setTogglePassword(false)} 
+                              />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(true)} />
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setTogglePassword(true)} 
+                              />
                             )}
                           </div>
                         </div>
@@ -313,8 +370,8 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Confirm Password</label>
                         <div className="relative">
-                          <Input
-                            type={toggleConfirmPassword ? "text" : "password"}
+                          <Input 
+                            type={toggleConfirmPassword ? "text" : "password"} 
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
                             value={confirmPassword}
@@ -322,14 +379,21 @@ export default function LoginPage() {
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {toggleConfirmPassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(false)} />
+                              <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleConfirmPassword(false)} 
+                              />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(true)} />
+                              <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
+                                onClick={() => setToggleConfirmPassword(true)} 
+                              />
                             )}
                           </div>
                         </div>
                       </div>
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
+                        onClick={handleSignUp}
+                      >
                         Sign Up
                       </Button>
 
@@ -348,11 +412,13 @@ export default function LoginPage() {
                 </>
               )}
 
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-sm mt-2">{error}</p>
+              )}
             </div>
           </Card>
         </div>
       </div>
     </main>
-  );
+  )
 }
