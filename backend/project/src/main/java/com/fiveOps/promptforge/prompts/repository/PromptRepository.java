@@ -11,30 +11,66 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId " +
+           "WHERE p.featured = true")
+    Page<PromptWithAuthorDTO> findByFeaturedTrue(Pageable pageable);
 
-     List<Prompt> findByFeaturedTrue();
-     Page<Prompt> findAll(Pageable pageable);
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId")
+    Page<PromptWithAuthorDTO> findAllWithAuthor(Pageable pageable);
 
-    Page<Prompt> findByVisibility(String visibility,Pageable pageable);
-    //Page<Prompt> findByCategoryAndVisibility(String category, String visibility);
-    Page<Prompt> findByAuthorId(UUID authorId,Pageable pageable);
-    Page<Prompt> findByTitleContainingIgnoreCase(String title,Pageable pageable);
-    @Query("SELECT p FROM Prompt p WHERE " +
-           "LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId " +
+           "WHERE p.visibility = :visibility")
+    Page<PromptWithAuthorDTO> findByVisibility(String visibility, Pageable pageable);
+
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId " +
+           "WHERE p.authorId = :authorId")
+    Page<PromptWithAuthorDTO> findByAuthorId(UUID authorId, Pageable pageable);
+
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId " +
+           "WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))")
+    Page<PromptWithAuthorDTO> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
+    @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
+           "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
+           "FROM Prompt p JOIN User u ON p.authorId = u.userId " +
+           "WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "AND p.visibility = 'public'")
-    Page<Prompt> searchPublicByTitle(@Param("searchTerm") String searchTerm,Pageable pageable);
-    
-    @Query(value = "SELECT * FROM prompts WHERE :tagId = ANY(prompt_tags)", 
+    Page<PromptWithAuthorDTO> searchPublicByTitle(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    @Query(value = "SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.prompt_id, p.author_id, p.title, p.slug, p.description, p.price, " +
+           "p.created_at, p.published_at, p.prompt_tags, u.username) " +
+           "FROM prompts p JOIN users u ON p.author_id = u.user_id " +
+           "WHERE :tagId = ANY(p.prompt_tags)", 
            nativeQuery = true)
-    Page<Prompt> findByTagId(@Param("tagId") UUID tagId,Pageable pageable);
+    Page<PromptWithAuthorDTO> findByTagId(@Param("tagId") UUID tagId, Pageable pageable);
 
-    @Query(value = "SELECT * FROM prompts WHERE visibility = 'public' AND price <= :maxPrice", nativeQuery = true)
-    Page<Prompt> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice,Pageable pageable);
-
-    
-
-    //long countByCategory(String category);
+    @Query(value = "SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
+           "p.prompt_id, p.author_id, p.title, p.slug, p.description, p.price, " +
+           "p.created_at, p.published_at, p.prompt_tags, u.username) " +
+           "FROM prompts p JOIN users u ON p.author_id = u.user_id " +
+           "WHERE visibility = 'public' AND price <= :maxPrice", 
+           nativeQuery = true)
+    Page<PromptWithAuthorDTO> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice, Pageable pageable);
 }
+
