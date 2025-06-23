@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 
 @RestController
@@ -30,7 +31,7 @@ public class PromptController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<Prompt>> getAllPrompts(
+    public ResponseEntity<Page<PromptWithAuthorDTO>> getAllPrompts(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
     
@@ -40,7 +41,7 @@ public class PromptController {
     }
 
     @GetMapping("/author/{authorId}")
-    public ResponseEntity<Page<Prompt>> getPromptsByAuthor(@PathVariable UUID authorId,
+    public ResponseEntity<Page<PromptWithAuthorDTO>> getPromptsByAuthor(@PathVariable UUID authorId,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
     
@@ -91,7 +92,7 @@ public class PromptController {
     }
 
     @GetMapping("/by-tag/{tagName}")
-    public ResponseEntity<Page<Prompt>> getByTagName(@PathVariable String tagName,
+    public ResponseEntity<Page<PromptWithAuthorDTO>> getByTagName(@PathVariable String tagName,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
     
@@ -100,7 +101,7 @@ public class PromptController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Prompt>> searchPrompts(
+    public ResponseEntity<Page<PromptWithAuthorDTO>> searchPrompts(
             @RequestParam String query,
             @RequestParam(required = false) Boolean onlyPublic,
             @RequestParam(defaultValue = "0") int page,
