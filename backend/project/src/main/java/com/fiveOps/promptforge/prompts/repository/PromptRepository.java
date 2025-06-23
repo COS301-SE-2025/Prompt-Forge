@@ -15,6 +15,8 @@ import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
+        List<Prompt> findByFeaturedTrue();
+        
     @Query("SELECT new com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO(" +
            "p.id, p.authorId, p.title, p.slug, p.description, p.price, " +
            "p.createdAt, p.publishedAt, p.tagIds, u.username) " +
