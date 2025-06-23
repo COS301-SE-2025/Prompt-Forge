@@ -24,6 +24,16 @@ export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
+  // New state variables for password validation
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasMinLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
     if (savedUsername) setUsername(savedUsername);
@@ -65,10 +75,30 @@ export default function LoginPage() {
 };
 
 
+  // Password validation function
+  const validatePassword = (password: string) => {
+    const validation = {
+      hasMinLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    setPasswordValidation(validation);
+    return Object.values(validation).every(Boolean);
+  };
+
   const handleSignUp = async () => {
     try {
       if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
         setError("All fields are required");
+        return;
+      }
+
+      // Validate password strength
+      if (!validatePassword(signupPassword)) {
+        setError("Password does not meet security requirements");
+        setShowPasswordRequirements(true);
         return;
       }
 
@@ -84,15 +114,35 @@ export default function LoginPage() {
         confirmPassword: confirmPassword,
       });
 
-      if (result.status === "success") {
+      console.log("Signup result:", result); // Debug log to see what's returned
+
+      // Check for different possible success indicators
+      if (result?.message === "Signup successful" || 
+          result?.message === "User created successfully" ||
+          result?.status === "success" ||
+          result?.success === true ||
+          result?.token) { // Sometimes a token indicates success
+        
+        // Store user data
         localStorage.setItem("username", signupUsername);
         localStorage.setItem("userEmail", signupEmail);
+        
+        // If there's a token and userId in the response, store them too
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+        }
+        if (result.userId || result.user?.id) {
+          localStorage.setItem("userId", result.userId || result.user.id);
+        }
+        
         setError("");
         navigate("/home");
       } else {
-        setError("Signup failed");
+        console.warn("Unexpected signup result:", result); // Debug
+        setError(result?.message || "Signup failed");
       }
     } catch (err: any) {
+      console.error("Signup error caught:", err); // Debug
       setError(err.message || "Signup error");
     }
   };
@@ -192,7 +242,7 @@ export default function LoginPage() {
                   <div className="flex border-b border-border mb-6 justify-center">
                     <button
                       className={`px-4 py-5 text-base font-medium w-1/2 ${
-                        activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
+                        activeTab === "login" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
                       }`}
                       onClick={() => setActiveTab("login")}
                     >
@@ -200,7 +250,7 @@ export default function LoginPage() {
                     </button>
                     <button
                       className={`px-4 py-5 text-base font-medium w-1/2 ${
-                        activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
+                        activeTab === "signup" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
                       }`}
                       onClick={() => setActiveTab("signup")}
                     >
@@ -299,7 +349,12 @@ export default function LoginPage() {
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
                             value={signupPassword}
-                            onChange={(e) => setSignupPassword(e.target.value)}
+                            onChange={(e) => {
+                              setSignupPassword(e.target.value);
+                              validatePassword(e.target.value);
+                              setShowPasswordRequirements(e.target.value.length > 0);
+                            }}
+                            onFocus={() => setShowPasswordRequirements(true)}
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {togglePassword ? (
@@ -309,13 +364,42 @@ export default function LoginPage() {
                             )}
                           </div>
                         </div>
+                        
+                        {/* Password Requirements */}
+                        {showPasswordRequirements && signupPassword.length > 0 && (
+                          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
+                            <div className="space-y-1">
+                              <div className={`flex items-center text-xs ${passwordValidation.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasMinLength ? '✓' : '○'}</span>
+                                At least 8 characters
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasUppercase ? '✓' : '○'}</span>
+                                One uppercase letter
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasLowercase ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasLowercase ? '✓' : '○'}</span>
+                                One lowercase letter
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasNumber ? '✓' : '○'}</span>
+                                One number
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasSpecialChar ? '✓' : '○'}</span>
+                                One special character (!@#$%^&*...)
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Confirm Password</label>
                         <div className="relative">
                           <Input
                             type={toggleConfirmPassword ? "text" : "password"}
-                            placeholder="Password"
+                            placeholder="Confirm Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -328,6 +412,12 @@ export default function LoginPage() {
                             )}
                           </div>
                         </div>
+                        {/* Password match indicator */}
+                        {confirmPassword && (
+                          <div className={`text-xs mt-1 ${signupPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
+                            {signupPassword === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                          </div>
+                        )}
                       </div>
                       <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
                         Sign Up
