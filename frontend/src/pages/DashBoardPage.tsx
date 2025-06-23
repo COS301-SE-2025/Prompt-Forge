@@ -1,13 +1,13 @@
 import { DashboardCard } from '@/components/DashboardCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { TopPrompt } from '../components/TopPrompt';
-import { dashProfileService } from "../services/dashprofileService"
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket } from "lucide-react";
 import { Link } from 'react-router-dom';
-import { StandardPromptCard } from "../components/StandardPromptCard"
+import { StandardPromptCard } from "../components/StandardPromptCard";
 
 // Types matching your backend JSON
 type MyPrompt = {
@@ -50,88 +50,207 @@ type DashboardData = {
   topPrompts: TopPromptType[];
 };
 
+type UserProfile = {
+  id: string;
+  username: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string;
+  followers: number;
+  following: number;
+};
+
 export default function DashboardPage() {
-    // State for dynamic profile data
-  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80")
-  const [userBio, setUserBio] = useState<string>("AI prompt engineer specializing in creative writing and technical documentation.")
-  const [username, setUsername] = useState<string>("theo_unknown")
-  const [followers, setFollowers] = useState<number>(0)
-  const [following, setFollowing] = useState<number>(0)
-  const [loading, setLoading] = useState<boolean>(true)
+  const navigate = useNavigate();
+  
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // Profile states
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=80&width=80");
+  const [userBio, setUserBio] = useState<string>("AI prompt engineer specializing in creative writing and technical documentation.");
+  const [username, setUsername] = useState<string>("theo_unknown");
+  const [followers, setFollowers] = useState<number>(0);
+  const [following, setFollowing] = useState<number>(0);
 
-  // Prompts data states - using same structure as MyPromptsPage
+  // Prompts data states
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fetch prompts using same endpoint and mapping as MyPromptsPage
+  // Dashboard data states
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check authentication status on component mount
   useEffect(() => {
-
-    async function fetchProfile() {
-      try {
-        setLoading(true)
-        const profile = await dashProfileService.getDashboardProfile()
-        setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80")
-        setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.")
-        setUsername(profile.username || "theo_unknown")
-        setFollowers(profile.followers ?? 0)
-        setFollowing(profile.following ?? 0)
-      } catch (error) {
-        
-      } finally {
-        setLoading(false)
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      
+      if (token && userId) {
+        setIsAuthenticated(true);
+        setCurrentUserId(userId);
+      } else {
+        setIsAuthenticated(false);
+        navigate('/login'); // Redirect to login if not authenticated
       }
-    }
-    fetchProfile()
-  }, [])
+      setAuthLoading(false);
+    };
 
+    checkAuth();
+
+    // Listen for storage changes (login/logout in other tabs)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' || e.key === 'userId') {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [navigate]);
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!isAuthenticated || !currentUserId) return;
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/users/${currentUserId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const profile: UserProfile = await response.json();
+          setUserProfile(profile);
+          setUsername(profile.username);
+          setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.");
+          setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80");
+          setFollowers(profile.followers);
+          setFollowing(profile.following);
+
+          // Update localStorage for consistency
+          localStorage.setItem('username', profile.username);
+          if (profile.bio) localStorage.setItem('userBio', profile.bio);
+          if (profile.profilePicture) localStorage.setItem('userProfileImage', profile.profilePicture);
+        } else if (response.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          setIsAuthenticated(false);
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [isAuthenticated, currentUserId, navigate]);
+
+  // Fetch user's prompts
+  useEffect(() => {
     const fetchMyPrompts = async () => {
-      setLoadingPrompts(true);
-      const authorId = "706d87a3-b874-4b37-a041-e67201f4ed22"; // Use the specific author ID
-      if (!authorId) {
-        setMyPrompts([]);
+      if (!isAuthenticated || !currentUserId) {
         setLoadingPrompts(false);
         return;
       }
+
+      setLoadingPrompts(true);
       try {
-        const res = await fetch(`/prompts/author/${authorId}`);
-        let prompts = await res.json();
-        if (!Array.isArray(prompts)) prompts = [];
-        
-        // Map backend fields to frontend MyPrompt interface - same as MyPromptsPage
-        const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          description: p.description || "",
-          content: p.content || "",
-          category: "General", // Default, backend does not provide
-          tags: p.tagNames || [],
-          createdAt: p.createdAt,
-          updatedAt: p.publishedAt || p.createdAt,
-          rating: 0, // Default, backend does not provide
-          uses: 0,   // Default, backend does not provide
-          featured: p.featured || false,
-          price: p.price || 0,
-          isPrivate: p.visibility !== "public",
-          isFavorite: false // Default, backend does not provide
-        }));
-        
-        setMyPrompts(mappedPrompts);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/prompts/author/${currentUserId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          let prompts = await response.json();
+          if (!Array.isArray(prompts)) prompts = [];
+          
+          // Map backend fields to frontend MyPrompt interface
+          const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            content: p.content || "",
+            category: p.category || "General",
+            tags: p.tagNames || [],
+            createdAt: p.createdAt,
+            updatedAt: p.publishedAt || p.createdAt,
+            rating: p.rating || 0,
+            uses: p.uses || 0,
+            featured: p.featured || false,
+            price: p.price || 0,
+            isPrivate: p.visibility !== "public",
+            isFavorite: p.isFavorite || false
+          }));
+          
+          setMyPrompts(mappedPrompts);
+        } else if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          setIsAuthenticated(false);
+          navigate('/login');
+        }
       } catch (error) {
         console.error("Failed to fetch prompts:", error);
         setMyPrompts([]);
       }
       setLoadingPrompts(false);
     };
-    
-    fetchMyPrompts();
-  }, []);
 
-  // Dashboard data states
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    fetchMyPrompts();
+  }, [isAuthenticated, currentUserId, navigate]);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch("/api/dashboard", {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setDashboard(data);
+        } else if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          setIsAuthenticated(false);
+          navigate('/login');
+        } else {
+          throw new Error("Failed to fetch dashboard data");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [isAuthenticated, navigate]);
 
   // Load profile info from localStorage and listen for changes
   useEffect(() => {
@@ -154,25 +273,45 @@ export default function DashboardPage() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Fetch dashboard data from backend
-  useEffect(() => {
-    fetch("/api/dashboard", { credentials: "include" })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch dashboard data");
-        return res.json();
-      })
-      .then(setDashboard)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  // Handlers for StandardPromptCard
+  const handleDeletePrompt = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/prompts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-  // Handlers for StandardPromptCard - same as MyPromptsPage
-  const handleDeletePrompt = (id: string) => {
-    setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+      if (response.ok) {
+        setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        console.error("Failed to delete prompt");
+      }
+    } catch (error) {
+      console.error("Error deleting prompt:", error);
+    }
   };
 
-  const handleToggleFavorite = (id: string) => {
-    setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+  const handleToggleFavorite = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/prompts/${id}/favorite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
   const handleCopyPrompt = async (content: string, id: string) => {
@@ -191,15 +330,30 @@ export default function DashboardPage() {
       title: prompt.title,
       description: prompt.description,
       category: prompt.category,
-      tags: prompt.tags,
       promptText: prompt.content,
-      instructions: "",
       expectedOutput: "",
-      useCase: "",
       isPrivate: prompt.isPrivate
     };
     sessionStorage.setItem("editPromptData", JSON.stringify(editData));
+    navigate("/submit");
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect will happen in useEffect if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -209,23 +363,14 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
   
-  if (error) return <div>Error: {error}</div>;
-  if (!dashboard) return <div>No data</div>;
+  if (error) return <div className="text-center text-red-500 p-8">Error: {error}</div>;
+  if (!dashboard) return <div className="text-center p-8">No data available</div>;
 
   // Get first few prompts for dashboard display
   const displayPrompts = myPrompts.slice(0, 4);
-
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center h-full">
-        <p>Loading dashboard...</p>
-      </div>
-    )
-  }
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
@@ -316,10 +461,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="items-center text-xs">
-                  <RecentActivity  username='Boityyyyy' activity='followed you' time='1.5h'   />
-                  <RecentActivity  username='Riri_ww' activity='followed you' time='1.5h'   />
-                  <RecentActivity  username='NavD' activity='rated your prompt' time='5h'   />
-                  <RecentActivity  username='MK' activity='rated your prompt' time='1 days'/>
+                  <RecentActivity username='Boityyyyy' activity='followed you' time='1.5h' />
+                  <RecentActivity username='Riri_ww' activity='followed you' time='1.5h' />
+                  <RecentActivity username='NavD' activity='rated your prompt' time='5h' />
+                  <RecentActivity username='MK' activity='rated your prompt' time='1 days'/>
                 </div>
               </Card>
             </div>
@@ -383,11 +528,7 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-
-  )
-}
-function setFollowers(arg0: any) {
-  throw new Error('Function not implemented.');
+  );
 }
 
 
