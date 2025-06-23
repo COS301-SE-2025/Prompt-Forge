@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
 @Service
@@ -25,12 +26,12 @@ public class PromptService {
         this.tagService = tagService;
     }
 
-    public Page<Prompt> getAllPrompts( Pageable pageable) {
-        return promptRepository.findAll(pageable);
+    public Page<PromptWithAuthorDTO> getAllPrompts(Pageable pageable) {
+    return promptRepository.findAllWithAuthor(pageable);
     }
 
-    public Page<Prompt> getPromptsByAuthor(UUID authorId, Pageable pageable) {
-        return promptRepository.findByAuthorId(authorId,pageable);
+    public Page<PromptWithAuthorDTO> getPromptsByAuthor(UUID authorId, Pageable pageable) {
+    return promptRepository.findByAuthorId(authorId, pageable);
     }
 
     @Cacheable(value = "prompts", key = "#id")
@@ -49,10 +50,9 @@ public class PromptService {
         return promptRepository.save(prompt);
     }
 
-    public Page<Prompt> getPromptsByTagName(String tagName, Pageable pageable) {
-        // Delegate tag lookup to TagService
-        UUID tagId = tagService.getTagIdByName(tagName);
-        return promptRepository.findByTagId(tagId,pageable);
+    public Page<PromptWithAuthorDTO> getPromptsByTagName(String tagName, Pageable pageable) {
+    UUID tagId = tagService.getTagIdByName(tagName);
+    return promptRepository.findByTagId(tagId, pageable);
     }
 
     @Transactional
@@ -108,12 +108,13 @@ public class PromptService {
     }
 
     @Cacheable(value = "prompts", condition = "#result != null")
-     public Page<Prompt> searchByTitle(String searchTerm, Pageable pageable) {
-        return promptRepository.findByTitleContainingIgnoreCase(searchTerm,pageable);
+     public Page<PromptWithAuthorDTO> searchByTitle(String searchTerm, Pageable pageable) {
+    return promptRepository.findByTitleContainingIgnoreCase(searchTerm, pageable);
     }
 
+
     @Cacheable(value = "prompts", condition = "#result != null")
-    public Page<Prompt> searchPublicByTitle(String searchTerm, Pageable pageable) {
-        return promptRepository.searchPublicByTitle(searchTerm,pageable);
+    public Page<PromptWithAuthorDTO> searchPublicByTitle(String searchTerm, Pageable pageable) {
+    return promptRepository.searchPublicByTitle(searchTerm, pageable);
     }
 }
