@@ -24,33 +24,27 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
-
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-      .csrf(csrf -> csrf.disable())
-      .authorizeHttpRequests(auth ->
-        auth
-        //   .requestMatchers("/")
-        //   .permitAll()
-        //   .requestMatchers("/auth/")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.GET, "/user/")
-        //   .permitAll()
-        //   .requestMatchers(HttpMethod.PATCH, "/user/")
-        //   .authenticated()
-        //   .requestMatchers("/swagger-ui/", "/v3/api-docs/")
-        //   .permitAll()
-        //   // other security rules
-          .anyRequest().permitAll()
-      )
-      .sessionManagement(sm ->
-        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-      )
-      .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
+      http
+          .cors(cors -> cors.configure(http))
+          .csrf(csrf -> csrf.disable())
+          .authorizeHttpRequests(auth -> auth
+              .requestMatchers("swagger-ui/**","/auth/**", "/public/**","/user/**").permitAll() // ✅ Allow your real routes
+              .anyRequest().authenticated()
+          )
+          .sessionManagement(sm -> sm
+              .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          )
+          .httpBasic(httpBasic -> httpBasic.disable())
+          .formLogin(formLogin -> formLogin.disable())
+          .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+  
+      return http.build();
   }
+  
+
 
   @Bean
    public WebMvcConfigurer corsConfigurer() {
@@ -64,5 +58,7 @@ public class SecurityConfig {
                 .allowCredentials(true);
         }
     };
+
 }
+
 }
