@@ -1,44 +1,15 @@
-import { Query } from "@/Models/Query";
+import { Query } from "@/models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/Models/Prompt";
+import { Prompt, Tag, PromptWithTags,  MarketplacePrompt } from "@/Models/Prompt";
+import { Review,ReviewsApiResponse } from '@/models/Reviews';
 
 export class PromptService {
     private httpClient = HttpClient;
 
-    // async getPromptById(promptId: string) {
-    //     try {
-    //         const response = await this.httpClient.get(`/prompts/${promptId}`)
-    //         return response.json()
-    //     } catch (error) {
-    //         console.error(error);
-    //         throw error;
-    //     }
-    // }
     
-    // async getMarketplacePrompts() {
-    //     try {
-    //         const response = await this.httpClient.get('/store/prompts')
-    //         return response.json()
-    //     } catch (error) {
-    //         console.error(error);
-    //         throw error;
-    //     }
-    // }
     async getPromptById(promptId: string) {
     try {
-      // const [promptResponse, tagsResponse] = await Promise.all([
-      //   this.httpClient.get(`/store/prompts/${promptId}`),
-      //   this.httpClient.get('/store/prompts/tags')
-      // ]);
       
-      // const prompt: Prompt = await promptResponse.json();
-      // const allTags: Tag[] = await tagsResponse.json();
-      
-      // // Map tagIds to full tag objects
-      // const tags = prompt.tagIds.map(tagId => 
-      //   allTags.find(tag => tag.id === tagId) || 
-      //   { id: tagId, name: 'Unknown', slug: 'unknown' }
-      // );
       const promptResponse = await this.httpClient.get(`/prompts/${promptId}`);
       const prompt: Prompt = await promptResponse.json();
     
@@ -240,40 +211,36 @@ export class PromptService {
         }
     }
 
-    async getPromptReviews(promptId: string): Promise<Review[]>  {
+    async getPromptReviews(promptId: string): Promise<Review[]> {
     try {
-        const response = await fetch(`/prompts/${promptId}/reviews`);
-        
-        // if (!response.ok) {
-        //     throw new Error(`HTTP error! Status: ${response.status}`);
-        // }
-        
-        // const data = await response.json();
-        // return Array.isArray(data) ? data : [];
-        // Check for successful response
-        if (!response.ok) {
-            throw new Error(`Failed to fetch reviews: ${response.status}`);
-        }
-        
-        // Verify JSON content type
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Expected JSON but got: ${contentType}`);
-        }
-        
-        const reviews: Review[] = await response.json();
-        
-        // Validate the response structure
-        if (!Array.isArray(reviews)) {
-            console.warn('Expected array but got:', reviews);
-            return [];
-        }
-        
-        return reviews;
+      const response = await this.httpClient.get(
+        `/store/prompts/${promptId}/reviews`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Expected JSON but got: ${contentType}`);
+      }
+
+
+      const data: ReviewsApiResponse = await response.json();
+      
+
+      if (!data?.content) {
+        console.warn('Unexpected response structure:', data);
+        return [];
+      }
+
+      return data.content
+      
     } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-        return []; // Return empty array as fallback
+      console.error('Failed to fetch reviews:', error);
+      return []; 
     }
 }
 
@@ -301,5 +268,23 @@ export class PromptService {
       throw error;
     }
   }
+
+  async postReview(promptId: string, reviewData: { rating: number; comment: string }): Promise<Review> {
+  try {
+    const response = await this.httpClient.post(
+      `/store/prompts/${promptId}/reviews`,
+      reviewData
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to post review:', error);
+    throw error;
+  }
+}
 }
 
