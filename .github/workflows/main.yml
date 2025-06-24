@@ -39,3 +39,6 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       if: always()  # Upload even if tests fail
+
+    - name: Lint with Checkstyle #Linting
+      run: mvn -B checkstyle:check   
