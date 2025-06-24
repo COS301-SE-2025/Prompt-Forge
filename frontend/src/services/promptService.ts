@@ -199,19 +199,6 @@ export class PromptService {
       console.error('Failed to fetch reviews:', error);
       return []; 
       
-      const reviews: Review[] = await response.json();
-      
-      // Validate the response structure
-      if (!Array.isArray(reviews)) {
-          console.warn('Expected array but got:', reviews);
-          return [];
-      }
-      
-      return reviews;
-    } catch (error) {
-      console.error('Failed to fetch reviews:', error);
-      return []; // Return empty array as fallback
-
     }
   }
 
