@@ -76,10 +76,6 @@ public class PromptStoreController {
         String userEmail = authentication.getName();
         UUID userId = userService.getUserIdByEmail(userEmail);
         
-        // // Verify the user has purchased the prompt before allowing review
-        // if (!storeService.hasUserPurchasedPrompt(userId, promptId)) {
-        //     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        // }
         
         review.setUserId(userId);
         review.setPromptId(promptId);
@@ -143,10 +139,6 @@ public class PromptStoreController {
         String userEmail = authentication.getName();
         UUID userId = userService.getUserIdByEmail(userEmail);
         
-        // // Verify the user owns the prompt before allowing deletion
-        // if (!storeService.isPromptOwner(promptId, userId)) {
-        //     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        // }
         
         boolean deleted = storeService.deleteListing(promptId);
         return deleted ? ResponseEntity.noContent().build() : 
