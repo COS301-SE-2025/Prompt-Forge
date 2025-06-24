@@ -39,7 +39,7 @@ export interface Review {
   id: string
   promptId: string
   userId: string
-  userName?: string
+  userName: string
   rating: number
   comment: string
   createdAt?: string

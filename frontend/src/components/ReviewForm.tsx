@@ -1,37 +1,56 @@
+// Update ReviewForm.tsx
 import React, { useState } from 'react'
 import { Star } from 'lucide-react'
 import { Button } from './ui/Button'
+import { PromptService } from '@/services/promptService'
 
 interface ReviewFormProps {
-  onSubmit: (review: { rating: number; comment: string }) => Promise<void>
+  promptId: string;
+  onSubmitSuccess?: () => void; // Optional callback for successful submission
 }
 
-export const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
+export const ReviewForm = ({ promptId, onSubmitSuccess }: ReviewFormProps) => {
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const promptService = new PromptService();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (rating === 0) {
-      alert('Please select a rating')
+      setError('Please select a rating')
       return
     }
     
     if (comment.trim().length < 10) {
-      alert('Please write a review of at least 10 characters')
+      setError('Please write a review of at least 10 characters')
       return
     }
 
     setIsSubmitting(true)
+    setError(null)
+    
     try {
-      await onSubmit({ rating, comment: comment.trim() })
+      await promptService.postReview(promptId, { 
+        rating, 
+        comment: comment.trim() 
+      });
+      
+      // Reset form on success
       setRating(0)
       setComment('')
+      
+      // Call success callback if provided
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
     } catch (error) {
       console.error('Review submission failed:', error)
+      setError(error instanceof Error ? error.message : 'Failed to submit review')
     } finally {
       setIsSubmitting(false)
     }
@@ -39,6 +58,13 @@ export const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Error message */}
+      {error && (
+        <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Star Rating Input */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
