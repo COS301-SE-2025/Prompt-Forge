@@ -44,13 +44,40 @@ export const ReviewForm = ({ promptId, onSubmitSuccess }: ReviewFormProps) => {
       setRating(0)
       setComment('')
       
+      // ✅ Mark that ratings should be refreshed
+      sessionStorage.setItem('needsRatingRefresh', 'true')
+      
       // Call success callback if provided
       if (onSubmitSuccess) {
         onSubmitSuccess();
       }
     } catch (error) {
       console.error('Review submission failed:', error)
-      setError(error instanceof Error ? error.message : 'Failed to submit review')
+      
+      // ✅ Better error handling for specific cases
+      let errorMessage = 'Failed to submit review'
+      
+      if (error instanceof Error) {
+        const errorText = error.message.toLowerCase()
+        
+        if (errorText.includes('already reviewed') || errorText.includes('duplicate')) {
+          errorMessage = 'You have already reviewed this prompt. You can only submit one review per prompt.'
+        } else if (errorText.includes('unauthorized') || errorText.includes('authentication')) {
+          errorMessage = 'Please log in to submit a review.'
+        } else if (errorText.includes('forbidden')) {
+          errorMessage = 'You do not have permission to review this prompt.'
+        } else if (errorText.includes('400')) {
+          errorMessage = 'Invalid review data. Please check your rating and comment.'
+        } else if (errorText.includes('404')) {
+          errorMessage = 'This prompt was not found.'
+        } else if (errorText.includes('500')) {
+          errorMessage = 'Server error. Please try again later.'
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -60,8 +87,18 @@ export const ReviewForm = ({ promptId, onSubmitSuccess }: ReviewFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Error message */}
       {error && (
-        <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md text-sm">
-          {error}
+        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">Unable to submit review</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 

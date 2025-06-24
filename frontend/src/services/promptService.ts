@@ -224,21 +224,40 @@ export class PromptService {
     }
   }
 
-  async postReview(promptId: string, reviewData: { rating: number; comment: string }): Promise<Review> {
+  async postReview(promptId: string, reviewData: { rating: number; comment: string }) {
   try {
-    const response = await this.httpClient.post(
-      `/store/prompts/${promptId}/reviews`,
-      reviewData
-    );
+    const response = await this.httpClient.post(`/store/prompts/${promptId}/reviews`, {
+      rating: reviewData.rating,
+      comment: reviewData.comment,
+    })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // ✅ Better error message extraction
+      let errorMessage = `HTTP error! status: ${response.status}`
+      
+      try {
+        const errorBody = await response.text()
+        if (errorBody) {
+          // Try to parse as JSON first
+          try {
+            const errorJson = JSON.parse(errorBody)
+            errorMessage = errorJson.message || errorJson.error || errorBody
+          } catch {
+            // If not JSON, use the text directly
+            errorMessage = errorBody
+          }
+        }
+      } catch (e) {
+        console.log('Could not read error response body')
+      }
+      
+      throw new Error(errorMessage)
     }
 
-    return await response.json();
+    return await response.json()
   } catch (error) {
-    console.error('Failed to post review:', error);
-    throw error;
+    console.error('PromptService.postReview error:', error)
+    throw error
   }
 }
 
