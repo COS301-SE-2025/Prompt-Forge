@@ -14,7 +14,34 @@ interface EnrichedMarketplacePrompt extends MarketplacePrompt {
   reviewCount?: number;
 }
 
+const useCacheInvalidation = () => {
+  useEffect(() => {
+    const clearRatingsCache = () => {
+      const keys = Object.keys(sessionStorage)
+      keys.forEach(key => {
+        if (key.startsWith('rating_')) {
+          sessionStorage.removeItem(key)
+        }
+      })
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        clearRatingsCache()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+}
+
 export default function MarketplacePage() {
+  useCacheInvalidation()
+  
   const promptService = new PromptService()
   const [currentPrompts, setCurrentPrompts] = useState<EnrichedMarketplacePrompt[]>([]);
   const [featuredPrompts, setFeaturedPrompts] = useState<MarketplacePrompt[]>([]);
@@ -125,6 +152,43 @@ export default function MarketplacePage() {
     fetchAvailableCategories() // Fetch categories first
     fetchData() // Then fetch prompts
   }, [])
+
+  // Add this useEffect to check for refresh flag:
+  useEffect(() => {
+    const checkRefreshFlag = () => {
+      if (sessionStorage.getItem('needsRatingRefresh') === 'true') {
+        sessionStorage.removeItem('needsRatingRefresh')
+        
+        // Clear all rating caches
+        const keys = Object.keys(sessionStorage)
+        keys.forEach(key => {
+          if (key.startsWith('rating_')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+        
+        // Refresh current data
+        if (currentPrompts.length > 0) {
+          fetchData(selectedCategory, selectedFilter, searchQuery, currentPage)
+        }
+      }
+    }
+
+    // Check on mount and on visibility change
+    checkRefreshFlag()
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkRefreshFlag()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [currentPrompts, selectedCategory, selectedFilter, searchQuery, currentPage])
 
   // Show loading screen (full screen like other pages)
   if ((loading && currentPrompts.length === 0) || categoriesLoading) {
