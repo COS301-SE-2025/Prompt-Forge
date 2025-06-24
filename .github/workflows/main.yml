@@ -178,7 +178,9 @@ jobs:
 
       - name: Run Jest coverage
         working-directory: ./frontend
-        run: npx jest --coverage --coverageReporters=json-summary lcov
+        run: |
+             npm install --save-dev @types/jest
+             npx jest --coverage
 
       # ----------------------------
       # Upload to Codecov
