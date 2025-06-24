@@ -352,7 +352,7 @@ export const PromptDetails = () => {
                 {reviews.map((review) => (
                   <ReviewCard
                     key={review.id}
-                    username={review.username}
+                    userName={review.userName}
                     // date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
                     rating={review.rating}
                     comment={review.comment}

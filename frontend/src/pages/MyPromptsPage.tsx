@@ -25,6 +25,9 @@ interface MyPrompt {
   price: number
   isPrivate: boolean
   isFavorite: boolean
+  authorName: string
+  isPublished: boolean // ✅ Add this property
+  publishedAt?: string // ✅ Add this property
 }
 
 interface UserProfile {
@@ -150,7 +153,10 @@ export default function MyPromptsPage() {
             featured: p.featured || false,
             price: p.price || 0,
             isPrivate: p.visibility !== "public",
-            isFavorite: false // Default, backend does not provide
+            isFavorite: false, // Default, backend does not provide
+            authorName: userProfile?.username || "You",
+            isPublished: p.visibility === "public" || p.publishedAt !== null, // ✅ Add this
+            publishedAt: p.publishedAt // ✅ Add this
           }))
 
           setMyPrompts(mappedPrompts)
@@ -280,6 +286,29 @@ export default function MyPromptsPage() {
     }
     sessionStorage.setItem("editPromptData", JSON.stringify(editData))
     navigate("/submit") // Navigate to submit page for editing
+  }
+
+  const handlePublishPrompt = async (id: string, isCurrentlyPublished: boolean) => {
+    try {
+      const action = isCurrentlyPublished ? "unpublish" : "publish"
+      console.log(`🔄 ${action}ing prompt ${id}...`)
+      
+      // For now, just update local state (you can add API call later)
+      setMyPrompts((prev) => prev.map((p) => 
+        p.id === id 
+          ? { 
+              ...p, 
+              isPrivate: isCurrentlyPublished, 
+              isPublished: !isCurrentlyPublished,
+              publishedAt: isCurrentlyPublished ? undefined : new Date().toISOString()
+            } 
+          : p
+      ))
+      
+      console.log(`✅ Prompt ${action}ed successfully`)
+    } catch (error) {
+      console.error(`❌ Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
+    }
   }
 
   // Show loading while checking authentication
@@ -435,6 +464,7 @@ export default function MyPromptsPage() {
                       onCopy={handleCopyPrompt}
                       copiedId={copiedId}
                       content={prompt.content}
+                      onPublish={handlePublishPrompt} // ✅ Make sure this is included
                     />
                   ))}
                 </div>
@@ -465,22 +495,24 @@ export default function MyPromptsPage() {
                   id={prompt.id}
                   title={prompt.title}
                   description={prompt.description}
-                  rating={prompt.rating}
-                  uses={prompt.uses}
-                  price={prompt.price}
-                  featured={prompt.featured}
-                  isPrivate={prompt.isPrivate}
-                  isFavorite={prompt.isFavorite}
-                  tags={prompt.tags}
-                  category={prompt.category}
-                  authorName={userProfile?.username || "You"}
-                  isOwned={true}
+                  rating={prompt.rating || 0}
+                  uses={prompt.uses || 0}
+                  price={prompt.price || 0}
+                  featured={prompt.featured || false}
+                  isPrivate={prompt.isPrivate || false}
+                  isFavorite={prompt.isFavorite || false}
+                  tags={prompt.tags || []}
+                  category={prompt.category || ""}
+                  authorName={prompt.authorName || ""}
+                  isOwned={true} // Since this is MyPromptsPage
+                  isPublished={prompt.isPublished || false} // ✅ Make sure this is included
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}
                   onCopy={handleCopyPrompt}
+                  onPublish={handlePublishPrompt} // ✅ Make sure this is included
                   copiedId={copiedId}
-                  content={prompt.content}
+                  content={prompt.content || ""}
                 />
               ))}
             </div>
