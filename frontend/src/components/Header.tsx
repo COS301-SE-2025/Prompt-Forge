@@ -68,7 +68,9 @@ export default function Header() {
               to={item.href}
               className={cn(
                 "transition-colors hover:text-foreground",
-                pathname === item.href ? "text-foreground font-medium" : "text-muted-foreground",
+                pathname === item.href 
+                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  : "text-muted-foreground",
               )}
             >
               {item.name}
@@ -145,7 +147,9 @@ export default function Header() {
               to={item.href}
               className={cn(
                 "block py-2 text-base transition-colors hover:text-foreground",
-                pathname === item.href ? "text-foreground font-medium" : "text-muted-foreground",
+                pathname === item.href 
+                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  : "text-muted-foreground",
               )}
               onClick={() => setMobileMenuOpen(false)}
             >
