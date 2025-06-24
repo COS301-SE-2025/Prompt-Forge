@@ -1,10 +1,12 @@
-import { Query } from "@/models/Query";
+import { Query } from "@/Models/Query";
 import HttpClient from "./httpClient";
 import { Prompt, Tag, PromptWithTags,  MarketplacePrompt } from "@/Models/Prompt";
-import { Review,ReviewsApiResponse } from '@/models/Reviews';
+import { Review,ReviewsApiResponse } from '@/Models/Reviews';
 
 export class PromptService {
     private httpClient = HttpClient;
+    private ratingsCache = new Map<string, { rating: number; count: number; timestamp: number }>();
+    private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 
     async getPromptById(promptId: string) {
@@ -237,6 +239,53 @@ export class PromptService {
   } catch (error) {
     console.error('Failed to post review:', error);
     throw error;
+  }
+}
+
+async getPromptRatingSummary(promptId: string): Promise<{ averageRating?: number; reviewCount: number }> {
+  // Simple cache to avoid repeated API calls
+  const cacheKey = `rating_${promptId}`;
+  const cached = sessionStorage.getItem(cacheKey);
+  
+  if (cached) {
+    try {
+      const { rating, count, timestamp } = JSON.parse(cached);
+      // Use cache for 5 minutes
+      if (Date.now() - timestamp < 5 * 60 * 1000) {
+        return {
+          averageRating: rating > 0 ? rating : undefined,
+          reviewCount: count
+        };
+      }
+    } catch (e) {
+      // Invalid cache, continue to fetch
+    }
+  }
+
+  try {
+    const reviews = await this.getPromptReviews(promptId);
+    const averageRating = reviews.length > 0 
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+      : 0;
+    
+    // Cache the result
+    const cacheData = {
+      rating: averageRating,
+      count: reviews.length,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    
+    return {
+      averageRating: averageRating > 0 ? averageRating : undefined,
+      reviewCount: reviews.length
+    };
+  } catch (error) {
+    console.warn(`Failed to fetch reviews for prompt ${promptId}:`, error);
+    return {
+      averageRating: undefined,
+      reviewCount: 0
+    };
   }
 }
 }
