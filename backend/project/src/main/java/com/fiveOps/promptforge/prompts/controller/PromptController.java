@@ -1,9 +1,9 @@
-
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +17,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.service.PromptService;
+import com.fiveOps.promptforge.securityConfig.JwtUtil;
+import com.fiveOps.promptforge.user_profile.service.UserService;
+import com.fiveOps.promptforge.user_profile.model.User;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/prompts")
 public class PromptController {
     private final PromptService promptService;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    public PromptController(PromptService promptService) {
+    public PromptController(PromptService promptService, JwtUtil jwtUtil, UserService userService) {
         this.promptService = promptService;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -44,14 +54,69 @@ public class PromptController {
     }
 
     @PostMapping
-    public ResponseEntity<Prompt> createPrompt(@RequestBody Prompt prompt) {
+    public ResponseEntity<?> createPrompt(@RequestBody Prompt prompt, HttpServletRequest request) {
         if (prompt.getPrice() == null) {
-        prompt.setPrice(0.0);
-    }
-        Prompt created = promptService.createPrompt(prompt);
-        return ResponseEntity.ok(created);
-        /////analytics!!!!!
+            prompt.setPrice(0.0);
+        }
         
+        try {
+            // ✅ Extract JWT token from cookies
+            String token = null;
+            Cookie[] cookies = request.getCookies();
+            
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("token".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+            
+            if (token == null || token.isEmpty()) {
+                System.err.println("❌ No JWT token found in cookies");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Authentication required\"}");
+            }
+            
+            // ✅ Validate token
+            if (!jwtUtil.validateToken(token)) {
+                System.err.println("❌ Invalid JWT token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Invalid token\"}");
+            }
+            
+            // ✅ Extract email from token
+            String userEmail = jwtUtil.extractUsername(token);
+            
+            if (userEmail == null || userEmail.isEmpty()) {
+                System.err.println("❌ Could not extract email from token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Invalid token format\"}");
+            }
+            
+            // ✅ Find user by email and get their ID
+            User user = userService.findByEmail(userEmail);
+            if (user == null) {
+                System.err.println("❌ User not found for email: " + userEmail);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"User not found\"}");
+            }
+            
+            // ✅ Set the authorId from the authenticated user
+            prompt.setAuthorId(user.getUserId()); // Note: using getUserId() based on your UserService
+            
+            System.out.println("✅ Creating prompt for user: " + userEmail + " (ID: " + user.getUserId() + ")");
+            
+            Prompt created = promptService.createPrompt(prompt);
+            return ResponseEntity.ok(created);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error creating prompt: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"error\": \"Internal server error: " + e.getMessage() + "\"}");
+        }
     }
 
     @PutMapping("/{id}")
@@ -93,26 +158,4 @@ public class PromptController {
         }
         return ResponseEntity.ok(promptService.searchByTitle(query));
     }
-    
-
-
-
-    // Removed metadata/analytics endpoints endpoints
-    /*
-    @GetMapping("/{id}/metadata")
-    public ResponseEntity<PromptMetadata> getPromptMetadata(@PathVariable UUID id) {
-        PromptMetadata metadata = metadataRepository.findByPromptId(id);
-        if (metadata != null) {
-            return ResponseEntity.ok(metadata);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PostMapping("/{id}/view")
-    public ResponseEntity<Void> trackPromptView(@PathVariable UUID id) {
-        metadataRepository.incrementViewCount(id);
-        return ResponseEntity.ok().build();
-    }
-    */
 }

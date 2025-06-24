@@ -269,4 +269,10 @@ public class UserService {
         throw new RuntimeException("File size exceeds 5MB limit");
     }
 }
+
+  public User findByEmail(String email) {
+    return userRepository
+      .findByEmail(email)
+      .orElse(null); // Return null if not found, let controller handle it
+}
 }
