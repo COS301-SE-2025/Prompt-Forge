@@ -99,30 +99,21 @@ export default function ComparisonsPage() {
     setAiResponse("Generating response...")
 
     try {
-      const requestBody = {
-        messages: [{
-          role: "user",
-          content: promptText
-        }]
-      }
-
+      // ✅ Send just the prompt text string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(promptText), // ✅ Send string directly, not wrapped in object
       })
 
       const data = await response.json()
 
-      // ✅ Use the same response handling pattern as EditorPage
+      // ✅ Handle the response (should be in standard OpenAI format now)
       if (data.choices && data.choices[0] && data.choices[0].message) {
         const aiResponseText = data.choices[0].message.content
         setAiResponse(decodeUnicode(aiResponseText))
-      } else if (data && data.messages && data.messages[0] && data.messages[0].content) {
-        // ✅ Handle direct messages array response
-        setAiResponse(decodeUnicode(data.messages[0].content))
       } else {
         console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
         setAiResponse("Received unexpected response format");
@@ -175,21 +166,13 @@ Please provide:
 `
 
     try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: ratingPrompt,
-          },
-        ],
-      }
-
+      // ✅ Send just the rating prompt string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(ratingPrompt), // ✅ Send string directly
       })
 
       const data = await response.json()
