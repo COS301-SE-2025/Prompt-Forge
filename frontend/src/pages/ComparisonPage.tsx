@@ -99,46 +99,23 @@ export default function ComparisonsPage() {
     setAiResponse("Generating response...")
 
     try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: promptText,
-          },
-        ],
-      }
-
+      // ✅ Send just the prompt text string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(promptText), // ✅ Send string directly, not wrapped in object
       })
 
       const data = await response.json()
 
-      // ✅ Enhanced response handling to unwrap JSON responses
-      if (data && data.choices && data.choices[0] && data.choices[0].message) {
-        let responseContent = data.choices[0].message.content;
-        
-        // Check if the response is JSON wrapped
-        try {
-          const parsedResponse = JSON.parse(responseContent);
-          if (parsedResponse.messages && parsedResponse.messages[0] && parsedResponse.messages[0].content) {
-            responseContent = parsedResponse.messages[0].content;
-          }
-        } catch (jsonError) {
-          // If it's not JSON, use the content as is
-          console.log("Response is not JSON, using as plain text");
-        }
-        
-        setAiResponse(decodeUnicode(responseContent))
-      } else if (data && data.messages && data.messages[0] && data.messages[0].content) {
-        // ✅ Handle direct messages array response
-        setAiResponse(decodeUnicode(data.messages[0].content))
+      // ✅ Handle the response (should be in standard OpenAI format now)
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        const aiResponseText = data.choices[0].message.content
+        setAiResponse(decodeUnicode(aiResponseText))
       } else {
-        console.warn("⚠️ Unexpected response structure:", data);
+        console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
         setAiResponse("Received unexpected response format");
       }
     } catch (error: unknown) {
@@ -189,21 +166,13 @@ Please provide:
 `
 
     try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: ratingPrompt,
-          },
-        ],
-      }
-
+      // ✅ Send just the rating prompt string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(ratingPrompt), // ✅ Send string directly
       })
 
       const data = await response.json()
