@@ -9,9 +9,14 @@ import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
+interface EnrichedMarketplacePrompt extends MarketplacePrompt {
+  averageRating?: number;
+  reviewCount?: number;
+}
+
 export default function MarketplacePage() {
   const promptService = new PromptService()
-  const [currentPrompts, setCurrentPrompts] = useState<MarketplacePrompt[]>([]);
+  const [currentPrompts, setCurrentPrompts] = useState<EnrichedMarketplacePrompt[]>([]);
   const [featuredPrompts, setFeaturedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
   const [promptsFound, setPromptsFound] = useState(0)
@@ -19,10 +24,12 @@ export default function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
-  const [showFeatured, setShowFeatured] = useState(true) // Featured prompts are collapsible
-  const [availableCategories, setAvailableCategories] = useState<string[]>(['all'])
+  const [showFeatured, setShowFeatured] = useState(true)
+  const [availableCategories, setAvailableCategories] = useState<Tag[]>([]) // ✅ Changed to Tag[]
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [ratingsLoading, setRatingsLoading] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
 
   // Pagination calculations
   const [totalPages, setTotalPages] = useState<number>(1)
@@ -33,85 +40,94 @@ export default function MarketplacePage() {
     { value: "new", label: "New" },
   ]
 
+  // ✅ Fetch available categories/tags from the database
+  const fetchAvailableCategories = async () => {
+    setCategoriesLoading(true)
+    try {
+      const tags = await promptService.getAllTags()
+      console.log("Fetched tags:", tags) // Debug log
+      setAvailableCategories(tags)
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      setAvailableCategories([]) // Fallback to empty array
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
+
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
-    fetchData(selectedCategory, filter, searchQuery)
+    setCurrentPage(1) // ✅ Reset to page 1
+    fetchData(selectedCategory, filter, searchQuery, 1)
   }
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    fetchData(category, selectedFilter, searchQuery)
+    setCurrentPage(1) // ✅ Reset to page 1
+    fetchData(category, selectedFilter, searchQuery, 1)
   }
 
-  const fetchData = (tag = "all", filter = "all", search = "", page = 1) => {
-    setLoading(true)
-    setError(null)
-    setCurrentPage(page);
+  const enrichPromptsWithRatings = async (prompts: MarketplacePrompt[]): Promise<EnrichedMarketplacePrompt[]> => {
+    const enrichedPrompts = await Promise.all(
+      prompts.map(async (prompt) => {
+        const { averageRating, reviewCount } = await promptService.getPromptRatingSummary(prompt.id);
+        return {
+          ...prompt,
+          averageRating,
+          reviewCount
+        };
+      })
+    );
     
-    // Fetch categories/tags if not already loaded
-    if (availableCategories.length <= 1) {
-      promptService.getTags()
-        .then(tags => {
-          setAvailableCategories(["all", ...tags])
-        })
-        .catch(err => console.error("Failed to load categories:", err))
-    }
+    return enrichedPrompts;
+  };
 
-    // Fetch featured prompts if not already loaded
-    if (featuredPrompts.length === 0) {
-      promptService.getFeatured(0, 100) // Load more featured prompts
-        .then(pageData => {
-          setFeaturedPrompts(pageData.content || [])
-        })
-        .catch(err => console.error("Failed to load featured prompts:", err))
-    }
+  const fetchData = async (tag = "all", filter = "all", search = "", page = 1) => {
+    setLoading(true);
+    setCurrentPage(page) // ✅ Update current page
     
-    promptService.fetchMarketplacePrompts({ tag, filter, search }, page - 1)
-      .then(pageData => {
-        setCurrentPrompts(pageData.content || [])
-        setTotalPages(pageData.totalPages || 1)
-        setPromptsFound(pageData.totalElements || 0)
-      })
-      .catch(err => {
-        setError('Failed to load prompts')
-        console.error(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+    try {
+      const pageData = await promptService.fetchMarketplacePrompts({ tag, filter, search }, page - 1);
+      
+      // Set prompts first without ratings
+      setCurrentPrompts(pageData.content || []);
+      setTotalPages(pageData.totalPages || 1);
+      setPromptsFound(pageData.totalElements || 0);
+      setLoading(false);
+      
+      // ✅ Load ratings in background
+      setRatingsLoading(true);
+      const enrichedPrompts = await enrichPromptsWithRatings(pageData.content || []);
+      setCurrentPrompts(enrichedPrompts);
+      setRatingsLoading(false);
+      
+    } catch (err) {
+      console.error('Error fetching marketplace data:', err);
+      setError('Failed to load prompts. Please try again.');
+      setLoading(false);
+      setRatingsLoading(false);
+    }
   }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+    setCurrentPage(1) // ✅ Reset to page 1
     
-    // Reset to page 1 when searching
-    promptService.fetchMarketplacePrompts({ tag: selectedCategory, filter: selectedFilter, search: query }, 0)
-      .then(pageData => {
-        setCurrentPrompts(pageData.content || [])
-        setTotalPages(pageData.totalPages || 1)
-        setPromptsFound(pageData.totalElements || 0)
-        setCurrentPage(1)
-      })
-      .catch(err => {
-        setError('Failed to search prompts')
-        console.error(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+    fetchData(selectedCategory, selectedFilter, query, 1)
   }
 
   const changePage = (pageNumber: number) => {
     fetchData(selectedCategory, selectedFilter, searchQuery, pageNumber)
   }
 
-  // Load initial data when component mounts or when needed
+  // ✅ Load initial data and categories when component mounts
   useEffect(() => {
-    fetchData()
-  }, []) // Empty dependency array means it runs once on mount
+    fetchAvailableCategories() // Fetch categories first
+    fetchData() // Then fetch prompts
+  }, [])
 
   // Show loading screen (full screen like other pages)
-  if (loading && currentPrompts.length === 0) {
+  if ((loading && currentPrompts.length === 0) || categoriesLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
@@ -172,18 +188,45 @@ export default function MarketplacePage() {
 
             <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
             <div className="space-y-1">
-              {availableCategories.map((category) => (
+              {/* ✅ All Categories button */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start text-sm h-8 px-2 ${
+                  selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                }`}
+                onClick={() => handleCategoryChange("all")}
+              >
+                All Categories
+              </Button>
+              
+              {/* ✅ Render actual tags from database - simplified version */}
+              {availableCategories.map((tag) => (
                 <Button
-                  key={category}
+                  key={tag.id || tag.name}
                   variant="ghost"
                   className={`w-full justify-start text-sm h-8 px-2 ${
-                    selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                   }`}
-                  onClick={() => handleCategoryChange(category)}
+                  onClick={() => handleCategoryChange(tag.name)}
                 >
-                  {category === "all" ? "All" : category}
+                  <span className="truncate">{tag.name}</span>
+                  {/* ✅ Removed promptCount display */}
                 </Button>
               ))}
+              
+              {/* ✅ Show loading state for categories */}
+              {categoriesLoading && (
+                <div className="flex justify-center py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
+                </div>
+              )}
+              
+              {/* ✅ Show empty state if no categories */}
+              {!categoriesLoading && availableCategories.length === 0 && (
+                <div className="text-xs text-muted-foreground px-2 py-1">
+                  No categories found
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -226,17 +269,27 @@ export default function MarketplacePage() {
                     </div>
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Categories</h4>
-                      {availableCategories.slice(0, 5).map((category) => (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start ${
+                          selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                        }`}
+                        onClick={() => handleCategoryChange("all")}
+                      >
+                        All Categories
+                      </Button>
+                      {availableCategories.slice(0, 4).map((tag) => (
                         <Button
-                          key={category}
+                          key={tag.id || tag.name}
                           variant="ghost"
                           size="sm"
                           className={`w-full justify-start ${
-                            selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                            selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                           }`}
-                          onClick={() => handleCategoryChange(category)}
+                          onClick={() => handleCategoryChange(tag.name)}
                         >
-                          {category === "all" ? "All" : category}
+                          <span className="truncate">{tag.name}</span>
                         </Button>
                       ))}
                     </div>
@@ -335,8 +388,14 @@ export default function MarketplacePage() {
                     {currentPrompts.map((prompt) => (
                       <PromptCard 
                         key={`prompt-${prompt.id}`}
-                        {...prompt}
+                        id={prompt.id}
+                        title={prompt.title}
+                        description={prompt.description}
+                        username={prompt.username}
+                        price={prompt.price}
                         tags={prompt.tagnames}
+                        rating={prompt.averageRating}
+                        reviewCount={prompt.reviewCount}
                       />
                     ))}
                   </div>

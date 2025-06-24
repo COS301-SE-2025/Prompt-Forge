@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ReviewCard } from './ReviewCard';
 import { PromptService } from '@/services/promptService';
-import { Review } from '@/models/Reviews';
+import { Review } from '@/Models/Reviews';
 
 interface ReviewsListProps {
   promptId: string;
