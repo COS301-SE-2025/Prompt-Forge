@@ -47,7 +47,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
-                <BrainCircuit className="w-3 h-3 text-[#3ebb9e] " />
+                <BrainCircuit className="w-6 h-6 text-[#3ebb9e] " />
               </div>
               <span className="text-lg font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
             </div>
@@ -64,12 +64,13 @@ export default function LandingPage() {
               >
                 How It Works
               </a>
-              <a
-                href="#pricing"
+              {/* ✅ Replace Pricing with Help & FAQ */}
+              <Link
+                to="/help"
                 className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
               >
-                Pricing
-              </a>
+                Help & FAQ
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"
@@ -129,13 +130,19 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+              <a
+                href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Watch Demo
-              </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+                >
+                  Watch Demo
+                </Button>
+              </a>
             </div>
             <div className="mt-12 flex justify-center items-center space-x-8 text-sm text-[#FFFFFF]/60">
               <div className="flex items-center">
@@ -408,13 +415,19 @@ export default function LandingPage() {
               <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
             </Button>
               </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+            <a
+              href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Schedule Demo
-            </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+              >
+                Watch Demo
+              </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -489,9 +502,10 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Help Center
-                  </a>
+                  {/* ✅ Link to your help page */}
+                  <Link to="/help" className="hover:text-white transition-colors duration-300">
+                    Help & FAQ
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors duration-300">

@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
-import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart } from "lucide-react"
+import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart, HelpCircle } from "lucide-react"
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
@@ -125,6 +125,14 @@ export default function Header() {
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile Settings</span>
                   </Link>
+                  <Link
+                    to="/help"
+                    className="flex items-center px-4 py-2 text-sm hover:bg-muted"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help & FAQ</span>
+                  </Link>
                   <button
                     className="flex w-full items-center px-4 py-2 text-sm text-red-500 hover:bg-muted"
                     onClick={handleLogout}
@@ -156,6 +164,18 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
+          <Link
+            to="/help"
+            className={cn(
+              "block py-2 text-base transition-colors hover:text-foreground",
+              pathname === "/help" 
+                ? "text-[#3ebb9e] font-medium"
+                : "text-muted-foreground",
+            )}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Help & FAQ
+          </Link>
         </nav>
       )}
     </header>

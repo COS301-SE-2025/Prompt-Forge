@@ -4,7 +4,7 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star } from "lucide-react"
 import { useState, useEffect } from "react"
-import { useLocation } from "react-router-dom"
+import { useLocation, Link, useNavigate } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
 import { jsPDF } from 'jspdf';
 import { Editor } from "@/services/editorService"
@@ -23,6 +23,7 @@ explain how the response should be adapted to fit.]`
 
 export default function EditorPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const editorService = new Editor();
 
   const [promptText, setPromptText] = useState(defaultPrompt)
@@ -313,6 +314,43 @@ export default function EditorPage() {
     "suggest": "Suggestion Models"
   };
 
+  // Replace the handleSavePrompt function with this simpler redirect:
+  const handleSavePrompt = () => {
+    // Check if user is authenticated
+    const username = localStorage.getItem('username')
+    if (!username || username === 'Guest') {
+      alert("Please log in to save prompts")
+      return
+    }
+
+    // Validate prompt content
+    if (!promptText.trim() || promptText.trim() === defaultPrompt.trim()) {
+      alert("Please write a valid prompt before saving")
+      return
+    }
+
+    // Generate a title from the prompt (first 50 characters)
+    const autoTitle = promptText.length > 50 
+      ? promptText.substring(0, 50).trim() + "..."
+      : promptText.trim()
+
+    // Redirect to SubmitPromptPage with pre-filled data
+    navigate('/submit', {
+      state: {
+        prefilled: {
+          title: autoTitle,
+          description: `Auto-saved prompt from Editor - ${new Date().toLocaleString()}`,
+          content: promptText.trim(),
+          tags: [],
+          visibility: "private",
+          price: 0,
+          featured: false
+        }
+      }
+    })
+  }
+
+  // Update the Save button (remove the complex state management):
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
@@ -321,15 +359,24 @@ export default function EditorPage() {
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 lg:h-8 lg:w-8"
+                onClick={handleSavePrompt}
+                title="Save prompt"
+              >
                 <Save className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
                 <History className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
-                <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
-              </Button>
+              {/* ✅ Link HelpCircle to help page */}
+              <Link to="/help">
+                <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+                  <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
 
