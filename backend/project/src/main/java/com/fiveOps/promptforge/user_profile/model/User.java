@@ -1,11 +1,21 @@
 package com.fiveOps.promptforge.user_profile.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_email", columnList = "email", unique = true),
+    @Index(name = "idx_user_username", columnList = "username", unique = true),
+    @Index(name = "idx_user_verified", columnList = "is_verified"),
+    @Index(name = "idx_user_active", columnList = "is_active")
+})
 public class User {
 
     @Id

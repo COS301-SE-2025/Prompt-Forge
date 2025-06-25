@@ -1,20 +1,41 @@
 package com.fiveOps.promptforge.prompts.model;
 
-import com.fiveOps.promptforge.prompts.service.TagService;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
-
-// import java.beans.Transient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.fiveOps.promptforge.prompts.service.TagService;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
-@Table(name = "prompts")
+@Table(name = "prompts", indexes = {
+    @Index(name = "idx_prompt_author", columnList = "author_id"),
+    @Index(name = "idx_prompt_visibility", columnList = "visibility"),
+    @Index(name = "idx_prompt_featured", columnList = "featured"),
+    @Index(name = "idx_prompt_published", columnList = "published_at"),
+    @Index(name = "idx_prompt_created", columnList = "created_at"),
+    @Index(name = "idx_prompt_title", columnList = "title"),
+    @Index(name = "idx_prompt_price", columnList = "price")
+})
 @Getter
 @Setter
 @NoArgsConstructor
