@@ -11,8 +11,19 @@ export class PromptService {
 
     async getPromptById(promptId: string) {
     try {
-      const promptResponse = await this.httpClient.get(`/prompts/${promptId}`);
+      const [promptResponse, ownershipResponse, addedToCartResponse] = await Promise.all([this.httpClient.get(`/prompts/${promptId}`),
+        this.httpClient.get(`/store/prompts/ownership/${promptId}`),
+        this.httpClient.get(`/cart/added/${promptId}`)])
+      
       const prompt: Prompt = await promptResponse.json();
+      
+      console.log("ownershipResponse");
+      const ownership = await ownershipResponse.json();
+      console.log(ownership);
+      
+      console.log("addedToCartResponse");
+      const addedToCart = await addedToCartResponse.json();
+      console.log(addedToCart);
     
       // Ensure tagIds exists and is an array
       const tagIds = prompt.tagIds || [];
@@ -29,7 +40,7 @@ export class PromptService {
           { id: tagId, name: 'Unknown', slug: 'unknown' }
         );
       }
-        return { ...prompt, tags };
+      return { ...prompt, tags, ownership, addedToCart };
       } catch (error) {
         console.error(error);
         throw error;
