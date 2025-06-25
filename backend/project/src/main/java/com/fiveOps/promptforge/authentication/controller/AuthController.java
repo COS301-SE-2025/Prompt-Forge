@@ -32,6 +32,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpStatus;
 
 @RestController
+
 @RequestMapping("/auth")
 public class AuthController {
 
