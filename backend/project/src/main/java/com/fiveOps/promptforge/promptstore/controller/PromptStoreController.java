@@ -149,6 +149,13 @@ public class PromptStoreController {
     public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
         return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
     }
+    
+    @GetMapping("/ownership/{promptId}")
+    public ResponseEntity<Boolean> isPromptBought(@PathVariable UUID promptId, Authentication authentication) {
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        return ResponseEntity.ok(storeService.isPromptBought(userId, promptId));
+    }
 
     @GetMapping("/tags")
     public List<Tag> getAllTags() {

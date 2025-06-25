@@ -34,7 +34,7 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.visibility = 'public'
-       GROUP BY p.prompt_id, u.username
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
        """, 
        countQuery = """
        SELECT COUNT(DISTINCT p.prompt_id)
