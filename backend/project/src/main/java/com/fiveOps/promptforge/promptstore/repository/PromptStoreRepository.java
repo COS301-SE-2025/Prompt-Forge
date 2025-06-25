@@ -33,15 +33,10 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
               prompts p
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public'
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """, 
        countQuery = """
        SELECT COUNT(DISTINCT p.prompt_id)
@@ -68,14 +63,9 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
               JOIN users u ON p.author_id = u.user_id
               LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
               WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
-              GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+              GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
               """, nativeQuery = true)
        Page<Map<String, PromptWithAuthorDTO>> findPublicByTagId(@Param("tagId") UUID tagId, Pageable pageable);
 
@@ -94,14 +84,9 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.featured = true
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """, nativeQuery = true)
     Page<Map<String, PromptWithAuthorDTO>> findByFeatured(Pageable pageable);
     
@@ -120,14 +105,9 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE visibility='public' AND p.featured = true AND :tagId = ANY(p.prompt_tags)
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """, nativeQuery = true)
     Page<Map<String, PromptWithAuthorDTO>> findPublicByTagIdAndFeatured(@Param("tagId") UUID tagId,Pageable pageable);
 
@@ -145,14 +125,9 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.visibility = 'public' AND p.created_At >= NOW() - INTERVAL '7 days' 
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+                  GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """, 
        countQuery = """
        SELECT COUNT(DISTINCT p.prompt_id)
@@ -180,14 +155,9 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags) 
        AND p.created_At >= NOW() - INTERVAL '7 days'
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """, 
        countQuery = """
        SELECT COUNT(DISTINCT p.prompt_id)
@@ -214,15 +184,10 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        FROM prompts p
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-       GROUP BY 
-    p.prompt_id, 
-    p.author_id, 
-    p.title, 
-    p.slug, 
-    p.description, 
-    p.price, 
-    u.username
+
+       WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND p.visibility = 'public'
+       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+
        """,
        countQuery = """
        SELECT COUNT(DISTINCT p.prompt_id)

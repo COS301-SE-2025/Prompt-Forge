@@ -22,7 +22,6 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
-import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import com.fiveOps.promptforge.user_profile.service.UserService;
@@ -47,16 +46,16 @@ public class PromptStoreController {
         return storeService.getFeaturedPrompts(pageable);
     }
 
-    @PostMapping("/{promptId}/purchase")
-    public ResponseEntity<PromptPurchase> purchasePrompt(
-            @PathVariable UUID promptId,
-            Authentication authentication) {
+    // @PostMapping("/{promptId}/purchase")
+    // public ResponseEntity<PromptPurchase> purchasePrompt(
+    //         @PathVariable UUID promptId,
+    //         Authentication authentication) {
         
-        String userEmail = authentication.getName();
-        UUID userId = userService.getUserIdByEmail(userEmail);
+    //     String userEmail = authentication.getName();
+    //     UUID userId = userService.getUserIdByEmail(userEmail);
         
-        return ResponseEntity.ok(storeService.purchasePrompt(promptId, userId));
-    }
+    //     return ResponseEntity.ok(storeService.purchasePrompt(promptId, userId));
+    // }
 
     @GetMapping("/{promptId}/reviews")
     public ResponseEntity<Page<ReviewProjection>> getReviewsForPrompt(
@@ -75,7 +74,6 @@ public class PromptStoreController {
         
         String userEmail = authentication.getName();
         UUID userId = userService.getUserIdByEmail(userEmail);
-        
         
         review.setUserId(userId);
         review.setPromptId(promptId);
@@ -97,11 +95,6 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/tag/{tagName}")
-    public List<Prompt> getByTagName(@PathVariable String tagName) {
-        return storeService.getPublicByTagName(tagName);
-    }
-
-    @GetMapping("/filter/tag/tag/{tagName}")
     public Page<Map<String, PromptWithAuthorDTO>> filterByTagName(
             @PathVariable String tagName,
             @PageableDefault(size = 10) Pageable pageable) {
@@ -120,7 +113,7 @@ public class PromptStoreController {
         return storeService.getPublicByTagNameAndFilter(formattedTagName, filter, pageable);
     }
 
-    @GetMapping("/new")
+    @GetMapping("/filter/recent")
     public Page<Map<String, PromptWithAuthorDTO>> getNew(
             @PageableDefault(size = 10) Pageable pageable) {
         return storeService.getNew(pageable);
@@ -136,18 +129,21 @@ public class PromptStoreController {
             @PathVariable UUID promptId,
             Authentication authentication) {
         
-        String userEmail = authentication.getName();
-        UUID userId = userService.getUserIdByEmail(userEmail);
-        
-        
         boolean deleted = storeService.deleteListing(promptId);
         return deleted ? ResponseEntity.noContent().build() : 
                         ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/filter/recent")
-    public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
-        return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    // @GetMapping("/filter/recent")
+    // public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
+    //     return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    // }
+    
+    @GetMapping("/ownership/{promptId}")
+    public ResponseEntity<Boolean> isPromptBought(@PathVariable UUID promptId, Authentication authentication) {
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        return ResponseEntity.ok(storeService.isPromptBought(userId, promptId));
     }
 
     @GetMapping("/tags")

@@ -11,6 +11,7 @@ import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
 import type { PromptWithTags, Review } from "@/Models/Prompt"
 import { Button } from "./ui/Button"
+import { CartService } from "@/services/cartServices"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
@@ -21,9 +22,10 @@ export const PromptDetails = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
+  const [userAddedToCart, setUserAddedToCart] = useState(false)
   const [checkingOwnership, setCheckingOwnership] = useState(true)
-  const [userHasReviewed, setUserHasReviewed] = useState(false)
   const promptService = new PromptService()
+  const cartService = new CartService()
 
   useEffect(() => {
     const fetchPromptData = async () => {
@@ -33,25 +35,28 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
+        
+        setUserOwnsPrompt(promptData.ownership);
+        setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
-
         // Check if user owns the prompt (for paid prompts)
         if (promptData.price > 0) {
           setCheckingOwnership(true)
           try {
-            const token = localStorage.getItem("token")
-            if (token) {
-              const response = await fetch(`/api/store/prompts/${id}/ownership`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              })
+            // const token = localStorage.getItem("token")
+            // if (token) {
+            //   const response = await fetch(`/api/store/prompts/${id}/ownership`, {
+            //     headers: {
+            //       Authorization: `Bearer ${token}`,
+            //     },
+            //   })
+          
 
-              if (response.ok) {
-                const ownershipData = await response.json()
-                setUserOwnsPrompt(ownershipData.owns || false)
-              }
-            }
+            //   if (response.ok) {
+            //     const ownershipData = await response.json()
+            //     setUserOwnsPrompt(ownershipData.owns || false)
+            //   }
+            // }
           } catch (ownershipError) {
             console.warn("Could not check prompt ownership:", ownershipError)
             setUserOwnsPrompt(false)
@@ -77,48 +82,18 @@ export const PromptDetails = () => {
     fetchPromptData()
   }, [id])
 
-  useEffect(() => {
-    const checkUserReview = async () => {
-      if (reviews.length > 0) {
-        const currentUsername = localStorage.getItem('username')
-        const userReview = reviews.find(review => review.userName === currentUsername)
-        setUserHasReviewed(!!userReview)
-      }
-    }
-    
-    checkUserReview()
-  }, [reviews])
-
   const averageRating =
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
 
   const handlePurchase = async () => {
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication required")
-      }
-
-      const response = await fetch(`/api/store/prompts/${id}/purchase`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Purchase failed")
-      }
-
-      // Update ownership status after successful purchase
-      setUserOwnsPrompt(true)
-      alert("Purchase successful!")
-    } catch (err) {
-      console.error("Purchase error:", err)
-      alert(err instanceof Error ? err.message : "Purchase failed. Please try again.")
-    }
+    cartService.addToCart(id)
+    .then(res => {
+      alert(res.message);
+      setUserAddedToCart(true)
+    })
+    .catch(err=>{
+      alert(err.message);
+    })
   }
 
   const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
@@ -379,38 +354,19 @@ export const PromptDetails = () => {
             )}
 
             {/* Only allow reviews if user owns the prompt or it's free */}
-            {canViewContent && !userHasReviewed ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <ReviewForm
-                  promptId={id!}
-                  onSubmitSuccess={() => {
-                    // Refresh reviews after successful submission
-                    const fetchReviews = async () => {
-                      const reviewsData = await promptService.getPromptReviews(id!)
-                      setReviews(reviewsData)
-                    }
-                    fetchReviews()
-                  }}
-                />
-              </div>
-            ) : userHasReviewed ? (
-              // ✅ Show message for users who already reviewed
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="font-medium mb-1">You have already reviewed this prompt</p>
-                  <p>Thank you for your feedback!</p>
-                </div>
-              </div>
-            ) : !canViewContent ? (
-              // ✅ Show message for users who haven't purchased
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Purchase this prompt to leave a review.</p>
-                </div>
-              </div>
-            ) : null}
+            {canViewContent && (
+              <ReviewForm
+                promptId={id!}
+                onSubmitSuccess={() => {
+                  // Refresh reviews after successful submission
+                  const fetchReviews = async () => {
+                    const reviewsData = await promptService.getPromptReviews(id!)
+                    setReviews(reviewsData)
+                  }
+                  fetchReviews()
+                }}
+              />
+            )}
           </Card>
         </div>
 
@@ -431,7 +387,15 @@ export const PromptDetails = () => {
                   <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
                     <span className="text-sm font-medium">✓ Owned</span>
                   </div>
-                ) : (
+                ) :
+                
+                userAddedToCart? (
+                    <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
+                      <span className="text-sm font-medium">✓ Added to cart</span>
+                    </div>
+                ):
+                
+                (
                   <PurchaseButton
                     price={prompt.price}
                     onClick={handlePurchase}

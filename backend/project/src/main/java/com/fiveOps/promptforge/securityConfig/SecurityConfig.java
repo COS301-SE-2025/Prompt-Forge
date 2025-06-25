@@ -12,8 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class SecurityConfig {
@@ -64,25 +62,25 @@ public class SecurityConfig {
   // ✅ Custom CORS configuration with path-specific rules
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration defaultConfig = new CorsConfiguration();
-    defaultConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-    defaultConfig.setAllowedMethods(
-      Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")
-    );
-    defaultConfig.setAllowedHeaders(Arrays.asList("*"));
-    defaultConfig.setAllowCredentials(true); // ✅ Default: allow credentials
-    defaultConfig.setMaxAge(3600L);
+
+     CorsConfiguration defaultConfig = new CorsConfiguration();
+      defaultConfig.setAllowedOriginPatterns(Arrays.asList(
+          "http://localhost:5173"));
+      defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      defaultConfig.setAllowedHeaders(Arrays.asList("*"));
+      defaultConfig.setAllowCredentials(true); // ✅ Default: allow credentials
+      defaultConfig.setMaxAge(3600L);
+
+      // ✅ Editor/Comparison pages configuration (no credentials)
+      CorsConfiguration noCredentialsConfig = new CorsConfiguration();
+      noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList(
+          "http://localhost:5173")); // ✅ Wildcard allowed without credentials
+      noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
+      noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
+      noCredentialsConfig.setMaxAge(3600L);
 
     // ✅ Editor/Comparison pages configuration (no credentials)
-    CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-    noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("*")); // ✅ Wildcard allowed without credentials
-    noCredentialsConfig.setAllowedMethods(
-      Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")
-    );
-    noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
-    noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
-    noCredentialsConfig.setMaxAge(3600L);
-
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
     // ✅ Apply no-credentials config to editor/comparison endpoints
