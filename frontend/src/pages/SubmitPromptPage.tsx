@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // Add this import
+import { useNavigate, useLocation } from "react-router-dom" // Add this import
 import {
   Save,
   Eye,
@@ -115,15 +115,21 @@ interface EditPromptData extends PromptSubmission {
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 
 export default function SubmitPromptPage() {
+  const location = useLocation()
   const navigate = useNavigate()
 
+  // Get pre-filled data if it exists
+  const prefilledData = location.state?.prefilled
+
+  // Update your state initialization to use pre-filled data:
   const [formData, setFormData] = useState<PromptSubmission>({
-    title: "",
-    description: "",
-    category: "",
-    promptText: "",
-    expectedOutput: "",
-    isPrivate: false,
+    title: prefilledData?.title || "",
+    description: prefilledData?.description || "",
+    category: prefilledData?.category || "",
+    promptText: prefilledData?.content || "",
+    expectedOutput: prefilledData?.expectedOutput || "",
+    isPrivate: prefilledData?.visibility === "private",
+    tags: prefilledData?.tags || [], // Add tags support
   })
 
   // Remove currentTag state since we're removing tags

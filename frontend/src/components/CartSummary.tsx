@@ -1,14 +1,30 @@
+import { EnrichedPrompt } from "@/Models/CartPrompt"
+import { CartService } from "@/services/cartServices"
+import { Dispatch, SetStateAction } from "react"
 import { Link } from "react-router-dom"
 
 interface CartSummaryProps {
   subtotal: number
-  discount?: number
+  discount?: number,
+  prompts:EnrichedPrompt[],
+  setCartItems:Dispatch<SetStateAction<EnrichedPrompt[]>>
 }
 export const CartSummary = ({
   subtotal,
-  discount = 0
+  discount = 0,prompts,setCartItems
 }: CartSummaryProps) => {
+  const cartService = new CartService()
   const total = subtotal - discount
+  const checkout = () =>{
+    cartService.checkout(prompts)
+    .then(res=>{
+      alert(res.message);
+      setCartItems([]);
+    })
+    .catch(err=>{
+      alert(err.message);
+    })
+  }
   return <div>
       <h3 className="text-lg font-medium mb-4">Order Summary</h3>
       <div className="space-y-3 mb-6">
@@ -25,9 +41,9 @@ export const CartSummary = ({
           <span>${total.toFixed(2)}</span>
         </div>
       </div>
-    <button className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white py-3 rounded-md font-medium transition-colors">
-        Proceed to Checkout
-      </button>
+    <button onClick={checkout} className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white py-3 rounded-md font-medium transition-colors">
+      Checkout
+    </button>
     <button className="w-full text-center mt-4 text-[#3ebb9e] hover:text-[#00674f]">
       <Link to='/marketplace'>Continue Shopping</Link>
         

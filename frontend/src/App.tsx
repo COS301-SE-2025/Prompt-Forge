@@ -14,11 +14,13 @@ import UnderConstructionPage from "./pages/UnderConstructionPage"
 import CartPage from "./pages/CartPage"
 import { PromptPage } from "./pages/PromptPage"
 import ComparisonPage from "./pages/ComparisonPage"
+import HelpPage from "./pages/HelpPage"
+
 
 
 function App() {
   const location = useLocation()
-  const hideHeaderRoutes = ['/','/login']
+  const hideHeaderRoutes = ['/','/login','/help']
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,6 +41,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/prompt/:id" element={<PromptPage />} />
           <Route path="/comparison" element={<ComparisonPage />} />
+          <Route path="/help" element={<HelpPage />} />
         </Routes>
       </main>
     </div>

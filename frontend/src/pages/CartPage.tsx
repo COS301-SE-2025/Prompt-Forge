@@ -1,52 +1,89 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CartSummary } from '@/components/CartSummary';
 import { ShoppingCartIcon } from 'lucide-react';
 import { CartItem } from '@/components/CartItem';
 import { Link } from 'react-router-dom';
+import { CartService } from '@/services/cartServices';
+import { CartPrompt, EnrichedPrompt } from '@/Models/CartPrompt';
+import { PromptService } from '@/services/promptService';
 
-const initialCartItems = [{
-    id: '1',
-    title: 'Expert Content Writer',
-    category: 'Writing',
-    price: 4.99,
-    rating: 4.8,
-    author: 'Content Pro',
-    authorHandle: '@writer_pro'
-}, {
-    id: '2',
-    title: 'Advanced SEO Optimizer',
-    category: 'Marketing',
-    price: 6.99,
-    rating: 4.9,
-    author: 'SEO Master',
-    authorHandle: '@seomaster'
-}, {
-    id: '3',
-    title: 'UI/UX Design Assistant',
-    category: 'Design',
-    price: 7.99,
-    rating: 4.6,
-    author: 'Design Pro',
-    authorHandle: '@designpro'
-}];
+export default function CartPage() {
+    const cartService = new CartService();
+    const promptService = new PromptService()
 
-export default function CartPage(){
-    const [cartItems, setCartItems] = useState(initialCartItems);
-    const removeItem = (id: string) => {
-        setCartItems(cartItems.filter(item => item.id !== id));
+    const [cartItems, setCartItems] = useState<EnrichedPrompt[]>([]);
+    const [loading, setLoading] = useState(false)
+    const [removing, setRemoving] = useState(false)
+
+    // const removeItem = (id: string) => {
+    //     setCartItems(cartItems.filter(item => item.id !== id));
+    // };
+
+    const subtotal = cartItems.reduce((sum, item) => sum + item.promptPrice, 0);
+
+
+
+    const enrichPromptsWithRatings = async (prompts: CartPrompt[]): Promise<EnrichedPrompt[]> => {
+        const enrichedPrompts = await Promise.all(
+            prompts.map(async (prompt) => {
+                const { averageRating, reviewCount } = await promptService.getPromptRatingSummary(prompt.promptId);
+                return {
+                    ...prompt,
+                    averageRating,
+                    reviewCount
+                };
+            })
+        );
+
+        return enrichedPrompts;
     };
-    const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
+
+    useEffect(() => {
+        fetchData()
+    }, [])
+
+    const fetchData = async () => {
+        setLoading(true);
+        cartService.getCart()
+        .then(res => {
+        enrichPromptsWithRatings(res.content || [])
+            .then((resp: EnrichedPrompt[]) => {
+                setCartItems(resp)
+            })
+        // setCartItems(res.content);
+
+        })
+        .finally(()=>{
+            setLoading(false);
+            setRemoving(false);
+
+        })
+
+        // setCartItems(enrichedPrompts);
+    }
+
+    if (loading && (cartItems.length === 0 || removing)) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading Cart...</p>
+                </div>
+            </div>
+        )
+      }
+
     return <div className="w-full pt-10 px-16 mx-auto" >
-      <div className="flex items-center mb-8">
-        <ShoppingCartIcon className="mr-3" size={24} />
-        <h1 className="text-2xl font-bold">Your Cart</h1>
-        <span className="ml-3 text-gray-400">({cartItems.length} items)</span>
-      </div>
+        <div className="flex items-center mb-8">
+            <ShoppingCartIcon className="mr-3" size={24} />
+            <h1 className="text-2xl font-bold">Your Cart</h1>
+            <span className="ml-3 text-gray-400">({cartItems.length} items)</span>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className={cartItems.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
                 {cartItems.length > 0 ?
                     <div>
-                        {cartItems.map(item => <CartItem key={item.id} {...item} removeItem={removeItem} />)}
+                        {cartItems.map((item: CartPrompt) => <CartItem key={item.cartItemId} {...item} fetchData={fetchData} setRemoving={setRemoving} />)}
                     </div>
                     :
                     <div className="text-center py-12">
@@ -61,7 +98,7 @@ export default function CartPage(){
                     </div>
                 }
             </div>
-        <div>{cartItems.length > 0 && <CartSummary subtotal={subtotal} />}</div>
+            <div>{cartItems.length > 0 && <CartSummary subtotal={subtotal} prompts={cartItems} setCartItems={setCartItems}/>}</div>
         </div>
     </div>
 }
