@@ -1,12 +1,43 @@
 package com.fiveOps.promptforge.analytics.ana_model;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
 @Entity
-@Table(name = "prompt_analytics")
+@Table(name = "prompt_analytics", indexes = {
+    // Primary lookup indexes
+    @Index(name = "idx_analytics_prompt", columnList = "prompt_id"),
+    @Index(name = "idx_analytics_date", columnList = "date"),
+    @Index(name = "idx_analytics_created_at", columnList = "created_at"),
+    
+    // Composite indexes for common query patterns
+    @Index(name = "idx_analytics_prompt_date", columnList = "prompt_id, date"),
+    @Index(name = "idx_analytics_date_views", columnList = "date, view_count"),
+    @Index(name = "idx_analytics_date_purchases", columnList = "date, purchase_count"),
+    @Index(name = "idx_analytics_prompt_metrics", columnList = "prompt_id, view_count, purchase_count, avg_rating"),
+    
+    // Time-series indexes (most recent first)
+    @Index(name = "idx_analytics_date_desc", columnList = "date DESC"),
+    @Index(name = "idx_analytics_prompt_date_desc", columnList = "prompt_id, date DESC"),
+    
+    // Metric-specific indexes for filtering and sorting
+    @Index(name = "idx_analytics_view_count", columnList = "view_count"),
+    @Index(name = "idx_analytics_unique_visitors", columnList = "unique_visitors"),
+    @Index(name = "idx_analytics_purchase_count", columnList = "purchase_count"),
+    @Index(name = "idx_analytics_avg_rating", columnList = "avg_rating"),
+    @Index(name = "idx_analytics_download_count", columnList = "download_count"),
+    
+    // Analytics aggregation indexes
+    @Index(name = "idx_analytics_monthly", columnList = "prompt_id, date"), // For monthly rollups
+    @Index(name = "idx_analytics_performance", columnList = "view_count, purchase_count, avg_rating") // For performance analysis
+})
 public class PromptAnalytics {
     @Id
     @Column(name = "analytics_id", nullable = false)
