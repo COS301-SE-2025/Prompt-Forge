@@ -11,8 +11,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 
@@ -61,7 +59,8 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
       CorsConfiguration defaultConfig = new CorsConfiguration();
-      defaultConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+      defaultConfig.setAllowedOriginPatterns(Arrays.asList(
+          "http://localhost:5173"));
       defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       defaultConfig.setAllowedHeaders(Arrays.asList("*"));
       defaultConfig.setAllowCredentials(true); // ✅ Default: allow credentials
@@ -69,7 +68,8 @@ public class SecurityConfig {
 
       // ✅ Editor/Comparison pages configuration (no credentials)
       CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-      noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("*")); // ✅ Wildcard allowed without credentials
+      noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList(
+          "http://localhost:5173")); // ✅ Wildcard allowed without credentials
       noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
       noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
