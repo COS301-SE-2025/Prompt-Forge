@@ -21,6 +21,8 @@
         <java.version>21</java.version>
         <junit-jupiter.version>5.9.3</junit-jupiter.version>
         <mockito.version>5.3.1</mockito.version>
+        <sonar.organization>prompt-forge</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
@@ -133,12 +135,12 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+        <!-- <dependency>
 
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
             <version>1.34.0</version>
-        </dependency>
+        </dependency> -->
 
         <!-- Google API Client -->
         <dependency>
@@ -179,7 +181,13 @@
             <artifactId>hibernate-core</artifactId>
         </dependency>
 
-        <!-- For repository tests -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>8.0.1.Final</version>
+        </dependency>
+
+        <!-- For repository tests
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -189,7 +197,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency> -->
 
 
     </dependencies>
@@ -214,6 +222,37 @@
                     <printSummary>true</printSummary>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                 </configuration>
+            </plugin>
+
+            <!-- Jacoco for coverage -->
+            <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.11</version>
+            <executions>
+                <execution>
+                <goals>
+                    <goal>prepare-agent</goal>
+                </goals>
+                </execution>
+                <execution>
+                <id>report</id>
+                <phase>test</phase>
+                <goals>
+                    <goal>report</goal>
+                </goals>
+                </execution>
+            </executions>
+            </plugin>
+
+            <!-- Linting -->
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>3.3.0</version>
+            <configuration>
+                <configLocation>google_checks.xml</configLocation>
+            </configuration>
             </plugin>
 
             <!-- Failsafe Plugin for Integration Tests -->
