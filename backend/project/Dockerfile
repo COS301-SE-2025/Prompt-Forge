@@ -1,34 +1,49 @@
-FROM openjdk:17-jdk-slim
+# Build stage
+FROM openjdk:17-jdk-slim as builder
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install necessary tools
+RUN apt-get update && \
+    apt-get install -y curl procps && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY mvnw ./
-COPY mvnw.cmd ./
-COPY pom.xml ./
+# Copy build configuration files
 COPY .mvn .mvn
+COPY mvnw .
+COPY pom.xml .
+COPY mvnw.cmd .
 
-# Make mvnw executable
-RUN chmod +x ./mvnw
-
-# Download dependencies (this layer will be cached if pom.xml doesn't change)
-RUN ./mvnw dependency:go-offline -B
+# Make mvnw executable and download dependencies
+RUN chmod +x mvnw && \
+    ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
-# Find the jar file and rename it to app.jar for easier reference
-RUN cp target/*.jar app.jar
+# Runtime stage
+FROM openjdk:17-jre-slim
+
+WORKDIR /app
+
+# Copy the built application from builder stage
+COPY --from=builder /app/target/*.jar app.jar
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "app.jar"]
+# Run the application with production-ready JVM settings
+ENTRYPOINT ["java", \
+            "-XX:+UseContainerSupport", \
+            "-XX:MaxRAMPercentage=75.0", \
+            "-XX:+HeapDumpOnOutOfMemoryError", \
+            "-XX:HeapDumpPath=/heap-dump.hprof", \
+            "-Djava.security.egd=file:/dev/./urandom", \
+            "-jar", "app.jar"]
