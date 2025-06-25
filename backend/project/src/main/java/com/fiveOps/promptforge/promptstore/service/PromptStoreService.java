@@ -87,17 +87,7 @@ public class PromptStoreService {
             return promptStoreRepository.findPublicByTagIdAndFeatured(tagId, pageable);
         }
         
-        // if(filter =="new"){
         return promptStoreRepository.findByTagAndNew(tagId, pageable);
-        // }
-        
-        // if(filter =="top-ranked"){
-
-        // }
-
-        // if
-        // UUID tagId = tagService.getTagIdByName(tagName);
-        // return promptStoreRepository.findPublicByTagId(tagId, pageable);
     }
     
     public Page<Map<String, PromptWithAuthorDTO>> getNew( Pageable pageable) {  

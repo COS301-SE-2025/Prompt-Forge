@@ -54,30 +54,23 @@ export class PromptService {
       if(searchStructure.search!==""){
         const promptResponse = await this.httpClient.get(`/store/prompts/search?query=${encodeURIComponent(searchStructure.search)}`)
         const prompts = await promptResponse.json();
-
         return prompts;
       }
 
       if(searchStructure.tag === "all"){
         //filter=new && tags=all && search=""
         if(searchStructure.filter === "new"){
-          const promptResponse = await this.httpClient.get(`/store/prompts/new?page=${page}&size=12`)
-          const prompts = await promptResponse.json();
-          return prompts;
+          return this.getRecentPrompts(page);
         }
         
         //filter=top-ranked && tags=all && search=""
         if(searchStructure.filter === "top-ranked"){
-          const promptResponse = await this.httpClient.get(`/store/prompts/new?page=${page}&size=12`)
-          const prompts = await promptResponse.json();
-          return prompts;
+          return this.getRecentPrompts(page);
         }
         
         //filter=featured && tags=all && search=""
         if(searchStructure.filter === "featured"){
-          const promptResponse = await this.httpClient.get(`/store/prompts/featured?page=${page}&size=12`)
-          const prompts = await promptResponse.json();
-          return prompts;
+          return this.getFeatured(page,12);
         }
 
         //filter=all && tags=all && search=""
@@ -94,10 +87,7 @@ export class PromptService {
       }
       
       if(searchStructure.filter === "all"){
-        const promptResponse = await this.httpClient.get(`/store/prompts/filter/tag/tag/${searchStructure.tag}`)
-        const prompts = await promptResponse.json();
-        
-        return prompts;
+        return this.getByCategory(searchStructure.tag);
       }
 
       if(searchStructure.search ===""){  
@@ -127,7 +117,7 @@ export class PromptService {
   async getFeatured(page:number,size:number) {
     try {
       const promptResponse = await this.httpClient.get(`/store/prompts/featured?page=${page}&size=${size}`)
-      return await promptResponse.json();
+      return promptResponse.json();
       // return prompts;
     } catch (error) {
         console.error(error);
@@ -167,10 +157,11 @@ export class PromptService {
     }
   }
 
-  async getRecentPrompts() {
+  async getRecentPrompts(page: number) {
       try {
-          const response = await this.httpClient.get('/store/prompts/filter/recent');
-          return response.json();
+        const promptResponse = await this.httpClient.get(`/store/prompts/filter/recent?page=${page}&size=12`)
+        return promptResponse.json();
+
       } catch (error) {
           console.error(error);
           throw error;
