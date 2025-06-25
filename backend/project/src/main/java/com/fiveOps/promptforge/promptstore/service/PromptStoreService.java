@@ -87,37 +87,35 @@ public class PromptStoreService {
             return promptStoreRepository.findPublicByTagIdAndFeatured(tagId, pageable);
         }
         
-        // if(filter =="new"){
         return promptStoreRepository.findByTagAndNew(tagId, pageable);
-        // }
-        
-        // if(filter =="top-ranked"){
-
-        // }
-
-        // if
-        // UUID tagId = tagService.getTagIdByName(tagName);
-        // return promptStoreRepository.findPublicByTagId(tagId, pageable);
     }
     
     public Page<Map<String, PromptWithAuthorDTO>> getNew( Pageable pageable) {  
         return promptStoreRepository.findNew(pageable);
     }
     
+    public Boolean isPromptBought(UUID userID, UUID promptId){
+        return purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
+    }
     
     @Transactional
     public PromptPurchase purchasePrompt(UUID promptId, UUID userId) {
         Prompt prompt = promptService.getPromptById(promptId);
         
+        if (prompt == null) {
+            throw new PurchaseException("Prompt with ID " + promptId + " not found in database");
+        }
+        
         if (purchaseRepository.existsByPromptIdAndUserId(promptId, userId)) {
-            throw new PurchaseException("User already purchased this prompt");
+            throw new PurchaseException("Prompt already purchased");
         }
         
         PromptPurchase purchase = PromptPurchase.builder()
-            .promptId(promptId)
-            .userId(userId)
-            .pricePaid(prompt.getPrice())
-            .build();
+        .promptId(promptId)
+        .userId(userId)
+        .pricePaid(prompt.getPrice())
+        .visibility("public")
+        .build();
             
         return purchaseRepository.save(purchase);
     }

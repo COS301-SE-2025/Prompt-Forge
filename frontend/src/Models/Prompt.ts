@@ -93,6 +93,7 @@ export interface PromptWithTags {
   rating?: number
   featured?: boolean
   reviews?: Review[] // Add reviews property
+  bought?: Review[] // Add reviews property
 }
 
 export enum CategoryColors {
