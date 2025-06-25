@@ -21,6 +21,8 @@
         <java.version>21</java.version>
         <junit-jupiter.version>5.9.3</junit-jupiter.version>
         <mockito.version>5.3.1</mockito.version>
+        <sonar.organization>prompt-forge</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
