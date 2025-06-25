@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.securityConfig;
 
+import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,8 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -30,35 +29,41 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-      http
-          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          .csrf(csrf -> csrf.disable())
-          .authorizeHttpRequests(auth -> auth
-              .requestMatchers(
-                  "swagger-ui/**", 
-                  "/auth/**", 
-                  "/public/**", 
-                  "/user/**",
-                  "/api/test/**",          // ✅ Allow editor/comparison endpoints without auth
-                  "/api/editor/**",        // ✅ Future editor-specific endpoints
-                  "/api/comparison/**"     // ✅ Future comparison-specific endpoints
-              ).permitAll()
-              .anyRequest().authenticated()
+    http
+      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+      .csrf(csrf -> csrf.disable())
+      .authorizeHttpRequests(auth ->
+        auth
+          .requestMatchers(
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/auth/**",
+            "/public/**",
+            "/user/**",
+            "/api/test/**", // ✅ Allow editor/comparison endpoints without auth
+            "/api/editor/**", // ✅ Future editor-specific endpoints
+            "/api/comparison/**" // ✅ Future comparison-specific endpoints
           )
-          .sessionManagement(sm -> sm
-              .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-          )
-          .httpBasic(httpBasic -> httpBasic.disable())
-          .formLogin(formLogin -> formLogin.disable())
-          .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-  
-      return http.build();
+          .permitAll()
+          .anyRequest()
+          .authenticated()
+      )
+      .sessionManagement(sm ->
+        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+      )
+      .httpBasic(httpBasic -> httpBasic.disable())
+      .formLogin(formLogin -> formLogin.disable())
+      .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
   }
 
   // ✅ Custom CORS configuration with path-specific rules
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration defaultConfig = new CorsConfiguration();
+
+     CorsConfiguration defaultConfig = new CorsConfiguration();
       defaultConfig.setAllowedOriginPatterns(Arrays.asList(
           "http://localhost:5173"));
       defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -75,16 +80,17 @@ public class SecurityConfig {
       noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
       noCredentialsConfig.setMaxAge(3600L);
 
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      
-      // ✅ Apply no-credentials config to editor/comparison endpoints
-      source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
-      source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
-      source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
-      
-      // ✅ Apply default config (with credentials) to all other endpoints
-      source.registerCorsConfiguration("/**", defaultConfig);
-      
-      return source;
+    // ✅ Editor/Comparison pages configuration (no credentials)
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+    // ✅ Apply no-credentials config to editor/comparison endpoints
+    source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
+    source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
+    source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
+
+    // ✅ Apply default config (with credentials) to all other endpoints
+    source.registerCorsConfiguration("/**", defaultConfig);
+
+    return source;
   }
 }
