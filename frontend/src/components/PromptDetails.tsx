@@ -16,10 +16,13 @@ export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [checkingOwnership, setCheckingOwnership] = useState(true)
+  const [userHasReviewed, setUserHasReviewed] = useState(false)
   const promptService = new PromptService()
 
   useEffect(() => {
@@ -73,6 +76,18 @@ export const PromptDetails = () => {
 
     fetchPromptData()
   }, [id])
+
+  useEffect(() => {
+    const checkUserReview = async () => {
+      if (reviews.length > 0) {
+        const currentUsername = localStorage.getItem('username')
+        const userReview = reviews.find(review => review.userName === currentUsername)
+        setUserHasReviewed(!!userReview)
+      }
+    }
+    
+    checkUserReview()
+  }, [reviews])
 
   const averageRating =
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
@@ -350,8 +365,8 @@ export const PromptDetails = () => {
                 {reviews.map((review) => (
                   <ReviewCard
                     key={review.id}
-                    author={review.userId}
-                    date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
+                    userName={review.userName}
+                    // date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
                     rating={review.rating}
                     comment={review.comment}
                   />
@@ -364,12 +379,38 @@ export const PromptDetails = () => {
             )}
 
             {/* Only allow reviews if user owns the prompt or it's free */}
-            {canViewContent && (
-              <ReviewForm
-                promptId={id!}
-                // onSubmit={handleReviewSubmit}
-              />
-            )}
+            {canViewContent && !userHasReviewed ? (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <ReviewForm
+                  promptId={id!}
+                  onSubmitSuccess={() => {
+                    // Refresh reviews after successful submission
+                    const fetchReviews = async () => {
+                      const reviewsData = await promptService.getPromptReviews(id!)
+                      setReviews(reviewsData)
+                    }
+                    fetchReviews()
+                  }}
+                />
+              </div>
+            ) : userHasReviewed ? (
+              // ✅ Show message for users who already reviewed
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="font-medium mb-1">You have already reviewed this prompt</p>
+                  <p>Thank you for your feedback!</p>
+                </div>
+              </div>
+            ) : !canViewContent ? (
+              // ✅ Show message for users who haven't purchased
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Purchase this prompt to leave a review.</p>
+                </div>
+              </div>
+            ) : null}
           </Card>
         </div>
 

@@ -16,6 +16,7 @@ import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
 import com.fiveOps.promptforge.promptstore.dto.PromptWithTagsDTO;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
 import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
@@ -122,8 +123,8 @@ public class PromptStoreService {
     }
 
     ///////// Review functionality from code2
-    public List<PromptReview> getPromptReviews(UUID promptId) {
-        return reviewRepository.findByPromptId(promptId);
+    public Page<ReviewProjection> getReviewsForPrompt(UUID promptId, Pageable pageable) {
+    return reviewRepository.findReviewsWithUsernameByPromptId(promptId, pageable);
     }
 
     @Transactional

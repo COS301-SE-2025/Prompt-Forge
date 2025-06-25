@@ -72,7 +72,7 @@ export default function LoginPage() {
         
         setError("");
         console.log("✅ Login successful, navigating to dashboard");
-        navigate("/dashboard"); // ✅ Navigate to dashboard to test
+        navigate("/home"); // ✅ Navigate to dashboard to test
       } else {
         console.warn("Unexpected login result:", result);
         setError("Login failed");
