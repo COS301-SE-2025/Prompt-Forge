@@ -1,97 +1,85 @@
-// package com.fiveOps.promptforge.promptstore.repository;
+package com.fiveOps.promptforge.promptstore.repository;
 
-// import java.util.List;
-// import java.util.UUID;
+import java.util.UUID;
 
-// import static org.junit.jupiter.api.Assertions.assertEquals;
-// import static org.junit.jupiter.api.Assertions.assertTrue;
-// import org.junit.jupiter.api.Test;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-// import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-// import com.fiveOps.promptforge.promptstore.model.PromptReview;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
+import com.fiveOps.promptforge.promptstore.model.PromptReview;
 
-// @DataJpaTest
-// class PromptReviewRepositoryTest {
+@ExtendWith(MockitoExtension.class)
+class PromptReviewRepositoryTest {
 
-//     @Autowired
-//     private TestEntityManager entityManager;
+    @Mock
+    private PromptReviewRepository reviewRepository;
 
-//     @Autowired
-//     private PromptReviewRepository reviewRepository;
+    @Test
+    void findByPromptId_ShouldReturnPageOfReviews() {
+        // Arrange
+        UUID promptId = UUID.randomUUID();
+        Pageable pageable = mock(Pageable.class);
+        when(reviewRepository.findByPromptId(promptId, pageable)).thenReturn(mock(Page.class));
 
-//     @Test
-//     void findByPromptId_ShouldReturnPromptReviews() {
-//         // Arrange
-//         UUID promptId = UUID.randomUUID();
-        
-//         PromptReview review1 = new PromptReview();
-//         review1.setPromptId(promptId);
-//         review1.setUserId(UUID.randomUUID());
-//         review1.setRating(4.5);
-        
-//         PromptReview review2 = new PromptReview();
-//         review2.setPromptId(UUID.randomUUID());
-//         review2.setUserId(UUID.randomUUID());
-//         review2.setRating(3.5);
-        
-//         entityManager.persist(review1);
-//         entityManager.persist(review2);
-//         entityManager.flush();
+        // Act
+        Page<PromptReview> result = reviewRepository.findByPromptId(promptId, pageable);
 
-//         // Act
-//         List<PromptReview> result = reviewRepository.findByPromptId(promptId);
+        // Assert
+        assertNotNull(result);
+        verify(reviewRepository).findByPromptId(promptId, pageable);
+    }
 
-//         // Assert
-//         assertEquals(1, result.size());
-//         assertEquals(review1.getPromptId(), result.get(0).getPromptId());
-//     }
+    @Test
+    void findReviewsWithUsernameByPromptId_ShouldReturnProjections() {
+        // Arrange
+        UUID promptId = UUID.randomUUID();
+        Pageable pageable = mock(Pageable.class);
+        when(reviewRepository.findReviewsWithUsernameByPromptId(promptId, pageable)).thenReturn(mock(Page.class));
 
-//     @Test
-//     void existsByPromptIdAndUserId_ShouldReturnTrueWhenExists() {
-//         // Arrange
-//         UUID promptId = UUID.randomUUID();
-//         UUID userId = UUID.randomUUID();
-        
-//         PromptReview review = new PromptReview();
-//         review.setPromptId(promptId);
-//         review.setUserId(userId);
-//         review.setRating(5.0);
-        
-//         entityManager.persist(review);
-//         entityManager.flush();
+        // Act
+        Page<ReviewProjection> result = reviewRepository.findReviewsWithUsernameByPromptId(promptId, pageable);
 
-//         // Act
-//         boolean exists = reviewRepository.existsByPromptIdAndUserId(promptId, userId);
+        // Assert
+        assertNotNull(result);
+        verify(reviewRepository).findReviewsWithUsernameByPromptId(promptId, pageable);
+    }
 
-//         // Assert
-//         assertTrue(exists);
-//     }
+    @Test
+    void calculateAverageRating_ShouldReturnAverage() {
+        // Arrange
+        UUID promptId = UUID.randomUUID();
+        when(reviewRepository.calculateAverageRating(promptId)).thenReturn(4.5);
 
-//     @Test
-//     void calculateAverageRating_ShouldReturnCorrectAverage() {
-//         // Arrange
-//         UUID promptId = UUID.randomUUID();
-        
-//         PromptReview review1 = new PromptReview();
-//         review1.setPromptId(promptId);
-//         review1.setUserId(UUID.randomUUID());
-//         review1.setRating(4.0);
-        
-//         PromptReview review2 = new PromptReview();
-//         review2.setPromptId(promptId);
-//         review2.setUserId(UUID.randomUUID());
-//         review2.setRating(5.0);
-        
-//         entityManager.persist(review1);
-//         entityManager.persist(review2);
-//         entityManager.flush();
+        // Act
+        Double result = reviewRepository.calculateAverageRating(promptId);
 
-//         // Act
-//         Double average = reviewRepository.calculateAverageRating(promptId);
+        // Assert
+        assertEquals(4.5, result);
+        verify(reviewRepository).calculateAverageRating(promptId);
+    }
 
-//         // Assert
-//         assertEquals(4.5, average);
-//     }
-// }
+    @Test
+    void existsByPromptIdAndUserId_ShouldReturnBoolean() {
+        // Arrange
+        UUID promptId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(reviewRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(true);
+
+        // Act
+        boolean result = reviewRepository.existsByPromptIdAndUserId(promptId, userId);
+
+        // Assert
+        assertTrue(result);
+        verify(reviewRepository).existsByPromptIdAndUserId(promptId, userId);
+    }
+}

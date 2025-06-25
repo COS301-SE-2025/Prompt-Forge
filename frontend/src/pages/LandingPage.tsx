@@ -17,7 +17,6 @@ import {
   Sun,
 } from "lucide-react"
 import { useState, useEffect } from "react"
-import { Image } from "../components/ui/Image"
 import { useTheme } from "../components/theme-provider"
 import { Link } from "react-router-dom"
 
@@ -209,6 +208,7 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* ✅ Updated Marketplace section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div>
               <div className="flex items-center mb-4">
@@ -236,30 +236,31 @@ export default function LandingPage() {
                 </li>
               </ul>
             </div>
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Prompt Marketplace Interface"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/Marketplace.png"
+                  alt="Prompt Marketplace Interface"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
           </div>
 
+          {/* ✅ Updated Testing Ground section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Testing Ground Interface"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto lg:order-1"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/TestingGround.png"
+                  alt="Testing Ground Interface"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
-            <div>
+            <div className="lg:order-2">
               <div className="flex items-center mb-4">
                 <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
                   <TestTube className="h-4 w-4 text-[#3ebb9e]" />
@@ -287,17 +288,18 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* ✅ Updated Community section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="flex items-center mb-4">
                 <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
                   <BarChart3 className="h-4 w-4 text-[#3ebb9e]" />
                 </div>
-                <h3 className="text-2xl font-bold">Analytics & Ranking</h3>
+                <h3 className="text-2xl font-bold">Analytics & Community</h3>
               </div>
               <p className="text-lg text-muted-foreground mb-6">
-                Community-driven ranking system with comprehensive analytics. Understand what makes prompts successful
-                and improve continuously.
+                Community-driven ranking system with comprehensive analytics. Connect with other prompt engineers and
+                share knowledge in our vibrant community.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-center animate-slideInLeft animation-delay-200">
@@ -310,19 +312,19 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center animate-slideInLeft animation-delay-600">
                   <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400" />
-                  <span>AI-powered insights</span>
+                  <span>Knowledge sharing</span>
                 </li>
               </ul>
             </div>
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Analytics Dashboard"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/Community.png"
+                  alt="Community & Analytics Dashboard"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
           </div>
         </div>

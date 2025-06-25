@@ -1,37 +1,83 @@
+// Update ReviewForm.tsx
 import React, { useState } from 'react'
 import { Star } from 'lucide-react'
 import { Button } from './ui/Button'
+import { PromptService } from '@/services/promptService'
 
 interface ReviewFormProps {
-  onSubmit: (review: { rating: number; comment: string }) => Promise<void>
+  promptId: string;
+  onSubmitSuccess?: () => void; // Optional callback for successful submission
 }
 
-export const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
+export const ReviewForm = ({ promptId, onSubmitSuccess }: ReviewFormProps) => {
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const promptService = new PromptService();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (rating === 0) {
-      alert('Please select a rating')
+      setError('Please select a rating')
       return
     }
     
     if (comment.trim().length < 10) {
-      alert('Please write a review of at least 10 characters')
+      setError('Please write a review of at least 10 characters')
       return
     }
 
     setIsSubmitting(true)
+    setError(null)
+    
     try {
-      await onSubmit({ rating, comment: comment.trim() })
+      await promptService.postReview(promptId, { 
+        rating, 
+        comment: comment.trim() 
+      });
+      
+      // Reset form on success
       setRating(0)
       setComment('')
+      
+      // ✅ Mark that ratings should be refreshed
+      sessionStorage.setItem('needsRatingRefresh', 'true')
+      
+      // Call success callback if provided
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
     } catch (error) {
       console.error('Review submission failed:', error)
+      
+      // ✅ Better error handling for specific cases
+      let errorMessage = 'Failed to submit review'
+      
+      if (error instanceof Error) {
+        const errorText = error.message.toLowerCase()
+        
+        if (errorText.includes('already reviewed') || errorText.includes('duplicate')) {
+          errorMessage = 'You have already reviewed this prompt. You can only submit one review per prompt.'
+        } else if (errorText.includes('unauthorized') || errorText.includes('authentication')) {
+          errorMessage = 'Please log in to submit a review.'
+        } else if (errorText.includes('forbidden')) {
+          errorMessage = 'You do not have permission to review this prompt.'
+        } else if (errorText.includes('400')) {
+          errorMessage = 'Invalid review data. Please check your rating and comment.'
+        } else if (errorText.includes('404')) {
+          errorMessage = 'This prompt was not found.'
+        } else if (errorText.includes('500')) {
+          errorMessage = 'Server error. Please try again later.'
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -39,6 +85,23 @@ export const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Error message */}
+      {error && (
+        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">Unable to submit review</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Star Rating Input */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

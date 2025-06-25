@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.securityConfig;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -41,6 +42,26 @@ public class JwtUtil {
       .getSubject();
   }
 
+  // ✅ Add this method to extract all claims
+  public Claims extractAllClaims(String token) {
+    return Jwts
+      .parserBuilder()
+      .setSigningKey(getSigningKey())
+      .build()
+      .parseClaimsJws(token)
+      .getBody();
+  }
+
+  // ✅ Add this method to check if token is expired
+  public boolean isTokenExpired(String token) {
+    try {
+      Claims claims = extractAllClaims(token);
+      return claims.getExpiration().before(new Date());
+    } catch (Exception e) {
+      return true;
+    }
+  }
+
   public boolean validateToken(String token) {
     try {
       Jwts
@@ -48,7 +69,7 @@ public class JwtUtil {
         .setSigningKey(getSigningKey())
         .build()
         .parseClaimsJws(token);
-      return true;
+      return !isTokenExpired(token);
     } catch (Exception e) {
       return false;
     }

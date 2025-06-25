@@ -1,9 +1,13 @@
 import { Query } from "@/Models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, Review, MarketplacePrompt } from "@/Models/Prompt";
+import { Prompt, Tag, PromptWithTags,  MarketplacePrompt } from "@/Models/Prompt";
+import { Review,ReviewsApiResponse } from '@/Models/Reviews';
 
 export class PromptService {
     private httpClient = HttpClient;
+    private ratingsCache = new Map<string, { rating: number; count: number; timestamp: number }>();
+    private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 
     async getPromptById(promptId: string) {
     try {
@@ -172,40 +176,31 @@ export class PromptService {
     }
   }
 
-  async getPromptReviews(promptId: string): Promise<Review[]>  {
+
+    async getPromptReviews(promptId: string): Promise<Review[]> {
     try {
-      const response = await fetch(`/prompts/${promptId}/reviews`);
-      
-      // if (!response.ok) {
-      //     throw new Error(`HTTP error! Status: ${response.status}`);
-      // }
-      
-      // const data = await response.json();
-      // return Array.isArray(data) ? data : [];
-      // Check for successful response
+      const response = await this.httpClient.get(
+        `/store/prompts/${promptId}/reviews`
+      );
+
       if (!response.ok) {
-          throw new Error(`Failed to fetch reviews: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-        
-      // Verify JSON content type
-      const contentType = response.headers.get('content-type');
-      if (!contentType?.includes('application/json')) {
-        const text = await response.text();
-        throw new Error(`Expected JSON but got: ${contentType}`);
+
+      const data: ReviewsApiResponse = await response.json();
+      
+
+      if (!data?.content) {
+        console.warn('Unexpected response structure:', data);
+        return [];
       }
+
+      return data.content
       
-      const reviews: Review[] = await response.json();
-      
-      // Validate the response structure
-      if (!Array.isArray(reviews)) {
-          console.warn('Expected array but got:', reviews);
-          return [];
-      }
-      
-      return reviews;
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
-      return []; // Return empty array as fallback
+      return []; 
+      
     }
   }
 
@@ -228,5 +223,89 @@ export class PromptService {
       throw error;
     }
   }
+
+  async postReview(promptId: string, reviewData: { rating: number; comment: string }) {
+  try {
+    const response = await this.httpClient.post(`/store/prompts/${promptId}/reviews`, {
+      rating: reviewData.rating,
+      comment: reviewData.comment,
+    })
+
+    if (!response.ok) {
+      // ✅ Better error message extraction
+      let errorMessage = `HTTP error! status: ${response.status}`
+      
+      try {
+        const errorBody = await response.text()
+        if (errorBody) {
+          // Try to parse as JSON first
+          try {
+            const errorJson = JSON.parse(errorBody)
+            errorMessage = errorJson.message || errorJson.error || errorBody
+          } catch {
+            // If not JSON, use the text directly
+            errorMessage = errorBody
+          }
+        }
+      } catch (e) {
+        console.log('Could not read error response body')
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('PromptService.postReview error:', error)
+    throw error
+  }
+}
+
+async getPromptRatingSummary(promptId: string): Promise<{ averageRating?: number; reviewCount: number }> {
+  // Simple cache to avoid repeated API calls
+  const cacheKey = `rating_${promptId}`;
+  const cached = sessionStorage.getItem(cacheKey);
+  
+  if (cached) {
+    try {
+      const { rating, count, timestamp } = JSON.parse(cached);
+      // Use cache for 5 minutes
+      if (Date.now() - timestamp < 5 * 60 * 1000) {
+        return {
+          averageRating: rating > 0 ? rating : undefined,
+          reviewCount: count
+        };
+      }
+    } catch (e) {
+      // Invalid cache, continue to fetch
+    }
+  }
+
+  try {
+    const reviews = await this.getPromptReviews(promptId);
+    const averageRating = reviews.length > 0 
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+      : 0;
+    
+    // Cache the result
+    const cacheData = {
+      rating: averageRating,
+      count: reviews.length,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    
+    return {
+      averageRating: averageRating > 0 ? averageRating : undefined,
+      reviewCount: reviews.length
+    };
+  } catch (error) {
+    console.warn(`Failed to fetch reviews for prompt ${promptId}:`, error);
+    return {
+      averageRating: undefined,
+      reviewCount: 0
+    };
+  }
+}
 }
 
