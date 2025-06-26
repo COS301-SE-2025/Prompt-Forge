@@ -217,7 +217,7 @@
             </plugin>
 
             <!-- Jacoco for coverage -->
-            <!-- <plugin>
+            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
@@ -235,64 +235,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin> -->
-            <!-- Jacoco for coverage -->
-<plugin>
-    <groupId>org.jacoco</groupId>
-    <artifactId>jacoco-maven-plugin</artifactId>
-    <version>0.8.11</version>
-    <configuration>
-        <excludes>
-            <!-- Spring Boot main classes -->
-            <exclude>**/*Application.*</exclude>
-            <exclude>**/*Config.*</exclude>
-            <exclude>**/*Configuration.*</exclude>
-            <exclude>**/*GlobalExceptionHandler.*</exclude>
-            
-            <!-- Data transfer objects and entities -->
-            <exclude>**/dto/**</exclude>
-            <exclude>**/ana_dto/**</exclude>
-            <exclude>**/entity/**</exclude>
-            <exclude>**/model/**</exclude>
-            <exclude>**/ana_model/**</exclude>
-            <exclude>**/securityConfig/**</exclude>
-            <exclude>**/domain/**</exclude>
-            
-            <!-- Constants and enums -->
-            <exclude>**/constants/**</exclude>
-            <exclude>**/enums/**</exclude>
-            
-            <!-- Configuration packages -->
-            <exclude>**/config/**</exclude>
-            
-            <!-- Generated code -->
-            <exclude>**/generated/**</exclude>
-            <exclude>**/*MapperImpl.*</exclude>
-            
-            <!-- Exception classes -->
-            <exclude>**/exception/**</exclude>
-            
-            <!-- Test utilities -->
-            <exclude>**/test/**</exclude>
-            <exclude>**/*TestUtils.*</exclude>
-
-        </excludes>
-    </configuration>
-    <executions>
-        <execution>
-            <goals>
-                <goal>prepare-agent</goal>
-            </goals>
-        </execution>
-        <execution>
-            <id>report</id>
-            <phase>test</phase>
-            <goals>
-                <goal>report</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
+            </plugin>
 
             <!-- Linting -->
             <plugin>

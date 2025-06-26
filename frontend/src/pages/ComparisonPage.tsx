@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown } from "lucide-react"
 import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
 
 const defaultPrompt = `Write your prompt here...
 
@@ -16,6 +17,7 @@ When writing a prompt, always follow these guidelines:
 explain how the response should be adapted to fit.]`
 
 export default function ComparisonsPage() {
+  const navigate = useNavigate()
   const [promptTextA, setPromptTextA] = useState(defaultPrompt)
   const [promptTextB, setPromptTextB] = useState(defaultPrompt)
   const [aiResponseA, setAiResponseA] = useState("AI response to prompt A will appear here...")
@@ -217,6 +219,43 @@ Please provide:
     setSelectedModelB(tempModel)
   }
 
+  const handleSavePrompt = (side: "A" | "B") => {
+    const promptText = side === "A" ? promptTextA : promptTextB
+    
+    // Check if user is authenticated
+    const username = localStorage.getItem('username')
+    if (!username || username === 'Guest') {
+      alert("Please log in to save prompts")
+      return
+    }
+
+    // Validate prompt content
+    if (!promptText.trim() || promptText.trim() === defaultPrompt.trim()) {
+      alert("Please write a valid prompt before saving")
+      return
+    }
+
+    // Generate a title from the prompt (first 50 characters)
+    const autoTitle = promptText.length > 50 
+      ? promptText.substring(0, 50).trim() + "..."
+      : promptText.trim()
+
+    // Redirect to SubmitPromptPage with pre-filled data
+    navigate('/submit', {
+      state: {
+        prefilled: {
+          title: `${autoTitle} (Prompt ${side})`,
+          description: `Auto-saved prompt ${side} from Comparison Page - ${new Date().toLocaleString()}`,
+          content: promptText.trim(),
+          tags: [],
+          visibility: "private",
+          price: 0,
+          featured: false
+        }
+      }
+    })
+  }
+
   return (
     <div className="flex-1 flex flex-col w-full h-[calc(100vh-64px)] bg-background">
       <div className="flex-1 flex min-h-0">
@@ -229,7 +268,14 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
                 <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+                  {/* ✅ Add Save button for Prompt A */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    onClick={() => handleSavePrompt("A")}
+                    title="Save Prompt A"
+                  >
                     <Save className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
@@ -244,6 +290,12 @@ Please provide:
                   >
                     <ArrowLeftRight className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
+                  {/* ✅ Add Help button */}
+                  <Link to="/help">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -329,15 +381,25 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
                 <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+                  {/* ✅ Add Save button for Prompt B */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    onClick={() => handleSavePrompt("B")}
+                    title="Save Prompt B"
+                  >
                     <Save className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
-                    <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
-                  </Button>
+                  {/* ✅ Replace the existing HelpCircle with linked Help button */}
+                  <Link to="/help">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -419,17 +481,42 @@ Please provide:
             </div>
           </div>
 
-          {/* Update the bottom action bar */}
+          {/* ✅ Update the bottom action bar to include save options */}
           <div className="h-12 border-t border-border px-3 bg-background flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-muted-foreground text-xs h-8" 
-              onClick={handleReset}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground text-xs h-8" 
+                onClick={handleReset}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
+              
+              {/* ✅ Add quick save buttons in bottom bar */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground text-xs h-8"
+                onClick={() => handleSavePrompt("A")}
+                title="Save Prompt A"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                Save A
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground text-xs h-8"
+                onClick={() => handleSavePrompt("B")}
+                title="Save Prompt B"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                Save B
+              </Button>
+            </div>
 
             <div className="flex items-center gap-2">
               <Button
