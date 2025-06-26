@@ -1,17 +1,19 @@
 package com.fiveOps.promptforge.dashboard.dash_controller;
 
-import com.fiveOps.promptforge.dashboard.dash_services.DashboardService;
-import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.user_profile.model.User;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fiveOps.promptforge.dashboard.dash_services.DashboardService;
+import com.fiveOps.promptforge.user_profile.model.User;
+import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/dashboard")
