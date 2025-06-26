@@ -13,19 +13,48 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+
 @Configuration
 public class SecurityConfig {
 
   private final JwtFilter jwtFilter;
+  private final JwtUtil jwtUtil;
 
-  public SecurityConfig(JwtFilter jwtFilter) {
+  public SecurityConfig(JwtFilter jwtFilter, JwtUtil jwtUtil) {
     this.jwtFilter = jwtFilter;
+    this.jwtUtil = jwtUtil;
   }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
+  
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return new JwtDecoder() {
+            @Override
+            public Jwt decode(String token) throws JwtException {
+                try {
+                    Claims claims = jwtUtil.extractAllClaims(token);
+                    
+                    return Jwt.withTokenValue(token)
+                            .header("alg", "HS256")
+                            .claim("sub", claims.getSubject())
+                            .issuedAt(claims.getIssuedAt().toInstant())
+                            .expiresAt(claims.getExpiration().toInstant())
+                            .build();
+                } catch (Exception e) {
+                    throw new JwtException("Invalid JWT", e);
+                }
+            }
+        };
+    }
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
