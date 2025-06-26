@@ -52,7 +52,7 @@ public class User {
     private UUID[] following = new UUID[]{};
     
 
-    // === Getters ===
+ 
 
     public UUID getUserId() {
         return userId;

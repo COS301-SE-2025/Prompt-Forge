@@ -37,9 +37,9 @@ public class JwtFilter extends OncePerRequestFilter {
       String requestPath = request.getRequestURI();
       String method = request.getMethod();
 
-      System.out.println("🔍 JWT Filter - " + method + " " + requestPath);
+      System.out.println("JWT Filter - " + method + " " + requestPath);
 
-      //Skip JWT validation for auth endpoints only
+
       if (shouldSkipFilter(requestPath)) {
         System.out.println("Skipping JWT filter for: " + requestPath);
         filterChain.doFilter(request, response);
@@ -60,13 +60,13 @@ public class JwtFilter extends OncePerRequestFilter {
         for (Cookie cookie : request.getCookies()) {
           if ("token".equals(cookie.getName())) {
             token = cookie.getValue();
-            System.out.println("🍪 Found JWT token in cookie");
+            System.out.println("Found JWT token in cookie");
             break;
           }
         }
       }
 
-      // Process token if found and set authentication
+     
       if (token != null && !token.trim().isEmpty()) {
         try {
           email = jwtUtil.extractUsername(token);
@@ -76,14 +76,13 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().getAuthentication() == null
           ) {
             if (jwtUtil.validateToken(token)) {
-              // ✅ Create UserDetails with the email as username
+           
               UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 email,
                 "",
                 Collections.emptyList()
               );
 
-              // ✅ Set authentication in SecurityContext
               UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
@@ -92,10 +91,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
               SecurityContextHolder.getContext().setAuthentication(authToken);
               System.out.println(
-                "✅ JWT authentication successful for: " + email
+                "JWT authentication successful for: " + email
               );
             } else {
-              System.out.println("❌ JWT token validation failed");
+              System.out.println(" JWT token validation failed");
             }
           }
         } catch (ExpiredJwtException ex) {
@@ -124,7 +123,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  //  Only skip auth endpoints - let JWT filter process dashboard
+
   private boolean shouldSkipFilter(String requestPath) {
     return (
       requestPath.startsWith("/auth/") ||

@@ -25,10 +25,9 @@ public class JwtUtil {
   public String generateToken(String email) {
     return Jwts
       .builder()
-      .subject(email)  // Updated: setSubject() → subject()
-      .issuedAt(new Date())  // Updated: setIssuedAt() → issuedAt()
-      .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Updated: setExpiration() → expiration()
-      .signWith(getSigningKey())  // Updated: removed SignatureAlgorithm parameter
+      .subject(email)  
+      .issuedAt(new Date())  
+      .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) 
       .compact();
   }
 
@@ -37,22 +36,21 @@ public class JwtUtil {
       .parser()
       .verifyWith(getSigningKey())
       .build()
-      .parseSignedClaims(token)  // Updated: parseClaimsJws() → parseSignedClaims()
-      .getPayload()  // Updated: getBody() → getPayload()
+      .parseSignedClaims(token)  
+      .getPayload() 
       .getSubject();
   }
 
-  // ✅ Updated method to extract all claims
+ 
   public Claims extractAllClaims(String token) {
     return Jwts
       .parser()
       .verifyWith(getSigningKey())
       .build()
-      .parseSignedClaims(token)  // Updated: parseClaimsJws() → parseSignedClaims()
-      .getPayload();  // Updated: getBody() → getPayload()
-  }
+      .parseSignedClaims(token)  
+      .getPayload();  }
 
-  // ✅ Updated method to check if token is expired
+ 
   public boolean isTokenExpired(String token) {
     try {
       Claims claims = extractAllClaims(token);
