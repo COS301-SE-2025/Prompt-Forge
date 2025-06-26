@@ -193,7 +193,7 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
        SELECT COUNT(DISTINCT p.prompt_id)
        FROM prompts p
        JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)s
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
        """, nativeQuery = true)
        Page<Map<String, PromptWithAuthorDTO>> searchPublicByTitle(@Param("searchTerm") String searchTerm, Pageable pageable);
