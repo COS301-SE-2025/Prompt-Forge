@@ -7,7 +7,7 @@ public class UpdateProfileDto {
     private String password;
     private String bio;
 
- 
+    // Getters
     public String getUsername() {
         return username;
     }
@@ -28,7 +28,7 @@ public class UpdateProfileDto {
         return bio;
     }
 
-  
+    // Setters
     public void setUsername(String username) {
         this.username = username;
     }
