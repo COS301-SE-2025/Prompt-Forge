@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.securityConfig;
 
 import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,9 +42,14 @@ public class SecurityConfig {
             "/auth/**",
             "/public/**",
             "/user/**",
-            "/api/test/**", // ✅ Allow editor/comparison endpoints without auth
-            "/api/editor/**", // ✅ Future editor-specific endpoints
-            "/api/comparison/**" // ✅ Future comparison-specific endpoints
+            "/api/test/**", 
+            "/api/editor/**", 
+            "/api/comparison/**", 
+            "/api/dashboard",
+            "/api/analytics/**",
+            "/prompts/**",
+            "/store/prompts/**"
+            
           )
           .permitAll()
           .anyRequest()
@@ -59,7 +65,7 @@ public class SecurityConfig {
     return http.build();
   }
 
-  // ✅ Custom CORS configuration with path-specific rules
+  
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
 
@@ -68,27 +74,27 @@ public class SecurityConfig {
           "http://localhost:5173"));
       defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       defaultConfig.setAllowedHeaders(Arrays.asList("*"));
-      defaultConfig.setAllowCredentials(true); // ✅ Default: allow credentials
+      defaultConfig.setAllowCredentials(true); 
       defaultConfig.setMaxAge(3600L);
 
-      // ✅ Editor/Comparison pages configuration (no credentials)
+      
       CorsConfiguration noCredentialsConfig = new CorsConfiguration();
       noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList(
-          "http://localhost:5173")); // ✅ Wildcard allowed without credentials
+          "http://localhost:5173")); 
       noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
-      noCredentialsConfig.setAllowCredentials(false); // ✅ No credentials for editor/comparison
+      noCredentialsConfig.setAllowCredentials(false); 
       noCredentialsConfig.setMaxAge(3600L);
 
-    // ✅ Editor/Comparison pages configuration (no credentials)
+    
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-    // ✅ Apply no-credentials config to editor/comparison endpoints
+    
     source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
     source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
     source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
 
-    // ✅ Apply default config (with credentials) to all other endpoints
+
     source.registerCorsConfiguration("/**", defaultConfig);
 
     return source;
