@@ -249,7 +249,6 @@ We use a **GitFlow** branching strategy to organize our development:
       <h2><b style="font-size: 18px;">Paballo Diyase</b></h2>
       <h3><b style="font-size: 16px;">Architect, Data Engineer, Services Engineer, Integration Engineer</b></h3><br>
       I am a final-year Computer Science student at the University of Pretoria. I have a strong passion for Cybersecurity, Networking, and Data Science. I have a natural aptitude for problem-solving and a deep curiosity for learning, which drives me to continuously expand my knowledge and refine my skills. My focus is on developing efficient, secure, and high-performing software systems that address real-world challenges.
-
 Beyond programming, I enjoy exploring emerging technologies and I find great fulfillment in sharing knowledge, mentoring others, and contributing to the community. I believe that software technology holds great power to transform industries and improve lives, and I am eager to collaborate with others to build innovative and impactful solutions.
       <br><br>
       <a href="https://github.com/mainmee" style="text-decoration: none; margin-right: 10px; display: inline-block; vertical-align: middle;">
@@ -289,8 +288,6 @@ Beyond programming, I enjoy exploring emerging technologies and I find great ful
       <h2><b style="font-size: 18px;">Navendran Naidoo</b></h2>
       <h3><b style="font-size: 16px;">Project Manager, UI Engineer, BA, Integration Engineer</b></h3><br>
      As a final-year Computer Science student, I enjoy building scalable, secure, and creative software solutions. I’m particularly drawn to frontend development because it allows me to combine logic with visual creativity, bringing interfaces to life in a way that’s both functional and engaging. Since I started coding, I’ve  found the challenge of transforming ideas into real, working systems both thrilling and deeply rewarding, especially when powered by caffeine and determination. Outside of programming, I’m passionate about photography, which fuels my eye for design and detail. Whether I’m crafting a UI or capturing the perfect shot, I thrive on combining technical skill with creativity.
-
-
       <br><br>
       <a href="https://github.com/naven1309" style="text-decoration: none; margin-right: 10px; display: inline-block; vertical-align: middle;">
         <img src="https://skillicons.dev/icons?i=github"/>
@@ -311,7 +308,6 @@ Beyond programming, I enjoy exploring emerging technologies and I find great ful
       <h3><b style="font-size: 16px;">Architect, Data Engineer, Services Engineer, Integration Engineer
 </b></h3><br>
       As a third-year Information and Knowledge Systems student, I get the best of both worlds—Computer Science and Data Science. This mix fuels my passion for playful problem-solving and diving into the weird and wonderful world of tech. Whether it’s figuring out why something broke (again) or building something from scratch, I love making things work—and work well.
-
 I thrive on collaboration, especially with people who question the norm, think boldly, and aren’t afraid to break (and remake) things. Every project is a chance to grow, every line of code a puzzle piece, and every bug an unexpected plot twist. I’m always keen to learn, build, and be part of projects that make a real impact.
       <br><br>
       <a href="https://github.com/riri-bygit" style="text-decoration: none; margin-right: 10px; display: inline-block; vertical-align: middle;">
