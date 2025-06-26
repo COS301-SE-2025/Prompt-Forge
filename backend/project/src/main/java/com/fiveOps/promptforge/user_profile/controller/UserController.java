@@ -48,7 +48,7 @@ public class UserController {
     return ResponseEntity.ok(user);
   }
 
-  // Update own profile
+  
   @PatchMapping("/me")
   public UserDto updateCurrentUser(
     HttpServletRequest request,
@@ -83,7 +83,7 @@ public class UserController {
 
     for (Cookie cookie : request.getCookies()) {
       if (cookie.getName().equals("token")) {
-        return jwtUtil.extractUsername(cookie.getValue()); // email stored as subject
+        return jwtUtil.extractUsername(cookie.getValue()); 
       }
     }
     throw new ResponseStatusException(

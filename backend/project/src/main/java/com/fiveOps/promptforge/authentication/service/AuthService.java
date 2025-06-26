@@ -20,7 +20,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.UUID;
 
 
@@ -33,7 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    @Autowired
+
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -76,55 +75,6 @@ public class AuthService {
         return jwtUtil.generateToken(user.getEmail());
     }
 
-    public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
-        String idTokenString = request.getToken();
-        GoogleIdToken.Payload payload = verifyGoogleToken(idTokenString);
-
-        String email = payload.getEmail();
-        boolean emailVerified = Boolean.TRUE.equals(payload.getEmailVerified());
-        String name = (String) payload.get("name");
-
-        if (!emailVerified) {
-            throw new IllegalArgumentException("Email not verified by Google");
-        }
-
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setUserId(UUID.randomUUID());
-            newUser.setEmail(email);
-            newUser.setUsername(name.replaceAll("\\s+", "_").toLowerCase());
-            newUser.setRole("buyer");
-            newUser.setIsVerified(true);
-            newUser.setIsActive(true);
-            newUser.setCreatedAt(LocalDateTime.now());
-            newUser.setUpdatedAt(LocalDateTime.now());
-            return userRepository.save(newUser);
-        });
-
-        String jwt = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(jwt);
-    }
-
-    
-    private GoogleIdToken.Payload verifyGoogleToken(String idTokenString) {
-        try {
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                    new NetHttpTransport(),
-                    JacksonFactory.getDefaultInstance()
-            )
-            .setAudience(Collections.singletonList("YOUR_GOOGLE_CLIENT_ID"))
-            .build();
-
-            GoogleIdToken idToken = verifier.verify(idTokenString);
-            if (idToken != null) {
-                return idToken.getPayload();
-            } else {
-                throw new IllegalArgumentException("Invalid Google ID token");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to verify Google token", e);
-        }
-    }
 
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
