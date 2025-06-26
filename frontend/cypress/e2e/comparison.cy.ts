@@ -1,3 +1,4 @@
+
 describe('Comparison Page', () => {
   beforeEach(() => {
     cy.visit('/comparison')
