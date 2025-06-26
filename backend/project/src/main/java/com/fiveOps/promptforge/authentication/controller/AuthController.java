@@ -7,28 +7,27 @@ import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
 import com.fiveOps.promptforge.authentication.service.RateLimitingService;
 import com.fiveOps.promptforge.user_profile.model.User;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponse;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/auth")
 public class AuthController {
 
   private final AuthService authService;
@@ -42,7 +41,7 @@ public class AuthController {
     this.rateLimitingService = rateLimitingService;
   }
 
-  @RequestMapping("/auth")
+  @GetMapping("/health")
   public ResponseEntity<String> healthCheck() {
     return ResponseEntity.ok("Authentication service is running");
   }
@@ -66,45 +65,51 @@ public class AuthController {
   ) {
     String clientIp = servletRequest.getRemoteAddr();
     String loginKey = "login_" + request.getEmail() + "_" + clientIp;
+    
+    try {
+      Bucket bucket = rateLimitingService.resolveBucket(loginKey);
+      ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
-    Bucket bucket = rateLimitingService.resolveBucket(loginKey);
-    ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
-
-    if (!probe.isConsumed()) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.add("X-Rate-Limit-Limit", "10");
-      headers.add(
-        "X-Rate-Limit-Remaining",
-        String.valueOf(probe.getRemainingTokens())
-      );
-      headers.add(
-        "X-Rate-Limit-Reset",
-        String.valueOf(probe.getNanosToWaitForRefill() / 1_000_000_000)
-      );
-
-      return ResponseEntity
-        .status(HttpStatus.TOO_MANY_REQUESTS)
-        .headers(headers)
-        .body(
-          Map.of(
-            "message",
-            "Too many login attempts",
-            "retry_after_seconds",
-            probe.getNanosToWaitForRefill() / 1_000_000_000
-          )
+      if (!probe.isConsumed()) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Rate-Limit-Limit", "10");
+        headers.add(
+          "X-Rate-Limit-Remaining",
+          String.valueOf(probe.getRemainingTokens())
         );
+        headers.add(
+          "X-Rate-Limit-Reset",
+          String.valueOf(probe.getNanosToWaitForRefill() / 1_000_000_000)
+        );
+
+        return ResponseEntity
+          .status(HttpStatus.TOO_MANY_REQUESTS)
+          .headers(headers)
+          .body(
+            Map.of(
+              "message",
+              "Too many login attempts",
+              "retry_after_seconds",
+              probe.getNanosToWaitForRefill() / 1_000_000_000
+            )
+          );
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity
+        .status(500)
+        .body(Map.of("message", "Rate limiter failed"));
     }
 
     try {
-      System.out.println("🔍 Login attempt for email: " + request.getEmail());
+      System.out.println("Login attempt for email: " + request.getEmail());
 
       String token = authService.login(request);
       System.out.println(
-        "🔍 Generated token: " +
+        "Generated token: " +
         (token != null ? token.substring(0, 20) + "..." : "NULL")
       );
 
-      // Get user info for response
       User user = authService.getUserByEmail(request.getEmail());
 
       Map<String, Object> responseBody = new HashMap<>();
@@ -122,14 +127,14 @@ public class AuthController {
         .sameSite("Lax")
         .build();
 
-      System.out.println("🔍 Setting cookie: " + cookie.toString());
+      System.out.println("Setting cookie: " + cookie.toString());
 
       return ResponseEntity
         .ok()
         .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(responseBody);
     } catch (RuntimeException e) {
-      System.err.println("❌ Login failed: " + e.getMessage());
+      System.err.println("Login failed: " + e.getMessage());
       return ResponseEntity
         .status(HttpStatus.UNAUTHORIZED)
         .body(Map.of("message", e.getMessage()));

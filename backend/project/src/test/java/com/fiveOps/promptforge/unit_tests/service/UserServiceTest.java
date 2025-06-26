@@ -7,7 +7,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+
 
 import java.util.Optional;
 import java.util.UUID;
