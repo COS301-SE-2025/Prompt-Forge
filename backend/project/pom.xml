@@ -39,7 +39,7 @@
             <version>2.2.0</version>            <!-- Compatible with Spring Boot 3.2.x -->
         </dependency>
 
-        
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -190,7 +190,27 @@
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>7.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-jcache</artifactId>
+            <version>7.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
 
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <version>5.8.5</version>
+        </dependency>
 
     </dependencies>
 
@@ -267,7 +287,8 @@
             </plugin>
 
 
-            
+
         </plugins>
     </build>
 </project>
+<!-- pom.xml -->
