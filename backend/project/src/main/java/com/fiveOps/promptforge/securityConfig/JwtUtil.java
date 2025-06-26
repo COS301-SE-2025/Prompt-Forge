@@ -2,8 +2,6 @@ package com.fiveOps.promptforge.securityConfig;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.util.Base64;
@@ -25,9 +23,10 @@ public class JwtUtil {
   public String generateToken(String email) {
     return Jwts
       .builder()
-      .subject(email)  
-      .issuedAt(new Date())  
-      .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) 
+      .subject(email)  // Updated: setSubject() → subject()
+      .issuedAt(new Date())  // Updated: setIssuedAt() → issuedAt()
+      .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Updated: setExpiration() → expiration()
+      .signWith(getSigningKey())  // Updated: removed SignatureAlgorithm parameter
       .compact();
   }
 
@@ -36,21 +35,22 @@ public class JwtUtil {
       .parser()
       .verifyWith(getSigningKey())
       .build()
-      .parseSignedClaims(token)  
-      .getPayload() 
+      .parseSignedClaims(token)  // Updated: parseClaimsJws() → parseSignedClaims()
+      .getPayload()  // Updated: getBody() → getPayload()
       .getSubject();
   }
 
- 
+  // ✅ Updated method to extract all claims
   public Claims extractAllClaims(String token) {
     return Jwts
       .parser()
       .verifyWith(getSigningKey())
       .build()
-      .parseSignedClaims(token)  
-      .getPayload();  }
+      .parseSignedClaims(token)  // Updated: parseClaimsJws() → parseSignedClaims()
+      .getPayload();  // Updated: getBody() → getPayload()
+  }
 
- 
+  // ✅ Updated method to check if token is expired
   public boolean isTokenExpired(String token) {
     try {
       Claims claims = extractAllClaims(token);
@@ -60,20 +60,16 @@ public class JwtUtil {
     }
   }
 
-  
- public boolean validateToken(String token) throws ExpiredJwtException {
+  public boolean validateToken(String token) {
     try {
-        Claims claims = Jwts.parser()
-            .verifyWith(getSigningKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-            
-        return !claims.getExpiration().before(new Date());
-    } catch (ExpiredJwtException ex) {
-        throw ex; // Re-throw for specific handling
-    } catch (JwtException | IllegalArgumentException ex) {
-        throw new JwtException("Invalid JWT token");
+      Jwts
+        .parser()
+        .verifyWith(getSigningKey())
+        .build()
+        .parseSignedClaims(token);  // Updated: parseClaimsJws() → parseSignedClaims()
+      return !isTokenExpired(token);
+    } catch (Exception e) {
+      return false;
     }
-}
+  }
 }

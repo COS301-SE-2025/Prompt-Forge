@@ -100,6 +100,6 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Logout successful"))
-                .andExpect(cookie().maxAge("token", 0)); 
+                .andExpect(cookie().maxAge("token", 0)); // <- this confirms cookie is cleared
     }
 }
