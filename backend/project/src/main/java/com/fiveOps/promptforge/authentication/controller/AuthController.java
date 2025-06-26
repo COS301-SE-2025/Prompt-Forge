@@ -141,13 +141,7 @@ public class AuthController {
     }
   }
 
-  @PostMapping("/google")
-  public ResponseEntity<AuthResponse> loginWithGoogle(
-    @RequestBody GoogleLoginRequest request
-  ) {
-    AuthResponse authResponse = authService.loginWithGoogle(request);
-    return ResponseEntity.ok(authResponse);
-  }
+ 
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletResponse response) {
