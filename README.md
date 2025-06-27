@@ -224,7 +224,7 @@ We use a **GitFlow** branching strategy to organize our development:
 <table style="border-width: 1px; width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Katlego.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;>
+      <img src="./assests/Katlego.jpg" width="800" height="auto">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Katlego Mositi
