@@ -45,10 +45,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            System.out.println("🔍 Login attempt for email: " + request.getEmail());
+            System.out.println("Login attempt for email: " + request.getEmail());
             
             String token = authService.login(request);
-            System.out.println("🔍 Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
+            System.out.println("Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
 
             // Get user info for response
             User user = authService.getUserByEmail(request.getEmail());
@@ -61,13 +61,13 @@ public class AuthController {
 
             ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(false) // ✅ CRITICAL: Must be false for localhost HTTP
+                .secure(false) 
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Lax")
                 .build();
 
-            System.out.println("🔍 Setting cookie: " + cookie.toString());
+            System.out.println("Setting cookie: " + cookie.toString());
 
             return ResponseEntity
                 .ok()
@@ -75,7 +75,7 @@ public class AuthController {
                 .body(responseBody);
 
         } catch (RuntimeException e) {
-            System.err.println("❌ Login failed: " + e.getMessage());
+            System.err.println("Login failed: " + e.getMessage());
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", e.getMessage()));
