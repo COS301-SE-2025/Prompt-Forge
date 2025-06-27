@@ -1,238 +1,53 @@
-# # # name: Maven CI
-
-# # # on:
-# # #   push:
-# # #     branches:
-# # #       - main
-# # #   pull_request:
-# # #     branches:
-# # #       - main
-
-# # # jobs:
-# # #   build:
-# # #     runs-on: ubuntu-latest
-    
-# # #     defaults:
-# # #       run:
-# # #         working-directory: ./backend/project
-
-# # #     steps:
-# # #     - name: Checkout code
-# # #       uses: actions/checkout@v3
-
-# # #     - name: Set up JDK 21
-# # #       uses: actions/setup-java@v3
-# # #       with:
-# # #         java-version: '21'
-# # #         distribution: 'temurin'
-# # #         cache: maven
-
-# # #     - name: Build with Maven
-# # #       run: mvn -B clean install
-
-# # #     - name: Test with Maven
-# # #       run: mvn -B test
-
-# # #     - name: Test with Maven (with coverage)
-# # #       run: mvn -B test jacoco:report  # Requires JaCoCo plugin in pom.xml
-
-# # #     # - name: Upload coverage to Codecov
-# # #     #   uses: codecov/codecov-action@v3
-# # #     #   if: always()  # Upload even if tests fail
-
-# # #     - name: Set up Node
-# # #       uses: actions/setup-node@v4
-
-# # #     - name: Install dependencies
-# # #       run: npm install
-
-# # #     - name: Run tests
-# # #       run: npx jest --coverage
-
-# # #     - name: Upload results to Codecov
-# # #       uses: codecov/codecov-action@v5
-# # #       if: always() # Upload even if tests fail
-# # #       with:
-# # #           token: ${{ secrets.CODECOV_TOKEN }}
-
-# # name: CI Pipeline (Frontend + Backend)
-
-# # on:
-# #   push:
-# #     branches: [main]
-# #   pull_request:
-# #     branches: [main]
-
-# # jobs:
-# #   test:
-# #     runs-on: ubuntu-latest
-
-# #     steps:
-# #       # ----------------------------
-# #       # Shared Setup
-# #       # ----------------------------
-# #       - name: Checkout code
-# #         uses: actions/checkout@v4
-
-# #       # ----------------------------
-# #       # Backend (Java/Spring Boot)
-# #       # ----------------------------
-# #       - name: Set up JDK 21
-# #         uses: actions/setup-java@v3
-# #         with:
-# #           java-version: '21'
-# #           distribution: 'temurin'
-# #           cache: maven
-
-# #       - name: Build and Test Backend
-# #         run: |
-# #           cd backend/project
-# #           mvn -B clean test jacoco:report  # Single command for tests + coverage
-
-# #       # ----------------------------
-# #       # Frontend (React/TypeScript)
-# #       # ----------------------------
-# #       - name: Set up Node.js
-# #         uses: actions/setup-node@v4
-# #         with:
-# #           node-version: '20'
-
-# #       - name: Install frontend deps
-# #         working-directory: ./frontend  # Critical!
-# #         run: npm ci
-
-# #       - name: Run Jest coverage
-# #         working-directory: ./frontend
-# #         run: npx jest --coverage --coverageReporters=json-summary lcov
-
-# #       # ----------------------------
-# #       # Upload to Codecov
-# #       # ----------------------------
-# #       - name: Upload coverage to Codecov
-# #         uses: codecov/codecov-action@v5
-# #         if: always()
-# #         with:
-# #           files: |
-# #             frontend/coverage/lcov.info
-# #             backend/project/target/site/jacoco/jacoco.xml
-# #           token: ${{ secrets.CODECOV_TOKEN }}  # Only needed for private repos
-# #           flags: frontend,backend  # Optional: label coverage by component
-
-# #       # ----------------------------
-# #       # Linting (Optional)
-# #       # ----------------------------
-# #       - name: Lint Backend
-# #         run: |
-# #           cd backend/project
-# #           mvn -B checkstyle:check
-
-
-# # #     - name: Lint with Checkstyle #Linting
-# # #       run: mvn -B checkstyle:check   
-
-
-# name: CI Pipeline (Frontend + Backend)
-
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
-
-# jobs:
-#   test:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       # ----------------------------
-#       # Shared Setup
-#       # ----------------------------
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-
-#       # ----------------------------
-#       # Backend (Java/Spring Boot)
-#       # ----------------------------
-#       - name: Set up JDK 21
-#         uses: actions/setup-java@v3
-#         with:
-#           java-version: '21'
-#           distribution: 'temurin'
-#           cache: maven
-
-#       - name: Build and Test Backend
-#         working-directory: ./backend/project  # Added working-directory for consistency
-#         run: mvn -B clean test jacoco:report  # Single command for tests + coverage
-
-#       # ----------------------------
-#       # Frontend (React/TypeScript)
-#       # ----------------------------
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: '20'
-
-#       - name: Install frontend deps
-#         working-directory: ./frontend  # Critical!
-#         run: npm ci
-
-#       - name: Run Jest coverage
-#         working-directory: ./frontend
-#         run: |
-#              npm install --save-dev @types/jest
-#              npx jest --coverage
-
-#       # ----------------------------
-#       # Upload to Codecov
-#       # ----------------------------
-#       - name: Upload coverage to Codecov
-#         uses: codecov/codecov-action@v5
-#         if: always()
-#         with:
-#           files: |
-#             frontend/coverage/lcov.info
-#             backend/project/target/site/jacoco/jacoco.xml
-#           token: ${{ secrets.CODECOV_TOKEN }}  # Only needed for private repos
-#           flags: frontend,backend  # Optional: label coverage by component
-
-#       # ----------------------------
-#       # Linting (Optional)
-#       # ----------------------------
-#       - name: Lint Backend
-#         working-directory: ./backend/project  # Added working-directory
-#         run: mvn -B checkstyle:check
-
-
-name: Upload Coverage to Codecov
+name: CI Pipeline (Frontend + Backend)
 
 on:
   push:
-    branches:
-      - main
-      - dev
-      - CORS-errors # include your dev branches here too
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
-  test-and-upload:
+  test:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # Backend (Java/Spring Boot)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
-          node-version: 20
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build and Test Backend
+        working-directory: ./backend/project
+        run: |
+          mvn -B clean install
+          mvn -B test
+          mvn -B jacoco:report
 
-      - name: Run tests with coverage
-        run: npm run test -- --coverage
+      - name: Lint Backend
+        working-directory: ./backend/project
+        run: mvn -B checkstyle:check
 
-      - name: Upload coverage to Codecov
-        run: npx codecov -f coverage/lcov.info --disable=gcov
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # Frontend (React/TypeScript)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Lint Frontend
+        working-directory: ./frontend
+        run: npx eslint .
+
+      - name: Run Frontend Tests and Coverage
+        working-directory: ./frontend
+        run: npx jest --coverage
