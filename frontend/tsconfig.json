@@ -18,8 +18,20 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    // Add Cypress types for component tests
+    "types": ["cypress"]
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "**/*.cy.tsx",
+    "**/*.cy.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/setupTests.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
