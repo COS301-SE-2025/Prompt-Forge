@@ -2,10 +2,11 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
-import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart } from "lucide-react"
+import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart, HelpCircle } from "lucide-react"
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
+import { AuthService } from "@/services/authService";
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
@@ -26,11 +27,18 @@ export default function Header() {
     { name: "Community", href: "/community" },
   ]
 
-  const handleLogout = () => {
-    // Add any logout logic here (clear tokens, etc.)
-    setDropdownOpen(false)
-    navigate('/login')
-  }
+  const handleLogout = async () => {
+    try {
+      const authService = new AuthService();
+      await authService.logout();
+      localStorage.removeItem("userEmail");
+      setDropdownOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Optional: Show toast or error message
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -60,7 +68,9 @@ export default function Header() {
               to={item.href}
               className={cn(
                 "transition-colors hover:text-foreground",
-                pathname === item.href ? "text-foreground font-medium" : "text-muted-foreground",
+                pathname === item.href 
+                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  : "text-muted-foreground",
               )}
             >
               {item.name}
@@ -115,6 +125,14 @@ export default function Header() {
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile Settings</span>
                   </Link>
+                  <Link
+                    to="/help"
+                    className="flex items-center px-4 py-2 text-sm hover:bg-muted"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help & FAQ</span>
+                  </Link>
                   <button
                     className="flex w-full items-center px-4 py-2 text-sm text-red-500 hover:bg-muted"
                     onClick={handleLogout}
@@ -137,13 +155,27 @@ export default function Header() {
               to={item.href}
               className={cn(
                 "block py-2 text-base transition-colors hover:text-foreground",
-                pathname === item.href ? "text-foreground font-medium" : "text-muted-foreground",
+                pathname === item.href 
+                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  : "text-muted-foreground",
               )}
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.name}
             </Link>
           ))}
+          <Link
+            to="/help"
+            className={cn(
+              "block py-2 text-base transition-colors hover:text-foreground",
+              pathname === "/help" 
+                ? "text-[#3ebb9e] font-medium"
+                : "text-muted-foreground",
+            )}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Help & FAQ
+          </Link>
         </nav>
       )}
     </header>

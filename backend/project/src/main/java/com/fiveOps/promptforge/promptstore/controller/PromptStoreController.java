@@ -1,61 +1,92 @@
 package com.fiveOps.promptforge.promptstore.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.Tag;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/store/prompts")
+@RequestMapping("/store/prompts")
 @RequiredArgsConstructor
 public class PromptStoreController {
     private final PromptStoreService storeService;
+    private final UserService userService;
 
-    @GetMapping // ← Handles GET /api/store/prompts
-    public List<Prompt> getAllPublicPrompts() {
-    return storeService.getAllPublicPrompts();
-}
-    @PostMapping("/{promptId}/purchase")
-    public ResponseEntity<PromptPurchase> purchasePrompt(
-            @PathVariable UUID promptId,
-            @AuthenticationPrincipal UUID userId) {
-        return ResponseEntity.ok(storeService.purchasePrompt(promptId, userId));
-    }//////user id???
-
-    @GetMapping("/{promptId}/reviews")
-    public ResponseEntity<List<PromptReview>> getPromptReviews(
-            @PathVariable UUID promptId) {
-        return ResponseEntity.ok(storeService.getPromptReviews(promptId));
+    @GetMapping
+    public Page<Map<String, PromptWithAuthorDTO>> getAllPublicPrompts(Pageable pageable) {
+        return storeService.getPublicPromptsWithAuthorAndTags(pageable);
     }
 
-    // @PostMapping("/reviews")
-    // public ResponseEntity<PromptReview> createReview(
-    //         @RequestBody PromptReview review,
-    //         @AuthenticationPrincipal UUID userId) {
-    //     review.setUserId(userId);
-    //     return ResponseEntity.ok(storeService.createReview(review));
-    // }///user id????????????????????
+    @GetMapping("/featured")
+    public Page<Map<String, PromptWithAuthorDTO>> getFeaturedPrompts(
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getFeaturedPrompts(pageable);
+    }
 
+    // @PostMapping("/{promptId}/purchase")
+    // public ResponseEntity<PromptPurchase> purchasePrompt(
+    //         @PathVariable UUID promptId,
+    //         Authentication authentication) {
+        
+    //     String userEmail = authentication.getName();
+    //     UUID userId = userService.getUserIdByEmail(userEmail);
+        
+    //     return ResponseEntity.ok(storeService.purchasePrompt(promptId, userId));
+    // }
 
+    @GetMapping("/{promptId}/reviews")
+    public ResponseEntity<Page<ReviewProjection>> getReviewsForPrompt(
+            @PathVariable UUID promptId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        
+        Page<ReviewProjection> reviews = storeService.getReviewsForPrompt(promptId, pageable);
+        return ResponseEntity.ok(reviews);
+    }
+
+    @PostMapping("/{promptId}/reviews")
+    public ResponseEntity<PromptReview> createReview(
+            @PathVariable UUID promptId,
+            @RequestBody PromptReview review,
+            Authentication authentication) {
+        
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        
+        review.setUserId(userId);
+        review.setPromptId(promptId);
+        
+        PromptReview createdReview = storeService.createReview(review);
+        return ResponseEntity.ok(createdReview);
+    }
 
     @GetMapping("/search")
-    public List<Prompt> searchPublic(@RequestParam String query) {
-        return storeService.searchPublic(query);
+    public Page<Map<String, PromptWithAuthorDTO>> searchPublic(
+            @RequestParam String query,
+            Pageable pageable) {
+        return storeService.searchPublic(query, pageable);
     }
 
     @GetMapping("/filter/price")
@@ -64,36 +95,65 @@ public class PromptStoreController {
     }
 
     @GetMapping("/filter/tag/{tagName}")
-    public List<Prompt> getByTagName(@PathVariable String tagName) {
-        return storeService.getPublicByTagName(tagName);
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagName(
+            @PathVariable String tagName,
+            @PageableDefault(size = 10) Pageable pageable) {
+        String formattedTagName = tagName.substring(0, 1).toUpperCase() + 
+                                tagName.substring(1).toLowerCase();
+        return storeService.getPublicByTagName(formattedTagName, pageable);
+    }
+    
+    @GetMapping("/filter")
+    public Page<Map<String, PromptWithAuthorDTO>> filterByTagNameAndFilter(
+            @RequestParam String tagName,
+            @RequestParam String filter,
+            @PageableDefault(size = 10) Pageable pageable) {
+        String formattedTagName = tagName.substring(0, 1).toUpperCase() + 
+                                tagName.substring(1).toLowerCase();
+        return storeService.getPublicByTagNameAndFilter(formattedTagName, filter, pageable);
     }
 
+    @GetMapping("/filter/recent")
+    public Page<Map<String, PromptWithAuthorDTO>> getNew(
+            @PageableDefault(size = 10) Pageable pageable) {
+        return storeService.getNew(pageable);
+    }
 
-    // Get public prompts by author
     @GetMapping("/filter/author/{authorId}")
     public List<Prompt> getPublicPromptsByAuthor(@PathVariable UUID authorId) {
         return storeService.getPublicPromptsByAuthor(authorId);
     }
 
-    // Delete (unpublish) listing
     @DeleteMapping("/{promptId}")
-    public ResponseEntity<Void> deleteListing(@PathVariable UUID promptId) {
-        return storeService.deleteListing(promptId) ?
-            ResponseEntity.noContent().build() :
-            ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deleteListing(
+            @PathVariable UUID promptId,
+            Authentication authentication) {
+        
+        boolean deleted = storeService.deleteListing(promptId);
+        return deleted ? ResponseEntity.noContent().build() : 
+                        ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/filter/recent")
-    public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
-    return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    // @GetMapping("/filter/recent")
+    // public ResponseEntity<List<Prompt>> getRecentlyPublishedPrompts() {
+    //     return ResponseEntity.ok(storeService.getRecentlyPublishedPrompts());
+    // }
+    
+    @GetMapping("/ownership/{promptId}")
+    public ResponseEntity<Boolean> isPromptBought(@PathVariable UUID promptId, Authentication authentication) {
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        return ResponseEntity.ok(storeService.isPromptBought(userId, promptId));
     }
 
+    @GetMapping("/tags")
+    public List<Tag> getAllTags() {
+        return storeService.getAllTags();
+    }
 
-    ////to implement view? need analytics
-    /// top rated
-    /// top selling
-
-    
-
-    
+    @GetMapping("/tags/popular")
+    public List<Tag> getPopularTags(
+            @RequestParam(defaultValue = "10") int limit) {
+        return storeService.getPopularTags(limit);
+    }
 }

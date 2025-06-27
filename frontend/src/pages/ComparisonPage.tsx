@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown } from "lucide-react"
 import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
 
 const defaultPrompt = `Write your prompt here...
 
@@ -16,6 +17,7 @@ When writing a prompt, always follow these guidelines:
 explain how the response should be adapted to fit.]`
 
 export default function ComparisonsPage() {
+  const navigate = useNavigate()
   const [promptTextA, setPromptTextA] = useState(defaultPrompt)
   const [promptTextB, setPromptTextB] = useState(defaultPrompt)
   const [aiResponseA, setAiResponseA] = useState("AI response to prompt A will appear here...")
@@ -99,28 +101,24 @@ export default function ComparisonsPage() {
     setAiResponse("Generating response...")
 
     try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: promptText,
-          },
-        ],
-      }
-
+      // ✅ Send just the prompt text string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(promptText), // ✅ Send string directly, not wrapped in object
       })
 
       const data = await response.json()
 
+      // ✅ Handle the response (should be in standard OpenAI format now)
       if (data.choices && data.choices[0] && data.choices[0].message) {
         const aiResponseText = data.choices[0].message.content
         setAiResponse(decodeUnicode(aiResponseText))
+      } else {
+        console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
+        setAiResponse("Received unexpected response format");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
@@ -170,21 +168,13 @@ Please provide:
 `
 
     try {
-      const requestBody = {
-        messages: [
-          {
-            role: "user",
-            content: ratingPrompt,
-          },
-        ],
-      }
-
+      // ✅ Send just the rating prompt string, like your test.html does
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(ratingPrompt), // ✅ Send string directly
       })
 
       const data = await response.json()
@@ -229,6 +219,43 @@ Please provide:
     setSelectedModelB(tempModel)
   }
 
+  const handleSavePrompt = (side: "A" | "B") => {
+    const promptText = side === "A" ? promptTextA : promptTextB
+    
+    // Check if user is authenticated
+    const username = localStorage.getItem('username')
+    if (!username || username === 'Guest') {
+      alert("Please log in to save prompts")
+      return
+    }
+
+    // Validate prompt content
+    if (!promptText.trim() || promptText.trim() === defaultPrompt.trim()) {
+      alert("Please write a valid prompt before saving")
+      return
+    }
+
+    // Generate a title from the prompt (first 50 characters)
+    const autoTitle = promptText.length > 50 
+      ? promptText.substring(0, 50).trim() + "..."
+      : promptText.trim()
+
+    // Redirect to SubmitPromptPage with pre-filled data
+    navigate('/submit', {
+      state: {
+        prefilled: {
+          title: `${autoTitle} (Prompt ${side})`,
+          description: `Auto-saved prompt ${side} from Comparison Page - ${new Date().toLocaleString()}`,
+          content: promptText.trim(),
+          tags: [],
+          visibility: "private",
+          price: 0,
+          featured: false
+        }
+      }
+    })
+  }
+
   return (
     <div className="flex-1 flex flex-col w-full h-[calc(100vh-64px)] bg-background">
       <div className="flex-1 flex min-h-0">
@@ -241,7 +268,14 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
                 <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+                  {/* ✅ Add Save button for Prompt A */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    onClick={() => handleSavePrompt("A")}
+                    title="Save Prompt A"
+                  >
                     <Save className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
@@ -256,9 +290,16 @@ Please provide:
                   >
                     <ArrowLeftRight className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
+                  {/* ✅ Add Help button */}
+                  <Link to="/help">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
+              {/* Prompt A Editor Section */}
               <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorACollapsed ? "flex-none" : "flex-1"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt A</h3>
@@ -274,9 +315,9 @@ Please provide:
                   </div>
                 </div>
                 {!editorACollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
                       placeholder="Write your first prompt here..."
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
@@ -313,7 +354,7 @@ Please provide:
                   </div>
                 </div>
                 {!responseACollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
                       {isLoadingA ? (
                         <div className="flex items-center space-x-2">
@@ -321,7 +362,7 @@ Please provide:
                           <span>Generating response...</span>
                         </div>
                       ) : (
-                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                           {aiResponseA}
                         </pre>
                       )}
@@ -340,18 +381,29 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
                 <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
+                  {/* ✅ Add Save button for Prompt B */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    onClick={() => handleSavePrompt("B")}
+                    title="Save Prompt B"
+                  >
                     <Save className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
-                    <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
-                  </Button>
+                  {/* ✅ Replace the existing HelpCircle with linked Help button */}
+                  <Link to="/help">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
+              {/* Prompt B Editor Section */}
               <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorBCollapsed ? "flex-none" : "flex-1"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt B</h3>
@@ -367,9 +419,9 @@ Please provide:
                   </div>
                 </div>
                 {!editorBCollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-foreground placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
                       placeholder="Write your second prompt here..."
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
@@ -406,7 +458,7 @@ Please provide:
                   </div>
                 </div>
                 {!responseBCollapsed && (
-                  <div className="bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
                       {isLoadingB ? (
                         <div className="flex items-center space-x-2">
@@ -414,7 +466,7 @@ Please provide:
                           <span>Generating response...</span>
                         </div>
                       ) : (
-                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
+                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                           {aiResponseB}
                         </pre>
                       )}
@@ -429,17 +481,42 @@ Please provide:
             </div>
           </div>
 
-          {/* Update the bottom action bar */}
+          {/* ✅ Update the bottom action bar to include save options */}
           <div className="h-12 border-t border-border px-3 bg-background flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-muted-foreground text-xs h-8" 
-              onClick={handleReset}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground text-xs h-8" 
+                onClick={handleReset}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
+              
+              {/* ✅ Add quick save buttons in bottom bar */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground text-xs h-8"
+                onClick={() => handleSavePrompt("A")}
+                title="Save Prompt A"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                Save A
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground text-xs h-8"
+                onClick={() => handleSavePrompt("B")}
+                title="Save Prompt B"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                Save B
+              </Button>
+            </div>
 
             <div className="flex items-center gap-2">
               <Button
@@ -485,14 +562,14 @@ Please provide:
             </div>
 
             <div className="flex-1 p-4 overflow-hidden"> {/* Changed from overflow-y-auto */}
-              <div className="bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
+              <div className="bg-gray-100 dark:bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
                 {isLoadingRating ? (
                   <div className="flex items-center space-x-2">
                     <RotateCcw className="h-4 w-4 animate-spin" />
                     <span>Analyzing responses...</span>
                   </div>
                 ) : (
-                  <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <pre className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                     {ratingResponse || "Click 'Rate' to compare both responses..."}
                   </pre>
                 )}

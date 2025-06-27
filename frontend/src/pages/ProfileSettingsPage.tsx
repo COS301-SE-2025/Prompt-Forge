@@ -8,56 +8,126 @@ import { Switch } from "../components/ui/Switch"
 import { Textarea } from "../components/ui/Textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select"
 import { Camera, Check, Save, Trash, Upload, X, Plus } from "lucide-react"
+import { profileService } from "../services/profileServices"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [profileImage, setProfileImage] = useState<string>(() => {
-    // Initialize from localStorage if exists
-    return localStorage.getItem('userProfileImage') || "/placeholder.svg?height=100&width=100"
-  })
+  // Saved state
+  const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
+  const [username, setUsername] = useState<string>("")
+  const [email, setEmail] = useState<string>("")
+  const [bio, setBio] = useState<string>("")
+  // Pending (unsaved) state
+  const [pendingProfileImage, setPendingProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
+  const [pendingUsername, setPendingUsername] = useState<string>("")
+  const [pendingEmail, setPendingEmail] = useState<string>("")
+  const [pendingBio, setPendingBio] = useState<string>("")
+  const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null)
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
-  const [bio, setBio] = useState(() => {
-    return localStorage.getItem('userBio') || "AI prompt engineer specializing in creative writing and technical documentation. I create prompts that help writers and developers get the most out of AI tools."
-  })
-  // Add username state
-  const [username, setUsername] = useState(() => {
-    return localStorage.getItem('username') || "theo_unknown"
-  })
+  const [loading, setLoading] = useState<boolean>(true)
 
+  // Load profile data on mount
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setLoading(true)
+        const profile = await profileService.getCurrentProfile()
+        setUsername(profile.username || "")
+        setEmail(profile.email || "")
+        setBio(profile.bio || "")
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+        // Set pending state to match loaded profile
+        setPendingUsername(profile.username || "")
+        setPendingEmail(profile.email || "")
+        setPendingBio(profile.bio || "")
+        setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+      } catch (error) {
+        console.error("Failed to load profile", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
+  // Only update pending image, not saved
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        setProfileImage(base64String)
-        localStorage.setItem('userProfileImage', base64String)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+    // Show preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPendingProfileImage(e.target?.result as string)
     }
+    reader.readAsDataURL(file)
+    setPendingProfileImageFile(file)
   }
 
+  // Remove image in pending state
   const handleRemoveImage = () => {
-    setProfileImage("/placeholder.svg?height=100&width=100")
-    localStorage.removeItem('userProfileImage')
+    setPendingProfileImage("/placeholder.svg?height=100&width=100")
+    setPendingProfileImageFile(null)
   }
 
+  // Update pending state only
   const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setBio(e.target.value)
+    setPendingBio(e.target.value)
+  }
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingUsername(e.target.value)
+  }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingEmail(e.target.value)
   }
 
-  const handleSave = () => {
-    setSaveStatus("saving")
-    // Add username to existing save handler
-    localStorage.setItem('username', username)
-    localStorage.setItem('userBio', bio)
-    
-    setTimeout(() => {
-      setSaveStatus("success")
-      setTimeout(() => setSaveStatus(null), 2000)
-    }, 1000)
-  }
-
+  // Save changes: upload image if changed, then update profile
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+  
+      let imageUrl = pendingProfileImage;
+  
+      if (pendingProfileImageFile) {
+        // If there's a new file, upload it and get the URL
+        imageUrl = await profileService.uploadProfilePicture(pendingProfileImageFile);
+      } else if (
+        pendingProfileImage === "/placeholder.svg?height=100&width=100" &&
+        profileImage !== pendingProfileImage
+      ) {
+        // If user removed the image
+        await profileService.deleteProfilePicture();
+        imageUrl = ""; // empty to trigger backend deletion logic
+      }
+  
+      await profileService.updateCurrentProfile({
+        username: pendingUsername,
+        bio: pendingBio,
+        email: pendingEmail,
+        profilePicture: imageUrl,
+      });
+  
+      // Update saved state only if successful
+      setUsername(pendingUsername);
+      setEmail(pendingEmail);
+      setBio(pendingBio);
+      setProfileImage(imageUrl);
+      setPendingProfileImageFile(null);
+  
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (error) {
+      console.error("Save failed", error);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 2000);
+    }
+    if (loading) {
+      return (
+        <div className="flex-1 flex items-center justify-center h-full">
+          <p>Loading profile...</p>
+        </div>
+      )}
+  };
+  //Show loading state while fetching profile
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex-1 p-6">
@@ -83,7 +153,7 @@ export default function ProfileSettingsPage() {
                       <div className="relative mb-4">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-muted">
                           <img
-                            src={profileImage}
+                            src={pendingProfileImage}
                             alt="Profile"
                             className="object-cover w-full h-full"
                           />
@@ -95,7 +165,7 @@ export default function ProfileSettingsPage() {
                           accept="image/*"
                           className="hidden"
                         />
-                        <div 
+                        <div
                           className="absolute -bottom-2 -right-2"
                           onClick={() => fileInputRef.current?.click()}
                         >
@@ -105,9 +175,9 @@ export default function ProfileSettingsPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="text-xs"
                           onClick={() => fileInputRef.current?.click()}
                         >
@@ -130,22 +200,26 @@ export default function ProfileSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="username">Username</Label>
-                          <Input 
-                            id="username" 
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                          <Input
+                            id="username"
+                            value={pendingUsername}
+                            onChange={handleUsernameChange}
                             className="bg-muted"
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="display-name">Display Name</Label>
-                          <Input id="display-name" defaultValue="Theo" />
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue="markdavis@gmail.com" />
+
+                        <Input
+                          id="email"
+                          type="email"
+                          value={pendingEmail}
+                          onChange={handleEmailChange}
+                          className="bg-muted"
+
+                        />
                       </div>
 
                       <div className="space-y-2">
@@ -153,9 +227,9 @@ export default function ProfileSettingsPage() {
                         <Textarea
                           id="bio"
                           placeholder="Tell us about yourself"
-                          value={bio}
+                          value={pendingBio}
                           onChange={handleBioChange}
-                          className="min-h-[100px]"
+                          className="min-h-[100px] bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#3ebb9e]"
                         />
                       </div>
                     </div>
@@ -164,10 +238,7 @@ export default function ProfileSettingsPage() {
                   <div className="border-t border-border pt-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        {saveStatus === "saving" && (
-                          <span className="text-sm text-muted-foreground">Saving changes...</span>
-                        )}
-                        {saveStatus === "success" && (
+                      {saveStatus === "success" && (
                           <span className="text-sm text-green-500 flex items-center">
                             <Check className="h-4 w-4 mr-1" />
                             Changes saved successfully
@@ -187,7 +258,6 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
                 </Card>
-
               </div>
             </TabsContent>
 
@@ -477,3 +547,7 @@ export default function ProfileSettingsPage() {
     </div>
   )
 }
+function setEmail(arg0: any) {
+  throw new Error("Function not implemented.")
+}
+

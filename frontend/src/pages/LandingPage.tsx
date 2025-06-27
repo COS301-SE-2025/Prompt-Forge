@@ -17,7 +17,6 @@ import {
   Sun,
 } from "lucide-react"
 import { useState, useEffect } from "react"
-import { Image } from "../components/ui/Image"
 import { useTheme } from "../components/theme-provider"
 import { Link } from "react-router-dom"
 
@@ -48,7 +47,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
-                <BrainCircuit className="w-3 h-3 text-[#3ebb9e] " />
+                <BrainCircuit className="w-6 h-6 text-[#3ebb9e] " />
               </div>
               <span className="text-lg font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
             </div>
@@ -65,12 +64,13 @@ export default function LandingPage() {
               >
                 How It Works
               </a>
-              <a
-                href="#pricing"
+              {/* ✅ Replace Pricing with Help & FAQ */}
+              <Link
+                to="/help"
                 className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
               >
-                Pricing
-              </a>
+                Help & FAQ
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"
@@ -130,13 +130,19 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+              <a
+                href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Watch Demo
-              </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+                >
+                  Watch Demo
+                </Button>
+              </a>
             </div>
             <div className="mt-12 flex justify-center items-center space-x-8 text-sm text-[#FFFFFF]/60">
               <div className="flex items-center">
@@ -209,6 +215,7 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* ✅ Updated Marketplace section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div>
               <div className="flex items-center mb-4">
@@ -236,30 +243,31 @@ export default function LandingPage() {
                 </li>
               </ul>
             </div>
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Prompt Marketplace Interface"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/Marketplace.png"
+                  alt="Prompt Marketplace Interface"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
           </div>
 
+          {/* ✅ Updated Testing Ground section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Testing Ground Interface"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto lg:order-1"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/TestingGround.png"
+                  alt="Testing Ground Interface"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
-            <div>
+            <div className="lg:order-2">
               <div className="flex items-center mb-4">
                 <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
                   <TestTube className="h-4 w-4 text-[#3ebb9e]" />
@@ -287,17 +295,18 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* ✅ Updated Community section - removed green square, bigger grey square and image */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="flex items-center mb-4">
                 <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
                   <BarChart3 className="h-4 w-4 text-[#3ebb9e]" />
                 </div>
-                <h3 className="text-2xl font-bold">Analytics & Ranking</h3>
+                <h3 className="text-2xl font-bold">Analytics & Community</h3>
               </div>
               <p className="text-lg text-muted-foreground mb-6">
-                Community-driven ranking system with comprehensive analytics. Understand what makes prompts successful
-                and improve continuously.
+                Community-driven ranking system with comprehensive analytics. Connect with other prompt engineers and
+                share knowledge in our vibrant community.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-center animate-slideInLeft animation-delay-200">
@@ -310,19 +319,19 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center animate-slideInLeft animation-delay-600">
                   <CheckCircle className="h-5 w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400" />
-                  <span>AI-powered insights</span>
+                  <span>Knowledge sharing</span>
                 </li>
               </ul>
             </div>
-            <div className="w-[400px] mx-auto">
-              <Image
-                src="/placeholder.svg?height=100&width=100"
-                alt="Analytics Dashboard"
-                width={100}
-                height={100}
-                className="w-[400px] h-[400px] mx-auto"
-                style={{ maxWidth: '400px', maxHeight: '400px' }}
-              />
+            <div className="w-[500px] mx-auto"> {/* ✅ Increased from w-[400px] to w-[500px] */}
+              {/* ✅ Removed green background, bigger grey container */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl"> {/* ✅ Increased padding from p-4 to p-6 */}
+                <img
+                  src="/Community.png"
+                  alt="Community & Analytics Dashboard"
+                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -406,13 +415,19 @@ export default function LandingPage() {
               <ArrowRight className="ml-2 h-5 w-5 animate-bounce-horizontal" />
             </Button>
               </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+            <a
+              href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Schedule Demo
-            </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 px-8 py-3 text-lg hover:scale-105 transition-all duration-300"
+              >
+                Watch Demo
+              </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -487,9 +502,10 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Help Center
-                  </a>
+                  {/* ✅ Link to your help page */}
+                  <Link to="/help" className="hover:text-white transition-colors duration-300">
+                    Help & FAQ
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors duration-300">
