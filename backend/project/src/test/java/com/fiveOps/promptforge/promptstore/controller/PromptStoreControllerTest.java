@@ -1,203 +1,356 @@
 package com.fiveOps.promptforge.promptstore.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.security.Principal;
+import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+
+import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.Tag;
+import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
+import com.fiveOps.promptforge.promptstore.model.PromptReview;
+import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
-import com.fiveOps.promptforge.promptstore.model.PromptReview;
-import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
+import org.springframework.security.core.Authentication;
 
 @ExtendWith(MockitoExtension.class)
-class PromptStoreControllerTest {
+class PromptStoreControllerReviewTest {
 
     @Mock
-    private PromptStoreService promptStoreService;
+    private PromptStoreService storeService;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private PromptStoreController promptStoreController;
 
-    private MockMvc mockMvc;
-    private Prompt testPrompt;
-    private UUID promptId;
-    private UUID userId;
+    private UUID testPromptId;
+    private UUID testUserId;
+    private PromptReview testReview;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(promptStoreController).build();
-        
-        promptId = UUID.randomUUID();
-        userId = UUID.randomUUID();
-        
-        testPrompt = new Prompt();
-        testPrompt.setId(promptId);
-        testPrompt.setTitle("Test Prompt");
-        testPrompt.setContent("Test Content");
+        testPromptId = UUID.randomUUID();
+        testUserId = UUID.randomUUID();
+
+        testReview = new PromptReview();
+        testReview.setPromptId(testPromptId);
+        testReview.setUserId(testUserId);
+        testReview.setRating(4.5);
+        testReview.setComment("Great prompt!");
     }
 
     @Test
-    void getAllPublicPrompts_ShouldReturnPublicPrompts() {
+    void getReviewsForPrompt_ShouldReturnPageOfReviews() {
         // Arrange
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getAllPublicPrompts()).thenReturn(expectedPrompts);
+        Pageable pageable = mock(Pageable.class);
+        when(storeService.getReviewsForPrompt(testPromptId, pageable)).thenReturn(mock(Page.class));
 
         // Act
-        List<Prompt> result = promptStoreController.getAllPublicPrompts();
+        ResponseEntity<Page<ReviewProjection>> response = 
+            promptStoreController.getReviewsForPrompt(testPromptId, pageable);
 
         // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).getAllPublicPrompts();
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        verify(storeService).getReviewsForPrompt(testPromptId, pageable);
     }
 
     @Test
-    void purchasePrompt_ShouldReturnPurchase() {
+    void createReview_ShouldCreateAndReturnReview() {
         // Arrange
-        PromptPurchase purchase = new PromptPurchase();
-        purchase.setPromptId(promptId);
-        purchase.setUserId(userId);
-        
-        when(promptStoreService.purchasePrompt(promptId, userId)).thenReturn(purchase);
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        when(storeService.createReview(any(PromptReview.class))).thenReturn(testReview);
 
         // Act
-        ResponseEntity<PromptPurchase> response = promptStoreController.purchasePrompt(promptId, userId);
+        ResponseEntity<PromptReview> response = 
+            promptStoreController.createReview(testPromptId, testReview, authentication);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(purchase, response.getBody());
-        verify(promptStoreService).purchasePrompt(promptId, userId);
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals(testPromptId, response.getBody().getPromptId());
+        assertEquals(testUserId, response.getBody().getUserId());
+        verify(storeService).createReview(any(PromptReview.class));
     }
 
     @Test
-    void getPromptReviews_ShouldReturnReviews() {
+    void createReview_ShouldSetUserIdAndPromptId() {
         // Arrange
-        PromptReview review = new PromptReview();
-        review.setPromptId(promptId);
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
         
-        List<PromptReview> expectedReviews = Arrays.asList(review);
-        when(promptStoreService.getPromptReviews(promptId)).thenReturn(expectedReviews);
+        PromptReview reviewWithoutIds = new PromptReview();
+        reviewWithoutIds.setRating(4.0);
+        reviewWithoutIds.setComment("Good");
+
+        when(storeService.createReview(any(PromptReview.class))).thenAnswer(invocation -> {
+            PromptReview r = invocation.getArgument(0);
+            r.setId(UUID.randomUUID());
+            return r;
+        });
 
         // Act
-        ResponseEntity<List<PromptReview>> response = promptStoreController.getPromptReviews(promptId);
+        ResponseEntity<PromptReview> response = 
+            promptStoreController.createReview(testPromptId, reviewWithoutIds, authentication);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedReviews, response.getBody());
-        verify(promptStoreService).getPromptReviews(promptId);
+        assertEquals(testPromptId, response.getBody().getPromptId());
+        assertEquals(testUserId, response.getBody().getUserId());
     }
 
     @Test
-    void searchPublic_ShouldReturnMatchingPrompts() {
-        // Arrange
+    void getAllPublicPrompts_ShouldReturnPageOfPrompts() {
+        Pageable pageable = mock(Pageable.class);
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
+        when(storeService.getPublicPromptsWithAuthorAndTags(pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.getAllPublicPrompts(pageable));
+        verify(storeService).getPublicPromptsWithAuthorAndTags(pageable);
+    }
+
+    @Test
+    void getFeaturedPrompts_ShouldReturnFeaturedPrompts() {
+        Pageable pageable = mock(Pageable.class);
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
+        when(storeService.getFeaturedPrompts(pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.getFeaturedPrompts(pageable));
+        verify(storeService).getFeaturedPrompts(pageable);
+    }
+
+    @Test
+    void searchPublic_ShouldReturnSearchResults() {
+        Pageable pageable = mock(Pageable.class);
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
         String query = "test";
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.searchPublic(query)).thenReturn(expectedPrompts);
-
-        // Act
-        List<Prompt> result = promptStoreController.searchPublic(query);
-
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).searchPublic(query);
+        when(storeService.searchPublic(query, pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.searchPublic(query, pageable));
+        verify(storeService).searchPublic(query, pageable);
     }
 
     @Test
-    void getUnderPrice_ShouldReturnPromptsUnderMaxPrice() {
-        // Arrange
-        double maxPrice = 15.0;
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getPublicUnderPrice(maxPrice)).thenReturn(expectedPrompts);
-
-        // Act
-        List<Prompt> result = promptStoreController.getUnderPrice(maxPrice);
-
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).getPublicUnderPrice(maxPrice);
+    void getUnderPrice_ShouldReturnPromptsUnderPrice() {
+        double maxPrice = 10.0;
+        List<Prompt> prompts = mock(List.class);
+        when(storeService.getPublicUnderPrice(maxPrice)).thenReturn(prompts);
+        assertEquals(prompts, promptStoreController.getUnderPrice(maxPrice));
+        verify(storeService).getPublicUnderPrice(maxPrice);
     }
 
     @Test
-    void getByTagName_ShouldReturnPromptsWithTag() {
-        // Arrange
+    void filterByTagName_ShouldReturnFilteredPrompts() {
+        Pageable pageable = mock(Pageable.class);
         String tagName = "test";
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getPublicByTagName(tagName)).thenReturn(expectedPrompts);
-
-        // Act
-        List<Prompt> result = promptStoreController.getByTagName(tagName);
-
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).getPublicByTagName(tagName);
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
+        when(storeService.getPublicByTagName("Test", pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.filterByTagName(tagName, pageable));
+        verify(storeService).getPublicByTagName("Test", pageable);
     }
 
     @Test
-    void getPublicPromptsByAuthor_ShouldReturnPublicPrompts() {
-        // Arrange
+    void filterByTagNameAndFilter_ShouldReturnFilteredPrompts() {
+        Pageable pageable = mock(Pageable.class);
+        String tagName = "test";
+        String filter = "popular";
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
+        when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
+        verify(storeService).getPublicByTagNameAndFilter("Test", filter, pageable);
+    }
+
+    @Test
+    void getNew_ShouldReturnNewPrompts() {
+        Pageable pageable = mock(Pageable.class);
+        Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
+        when(storeService.getNew(pageable)).thenReturn(page);
+        assertEquals(page, promptStoreController.getNew(pageable));
+        verify(storeService).getNew(pageable);
+    }
+
+    @Test
+    void getPublicPromptsByAuthor_ShouldReturnPrompts() {
         UUID authorId = UUID.randomUUID();
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getPublicPromptsByAuthor(authorId)).thenReturn(expectedPrompts);
-
-        // Act
-        List<Prompt> result = promptStoreController.getPublicPromptsByAuthor(authorId);
-
-        // Assert
-        assertEquals(expectedPrompts, result);
-        verify(promptStoreService).getPublicPromptsByAuthor(authorId);
+        List<Prompt> prompts = mock(List.class);
+        when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(prompts);
+        assertEquals(prompts, promptStoreController.getPublicPromptsByAuthor(authorId));
+        verify(storeService).getPublicPromptsByAuthor(authorId);
     }
 
     @Test
-    void deleteListing_ShouldReturnNoContentWhenSuccessful() {
-        // Arrange
-        when(promptStoreService.deleteListing(promptId)).thenReturn(true);
-
-        // Act
-        ResponseEntity<Void> response = promptStoreController.deleteListing(promptId);
-
-        // Assert
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(promptStoreService).deleteListing(promptId);
+    void deleteListing_ShouldReturnNoContentIfDeleted() {
+        UUID promptId = UUID.randomUUID();
+        when(storeService.deleteListing(promptId)).thenReturn(true);
+        ResponseEntity<Void> response = promptStoreController.deleteListing(promptId, authentication);
+        assertEquals(204, response.getStatusCodeValue());
+        verify(storeService).deleteListing(promptId);
     }
 
     @Test
-    void deleteListing_ShouldReturnNotFoundWhenFailed() {
-        // Arrange
-        when(promptStoreService.deleteListing(promptId)).thenReturn(false);
-
-        // Act
-        ResponseEntity<Void> response = promptStoreController.deleteListing(promptId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(promptStoreService).deleteListing(promptId);
+    void deleteListing_ShouldReturnNotFoundIfNotDeleted() {
+        UUID promptId = UUID.randomUUID();
+        when(storeService.deleteListing(promptId)).thenReturn(false);
+        ResponseEntity<Void> response = promptStoreController.deleteListing(promptId, authentication);
+        assertEquals(404, response.getStatusCodeValue());
+        verify(storeService).deleteListing(promptId);
     }
 
     @Test
-    void getRecentlyPublishedPrompts_ShouldReturnRecentPrompts() {
-        // Arrange
-        List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-        when(promptStoreService.getRecentlyPublishedPrompts()).thenReturn(expectedPrompts);
+    void isPromptBought_ShouldReturnTrueOrFalse() {
+        UUID promptId = UUID.randomUUID();
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        when(storeService.isPromptBought(testUserId, promptId)).thenReturn(true);
+        ResponseEntity<Boolean> response = promptStoreController.isPromptBought(promptId, authentication);
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody());
+        verify(storeService).isPromptBought(testUserId, promptId);
+    }
 
-        // Act
-        ResponseEntity<List<Prompt>> response = promptStoreController.getRecentlyPublishedPrompts();
+    @Test
+    void getAllTags_ShouldReturnTags() {
+        List<Tag> tags = mock(List.class);
+        when(storeService.getAllTags()).thenReturn(tags);
+        assertEquals(tags, promptStoreController.getAllTags());
+        verify(storeService).getAllTags();
+    }
 
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedPrompts, response.getBody());
-        verify(promptStoreService).getRecentlyPublishedPrompts();
+    @Test
+    void getPopularTags_ShouldReturnPopularTags() {
+        int limit = 5;
+        List<Tag> tags = mock(List.class);
+        when(storeService.getPopularTags(limit)).thenReturn(tags);
+        assertEquals(tags, promptStoreController.getPopularTags(limit));
+        verify(storeService).getPopularTags(limit);
+    }
+
+    @Test
+    void getAllPublicPrompts_ShouldHandleNullAndEmpty() {
+        Pageable pageable = mock(Pageable.class);
+        when(storeService.getPublicPromptsWithAuthorAndTags(pageable)).thenReturn(null);
+        assertNull(promptStoreController.getAllPublicPrompts(pageable));
+    }
+
+    @Test
+    void getFeaturedPrompts_ShouldHandleNullAndEmpty() {
+        Pageable pageable = mock(Pageable.class);
+        when(storeService.getFeaturedPrompts(pageable)).thenReturn(null);
+        assertNull(promptStoreController.getFeaturedPrompts(pageable));
+    }
+
+    @Test
+    void searchPublic_ShouldHandleNullAndEmpty() {
+        Pageable pageable = mock(Pageable.class);
+        String query = "test";
+        when(storeService.searchPublic(query, pageable)).thenReturn(null);
+        assertNull(promptStoreController.searchPublic(query, pageable));
+    }
+
+    @Test
+    void getUnderPrice_ShouldHandleEmptyList() {
+        double maxPrice = 10.0;
+        when(storeService.getPublicUnderPrice(maxPrice)).thenReturn(List.of());
+        assertTrue(promptStoreController.getUnderPrice(maxPrice).isEmpty());
+    }
+
+    @Test
+    void filterByTagName_ShouldHandleNullPage() {
+        Pageable pageable = mock(Pageable.class);
+        String tagName = "test";
+        when(storeService.getPublicByTagName("Test", pageable)).thenReturn(null);
+        assertNull(promptStoreController.filterByTagName(tagName, pageable));
+    }
+
+    @Test
+    void filterByTagNameAndFilter_ShouldHandleNullPage() {
+        Pageable pageable = mock(Pageable.class);
+        String tagName = "test";
+        String filter = "popular";
+        when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(null);
+        assertNull(promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
+    }
+
+    @Test
+    void getNew_ShouldHandleNullPage() {
+        Pageable pageable = mock(Pageable.class);
+        when(storeService.getNew(pageable)).thenReturn(null);
+        assertNull(promptStoreController.getNew(pageable));
+    }
+
+    @Test
+    void getPublicPromptsByAuthor_ShouldHandleEmptyList() {
+        UUID authorId = UUID.randomUUID();
+        when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(List.of());
+        assertTrue(promptStoreController.getPublicPromptsByAuthor(authorId).isEmpty());
+    }
+
+    @Test
+    void deleteListing_ShouldHandleException() {
+        UUID promptId = UUID.randomUUID();
+        when(storeService.deleteListing(promptId)).thenThrow(new IllegalArgumentException("Invalid ID"));
+        assertThrows(IllegalArgumentException.class, () -> promptStoreController.deleteListing(promptId, authentication));
+    }
+
+    @Test
+    void isPromptBought_ShouldHandleException() {
+        UUID promptId = UUID.randomUUID();
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        when(storeService.isPromptBought(testUserId, promptId)).thenThrow(new IllegalArgumentException("Invalid"));
+        assertThrows(IllegalArgumentException.class, () -> promptStoreController.isPromptBought(promptId, authentication));
+    }
+
+    @Test
+    void getAllTags_ShouldHandleEmptyList() {
+        when(storeService.getAllTags()).thenReturn(List.of());
+        assertTrue(promptStoreController.getAllTags().isEmpty());
+    }
+
+    @Test
+    void getPopularTags_ShouldHandleEmptyList() {
+        int limit = 5;
+        when(storeService.getPopularTags(limit)).thenReturn(List.of());
+        assertTrue(promptStoreController.getPopularTags(limit).isEmpty());
+    }
+
+    @Test
+    void createReview_ShouldThrowIfDuplicate() {
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        when(storeService.createReview(any(PromptReview.class))).thenThrow(new IllegalArgumentException("User already reviewed this prompt"));
+        assertThrows(IllegalArgumentException.class, () -> promptStoreController.createReview(testPromptId, testReview, authentication));
+    }
+
+    @Test
+    void createReview_ShouldThrowOnGenericException() {
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        when(storeService.createReview(any(PromptReview.class))).thenThrow(new RuntimeException("Unexpected error"));
+        assertThrows(RuntimeException.class, () -> promptStoreController.createReview(testPromptId, testReview, authentication));
+    }
+
+    @Test
+    void getReviewsForPrompt_ShouldHandleNullPage() {
+        Pageable pageable = mock(Pageable.class);
+        when(storeService.getReviewsForPrompt(testPromptId, pageable)).thenReturn(null);
+        ResponseEntity<Page<ReviewProjection>> response = promptStoreController.getReviewsForPrompt(testPromptId, pageable);
+        assertNull(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
     }
 }

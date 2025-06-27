@@ -2,50 +2,64 @@ import { useEffect, useState } from "react"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
-import { Sparkles, Star, User, Search, Filter } from "lucide-react"
+import { Sparkles, Star, User, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
-import { Category, Prompt } from "@/models/Prompt"
 import { PromptService } from "@/services/promptService"
+import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
 
-// Mock data for prompts
 const PROMPTS_PER_PAGE = 12
 
+interface EnrichedMarketplacePrompt extends MarketplacePrompt {
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+const useCacheInvalidation = () => {
+  useEffect(() => {
+    const clearRatingsCache = () => {
+      const keys = Object.keys(sessionStorage)
+      keys.forEach(key => {
+        if (key.startsWith('rating_')) {
+          sessionStorage.removeItem(key)
+        }
+      })
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        clearRatingsCache()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+}
+
 export default function MarketplacePage() {
-  const promptService = new PromptService();
-  const [prompts, setPrompts] = useState([])
+  useCacheInvalidation()
+  
+  const promptService = new PromptService()
+  const [currentPrompts, setCurrentPrompts] = useState<EnrichedMarketplacePrompt[]>([]);
+  const [featuredPrompts, setFeaturedPrompts] = useState<MarketplacePrompt[]>([]);
   const [currentPage, setCurrentPage] = useState(1)
+  const [promptsFound, setPromptsFound] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
+  const [showFeatured, setShowFeatured] = useState(true)
+  const [availableCategories, setAvailableCategories] = useState<Tag[]>([]) // ✅ Changed to Tag[]
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [ratingsLoading, setRatingsLoading] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
 
-  useEffect(() => {
-    promptService.getMarketplacePrompts()
-    .then(setPrompts)
-    .catch(err => console.error(err));
-  }, []);
-
-  // Filter prompts based on search and category
-  const filteredPrompts = prompts.filter((prompt:Prompt) => {
-    const matchesSearch =
-      prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || prompt.category === selectedCategory
-    const matchesFilter =
-      selectedFilter === "all" ||
-      (selectedFilter === "featured" && prompt.featured) ||
-      (selectedFilter === "popular" && prompt.uses > 2000) ||
-      (selectedFilter === "new" && prompt.id > 40)
-
-    return matchesSearch && matchesCategory && matchesFilter
-  })
-
-  const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
-  const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
-  const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
-  const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
-
-  const categories = ["all", "Writing", "Marketing", "Development", "Design"]
+  // Pagination calculations
+  const [totalPages, setTotalPages] = useState<number>(1)
   const filters = [
     { value: "all", label: "All" },
     { value: "featured", label: "Featured" },
@@ -53,227 +67,475 @@ export default function MarketplacePage() {
     { value: "new", label: "New" },
   ]
 
-  const featuredPrompts = prompts.filter((prompt:Prompt) => prompt.featured).slice(0, 4)
+  // ✅ Fetch available categories/tags from the database
+  const fetchAvailableCategories = async () => {
+    setCategoriesLoading(true)
+    try {
+      const tags = await promptService.getAllTags()
+      console.log("Fetched tags:", tags) // Debug log
+      setAvailableCategories(tags)
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      setAvailableCategories([]) // Fallback to empty array
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
+
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter);
+    setCurrentPage(1) // ✅ Reset to page 1
+    fetchData(selectedCategory, filter, searchQuery, 1)
+  }
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1) // ✅ Reset to page 1
+    fetchData(category, selectedFilter, searchQuery, 1)
+  }
+
+  const enrichPromptsWithRatings = async (prompts: MarketplacePrompt[]): Promise<EnrichedMarketplacePrompt[]> => {
+    const enrichedPrompts = await Promise.all(
+      prompts.map(async (prompt) => {
+        const { averageRating, reviewCount } = await promptService.getPromptRatingSummary(prompt.id);
+        return {
+          ...prompt,
+          averageRating,
+          reviewCount
+        };
+      })
+    );
+    
+    return enrichedPrompts;
+  };
+
+  const fetchData = async (tag = "all", filter = "all", search = "", page = 1) => {
+    setLoading(true);
+    setCurrentPage(page) // ✅ Update current page
+    
+    try {
+      const pageData = await promptService.fetchMarketplacePrompts({ tag, filter, search }, page - 1);
+      
+      // Set prompts first without ratings
+      setCurrentPrompts(pageData.content || []);
+      setTotalPages(pageData.totalPages || 1);
+      setPromptsFound(pageData.totalElements || 0);
+      setLoading(false);
+      
+      // ✅ Load ratings in background
+      setRatingsLoading(true);
+      const enrichedPrompts = await enrichPromptsWithRatings(pageData.content || []);
+      setCurrentPrompts(enrichedPrompts);
+      setRatingsLoading(false);
+      
+    } catch (err) {
+      console.error('Error fetching marketplace data:', err);
+      setError('Failed to load prompts. Please try again.');
+      setLoading(false);
+      setRatingsLoading(false);
+    }
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1) // ✅ Reset to page 1
+    
+    fetchData(selectedCategory, selectedFilter, query, 1)
+  }
+
+  const changePage = (pageNumber: number) => {
+    fetchData(selectedCategory, selectedFilter, searchQuery, pageNumber)
+  }
+
+  // ✅ Load initial data and categories when component mounts
+  useEffect(() => {
+    fetchAvailableCategories() // Fetch categories first
+    fetchData() // Then fetch prompts
+  }, [])
+
+  // Add this useEffect to check for refresh flag:
+  useEffect(() => {
+    const checkRefreshFlag = () => {
+      if (sessionStorage.getItem('needsRatingRefresh') === 'true') {
+        sessionStorage.removeItem('needsRatingRefresh')
+        
+        // Clear all rating caches
+        const keys = Object.keys(sessionStorage)
+        keys.forEach(key => {
+          if (key.startsWith('rating_')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+        
+        // Refresh current data
+        if (currentPrompts.length > 0) {
+          fetchData(selectedCategory, selectedFilter, searchQuery, currentPage)
+        }
+      }
+    }
+
+    // Check on mount and on visibility change
+    checkRefreshFlag()
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkRefreshFlag()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [currentPrompts, selectedCategory, selectedFilter, searchQuery, currentPage])
+
+  // Show loading screen (full screen like other pages)
+  if ((loading && currentPrompts.length === 0) || categoriesLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading marketplace...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error screen
+  if (error && currentPrompts.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Error Loading Marketplace</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button 
+            onClick={() => {
+              setError(null)
+              fetchData()
+            }} 
+            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full">
-      <div className="flex">
+    <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block">
-          <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-          <div className="space-y-1">
-            {filters.map((filter) => (
-              <Button
-                key={filter.value}
-                variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+            <div className="space-y-1 mb-6">
+              {filters.map((filter) => (
+                <Button
+                  key={filter.value}
+                  variant="ghost"
+                  className={`w-full justify-start text-sm h-8 px-2 ${
+                    selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                   }`}
-                onClick={() => setSelectedFilter(filter.value)}
-              >
-                {filter.label}
-              </Button>
-            ))}
-          </div>
+                  onClick={() => handleFilterChange(filter.value)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
 
-          <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
-          <div className="space-y-1">
-            {categories.map((category) => (
+            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
+            <div className="space-y-1">
+              {/* ✅ All Categories button */}
               <Button
-                key={category}
                 variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                  }`}
-                onClick={() => setSelectedCategory(category)}
+                className={`w-full justify-start text-sm h-8 px-2 ${
+                  selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                }`}
+                onClick={() => handleCategoryChange("all")}
               >
-                {category === "all" ? "All" : category}
+                All Categories
               </Button>
-            ))}
+              
+              {/* ✅ Render actual tags from database - simplified version */}
+              {availableCategories.map((tag) => (
+                <Button
+                  key={tag.id || tag.name}
+                  variant="ghost"
+                  className={`w-full justify-start text-sm h-8 px-2 ${
+                    selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                  }`}
+                  onClick={() => handleCategoryChange(tag.name)}
+                >
+                  <span className="truncate">{tag.name}</span>
+                  {/* ✅ Removed promptCount display */}
+                </Button>
+              ))}
+              
+              {/* ✅ Show loading state for categories */}
+              {categoriesLoading && (
+                <div className="flex justify-center py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
+                </div>
+              )}
+              
+              {/* ✅ Show empty state if no categories */}
+              {!categoriesLoading && availableCategories.length === 0 && (
+                <div className="text-xs text-muted-foreground px-2 py-1">
+                  No categories found
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold mb-4 md:mb-0">Prompt Marketplace</h1>
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-6xl mx-auto">
+              {/* Header and Mobile Filters */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold mb-4 md:mb-0">Prompt Marketplace</h1>
+                <Button 
+                  variant="outline" 
+                  className="md:hidden mb-4" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+              </div>
 
-              {/* Mobile Filter Toggle */}
-              <Button variant="outline" className="md:hidden mb-4" onClick={() => setShowFilters(!showFilters)}>
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </div>
-
-            {/* Mobile Filters */}
-            {showFilters && (
-              <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Filter</h4>
-                    <div className="space-y-1">
+              {showFilters && (
+                <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Filters</h4>
                       {filters.map((filter) => (
                         <Button
                           key={filter.value}
                           variant="ghost"
                           size="sm"
-                          className={`w-full justify-start ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                            }`}
-                          onClick={() => setSelectedFilter(filter.value)}
+                          className={`w-full justify-start ${
+                            selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                          }`}
+                          onClick={() => handleFilterChange(filter.value)}
                         >
                           {filter.label}
                         </Button>
                       ))}
                     </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Category</h4>
-                    <div className="space-y-1">
-                      {categories.map((category) => (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Categories</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start ${
+                          selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                        }`}
+                        onClick={() => handleCategoryChange("all")}
+                      >
+                        All Categories
+                      </Button>
+                      {availableCategories.slice(0, 4).map((tag) => (
                         <Button
-                          key={category}
+                          key={tag.id || tag.name}
                           variant="ghost"
                           size="sm"
-                          className={`w-full justify-start ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                            }`}
-                          onClick={() => setSelectedCategory(category)}
+                          className={`w-full justify-start ${
+                            selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                          }`}
+                          onClick={() => handleCategoryChange(tag.name)}
                         >
-                          {category === "all" ? "All" : category}
+                          <span className="truncate">{tag.name}</span>
                         </Button>
                       ))}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Search Bar */}
-            <div className="mb-8">
-              <div className="relative">
-                <Input
-                  placeholder="        Search for prompts..."
-                  className="bg-muted border-muted pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {!searchQuery && (
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Featured Prompts */}
-            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && (
+              {/* Search Bar */}
               <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                  <h2 className="text-lg font-medium">Featured Prompts</h2>
+                <div className="relative">
+                  <Input
+                    placeholder="        Search for prompts..."
+                    className="bg-muted border-muted pl-10"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                  />
+                  {!searchQuery && (
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  {featuredPrompts.map((prompt:Prompt) => (
-                    <PromptCard key={prompt.id} id={prompt.id} category={prompt.category} rating={prompt.rating} title={prompt.title} description={prompt.description} author={prompt.author} price={prompt.price} uses={prompt.uses} featured={prompt.featured} />
-                  ))}
-                </div>
               </div>
-            )}
 
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                <h2 className="text-lg font-medium">
-                  {searchQuery
-                    ? `Search Results for "${searchQuery}"`
-                    : selectedCategory !== "all"
-                      ? `${selectedCategory} Prompts`
-                      : selectedFilter !== "all"
-                        ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
-                        : "All Prompts"}
-                </h2>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
-              </div>
-            </div>
-
-            {/* Prompts Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-              {currentPrompts.map((prompt:Prompt) => (
-                <PromptCard key={prompt.id} id={prompt.id} category={prompt.category} rating={prompt.rating} title={prompt.title} description={prompt.description} author={prompt.author} price={prompt.price} uses={prompt.uses} featured={prompt.featured} />
-
-              ))}
-            </div>
-
-            {/* No Results */}
-            {filteredPrompts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No prompts found</h3>
-                  <p>Try adjusting your search terms or filters</p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("")
-                    setSelectedCategory("all")
-                    setSelectedFilter("all")
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                  let pageNumber
-                  if (totalPages <= 5) {
-                    pageNumber = i + 1
-                  } else if (currentPage <= 3) {
-                    pageNumber = i + 1
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNumber = totalPages - 4 + i
-                  } else {
-                    pageNumber = currentPage - 2 + i
-                  }
-
-                  return (
+              {/* Featured Prompts - Always show when available */}
+              {featuredPrompts.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                      <h2 className="text-lg font-medium">Featured Prompts</h2>
+                      <span className="ml-2 text-sm text-muted-foreground">({featuredPrompts.length})</span>
+                    </div>
                     <Button
-                      key={pageNumber}
-                      variant={currentPage === pageNumber ? "default" : "outline"}
+                      variant="ghost"
                       size="sm"
-                      onClick={() => setCurrentPage(pageNumber)}
-                      className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
+                      onClick={() => setShowFeatured(!showFeatured)}
+                      className="flex items-center text-sm text-muted-foreground hover:text-foreground"
                     >
-                      {pageNumber}
+                      {showFeatured ? "Hide" : "Show"}
+                      {showFeatured ? (
+                        <ChevronUp className="h-4 w-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      )}
                     </Button>
-                  )
-                })}
+                  </div>
+                  
+                  {showFeatured && (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-all duration-300 ease-in-out">
+                      {featuredPrompts.map((prompt) => (
+                        <PromptCard
+                          key={`featured-${prompt.id}`}
+                          {...prompt}
+                          tags={prompt.tagnames}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
+              {/* Loading State */}
+              {loading && currentPrompts.length > 0 && (
+                <div className="flex justify-center items-center h-32">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Updating results...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Results - only show when not loading initial data */}
+              {!loading || currentPrompts.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <Star className="h-5 w-5 mr-2 text-yellow-400" />
+                      <h2 className="text-lg font-medium">
+                        {searchQuery
+                          ? `Search Results for "${searchQuery}"`
+                          : selectedCategory !== "all"
+                            ? `${selectedCategory} Prompts`
+                            : selectedFilter !== "all"
+                              ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
+                              : "All Prompts"}
+                      </h2>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {promptsFound} prompt{promptsFound !== 1 ? "s" : ""} found
+                    </div>
+                  </div>
+
+                  {/* Prompts Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                    {currentPrompts.map((prompt) => (
+                      <PromptCard 
+                        key={`prompt-${prompt.id}`}
+                        id={prompt.id}
+                        title={prompt.title}
+                        description={prompt.description}
+                        username={prompt.username}
+                        price={prompt.price}
+                        tags={prompt.tagnames}
+                        rating={prompt.averageRating}
+                        reviewCount={prompt.reviewCount}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Empty State */}
+                  {currentPrompts.length === 0 && !loading && (
+                    <div className="text-center py-12">
+                      <div className="text-muted-foreground mb-4">
+                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <h3 className="text-lg font-medium mb-2">No prompts found</h3>
+                        <p>Try adjusting your search terms or filters</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSearchQuery("")
+                          setSelectedCategory("all")
+                          setSelectedFilter("all")
+                          fetchData("all", "all", "", 1)
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mt-8">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+
+                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                        let pageNumber
+                        if (totalPages <= 5) {
+                          pageNumber = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNumber = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNumber = totalPages - 4 + i
+                        } else {
+                          pageNumber = currentPage - 2 + i
+                        }
+
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => changePage(pageNumber)}
+                            className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
+                          >
+                            {pageNumber}
+                          </Button>
+                        )
+                      })}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

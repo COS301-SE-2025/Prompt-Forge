@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "prompt_purchases")
+@Table(name = "purchased_prompts")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,6 +40,9 @@ public class PromptPurchase {
     @CreationTimestamp
     @Column(name = "purchased_at", nullable = false)
     private LocalDateTime purchasedAt;
+    
+    @Column(name = "visibility", nullable = false)
+    private String visibility = "public"; // ✅ default at Java level
 
     // @Column(name = "downloads_remaining", nullable = false)
     // private Integer downloadsRemaining = 3;
