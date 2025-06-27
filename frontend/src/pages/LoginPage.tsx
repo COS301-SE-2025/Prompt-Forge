@@ -1,154 +1,236 @@
-import { useState, useEffect } from "react"
-import { Link, useNavigate, Navigate } from "react-router-dom"
-import { BrainCircuit, Chrome, Eye, EyeOff } from "lucide-react"
-import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
-import { Input } from "../components/ui/Input"
-
-// Test users array - moved outside component to persist during session
-const TEST_USERS = [
-  { email: "test@example.com", password: "password123", username: "testuser" },
-  { email: "admin@promptforge.com", password: "admin123", username: "admin" },
-]
+import { useState, useEffect } from "react";
+import { Link, useNavigate, Navigate } from "react-router-dom";
+import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { AuthService } from "@/services/authService";
 
 export default function LoginPage() {
-  const [activeTab, setActiveTab] = useState("login")
-  const navigate = useNavigate()
-  const [toggleLoginPassword,setToggleLoginPassword] = useState(false);
-  const [togglePassword,setTogglePassword] = useState(false);
-  const [toggleConfirmPassword,setToggleConfirmPassword] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("")
-  const [loginPassword, setLoginPassword] = useState("")
-  const [signupEmail, setSignupEmail] = useState("")
-  const [signupPassword, setSignupPassword] = useState("")
-  const [signupUsername, setSignupUsername] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
-  const [username, setUsername] = useState(() => {
-    return localStorage.getItem('username') || "Guest"
-  })
+  const authService = new AuthService();
+  const [activeTab, setActiveTab] = useState("login");
+  const navigate = useNavigate();
+  const [toggleLoginPassword, setToggleLoginPassword] = useState(false);
+  const [togglePassword, setTogglePassword] = useState(false);
+  const [toggleConfirmPassword, setToggleConfirmPassword] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [username, setUsername] = useState(() => localStorage.getItem("username") || "Guest");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+
+  // New state variables for password validation
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasMinLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
 
   useEffect(() => {
-    const savedUsername = localStorage.getItem('username')
-    if (savedUsername) {
-      setUsername(savedUsername)
-    }
+    const savedUsername = localStorage.getItem("username");
+    if (savedUsername) setUsername(savedUsername);
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'username') {
-        setUsername(e.newValue || "Guest")
+      if (e.key === "username") {
+        setUsername(e.newValue || "Guest");
       }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const handleLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+      setError("All fields are required");
+      return;
     }
 
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+    try {
+      console.log("🔍 Attempting login with:", { email: loginEmail });
+      
+      const result = await authService.login({ 
+        email: loginEmail, 
+        password: loginPassword 
+      });
+      
+      console.log("🔍 Login result:", result);
+      
+      if (result?.message === "Login successful") {
+        // Store user data from response
+        if (result.username) localStorage.setItem("username", result.username);
+        if (result.userId) localStorage.setItem("userId", result.userId);
+        if (result.email) localStorage.setItem("userEmail", result.email);
+        
+        setError("");
+        console.log("✅ Login successful, navigating to dashboard");
+        navigate("/home"); // ✅ Navigate to dashboard to test
+      } else {
+        console.warn("Unexpected login result:", result);
+        setError("Login failed");
+      }
+    } catch (err: any) {
+      console.error("Login error caught:", err);
+      setError(err.message || "Login error");
+    }
+  };
 
-  const handleLogin = () => {
-    const user = TEST_USERS.find(u => u.email === loginEmail)
-    
-    if (!user) {
-      setError("User not found")
-      return
+
+  // Password validation function
+  const validatePassword = (password: string) => {
+    const validation = {
+      hasMinLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    setPasswordValidation(validation);
+    return Object.values(validation).every(Boolean);
+  };
+
+  const handleSignUp = async () => {
+    try {
+      if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
+        setError("All fields are required");
+        return;
+      }
+
+      // Validate password strength
+      if (!validatePassword(signupPassword)) {
+        setError("Password does not meet security requirements");
+        setShowPasswordRequirements(true);
+        return;
+      }
+
+      if (signupPassword !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+
+      // First, sign up the user
+      const signupResult = await authService.signup({
+        email: signupEmail,
+        password: signupPassword,
+        username: signupUsername,
+        confirmPassword: confirmPassword,
+      });
+
+      console.log("Signup result:", signupResult);
+
+      // Check if signup was successful
+      if (signupResult?.message === "Signup successful" || 
+          signupResult?.message === "User created successfully" ||
+          signupResult?.status === "success" ||
+          signupResult?.success === true) {
+        
+        // If signup successful, automatically log them in
+        try {
+          const loginResult = await authService.login({ 
+            email: signupEmail, 
+            password: signupPassword 
+          });
+
+          console.log("Auto-login result:", loginResult);
+
+          if (loginResult?.message === "Login successful") {
+            // Store user data from login response
+            localStorage.setItem("username", loginResult.username || signupUsername);
+            localStorage.setItem("userEmail", signupEmail);
+            
+            // Store authentication tokens if provided
+            if (loginResult.token) {
+              localStorage.setItem("token", loginResult.token);
+            }
+            if (loginResult.userId || loginResult.user?.id) {
+              localStorage.setItem("userId", loginResult.userId || loginResult.user.id);
+            }
+            
+            setError("");
+            navigate("/home");
+          } else {
+            // Login failed after successful signup - still navigate but show a message
+            localStorage.setItem("username", signupUsername);
+            localStorage.setItem("userEmail", signupEmail);
+            setError("Account created successfully! Please log in.");
+            setActiveTab("login"); // Switch to login tab
+          }
+        } catch (loginErr: any) {
+          console.error("Auto-login error:", loginErr);
+          // Signup successful but auto-login failed
+          localStorage.setItem("username", signupUsername);
+          localStorage.setItem("userEmail", signupEmail);
+          setError("Account created successfully! Please log in.");
+          setActiveTab("login"); // Switch to login tab
+          setLoginEmail(signupEmail); // Pre-fill email for convenience
+        }
+      } else {
+        console.warn("Unexpected signup result:", signupResult);
+        setError(signupResult?.message || "Signup failed");
+      }
+    } catch (err: any) {
+      console.error("Signup error caught:", err);
+      setError(err.message || "Signup error");
+    }
+  };
+
+  const handleForgotPassword = () => {
+    if (!forgotEmail) {
+      setError("Email is required");
+      return;
     }
 
-    if (user.password !== loginPassword) {
-      setError("Invalid password")
-      return
-    }
+    setError("");
+    alert(`If this were real, password reset instructions would be sent to ${forgotEmail}`);
+    setShowForgotPassword(false);
+    setForgotEmail("");
+  };
 
-    // Save user data to localStorage
-    localStorage.setItem('username', user.username)
-    localStorage.setItem('userEmail', user.email)
-    
-    setError("")
-    navigate('/home')
-  }
-
-  const handleSignUp = () => {
-    // Validation
-    if (!signupEmail || !signupPassword || !signupUsername || !confirmPassword) {
-      setError("All fields are required")
-      return
-    }
-
-    if (signupPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (TEST_USERS.some(u => u.email === signupEmail)) {
-      setError("Email already exists")
-      return
-    }
-
-    if (TEST_USERS.some(u => u.username === signupUsername)) {
-      setError("Username already taken")
-      return
-    }
-
-    // Add new user
-    TEST_USERS.push({
-      email: signupEmail,
-      password: signupPassword,
-      username: signupUsername
-    })
-
-    // Save user data to localStorage
-    localStorage.setItem('username', signupUsername)
-    localStorage.setItem('userEmail', signupEmail)
-
-    setError("")
-    navigate('/home')
-  }
-
-  const handleLogout = () => {
-    // Clear user data from localStorage
-    localStorage.removeItem('username')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userProfileImage')
-    localStorage.removeItem('userBio')
-    
-    // Navigate to login page
-    navigate('/login')
-  }
-
-  // Add this to routes that require authentication
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-    const username = localStorage.getItem('username')
-    
-    if (!username) {
-      return <Navigate to="/login" replace />
-    }
-
-    return <>{children}</>
-  }
+    const username = localStorage.getItem("username");
+    if (!username) return <Navigate to="/login" replace />;
+    return <>{children}</>;
+  };
 
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col md:flex-row">
-        <div className="w-full md:w-1/2 bg-gradient-to-b from-[#3ebb9e] to-hsl(var(--background)) p-8 flex flex-col justify-center items-center text-center">
+        <div
+          className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
+          style={{
+            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
+            backgroundSize: "400% 400%",
+          }}
+        >
           <div className="max-w-md mx-auto">
             <div className="mb-6 flex justify-center">
-              <div className="bg-white/10 p-4 rounded-full">
-                <BrainCircuit className="w-12 h-12 text-white" />
+              <div className="bg-[#00876e]/10 p-4 rounded-full">
+                <BrainCircuit className="w-12 h-12 text-white dark:text-white" />
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white">Prompt Forge</h1>
-            <p className="text-sm text-white/70 uppercase tracking-widest mb-8">Forge the future</p>
+            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white">
+              Prompt Forge
+            </h1>
+            <p className="text-sm text-white/70 uppercase tracking-widest mb-8">
+              Forge the future
+            </p>
 
             <h2 className="text-xl font-semibold mb-4 text-white">
-              Discover, Test & Master
-              <br />
-              AI Prompts
+              Discover, Test & Master <br /> AI Prompts
             </h2>
 
-            <p className="text-sm text-labelText/80 mb-6">
-              The marketplace for high-quality, tested AI prompts.
-              <br />
-              Buy, sell, test, and compare prompts to maximize
-              <br />
+            <p className="text-sm text-white/80 mb-6">
+              The marketplace for high-quality, tested AI prompts. <br />
+              Buy, sell, test, and compare prompts to maximize <br />
               your AI potential.
             </p>
           </div>
@@ -157,184 +239,255 @@ export default function LoginPage() {
         <div className="w-full md:w-1/2 bg-background p-8 flex items-center justify-center">
           <Card className="w-full max-w-md">
             <div className="p-6">
-              <div className="flex border-b border-border mb-6 justify-center">
-                <button
-                  className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "login" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
-                  }`}
-                  onClick={() => setActiveTab("login")}
-                >
-                  Login
-                </button>
-                <button
-                  className={`px-4 py-5 text-base font-medium w-1/2 ${
-                    activeTab === "signup" ? "border-b-2 border-primary text-forge-green" : "text-labelText"
-                  }`}
-                  onClick={() => setActiveTab("signup")}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              {activeTab === "login" && (
+              {showForgotPassword ? (
                 <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setError("");
+                    }}
+                    className="flex items-center text-sm text-muted-foreground hover:text-forge-green mb-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to login
+                  </button>
+
+                  <h2 className="text-xl font-semibold mb-2">Reset Password</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Enter your email address and we'll send you instructions to reset your password.
+                  </p>
+
                   <div className="space-y-2">
                     <label className="text-labelText px-1">Email</label>
-                    <Input 
-                      type="email" 
-                      placeholder="you@example.com" 
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
                       className="bg-muted border-muted h-11"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={toggleLoginPassword ? "text" : "password"}
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {toggleLoginPassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleLoginPassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleLoginPassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                    <Link to="#" className="hover:text-forge-green-dark text-forge-green text-sm">
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <Button 
-                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
-                    onClick={handleLogin}
-                  >
-                    Login
-                  </Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Continue with Google
-                  </Button>
-
-                  
-                </div>
-              )}
-
-              {activeTab === "signup" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1 text-sm">Username</label>
-                    <Input 
-                      type="text" 
-                      placeholder="Username" 
-                      className="bg-muted border-muted h-11"
-                      value={signupUsername}
-                      onChange={(e) => setSignupUsername(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1 text-sm">Email</label>
-                    <Input 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      className="bg-muted border-muted h-11"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={togglePassword ? "text" : "password"} 
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {togglePassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setTogglePassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setTogglePassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-labelText px-1">Confirm Password</label>
-                    <div className="relative">
-                      <Input 
-                        type={toggleConfirmPassword ? "text" : "password"} 
-                        placeholder="Password"
-                        className="bg-muted border-muted h-11 pr-12 w-full"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        {toggleConfirmPassword ? (
-                          <EyeOff className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleConfirmPassword(false)} 
-                          />
-                        ) : (
-                          <Eye className="h-5 w-5 cursor-pointer hover:text-gray-700" 
-                            onClick={() => setToggleConfirmPassword(true)} 
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f]"
-                    onClick={handleSignUp}
-                  >
-                    Sign Up
-                  </Button>
-
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-border"></div>
-                    <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
-                    <div className="flex-grow border-t border-border"></div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Continue with Google
+                  <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleForgotPassword}>
+                    Send Reset Instructions
                   </Button>
                 </div>
+              ) : (
+                <>
+                  <div className="flex border-b border-border mb-6 justify-center">
+                    <button
+                      className={`px-4 py-5 text-base font-medium w-1/2 ${
+                        activeTab === "login" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
+                      }`}
+                      onClick={() => setActiveTab("login")}
+                    >
+                      Login
+                    </button>
+                    <button
+                      className={`px-4 py-5 text-base font-medium w-1/2 ${
+                        activeTab === "signup" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
+                      }`}
+                      onClick={() => setActiveTab("signup")}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+
+                  {activeTab === "login" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Email</label>
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="bg-muted border-muted h-11"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Password</label>
+                        <div className="relative">
+                          <Input
+                            type={toggleLoginPassword ? "text" : "password"}
+                            placeholder="Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {toggleLoginPassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(false)} />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(true)} />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
+                        <button
+                          onClick={() => {
+                            setShowForgotPassword(true);
+                            setError("");
+                          }}
+                          className="hover:text-forge-green-dark text-forge-green text-sm"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+
+                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleLogin}>
+                        Login
+                      </Button>
+
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-border"></div>
+                        <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
+                        <div className="flex-grow border-t border-border"></div>
+                      </div>
+
+                      <Button variant="outline" className="w-full">
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </Button>
+                    </div>
+                  )}
+
+                  {activeTab === "signup" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1 text-sm">Username</label>
+                        <Input
+                          type="text"
+                          placeholder="Username"
+                          className="bg-muted border-muted h-11"
+                          value={signupUsername}
+                          onChange={(e) => setSignupUsername(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1 text-sm">Email</label>
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="bg-muted border-muted h-11"
+                          value={signupEmail}
+                          onChange={(e) => setSignupEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Password</label>
+                        <div className="relative">
+                          <Input
+                            type={togglePassword ? "text" : "password"}
+                            placeholder="Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={signupPassword}
+                            onChange={(e) => {
+                              setSignupPassword(e.target.value);
+                              validatePassword(e.target.value);
+                              setShowPasswordRequirements(e.target.value.length > 0);
+                            }}
+                            onFocus={() => setShowPasswordRequirements(true)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {togglePassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(false)} />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(true)} />
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Password Requirements */}
+                        {showPasswordRequirements && signupPassword.length > 0 && !Object.values(passwordValidation).every(Boolean) && (
+                          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
+                            <div className="space-y-1">
+                              <div className={`flex items-center text-xs ${passwordValidation.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasMinLength ? '✓' : '○'}</span>
+                                At least 8 characters
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasUppercase ? '✓' : '○'}</span>
+                                One uppercase letter
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasLowercase ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasLowercase ? '✓' : '○'}</span>
+                                One lowercase letter
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasNumber ? '✓' : '○'}</span>
+                                One number
+                              </div>
+                              <div className={`flex items-center text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+                                <span className="mr-2">{passwordValidation.hasSpecialChar ? '✓' : '○'}</span>
+                                One special character (!@#$%^&*...)
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show success message when all requirements are met */}
+                        {showPasswordRequirements && signupPassword.length > 0 && Object.values(passwordValidation).every(Boolean) && (
+                          <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="flex items-center text-xs text-green-600 dark:text-green-400">
+                              <span className="mr-2">✓</span>
+                              Password meets all requirements
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-labelText px-1">Confirm Password</label>
+                        <div className="relative">
+                          <Input
+                            type={toggleConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm Password"
+                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            {toggleConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(false)} />
+                            ) : (
+                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(true)} />
+                            )}
+                          </div>
+                        </div>
+                        {/* Password match indicator */}
+                        {confirmPassword && (
+                          <div className={`text-xs mt-1 ${signupPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
+                            {signupPassword === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                          </div>
+                        )}
+                      </div>
+                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
+                        Sign Up
+                      </Button>
+
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-border"></div>
+                        <span className="flex-shrink mx-4 text-muted-foreground text-xs">OR</span>
+                        <div className="flex-grow border-t border-border"></div>
+                      </div>
+
+                      <Button variant="outline" className="w-full">
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
 
-              {error && (
-                <p className="text-red-500 text-sm mt-2">{error}</p>
-              )}
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
           </Card>
         </div>
       </div>
     </main>
-  )
+  );
 }

@@ -4,6 +4,31 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
+      animation: {
+        'gradient': 'gradient 15s ease infinite',
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      keyframes: {
+        gradient: {
+          '0%, 100%': {
+            'background-size': '400% 400%',
+            'background-position': '0% 50%'
+          },
+          '50%': {
+            'background-size': '400% 400%',
+            'background-position': '100% 50%'
+          },
+        },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
       colors: {
         rating:"hsl(var(--rating))",
         labelText:"hsl(var(--labelText))",
