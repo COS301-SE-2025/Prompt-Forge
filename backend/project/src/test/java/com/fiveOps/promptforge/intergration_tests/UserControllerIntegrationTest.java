@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserControllerIntegrationTest {
 
   @Autowired
@@ -44,13 +45,12 @@ class UserControllerIntegrationTest {
   private static UUID userId;
   private static String authToken;
 
-  @BeforeAll
-  static void setup(
-    @Autowired UserRepository userRepository,
-    @Autowired PasswordEncoder passwordEncoder
-  ) {
-    // Clean up any existing test user
-    userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
+ 
+
+  @BeforeEach
+  void setup() {
+      // Clean up any existing test user before each test
+      userRepository.findByEmail("testuser@integration.com").ifPresent(userRepository::delete);
   }
 
   private String setupUserAndGetToken() throws Exception {

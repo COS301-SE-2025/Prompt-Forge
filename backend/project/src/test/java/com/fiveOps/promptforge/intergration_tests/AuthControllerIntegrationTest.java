@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+
 class AuthControllerIntegrationTest {
 
     @Autowired
@@ -52,6 +53,12 @@ class AuthControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(signupRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Signup successful"));
+    }
+    @AfterEach
+    @Transactional
+    @Rollback
+    void cleanUpAfterEach() {
+        userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
     }
 
     @Test

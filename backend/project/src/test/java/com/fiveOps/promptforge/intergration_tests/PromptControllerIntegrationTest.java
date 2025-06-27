@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PromptControllerIntegrationTest {
 
     @Autowired
@@ -52,7 +53,7 @@ class PromptControllerIntegrationTest {
     private static UUID promptId;
 
     @BeforeAll
-    static void setup(@Autowired UserRepository userRepository) {
+    void setup() {
         userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
     }
 

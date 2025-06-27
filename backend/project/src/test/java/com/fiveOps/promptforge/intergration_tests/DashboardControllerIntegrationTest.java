@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DashboardControllerIntegrationTest {
 
     @Autowired
@@ -50,12 +51,17 @@ class DashboardControllerIntegrationTest {
     private static final String TEST_USERNAME = "DashboardUser";
     private static final String TEST_PROMPT_CONTENT = "Test prompt content";
 
-    private static UUID userId;
-    private static String authToken;
+    private UUID userId;
+    private String authToken;
 
-    @BeforeAll
-    static void setup(@Autowired UserRepository userRepository) {
-        userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
+    @BeforeEach
+    void setup() {
+        // Clean up user and prompts before each test
+        userRepository.findByEmail(TEST_EMAIL).ifPresent(user -> {
+            List<Prompt> prompts = promptService.getPromptsByAuthor(user.getUserId());
+            prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
+            userRepository.delete(user);
+        });
     }
 
     private String setupUserAndGetToken() throws Exception {
