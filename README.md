@@ -224,7 +224,7 @@ We use a **GitFlow** branching strategy to organize our development:
 <table style="border-width: 1px; width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Katlego.jpg" width="800" height="auto">
+      <img src="./assests/Katlego.jpg" width="1200" height="auto">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Katlego Mositi
@@ -243,7 +243,7 @@ We use a **GitFlow** branching strategy to organize our development:
 
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Pabi.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Pabi.jpg" width="1200" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Paballo Diyase</b></h2>
@@ -262,7 +262,7 @@ Beyond programming, I enjoy exploring emerging technologies and I find great ful
 
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Boity.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Boity.jpg" width="1200" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Boitumelo Mtsatse</b></h2>
@@ -282,7 +282,7 @@ Beyond programming, I enjoy exploring emerging technologies and I find great ful
 
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Naven.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Naven.jpg" width="1200" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Navendran Naidoo</b></h2>
@@ -300,7 +300,7 @@ Beyond programming, I enjoy exploring emerging technologies and I find great ful
 
   <tr>
     <td style="vertical-align: top; width:auto; border: 0; padding: 10px;">
-      <img src="./assests/Reta.jpg" width="800" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
+      <img src="./assests/Reta.jpg" width="1200" height="auto" style="display: block; margin: 0 auto; border-radius: 30px;">
     </td>
     <td style="vertical-align: top; width: auto; border: 0; padding: 10px;">
       <h2><b style="font-size: 18px;">Rethabile Bore
