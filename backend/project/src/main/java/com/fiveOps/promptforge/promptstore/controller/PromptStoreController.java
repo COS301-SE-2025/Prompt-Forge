@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +27,7 @@ import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -81,6 +83,43 @@ public class PromptStoreController {
         PromptReview createdReview = storeService.createReview(review);
         return ResponseEntity.ok(createdReview);
     }
+
+    @PutMapping("/{promptId}/reviews/{reviewId}")
+    public ResponseEntity<PromptReview> updateReviewPartial(
+            @PathVariable UUID promptId,
+            @PathVariable UUID reviewId,
+            @Valid @RequestBody PromptReview request,
+            Authentication authentication) {
+        
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        
+        PromptReview updatedReview = storeService.updateReviewPartial(
+                reviewId,
+                userId,
+                promptId,
+                request.getRating(),  
+                request.getComment() 
+        );
+        
+        return ResponseEntity.ok(updatedReview);
+    }
+
+    @DeleteMapping("/{promptId}/reviews/{reviewId}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable UUID promptId,
+            @PathVariable UUID reviewId,
+            Authentication authentication) {
+        
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        
+        storeService.deleteReview(reviewId, userId, promptId);
+        return ResponseEntity.noContent().build();
+    }
+    
+
+    
 
     @GetMapping("/search")
     public Page<Map<String, PromptWithAuthorDTO>> searchPublic(
