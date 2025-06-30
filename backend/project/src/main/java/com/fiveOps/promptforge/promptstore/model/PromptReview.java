@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,7 +39,9 @@ public class PromptReview {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(nullable = false)
+    @Column(name= "rating",nullable = false)
+    @DecimalMin(value = "0.5", message = "Rating must be at least 0.5")
+    @DecimalMax(value = "5.0", message = "Rating must be at most 5.0")
     private Double rating;
 
     @Column(columnDefinition = "TEXT")
