@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.Optional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
@@ -105,17 +106,89 @@ class PromptStoreServiceReviewTest {
     }
 
     @Test
-    void getAverageRating_ShouldReturnRating() {
-        // Arrange
-        when(reviewRepository.calculateAverageRating(testPromptId)).thenReturn(4.2);
+void updateReviewPartial_ShouldUpdateOnlyProvidedFields() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    PromptReview existingReview = new PromptReview();
+    existingReview.setId(reviewId);
+    existingReview.setPromptId(testPromptId);
+    existingReview.setUserId(testUserId);
+    existingReview.setRating(3.0);
+    existingReview.setComment("Original comment");
+    
+    when(reviewRepository.findByIdAndUserIdAndPromptId(reviewId, testUserId, testPromptId))
+        .thenReturn(Optional.of(existingReview));
+    when(reviewRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
-        Double result = promptStoreService.getAverageRating(testPromptId);
+    // Act - update only rating
+    PromptReview result = promptStoreService.updateReviewPartial(
+        reviewId, 
+        testUserId, 
+        testPromptId, 
+        5.0, 
+        null);
 
-        // Assert
-        assertEquals(4.2, result);
-        verify(reviewRepository).calculateAverageRating(testPromptId);
-    }
+    // Assert
+    assertEquals(5.0, result.getRating());
+    assertEquals("Original comment", result.getComment());
+    
+    // Act - update only comment
+    result = promptStoreService.updateReviewPartial(
+        reviewId, 
+        testUserId, 
+        testPromptId, 
+        null, 
+        "New comment");
+
+    // Assert
+    assertEquals(5.0, result.getRating()); // Rating remains unchanged
+    assertEquals("New comment", result.getComment());
+}
+
+@Test
+void updateReviewPartial_ShouldThrowWhenReviewNotFound() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    when(reviewRepository.findByIdAndUserIdAndPromptId(reviewId, testUserId, testPromptId))
+        .thenReturn(Optional.empty());
+
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () -> 
+        promptStoreService.updateReviewPartial(
+            reviewId, 
+            testUserId, 
+            testPromptId, 
+            5.0, 
+            "Comment"));
+}
+
+@Test
+void deleteReview_ShouldDeleteWhenExists() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    when(reviewRepository.existsByIdAndUserIdAndPromptId(reviewId, testUserId, testPromptId))
+        .thenReturn(true);
+
+    // Act
+    promptStoreService.deleteReview(reviewId, testUserId, testPromptId);
+
+    // Assert
+    verify(reviewRepository).deleteById(reviewId);
+}
+
+@Test
+void deleteReview_ShouldThrowWhenNotExists() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    when(reviewRepository.existsByIdAndUserIdAndPromptId(reviewId, testUserId, testPromptId))
+        .thenReturn(false);
+
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () -> 
+        promptStoreService.deleteReview(reviewId, testUserId, testPromptId));
+    verify(reviewRepository, never()).deleteById(any());
+}
+
 
     @Test
     void getAllPublicPrompts_ShouldReturnPrompts() {
