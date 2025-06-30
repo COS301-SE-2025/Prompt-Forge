@@ -1,5 +1,4 @@
 package com.fiveOps.promptforge.promptstore.dto;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface ReviewProjection {
@@ -9,5 +8,5 @@ public interface ReviewProjection {
     String getUserName();
     Double getRating();
     String getComment();
-    LocalDateTime getCreatedAt();
+
 }
