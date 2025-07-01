@@ -49,6 +49,15 @@ class HttpClient {
       body: data ? JSON.stringify(data) : undefined,
     });
   }
+
+  async uploadForm(endpoint: string, formData: FormData, options?: RequestInit): Promise<Response> {
+    return this.request(endpoint, {
+      ...options,
+      method: "POST",
+      body: formData,
+    });
+  }
 }
+
 
 export default new HttpClient();
