@@ -39,36 +39,7 @@ export const PromptDetails = () => {
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
-        // Check if user owns the prompt (for paid prompts)
-        if (promptData.price > 0) {
-          setCheckingOwnership(true)
-          try {
-            // const token = localStorage.getItem("token")
-            // if (token) {
-            //   const response = await fetch(`/api/store/prompts/${id}/ownership`, {
-            //     headers: {
-            //       Authorization: `Bearer ${token}`,
-            //     },
-            //   })
-          
-
-            //   if (response.ok) {
-            //     const ownershipData = await response.json()
-            //     setUserOwnsPrompt(ownershipData.owns || false)
-            //   }
-            // }
-          } catch (ownershipError) {
-            console.warn("Could not check prompt ownership:", ownershipError)
-            setUserOwnsPrompt(false)
-          } finally {
-            setCheckingOwnership(false)
-          }
-        } else {
-          // Free prompts are always accessible
-          setUserOwnsPrompt(true)
-          setCheckingOwnership(false)
-        }
-
+    
         // Only try to fetch reviews if we got a prompt successfully
         const reviewsData = await promptService.getPromptReviews(id!)
         setReviews(reviewsData)
@@ -127,7 +98,9 @@ export const PromptDetails = () => {
     }
   }
 
-  if (loading || checkingOwnership) {
+  if (loading) {
+    console.log("checkingOwnership", checkingOwnership);
+    
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
