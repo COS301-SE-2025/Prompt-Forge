@@ -55,19 +55,9 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        """, 
        countQuery = """
        SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              author_user.username AS username,
-              array_agg(t.name) AS tagNames
+             *
        FROM
               purchased_prompts pp
-       JOIN prompts p ON pp.prompt_id = p.prompt_id
-       JOIN users author_user ON p.author_id = author_user.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE pp.user_id = :user_id
        """,
        nativeQuery = true)
