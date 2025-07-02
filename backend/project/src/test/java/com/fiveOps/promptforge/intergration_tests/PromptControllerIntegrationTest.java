@@ -1,10 +1,9 @@
 package com.fiveOps.promptforge.intergration_tests;
 
-
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import org.junit.jupiter.api.*;
@@ -50,6 +49,7 @@ class PromptControllerIntegrationTest {
     private static UUID userId;
     private static String authToken;
     private static UUID promptId;
+    private static UUID reviewId;
 
     @BeforeAll
     static void setup(@Autowired UserRepository userRepository) {
@@ -105,6 +105,27 @@ class PromptControllerIntegrationTest {
         
         Prompt createdPrompt = objectMapper.readValue(result.getResponse().getContentAsString(), Prompt.class);
         promptId = createdPrompt.getId();
+
+        // Publish the prompt to make it reviewable
+        mockMvc.perform(post("/prompts/" + promptId + "/publish")
+                .cookie(new Cookie("token", authToken)))
+                .andExpect(status().isOk());
+
+        // Create a test review
+        PromptReview review = new PromptReview();
+        review.setId(UUID.fromString("d70c30cc-df94-46c6-8e58-3d740ad2238d"));
+        review.setRating(4.0);
+        review.setComment("Initial review");
+        
+        MvcResult reviewResult = mockMvc.perform(post("/store/prompts/" + promptId + "/reviews")
+                .cookie(new Cookie("token", authToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(review)))
+                .andExpect(status().isOk())
+                .andReturn();
+        
+        PromptReview createdReview = objectMapper.readValue(reviewResult.getResponse().getContentAsString(), PromptReview.class);
+        reviewId = createdReview.getId();
     }
 
     @AfterEach
@@ -190,5 +211,99 @@ class PromptControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(promptId.toString()))
                 .andExpect(jsonPath("$[0].authorId").value(userId.toString()));
+    }
+
+    // ========== NEW REVIEW TESTS ==========
+
+    @Test
+    void whenUpdateReviewWithValidToken_thenSuccess() throws Exception {
+        PromptReview updateRequest = new PromptReview();
+        updateRequest.setRating(5.0); // Only update rating
+        
+        mockMvc.perform(put("/store/prompts/" + promptId + "/reviews/" + reviewId)
+                .cookie(new Cookie("token", authToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(5.0))
+                .andExpect(jsonPath("$.comment").value("Initial review")); // Comment remains unchanged
+    }
+
+    @Test
+    void whenUpdateReviewCommentOnly_thenSuccess() throws Exception {
+        PromptReview updateRequest = new PromptReview();
+        updateRequest.setComment("Updated comment"); // Only update comment
+        
+        mockMvc.perform(put("/store/prompts/" + promptId + "/reviews/" + reviewId)
+                .cookie(new Cookie("token", authToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(4.0)) // Rating remains unchanged
+                .andExpect(jsonPath("$.comment").value("Updated comment"));
+    }
+
+    @Test
+    void whenUpdateReviewWithInvalidToken_thenUnauthorized() throws Exception {
+        PromptReview updateRequest = new PromptReview();
+        updateRequest.setRating(5.0);
+        
+        mockMvc.perform(put("/store/prompts/" + promptId + "/reviews/" + reviewId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void whenDeleteReviewWithValidToken_thenSuccess() throws Exception {
+        mockMvc.perform(delete("/store/prompts/" + promptId + "/reviews/" + reviewId)
+                .cookie(new Cookie("token", authToken)))
+                .andExpect(status().isNoContent());
+        
+        // Verify review is deleted
+        mockMvc.perform(get("/store/prompts/" + promptId + "/reviews")
+                .cookie(new Cookie("token", authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    void whenDeleteReviewWithInvalidToken_thenUnauthorized() throws Exception {
+        mockMvc.perform(delete("/store/prompts/" + promptId + "/reviews/" + reviewId))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void whenUpdateNonexistentReview_thenNotFound() throws Exception {
+        UUID nonExistentReviewId = UUID.randomUUID();
+        PromptReview updateRequest = new PromptReview();
+        updateRequest.setRating(5.0);
+        
+        mockMvc.perform(put("/store/prompts/" + promptId + "/reviews/" + nonExistentReviewId)
+                .cookie(new Cookie("token", authToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void whenUpdateReviewWithInvalidRating_thenBadRequest() throws Exception {
+        PromptReview updateRequest = new PromptReview();
+        updateRequest.setRating(6.0); // Invalid rating (above 5.0)
+        
+        mockMvc.perform(put("/store/prompts/" + promptId + "/reviews/" + reviewId)
+                .cookie(new Cookie("token", authToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void whenGetReviewsForPrompt_thenReturnReviews() throws Exception {
+        mockMvc.perform(get("/store/prompts/" + promptId + "/reviews")
+                .cookie(new Cookie("token", authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(reviewId.toString()))
+                .andExpect(jsonPath("$.content[0].rating").value(4.0));
     }
 }
