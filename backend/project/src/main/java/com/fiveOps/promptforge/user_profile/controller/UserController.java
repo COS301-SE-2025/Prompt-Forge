@@ -22,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/user")
 public class UserController {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
+
   @Autowired
   private UserService userService;
 
@@ -94,16 +96,34 @@ public class UserController {
 
   @PostMapping(
     value = "/upload-picture",
-    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-  )
-  public ResponseEntity<Map<String, String>> uploadProfilePicture(
-    @RequestParam MultipartFile file,
+    consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE
+)
+public ResponseEntity<Map<String, String>> uploadProfilePicture(
+    @RequestPart("file") MultipartFile file,  // Using @RequestPart instead of @RequestParam
     HttpServletRequest request
-  ) {
-    String email = extractEmailFromCookie(request);
-    String imageUrl = userService.saveProfilePicture(email, file);
-    return ResponseEntity.ok(Map.of("url", imageUrl));
-  }
+) {
+    try {
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+
+        String email = extractEmailFromCookie(request);
+        String imageUrl = userService.saveProfilePicture(email, file);
+        
+        return ResponseEntity.ok(Map.of(
+            "url", imageUrl,
+            "message", "Profile picture uploaded successfully"
+        ));
+    } catch (Exception e) {
+        logger.error("Error uploading profile picture: ", e);
+        throw new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Failed to upload profile picture", 
+            e
+        );
+    }
+}
 
   @DeleteMapping("/delete-picture")
   public ResponseEntity<Map<String, String>> deleteProfilePicture(
