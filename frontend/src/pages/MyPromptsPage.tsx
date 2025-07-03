@@ -68,7 +68,7 @@ export default function MyPromptsPage() {
 
         setIsAuthenticated(true)
 
-        // ✅ Get user profile using JWT token (sent via cookies)
+        //Get user profile using JWT token (sent via cookies)
         console.log("🔍 Fetching user profile...")
         const response = await httpClient.get('/user/me')
 
@@ -108,12 +108,12 @@ export default function MyPromptsPage() {
       try {
         let authorId: string | null = null
 
-        // ✅ Try to get authorId from user profile (preferred)
+        //Try to get authorId from user profile (preferred)
         if (userProfile?.userId) {
           authorId = userProfile.userId
           console.log("🔍 Using authorId from profile:", authorId)
         } 
-        // ✅ Fallback: get from localStorage if profile not loaded yet
+        //Fallback: get from localStorage if profile not loaded yet
         else {
           authorId = localStorage.getItem('userId')
           console.log("🔍 Using authorId from localStorage:", authorId)
@@ -129,7 +129,7 @@ export default function MyPromptsPage() {
 
         console.log("🔍 Fetching prompts for authorId:", authorId)
         
-        // ✅ Fetch prompts using JWT authentication (cookies)
+        //Fetch prompts using JWT authentication (cookies)
         const response = await httpClient.get(`/prompts/author/${authorId}`)
         
         if (response.ok) {
@@ -165,7 +165,7 @@ export default function MyPromptsPage() {
           const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
           setAvailableCategories(categories)
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login")
+          console.log("Unauthorized, redirecting to login")
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -186,7 +186,7 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate]) // ✅ Remove userProfile from dependencies
+  }, [isAuthenticated, navigate]) //Remove userProfile from dependencies
 
   // Filtering logic
   useEffect(() => {
@@ -244,7 +244,7 @@ export default function MyPromptsPage() {
       const response = await httpClient.delete(`/prompts/${id}`)
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
-        console.log("✅ Prompt deleted successfully")
+        console.log("Prompt deleted successfully")
       } else {
         throw new Error("Failed to delete prompt")
       }
@@ -258,7 +258,7 @@ export default function MyPromptsPage() {
   const handleToggleFavorite = async (id: string) => {
     // For now, just update locally since backend doesn't support favorites yet
     setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)))
-    console.log("✅ Favorite toggled (local only)")
+    console.log("Favorite toggled (local only)")
   }
 
   const handleCopyPrompt = async (content: string, id: string) => {
@@ -307,7 +307,7 @@ export default function MyPromptsPage() {
       
       console.log(`✅ Prompt ${action}ed successfully`)
     } catch (error) {
-      console.error(`❌ Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
+      console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }
   }
 
@@ -464,7 +464,7 @@ export default function MyPromptsPage() {
                       onCopy={handleCopyPrompt}
                       copiedId={copiedId}
                       content={prompt.content}
-                      onPublish={handlePublishPrompt} // ✅ Make sure this is included
+                      onPublish={handlePublishPrompt}
                     />
                   ))}
                 </div>
@@ -505,12 +505,12 @@ export default function MyPromptsPage() {
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
                   isOwned={true} // Since this is MyPromptsPage
-                  isPublished={prompt.isPublished || false} // ✅ Make sure this is included
+                  isPublished={prompt.isPublished || false}
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}
                   onCopy={handleCopyPrompt}
-                  onPublish={handlePublishPrompt} // ✅ Make sure this is included
+                  onPublish={handlePublishPrompt}
                   copiedId={copiedId}
                   content={prompt.content || ""}
                 />
