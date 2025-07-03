@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "./ui/Button"
-import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart, HelpCircle } from "lucide-react"
+import { Moon, Sun, User, LogOut, Settings, Menu, ShoppingCart, HelpCircle, BrainCircuit } from "lucide-react"
 import { useTheme } from "./theme-provider"
 import { cn } from "../lib/utils"
 import { useState, useRef, useEffect } from "react"
@@ -57,6 +57,9 @@ export default function Header() {
       <div className="container mx-auto flex h-14 items-center px-4">
         <div className="mr-4 flex">
           <Link to="/home" className="flex items-center space-x-2">
+            <div className="bg-[#00876e]/10 p-1 rounded-lg">
+              <BrainCircuit className="w-6 h-6 text-[#3ebb9e]" />
+            </div>
             <span className="font-bold text-lg">Prompt Forge</span>
           </Link>
         </div>
