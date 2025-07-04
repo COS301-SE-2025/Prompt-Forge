@@ -3,7 +3,7 @@ package com.fiveOps.promptforge.promptstore.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.security.Principal;
+
 import java.util.UUID;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +115,110 @@ class PromptStoreControllerReviewTest {
         // Assert
         assertEquals(testPromptId, response.getBody().getPromptId());
         assertEquals(testUserId, response.getBody().getUserId());
+    }
+
+    @Test
+void updateReview_ShouldUpdateAndReturnReview() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    when(authentication.getName()).thenReturn("test@example.com");
+    when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+    
+    PromptReview request = new PromptReview();
+    request.setRating(4.0);
+    request.setComment("Updated comment");
+    
+    PromptReview updatedReview = new PromptReview();
+    updatedReview.setId(reviewId);
+    updatedReview.setPromptId(testPromptId);
+    updatedReview.setUserId(testUserId);
+    updatedReview.setRating(4.0);
+    updatedReview.setComment("Updated comment");
+    
+    when(storeService.updateReviewPartial(
+        reviewId, 
+        testUserId, 
+        testPromptId, 
+        4.0, 
+        "Updated comment"))
+        .thenReturn(updatedReview);
+
+    // Act
+    ResponseEntity<PromptReview> response = 
+        promptStoreController.updateReviewPartial(
+            testPromptId, 
+            reviewId, 
+            request, 
+            authentication);
+
+    // Assert
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(4.0, response.getBody().getRating());
+    assertEquals("Updated comment", response.getBody().getComment());
+}
+
+@Test
+void updateReview_ShouldThrowWhenUnauthorized() {
+    // Arrange
+    UUID reviewId = UUID.randomUUID();
+    when(authentication.getName()).thenReturn("test@example.com");
+    when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+    
+    PromptReview request = new PromptReview();
+    request.setRating(4.0);
+    
+    when(storeService.updateReviewPartial(
+        reviewId, 
+        testUserId, 
+        testPromptId, 
+        4.0, 
+        null))
+        .thenThrow(new IllegalArgumentException("Review not found or unauthorized"));
+
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () -> 
+        promptStoreController.updateReviewPartial(
+            testPromptId, 
+            reviewId, 
+            request, 
+            authentication));
+}
+
+    @Test
+    void deleteReview_ShouldReturnNoContent() {
+        // Arrange
+        UUID reviewId = UUID.randomUUID();
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        
+        // Act
+        ResponseEntity<Void> response = 
+            promptStoreController.deleteReview(
+                testPromptId, 
+                reviewId, 
+                authentication);
+
+        // Assert
+        assertEquals(204, response.getStatusCodeValue());
+        verify(storeService).deleteReview(reviewId, testUserId, testPromptId);
+    }
+
+    @Test
+    void deleteReview_ShouldThrowWhenUnauthorized() {
+        // Arrange
+        UUID reviewId = UUID.randomUUID();
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
+        
+        doThrow(new IllegalArgumentException("Review not found or unauthorized"))
+            .when(storeService).deleteReview(reviewId, testUserId, testPromptId);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> 
+            promptStoreController.deleteReview(
+                testPromptId, 
+                reviewId, 
+                authentication));
     }
 
     @Test

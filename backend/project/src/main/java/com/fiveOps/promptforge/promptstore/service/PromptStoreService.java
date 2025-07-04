@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.lang.Nullable;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
@@ -125,7 +126,7 @@ public class PromptStoreService {
         return purchaseRepository.save(purchase);
     }
 
-    ///////// Review functionality from code2
+    ///////// Review functionality 
     public Page<ReviewProjection> getReviewsForPrompt(UUID promptId, Pageable pageable) {
     return reviewRepository.findReviewsWithUsernameByPromptId(promptId, pageable);
     }
@@ -138,9 +139,35 @@ public class PromptStoreService {
         return reviewRepository.save(review);
     }
 
-    public Double getAverageRating(UUID promptId) {
-        return reviewRepository.calculateAverageRating(promptId);
+
+@Transactional
+public PromptReview updateReviewPartial(UUID reviewId, UUID userId, UUID promptId, 
+                                      @Nullable Double rating, 
+                                      @Nullable String comment) {
+    // Verify review exists and belongs to user/prompt
+    PromptReview review = reviewRepository
+            .findByIdAndUserIdAndPromptId(reviewId, userId, promptId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Review not found or unauthorized"));
+    
+    // Only update non-null fields
+    if (rating != null) {
+        review.setRating(rating);
     }
+    if (comment != null) {
+        review.setComment(comment);
+    }
+    
+    return reviewRepository.save(review);
+}
+
+@Transactional
+public void deleteReview(UUID reviewId, UUID userId, UUID promptId) {
+    if (!reviewRepository.existsByIdAndUserIdAndPromptId(reviewId, userId, promptId)) {
+        throw new IllegalArgumentException("Review not found or unauthorized");
+    }
+    reviewRepository.deleteById(reviewId);
+}
     /////////////////////////////////////
     
     // Get PUBLIC prompts by author
