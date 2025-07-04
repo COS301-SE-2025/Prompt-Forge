@@ -37,13 +37,14 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
     
    @Query(value = """
        SELECT
+              pp.purchase_id AS purchaseId,
               p.prompt_id AS id,
               p.author_id AS authorId,
               p.title AS title,
               p.slug AS slug,
               p.description AS description,
               p.price AS price,
-              author_user.username AS username,
+              author_user.username AS authorName,
               array_agg(t.name) AS tagNames
        FROM
               purchased_prompts pp
@@ -51,7 +52,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        JOIN users author_user ON p.author_id = author_user.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE pp.user_id = :user_id
-       GROUP BY p.prompt_id, author_user.username, p.author_id, p.title, p.slug,p.description, p.price
+       GROUP BY pp.purchase_id, p.prompt_id, author_user.username, p.author_id, p.title, p.slug,p.description, p.price
        """, 
        countQuery = """
        SELECT
