@@ -216,11 +216,11 @@ class PromptStoreControllerReviewTest {
         UUID promptId = UUID.randomUUID();
         when(authentication.getName()).thenReturn("test@example.com");
         when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
-        when(storeService.isPromptBought(testUserId, promptId)).thenReturn(true);
+        when(storeService.isOwned(testUserId, promptId)).thenReturn(true);
         ResponseEntity<Boolean> response = promptStoreController.isPromptBought(promptId, authentication);
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody());
-        verify(storeService).isPromptBought(testUserId, promptId);
+        verify(storeService).isOwned(testUserId, promptId);
     }
 
     @Test
@@ -312,7 +312,7 @@ class PromptStoreControllerReviewTest {
         UUID promptId = UUID.randomUUID();
         when(authentication.getName()).thenReturn("test@example.com");
         when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
-        when(storeService.isPromptBought(testUserId, promptId)).thenThrow(new IllegalArgumentException("Invalid"));
+        when(storeService.isOwned(testUserId, promptId)).thenThrow(new IllegalArgumentException("Invalid"));
         assertThrows(IllegalArgumentException.class, () -> promptStoreController.isPromptBought(promptId, authentication));
     }
 
