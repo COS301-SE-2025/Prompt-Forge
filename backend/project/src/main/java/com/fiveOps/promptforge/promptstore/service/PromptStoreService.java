@@ -95,8 +95,13 @@ public class PromptStoreService {
         return promptStoreRepository.findNew(pageable);
     }
     
-    public Boolean isPromptBought(UUID userID, UUID promptId){
-        return purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
+    public Boolean isOwned(UUID userID, UUID promptId){
+
+        Prompt probe = new Prompt();
+        probe.setAuthorId(userID); // you want all prompts in the "Marketing" category
+        probe.setId(promptId); // you want all prompts in the "Marketing" category
+
+        return promptStoreRepository.existsByIdAndAuthorId(promptId,userID) || purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
     }
     
     @Transactional

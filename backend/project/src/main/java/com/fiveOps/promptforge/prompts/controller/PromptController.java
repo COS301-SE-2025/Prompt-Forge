@@ -1,10 +1,14 @@
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.service.UserService;
@@ -146,6 +151,20 @@ public class PromptController {
     @GetMapping("/by-tag/{tagName}")
     public ResponseEntity<List<Prompt>> getByTagName(@PathVariable String tagName) {
         return ResponseEntity.ok(promptService.getPromptsByTagName(tagName));
+    }
+
+    @GetMapping("/purchased")
+    public ResponseEntity<Page<Map<String,PromptWithAuthorDTO>>> getPurchasedPrompts(Pageable pageable, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userEmail = authentication.getName();
+        UUID userId = userService.getUserIdByEmail(userEmail);
+        System.out.println("\nuserEmail in purchased:"+userEmail);
+        System.out.println("\nuserId in purchased:"+userId);
+        System.out.println(userId);
+        return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
+        
     }
 
     @GetMapping("/search")

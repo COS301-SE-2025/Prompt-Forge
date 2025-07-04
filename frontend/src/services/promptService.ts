@@ -76,6 +76,9 @@ export class PromptService {
         //filter=all && tags=all && search=""
         const promptsResponse = await this.httpClient.get(`/store/prompts?page=${page}&size=12`)
         const prompts = await promptsResponse.json();
+        console.log("prompts:");
+        console.log(prompts);
+        
         return prompts;
       }
       
@@ -117,6 +120,17 @@ export class PromptService {
   async getFeatured(page:number,size:number) {
     try {
       const promptResponse = await this.httpClient.get(`/store/prompts/featured?page=${page}&size=${size}`)
+      return promptResponse.json();
+      // return prompts;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+  }
+  
+  async getPurchasedPrompts(page:number,size:number) {
+    try {
+      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}`)
       return promptResponse.json();
       // return prompts;
     } catch (error) {

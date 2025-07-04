@@ -16,6 +16,8 @@ import httpClient from "../services/httpClient"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
+  console.log("id", id);
+  
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -24,10 +26,12 @@ export const PromptDetails = () => {
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [userAddedToCart, setUserAddedToCart] = useState(false)
+
   const [checkingOwnership, setCheckingOwnership] = useState(true)
   const [editingReview, setEditingReview] = useState<string | null>(null)
   const [deletingReview, setDeletingReview] = useState<string | null>(null)
   const [editingReviewData, setEditingReviewData] = useState<{id: string, rating: number, comment: string} | null>(null)
+
   const promptService = new PromptService()
   const cartService = new CartService()
 
@@ -39,29 +43,14 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
+        console.log("promptData");
+        console.log(promptData);
         
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
-        
-        // Check if user owns the prompt (for paid prompts)
-        if (promptData.price > 0) {
-          setCheckingOwnership(true)
-          try {
-            // Ownership logic here if needed
-          } catch (ownershipError) {
-            console.warn("Could not check prompt ownership:", ownershipError)
-            setUserOwnsPrompt(false)
-          } finally {
-            setCheckingOwnership(false)
-          }
-        } else {
-          // Free prompts are always accessible
-          setUserOwnsPrompt(true)
-          setCheckingOwnership(false)
-        }
-
-        // Fetch reviews and current user info
+    
+        // Only try to fetch reviews if we got a prompt successfully
         const reviewsData = await promptService.getPromptReviews(id!)
         setReviews(reviewsData)
         
@@ -71,13 +60,13 @@ export const PromptDetails = () => {
             // Check if user is logged in
             const username = localStorage.getItem('username')
             if (!username || username === 'Guest') {
-              console.log("❌ User not authenticated")
+              console.log("User not authenticated")
               setCurrentUserId(null)
               return
             }
 
             //Get user profile using JWT token (sent via cookies)
-            console.log("🔍 Fetching user profile for review permissions...")
+            console.log("Fetching user profile for review permissions...")
             const response = await httpClient.get('/user/me')
 
             if (response.ok) {
@@ -85,10 +74,10 @@ export const PromptDetails = () => {
               setCurrentUserId(userData.userId)
               console.log("User profile loaded for reviews:", userData.userId)
             } else if (response.status === 401) {
-              console.log("❌ Unauthorized")
+              console.log("Unauthorized")
               setCurrentUserId(null)
             } else {
-              // ✅ Fallback: try to get from localStorage
+              // Fallback: try to get from localStorage
               const fallbackUserId = localStorage.getItem('userId')
               if (fallbackUserId) {
                 setCurrentUserId(fallbackUserId)
@@ -100,7 +89,7 @@ export const PromptDetails = () => {
             }
           } catch (error) {
             console.error("Auth check failed:", error)
-            // ✅ Fallback: try to get from localStorage
+            // Fallback: try to get from localStorage
             const fallbackUserId = localStorage.getItem('userId')
             if (fallbackUserId) {
               setCurrentUserId(fallbackUserId)
