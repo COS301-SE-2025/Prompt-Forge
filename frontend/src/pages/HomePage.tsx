@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom"
 import { Card } from "../components/ui/Card"
-import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, Tag } from "lucide-react"
+import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, Tag, HelpCircle } from "lucide-react"
 
 export default function HomePage() {
   return (
-    <div className="flex-1 flex flex-col w-full h-full bg-background">
+    <div className="flex-1 flex flex-col w-full h-full bg-background relative">
       <div className="flex-1 flex items-center justify-center p-3 md:p-6">
         <div className="w-full max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 h-full items-center">
@@ -40,7 +40,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 h-fit">
               {/* Prompt Marketplace */}
               <Link to="/marketplace">
-                <Card className="bg-blue-500/20 border-blue-500/30 p-3 lg:p-4 hover:bg-blue-500/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-blue-500/20 border-blue-500/30 p-3 lg:p-4 hover:bg-blue-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:scale-105">
                   <div className="bg-blue-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <ShoppingBag className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -53,7 +53,7 @@ export default function HomePage() {
 
               {/* Testing Ground */}
               <Link to="/editor">
-                <Card className="bg-purple-500/20 border-purple-500/30 p-3 lg:p-4 hover:bg-purple-500/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-purple-500/20 border-purple-500/30 p-3 lg:p-4 hover:bg-purple-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] hover:scale-105">
                   <div className="bg-purple-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <TestTube className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -66,7 +66,7 @@ export default function HomePage() {
 
               {/* Prompt Comparison */}
               <Link to="/comparison">
-                <Card className="bg-green-500/20 border-green-500/30 p-3 lg:p-4 hover:bg-green-500/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-green-500/20 border-green-500/30 p-3 lg:p-4 hover:bg-green-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:scale-105">
                   <div className="bg-green-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Scale className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -79,7 +79,7 @@ export default function HomePage() {
 
               {/* Analytics Engine */}
               <Link to="/dashboard">
-                <Card className="bg-orange-500/20 border-orange-500/30 p-3 lg:p-4 hover:bg-orange-500/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-orange-500/20 border-orange-500/30 p-3 lg:p-4 hover:bg-orange-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] hover:scale-105">
                   <div className="bg-orange-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <BarChart3 className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -92,7 +92,7 @@ export default function HomePage() {
 
               {/* Categorization */}
               <Link to="/construction">
-                <Card className="bg-purple-600/20 border-purple-600/30 p-3 lg:p-4 hover:bg-purple-600/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-purple-600/20 border-purple-600/30 p-3 lg:p-4 hover:bg-purple-600/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(147,51,234,0.6)] hover:scale-105">
                   <div className="bg-purple-600 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Tag className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -105,7 +105,7 @@ export default function HomePage() {
 
               {/* Community Rankings */}
               <Link to="/community">
-                <Card className="bg-red-500/20 border-red-500/30 p-3 lg:p-4 hover:bg-red-500/30 transition-colors cursor-pointer h-full">
+                <Card className="bg-red-500/20 border-red-500/30 p-3 lg:p-4 hover:bg-red-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-105">
                   <div className="bg-red-500 w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-2 lg:mb-3">
                     <Trophy className="text-white h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
@@ -119,6 +119,15 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Help Button - Fixed position in bottom right */}
+      <Link
+        to="/help"
+        className="fixed bottom-6 right-6 bg-[#3ebb9e] hover:bg-[#2ea688] text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-50"
+        title="Help & Support"
+      >
+        <HelpCircle className="w-6 h-6" />
+      </Link>
     </div>
   )
 }
