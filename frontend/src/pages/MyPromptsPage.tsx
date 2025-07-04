@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
 import { Star, Search, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -22,7 +21,6 @@ export default function MyPromptsPage() {
   const promptService = new PromptService ();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
-  // const [purchasedPrompts, setPurchasedPrompts] = useState<MyPrompt[]>([])
   const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
@@ -42,7 +40,7 @@ export default function MyPromptsPage() {
         // Check if user is logged in (you can also check localStorage)
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-          console.log("❌ User not authenticated, redirecting to login")
+          console.log("User not authenticated, redirecting to login")
           navigate('/login')
           return
         }
@@ -50,15 +48,15 @@ export default function MyPromptsPage() {
         setIsAuthenticated(true)
 
         //Get user profile using JWT token (sent via cookies)
-        console.log("🔍 Fetching user profile...")
+        console.log("Fetching user profile...")
         const response = await httpClient.get('/user/me')
 
         if (response.ok) {
           const userData: UserProfile = await response.json()
           setUserProfile(userData)
-          console.log("✅ User profile loaded:", userData)
+          console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login")
+          console.log("Unauthorized, redirecting to login")
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -67,7 +65,7 @@ export default function MyPromptsPage() {
           throw new Error('Failed to fetch user profile')
         }
       } catch (error) {
-        console.error("❌ Auth check failed:", error)
+        console.error("Auth check failed:", error)
         // Don't redirect on network errors, just continue without profile
         setIsAuthenticated(true) // Allow fallback behavior
       }
@@ -92,23 +90,23 @@ export default function MyPromptsPage() {
         //Try to get authorId from user profile (preferred)
         if (userProfile?.userId) {
           authorId = userProfile.userId
-          console.log("🔍 Using authorId from profile:", authorId)
+          console.log("Using authorId from profile:", authorId)
         } 
         //Fallback: get from localStorage if profile not loaded yet
         else {
           authorId = localStorage.getItem('userId')
-          console.log("🔍 Using authorId from localStorage:", authorId)
+          console.log("Using authorId from localStorage:", authorId)
         }
 
         if (!authorId) {
-          console.log("⚠️ No authorId available, using empty prompts")
+          console.log("No authorId available, using empty prompts")
           setMyPrompts([])
           setFilteredPrompts([])
           setLoading(false)
           return
         }
 
-        console.log("🔍 Fetching prompts for authorId:", authorId)
+        console.log("Fetching prompts for authorId:", authorId)
         
         //Fetch prompts using JWT authentication (cookies)
         const response = await httpClient.get(`/prompts/author/${authorId}`)
@@ -120,12 +118,11 @@ export default function MyPromptsPage() {
           let prompts = await response.json()
           if (!Array.isArray(prompts)) prompts = []
           prompts = [...prompts, ...purchasedPrompts.content]
-          console.log(`✅ Fetched ${prompts.length} prompts for user`)
+          console.log(`Fetched ${prompts.length} prompts for user`)
 
           // Map backend fields to frontend MyPrompt interface
           const mappedPrompts: MyPrompt[] = await Promise.all(
             prompts.map(async (p: any) => {
-            // var promptRating = 0;
             const { averageRating } = await promptService.getPromptRatingSummary(p.id)
             console.log(p);
             
@@ -146,8 +143,8 @@ export default function MyPromptsPage() {
               isFavorite: false, // Default, backend does not provide
               authorName: p.authorname ||userProfile?.username || "You",
               isBought: p.purchaseid?true:false ,
-              isPublished: p.visibility === "public" || p.publishedAt !== null, // ✅ Add this
-              publishedAt: p.publishedAt // ✅ Add this
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+              publishedAt: p.publishedAt // Add this
             }
           }))
 
@@ -166,7 +163,7 @@ export default function MyPromptsPage() {
           throw new Error(`Failed to fetch prompts: ${response.status}`)
         }
       } catch (error) {
-        console.error("❌ Error fetching prompts:", error)
+        console.error("Error fetching prompts:", error)
         setMyPrompts([])
         setFilteredPrompts([])
       } finally {
@@ -174,7 +171,7 @@ export default function MyPromptsPage() {
       }
     }
 
-    // ✅ Only fetch prompts when authenticated AND we have either profile or localStorage userId
+    // Only fetch prompts when authenticated AND we have either profile or localStorage userId
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
@@ -208,12 +205,6 @@ export default function MyPromptsPage() {
         (selectedFilter === "recent" && isRecent) ||
         (selectedFilter === "popular" && prompt.uses > 30) ||
         (selectedFilter === "purchased" && prompt.isBought === true)
-  
-        console.log("prompt");
-        console.log("prompt.isBought");
-        console.log(prompt.isBought);
-        // console.log("userProfile?.username");
-        // console.log(userProfile?.username);
         
       return matchesSearch && matchesCategory && matchesFilter
     })
@@ -221,25 +212,6 @@ export default function MyPromptsPage() {
     setFilteredPrompts(filtered)
     setCurrentPage(1)
   }, [searchQuery, selectedCategory, selectedFilter, myPrompts])
-
-  // useEffect(() => {
-  //   const fetchPurchasedPrompts = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
-  //       setFilteredPrompts(purchasedPrompts.content);
-  //     } catch (error) {
-  //       console.error("Failed to fetch purchased prompts:", error);
-  //       setFilteredPrompts([]); // fallback or clear prompts
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   // if (selectedFilter === "purchased") {
-  //   //   fetchPurchasedPrompts();
-  //   // }
-  // }, [selectedFilter, currentPage]);
 
   // Pagination
   const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
@@ -268,7 +240,7 @@ export default function MyPromptsPage() {
         throw new Error("Failed to delete prompt")
       }
     } catch (error) {
-      console.error("❌ Error deleting prompt:", error)
+      console.error("Error deleting prompt:", error)
       // For now, still remove from UI even if backend fails
       setMyPrompts((prev) => prev.filter((p) => p.id !== id))
     }
@@ -310,7 +282,7 @@ export default function MyPromptsPage() {
   const handlePublishPrompt = async (id: string, isCurrentlyPublished: boolean) => {
     try {
       const action = isCurrentlyPublished ? "unpublish" : "publish"
-      console.log(`🔄 ${action}ing prompt ${id}...`)
+      console.log(`${action}ing prompt ${id}...`)
       
       // For now, just update local state (you can add API call later)
       setMyPrompts((prev) => prev.map((p) => 
@@ -324,7 +296,7 @@ export default function MyPromptsPage() {
           : p
       ))
       
-      console.log(`✅ Prompt ${action}ed successfully`)
+      console.log(`Prompt ${action}ed successfully`)
     } catch (error) {
       console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }

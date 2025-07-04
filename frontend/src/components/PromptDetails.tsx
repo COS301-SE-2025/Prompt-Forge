@@ -60,13 +60,13 @@ export const PromptDetails = () => {
             // Check if user is logged in
             const username = localStorage.getItem('username')
             if (!username || username === 'Guest') {
-              console.log("❌ User not authenticated")
+              console.log("User not authenticated")
               setCurrentUserId(null)
               return
             }
 
             //Get user profile using JWT token (sent via cookies)
-            console.log("🔍 Fetching user profile for review permissions...")
+            console.log("Fetching user profile for review permissions...")
             const response = await httpClient.get('/user/me')
 
             if (response.ok) {
@@ -74,10 +74,10 @@ export const PromptDetails = () => {
               setCurrentUserId(userData.userId)
               console.log("User profile loaded for reviews:", userData.userId)
             } else if (response.status === 401) {
-              console.log("❌ Unauthorized")
+              console.log("Unauthorized")
               setCurrentUserId(null)
             } else {
-              // ✅ Fallback: try to get from localStorage
+              // Fallback: try to get from localStorage
               const fallbackUserId = localStorage.getItem('userId')
               if (fallbackUserId) {
                 setCurrentUserId(fallbackUserId)
@@ -89,7 +89,7 @@ export const PromptDetails = () => {
             }
           } catch (error) {
             console.error("Auth check failed:", error)
-            // ✅ Fallback: try to get from localStorage
+            // Fallback: try to get from localStorage
             const fallbackUserId = localStorage.getItem('userId')
             if (fallbackUserId) {
               setCurrentUserId(fallbackUserId)
