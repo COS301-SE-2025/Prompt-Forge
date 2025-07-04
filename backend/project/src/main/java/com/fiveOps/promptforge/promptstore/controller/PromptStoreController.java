@@ -143,7 +143,7 @@ public class PromptStoreController {
     public ResponseEntity<Boolean> isPromptBought(@PathVariable UUID promptId, Authentication authentication) {
         String userEmail = authentication.getName();
         UUID userId = userService.getUserIdByEmail(userEmail);
-        return ResponseEntity.ok(storeService.isPromptBought(userId, promptId));
+        return ResponseEntity.ok(storeService.isOwned(userId, promptId));
     }
 
     @GetMapping("/tags")
