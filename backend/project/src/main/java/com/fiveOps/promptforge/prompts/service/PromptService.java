@@ -2,12 +2,16 @@
 package com.fiveOps.promptforge.prompts.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
 @Service
@@ -105,5 +109,11 @@ public class PromptService {
 
     public List<Prompt> searchPublicByTitle(String searchTerm) {
         return promptRepository.searchPublicByTitle(searchTerm);
+    }
+
+    public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts(UUID userId,Pageable pageable) {
+        System.out.println("getPurchasedPromptsByUserId");
+        System.out.println(promptRepository.getPurchasedPromptsByUserId(userId, pageable));
+        return promptRepository.getPurchasedPromptsByUserId(userId,pageable);
     }
 }
