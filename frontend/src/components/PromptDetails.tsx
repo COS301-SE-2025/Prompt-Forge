@@ -15,6 +15,8 @@ import { CartService } from "@/services/cartServices"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
+  console.log("id", id);
+  
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export const PromptDetails = () => {
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [userAddedToCart, setUserAddedToCart] = useState(false)
-  const [checkingOwnership, setCheckingOwnership] = useState(true)
+  // const [checkingOwnership, setCheckingOwnership] = useState(true)
   const promptService = new PromptService()
   const cartService = new CartService()
 
@@ -35,6 +37,8 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
+        console.log("promptData");
+        console.log(promptData);
         
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
@@ -99,7 +103,7 @@ export const PromptDetails = () => {
   }
 
   if (loading) {
-    console.log("checkingOwnership", checkingOwnership);
+    // console.log("checkingOwnership", checkingOwnership);
     
     return (
       <div className="flex justify-center items-center h-screen">

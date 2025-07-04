@@ -11,7 +11,7 @@ interface PromptCardProps {
   reviewCount?: number
   title: string
   description: string
-  username: string
+  authorname: string
   price: number
 }
 
@@ -22,7 +22,7 @@ export const PromptCard = ({
   reviewCount = 0,
   title, 
   description, 
-  username, 
+  authorname, 
   price,
 }: PromptCardProps) => {
   return (
@@ -59,7 +59,7 @@ export const PromptCard = ({
               <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                 <User className="h-3 w-3" />
               </div>
-              <span className="text-xs ml-1 text-muted-foreground">@{username}</span>
+              <span className="text-xs ml-1 text-muted-foreground">@{authorname}</span>
             </div>
             <div className="text-xs font-medium">
               {price === 0 ? "Free" : `$${price.toFixed(2)}`}
