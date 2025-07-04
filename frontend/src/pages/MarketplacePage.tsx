@@ -136,11 +136,13 @@ export default function MarketplacePage() {
     }
   }
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1) // ✅ Reset to page 1
-    
-    fetchData(selectedCategory, selectedFilter, query, 1)
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // setSearchQuery(query)
+    if (event.key === "Enter") {
+      setCurrentPage(1) // ✅ Reset to page 1
+      
+      fetchData(selectedCategory, selectedFilter, searchQuery,1)
+    }
   }
 
   const changePage = (pageNumber: number) => {
@@ -368,7 +370,9 @@ export default function MarketplacePage() {
                     placeholder="        Search for prompts..."
                     className="bg-muted border-muted pl-10"
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e)=> setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearch}
+                  
                   />
                   {!searchQuery && (
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
