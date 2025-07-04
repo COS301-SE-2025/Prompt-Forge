@@ -9,39 +9,20 @@ import { Star, Search, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
+import { MyPrompt } from "@/Models/MyPrompt"
+import { UserProfile } from "@/Models/User"
+import { PromptService } from "@/services/promptService"
 
-interface MyPrompt {
-  id: string
-  title: string
-  description: string
-  content: string
-  category: string
-  tags: string[]
-  createdAt: string
-  updatedAt: string
-  rating: number
-  uses: number
-  featured: boolean
-  price: number
-  isPrivate: boolean
-  isFavorite: boolean
-  authorName: string
-  isPublished: boolean // ✅ Add this property
-  publishedAt?: string // ✅ Add this property
-}
 
-interface UserProfile {
-  userId: string
-  username: string
-  email: string
-  // Add other user fields as needed
-}
+
 
 const PROMPTS_PER_PAGE = 12
 
 export default function MyPromptsPage() {
+  const promptService = new PromptService ();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
+  // const [purchasedPrompts, setPurchasedPrompts] = useState<MyPrompt[]>([])
   const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
@@ -131,32 +112,43 @@ export default function MyPromptsPage() {
         
         // ✅ Fetch prompts using JWT authentication (cookies)
         const response = await httpClient.get(`/prompts/author/${authorId}`)
+        const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
+        console.log("purchasedPrompts");
+        console.log(purchasedPrompts);
         
         if (response.ok) {
           let prompts = await response.json()
           if (!Array.isArray(prompts)) prompts = []
-          
+          prompts = [...prompts, ...purchasedPrompts.content]
           console.log(`✅ Fetched ${prompts.length} prompts for user`)
 
           // Map backend fields to frontend MyPrompt interface
-          const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            description: p.description || "",
-            content: p.content || "",
-            category: "General", // Default, backend does not provide
-            tags: p.tagNames || [],
-            createdAt: p.createdAt,
-            updatedAt: p.publishedAt || p.createdAt,
-            rating: 0, // Default, backend does not provide
-            uses: 0,   // Default, backend does not provide
-            featured: p.featured || false,
-            price: p.price || 0,
-            isPrivate: p.visibility !== "public",
-            isFavorite: false, // Default, backend does not provide
-            authorName: userProfile?.username || "You",
-            isPublished: p.visibility === "public" || p.publishedAt !== null, // ✅ Add this
-            publishedAt: p.publishedAt // ✅ Add this
+          const mappedPrompts: MyPrompt[] = await Promise.all(
+            prompts.map(async (p: any) => {
+            // var promptRating = 0;
+            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+            console.log(p);
+            
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description || "",
+              content: p.content || "",
+              category: "General", // Default, backend does not provide
+              tags: p.tagNames || [],
+              createdAt: p.createdAt,
+              updatedAt: p.publishedAt || p.createdAt,
+              rating: averageRating || 0, // Default, backend does not provide
+              uses: 0,   // Default, backend does not provide
+              featured: p.featured || false,
+              price: p.price || 0,
+              isPrivate: p.visibility !== "public",
+              isFavorite: false, // Default, backend does not provide
+              authorName: p.authorname ||userProfile?.username || "You",
+              isBought: p.purchaseid?true:false ,
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // ✅ Add this
+              publishedAt: p.publishedAt // ✅ Add this
+            }
           }))
 
           setMyPrompts(mappedPrompts)
@@ -186,7 +178,7 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate]) // ✅ Remove userProfile from dependencies
+  }, [isAuthenticated, navigate]) // Remove userProfile from dependencies
 
   // Filtering logic
   useEffect(() => {
@@ -214,14 +206,40 @@ export default function MyPromptsPage() {
         (selectedFilter === "private" && prompt.isPrivate) ||
         (selectedFilter === "public" && !prompt.isPrivate) ||
         (selectedFilter === "recent" && isRecent) ||
-        (selectedFilter === "popular" && prompt.uses > 30)
-
+        (selectedFilter === "popular" && prompt.uses > 30) ||
+        (selectedFilter === "purchased" && prompt.isBought === true)
+  
+        console.log("prompt");
+        console.log("prompt.isBought");
+        console.log(prompt.isBought);
+        // console.log("userProfile?.username");
+        // console.log(userProfile?.username);
+        
       return matchesSearch && matchesCategory && matchesFilter
     })
 
     setFilteredPrompts(filtered)
     setCurrentPage(1)
   }, [searchQuery, selectedCategory, selectedFilter, myPrompts])
+
+  // useEffect(() => {
+  //   const fetchPurchasedPrompts = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
+  //       setFilteredPrompts(purchasedPrompts.content);
+  //     } catch (error) {
+  //       console.error("Failed to fetch purchased prompts:", error);
+  //       setFilteredPrompts([]); // fallback or clear prompts
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   // if (selectedFilter === "purchased") {
+  //   //   fetchPurchasedPrompts();
+  //   // }
+  // }, [selectedFilter, currentPage]);
 
   // Pagination
   const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
@@ -237,6 +255,7 @@ export default function MyPromptsPage() {
     { value: "popular", label: "Popular" },
     { value: "private", label: "Private" },
     { value: "public", label: "Public" },
+    { value: "purchased", label: "Purchased" },
   ]
 
   const handleDeletePrompt = async (id: string) => {
@@ -456,7 +475,8 @@ export default function MyPromptsPage() {
                       isFavorite={prompt.isFavorite}
                       tags={prompt.tags}
                       category={prompt.category}
-                      authorName={userProfile?.username || "You"}
+                      authorName={prompt.authorName || userProfile?.username || "You"}
+                      isBought={prompt.isBought}
                       isOwned={true}
                       onEdit={handleEditPrompt}
                       onDelete={handleDeletePrompt}
@@ -506,6 +526,7 @@ export default function MyPromptsPage() {
                   authorName={prompt.authorName || ""}
                   isOwned={true} // Since this is MyPromptsPage
                   isPublished={prompt.isPublished || false} // ✅ Make sure this is included
+                  isBought = {prompt.isBought}
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}

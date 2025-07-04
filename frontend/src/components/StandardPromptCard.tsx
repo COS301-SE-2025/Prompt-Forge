@@ -32,6 +32,7 @@ interface StandardPromptCardProps {
   authorName: string
   isOwned: boolean
   isPublished?: boolean // ✅ Add this
+  isBought:boolean
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
@@ -56,6 +57,7 @@ export function StandardPromptCard({
   authorName,
   isOwned = false,
   isPublished = false, // ✅ Add this
+  isBought,
   onEdit,
   onDelete,
   onToggleFavorite,
@@ -188,7 +190,13 @@ export function StandardPromptCard({
               )}
               
               {/* Private indicator - only for owned prompts */}
-              {isOwned && isPrivate && (
+              {isBought === true && (
+                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
+                  Bought
+                </span>
+              )}
+
+              {isBought === false && isOwned && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
                   Private
                 </span>
@@ -241,7 +249,7 @@ export function StandardPromptCard({
               )}
               
               {/* Publish/Unpublish button - only for owned prompts */}
-              {isOwned && onPublish && (
+              {!isBought && isOwned &&  onPublish && (
                 <Button
                   variant="ghost"
                   size="icon"

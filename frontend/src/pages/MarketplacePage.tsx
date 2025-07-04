@@ -455,7 +455,7 @@ export default function MarketplacePage() {
                         id={prompt.id}
                         title={prompt.title}
                         description={prompt.description}
-                        username={prompt.username}
+                        authorname={prompt.authorname}
                         price={prompt.price}
                         tags={prompt.tagnames}
                         rating={prompt.averageRating}
