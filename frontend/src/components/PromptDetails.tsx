@@ -27,7 +27,6 @@ export const PromptDetails = () => {
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [userAddedToCart, setUserAddedToCart] = useState(false)
 
-  const [checkingOwnership, setCheckingOwnership] = useState(true)
   const [editingReview, setEditingReview] = useState<string | null>(null)
   const [deletingReview, setDeletingReview] = useState<string | null>(null)
   const [editingReviewData, setEditingReviewData] = useState<{id: string, rating: number, comment: string} | null>(null)
@@ -189,7 +188,7 @@ export const PromptDetails = () => {
     return currentUserId === review.userId || currentUserId === review.userId?.toString();
   }
 
-  if (loading || checkingOwnership) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
