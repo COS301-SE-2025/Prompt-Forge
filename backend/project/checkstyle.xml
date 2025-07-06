@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <!-- File-level checks -->
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java, properties, xml"/>
+
+    <!-- Maximum line length - matches Google Java Format -->
+    <module name="LineLength">
+        <property name="max" value="100"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
+    <!-- Tree Walker for code-level checks -->
+    <module name="TreeWalker">
+        <!-- Naming Conventions Only -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern" value="Method name ''{0}'' must be camelCase."/>
+        </module>
+
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern" value="Local variable name ''{0}'' must be camelCase."/>
+        </module>
+
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern" value="Parameter name ''{0}'' must be camelCase."/>
+        </module>
+
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern" value="Member name ''{0}'' must be camelCase."/>
+        </module>
+
+        <module name="TypeName">
+            <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern" value="Type name ''{0}'' must be PascalCase."/>
+        </module>
+
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-zA-Z][a-zA-Z0-9_]*)*$"/>
+            <message key="name.invalidPattern" value="Package name ''{0}'' should be lowercase."/>
+        </module>
+
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+            <message key="name.invalidPattern" value="Constant name ''{0}'' must be UPPER_CASE."/>
+        </module>
+
+        <!-- Prevent emojis and unusual characters -->
+        <module name="AvoidEscapedUnicodeCharacters">
+            <property name="allowEscapesForControlCharacters" value="true"/>
+            <property name="allowByTailComment" value="true"/>
+            <property name="allowNonPrintableEscapes" value="true"/>
+        </module>
+
+        <!-- Import organization - compatible with Google Java Format -->
+        <module name="AvoidStarImport">
+            <property name="allowStaticMemberImports" value="true"/>
+        </module>
+        
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- Method complexity limits -->
+        <module name="MethodLength">
+            <property name="max" value="100"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+
+        <module name="ParameterNumber">
+            <property name="max" value="8"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+        </module>
+
+        <!-- Boolean expression complexity -->
+        <module name="BooleanExpressionComplexity">
+            <property name="max" value="5"/>
+        </module>
+
+        <!-- Cyclomatic complexity -->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="15"/>
+        </module>
+
+        <!-- Avoid nested blocks -->
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
+
+        <!-- Empty catch blocks -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignore"/>
+        </module>
+
+        <!-- Modifier order -->
+        <module name="ModifierOrder"/>
+
+        <!-- One statement per line -->
+        <module name="OneStatementPerLine"/>
+
+        <!-- Array trailing comma -->
+        <module name="ArrayTrailingComma"/>
+
+        <!-- Missing override annotation -->
+        <module name="MissingOverride"/>
+
+        <!-- Annotation location - flexible for Google Java Format -->
+        <module name="AnnotationLocation">
+            <property name="allowSamelineMultipleAnnotations" value="true"/>
+            <property name="allowSamelineSingleParameterlessAnnotation" value="true"/>
+            <property name="allowSamelineParameterizedAnnotation" value="false"/>
+        </module>
+
+        <!-- Generic whitespace - let Google Java Format handle most formatting -->
+        <module name="GenericWhitespace"/>
+
+        <!-- No finalize methods -->
+        <module name="NoFinalizer"/>
+
+        <!-- String equality -->
+        <module name="StringLiteralEquality"/>
+
+        <!-- Require this for field access -->
+        <module name="RequireThis">
+            <property name="checkFields" value="false"/>
+            <property name="checkMethods" value="false"/>
+        </module>
+    </module>
+
+    <!-- Suppress warnings for generated code -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"
+                  default="checkstyle-suppressions.xml"/>
+        <property name="optional" value="true"/>
+    </module>
+</module>
