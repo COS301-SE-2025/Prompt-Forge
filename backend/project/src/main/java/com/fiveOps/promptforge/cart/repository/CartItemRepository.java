@@ -4,6 +4,8 @@ package com.fiveOps.promptforge.cart.repository;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.transaction.Transactional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,12 +16,12 @@ import org.springframework.stereotype.Repository;
 
 import com.fiveOps.promptforge.cart.model.CartItem;
 
-import jakarta.transaction.Transactional;
-
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
-       @Query(value = """
+  @Query(
+      value =
+          """
               SELECT
                          c.id AS cart_item_id,
                          cart_user.user_id AS user_id,
@@ -44,19 +46,23 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
                          p.price,
                          author_user.username
 
-              """, nativeQuery = true)
-       Page<Object[]> findCartItemsWithTagsByUserId(@Param("userId") UUID userId, Pageable pageable);
+              """,
+      nativeQuery = true)
+  Page<Object[]> findCartItemsWithTagsByUserId(@Param("userId") UUID userId, Pageable pageable);
 
-       @Query(value = """
+  @Query(
+      value =
+          """
               SELECT c.id AS cart_item_id
               FROM cart_items c
               WHERE c.user_id = :userId AND c.prompt_id = :promptId
-              """, nativeQuery = true)
-       List<Object[]> findByUserIdAndPromptId(@Param("userId") UUID userId, @Param("promptId") UUID promptId);
+              """,
+      nativeQuery = true)
+  List<Object[]> findByUserIdAndPromptId(
+      @Param("userId") UUID userId, @Param("promptId") UUID promptId);
 
-       @Modifying
-       @Transactional
-       @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId AND c.prompt.id = :promptId")
-       void deleteByUserIdAndPromptId(@Param("userId") UUID userId, @Param("promptId") UUID promptId);
-
+  @Modifying
+  @Transactional
+  @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId AND c.prompt.id = :promptId")
+  void deleteByUserIdAndPromptId(@Param("userId") UUID userId, @Param("promptId") UUID promptId);
 }
