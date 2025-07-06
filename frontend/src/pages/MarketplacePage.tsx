@@ -85,12 +85,15 @@ export default function MarketplacePage() {
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
     setCurrentPage(1) // ✅ Reset to page 1
+    console.log("filter:", filter);
+    
     fetchData(selectedCategory, filter, searchQuery, 1)
   }
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1) // ✅ Reset to page 1
+    console.log("category:", category);
     fetchData(category, selectedFilter, searchQuery, 1)
   }
 
