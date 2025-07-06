@@ -50,7 +50,7 @@ export class PromptService {
   async fetchMarketplacePrompts(searchStructure:Query,page: number): Promise<any> {
     try {
 
-      //filter=new && tags=all && search!=""
+      //filter=... && tags=... && search!=""
       if(searchStructure.search!==""){
         const promptResponse = await this.httpClient.get(`/store/prompts/search?query=${encodeURIComponent(searchStructure.search)}`)
         const prompts = await promptResponse.json();
@@ -90,7 +90,12 @@ export class PromptService {
       }
       
       if(searchStructure.filter === "all"){
-        return this.getByCategory(searchStructure.tag);
+        console.log("herrreeee byCat");
+        this.getByCategory(searchStructure.tag,page)
+        .then(console.log)
+        // console.log("thi.getbycat", log);
+        
+        return this.getByCategory(searchStructure.tag,page);
       }
 
       if(searchStructure.search ===""){  
@@ -161,9 +166,9 @@ export class PromptService {
     }
   }
 
-  async getByCategory(category: string) {
+  async getByCategory(category: string,page:number) {
     try {
-      const response = await this.httpClient.get(`/store/prompts/filter/tag/${category}`);
+      const response = await this.httpClient.get(`/store/prompts/filter/tag/${category}?page=${page}&size=12`);
       return response.json();
     } catch (error) {
       console.error(error);
