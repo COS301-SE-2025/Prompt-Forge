@@ -91,15 +91,15 @@ export default function DashboardPage() {
     const checkAuth = () => {
       const username = localStorage.getItem('username');
       
-      console.log("🔍 Dashboard auth check:");
+      console.log("Dashboard auth check:");
       console.log("  - username:", username);
       
       // ✅ Simplified check - only require username for now
       if (username && username !== 'Guest') {
         setIsAuthenticated(true);
-        console.log("✅ User is authenticated with username:", username);
+        console.log("User is authenticated with username:", username);
       } else {
-        console.log("❌ User not authenticated, redirecting to login");
+        console.log("User not authenticated, redirecting to login");
         setIsAuthenticated(false);
         navigate('/login');
       }
@@ -171,21 +171,21 @@ export default function DashboardPage() {
 
       setLoadingPrompts(true);
       try {
-        // ✅ Get userId from localStorage (set during login)
+        //Get userId from localStorage (set during login)
         const userId = localStorage.getItem('userId');
         if (!userId) {
-          console.log("⚠️ No userId found in localStorage");
+          console.log("No userId found in localStorage");
           setMyPrompts([]);
           setLoadingPrompts(false);
           return;
         }
 
-        console.log("🔍 Fetching prompts for userId:", userId);
+        console.log("Fetching prompts for userId:", userId);
 
-        // ✅ Use cookie-based auth (same as dashboard)
-        const response = await fetch(`http://localhost:8080/prompts/author/${userId}`, {
+        // Use cookie-based auth (same as dashboard)
+        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}`, {
           method: 'GET',
-          credentials: 'include', // ✅ Use cookies instead of Authorization header
+          credentials: 'include', // Use cookies instead of Authorization header
           headers: {
             'Content-Type': 'application/json',
           },
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           let prompts = await response.json();
           if (!Array.isArray(prompts)) prompts = [];
           
-          console.log(`✅ Fetched ${prompts.length} prompts for user`);
+          console.log(`Fetched ${prompts.length} prompts for user`);
 
           // Map backend fields to frontend MyPrompt interface
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           
           setMyPrompts(mappedPrompts);
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login");
+          console.log("Unauthorized, redirecting to login");
           localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
@@ -244,11 +244,11 @@ export default function DashboardPage() {
         return;
       }
 
-      setLoading(true); // ✅ Ensure loading is true when starting fetch
-      setError(null);   // ✅ Clear any previous errors
+      setLoading(true); 
+      setError(null);   
 
       try {
-        console.log("🔍 Fetching dashboard data...");
+        console.log(" Fetching dashboard data...");
         
         const response = await fetch("http://localhost:8080/api/dashboard", {
           method: 'GET',
@@ -261,9 +261,9 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json();
           setDashboard(data);
-          console.log("✅ Dashboard data loaded:", data);
+          console.log(" Dashboard data loaded:", data);
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login");
+          console.log("Unauthorized, redirecting to login");
           localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
@@ -273,10 +273,10 @@ export default function DashboardPage() {
           throw new Error(`Failed to fetch dashboard data: ${response.status}`);
         }
       } catch (err) {
-        console.error("❌ Dashboard fetch error:", err);
+        console.error("Dashboard fetch error:", err);
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
       } finally {
-        setLoading(false); // ✅ Always set loading to false when done
+        setLoading(false); //Always set loading to false when done
       }
     };
 
@@ -310,10 +310,10 @@ export default function DashboardPage() {
   // Handlers for StandardPromptCard
   const handleDeletePrompt = async (id: string) => {
     try {
-      // ✅ Use cookie-based auth
+      // Use cookie-based auth
       const response = await fetch(`http://localhost:8080/prompts/${id}`, {
         method: 'DELETE',
-        credentials: 'include', // ✅ Use cookies
+        credentials: 'include', 
         headers: {
           'Content-Type': 'application/json',
         },
@@ -321,7 +321,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id));
-        console.log("✅ Prompt deleted successfully");
+        console.log("Prompt deleted successfully");
       } else {
         console.error("Failed to delete prompt:", response.status);
       }
@@ -332,10 +332,10 @@ export default function DashboardPage() {
 
   const handleToggleFavorite = async (id: string) => {
     try {
-      // ✅ Use cookie-based auth
+      // Use cookie-based auth
       const response = await fetch(`http://localhost:8080/prompts/${id}/favorite`, {
         method: 'POST',
-        credentials: 'include', // ✅ Use cookies
+        credentials: 'include', 
         headers: {
           'Content-Type': 'application/json',
         },
@@ -343,7 +343,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
-        console.log("✅ Favorite toggled");
+        console.log("Favorite toggled");
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
