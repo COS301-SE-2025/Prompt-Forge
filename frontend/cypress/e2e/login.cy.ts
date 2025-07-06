@@ -5,11 +5,11 @@ describe("LoginPage", () => {
     cy.visit("/login"); // adjust if your route is different
   });
 
-  describe('Display', () => { 
+  describe('Display', () => {
     it("renders login form by default", () => {
       cy.contains("Login").should("have.class", "border-b-2");
-      cy.get("#login-email").should("exist");
-      cy.get("#login-password").should("exist");
+      cy.get("[data-testid='login-email'").should("exist");
+      cy.get("[data-testid='login-password'").should("exist");
     })
 
     it("shows forgot password form and handles submit", () => {
@@ -21,34 +21,34 @@ describe("LoginPage", () => {
         expect(txt).to.contains("password reset instructions would be sent");
       });
     });
-   })
+  })
 
-  describe("Signup",()=>{
+  describe("Signup", () => {
     it("switches to signup tab", () => {
       cy.contains("Sign Up").click();
-      cy.get("#signup-username").should("exist");
-      cy.get("#signup-email").should("exist");
-      cy.get("#signup-password").should("exist");
-      cy.get("#signup-confirm-password").should("exist");
+      cy.get("[data-testid='signup-username'").should("exist");
+      cy.get("[data-testid='signup-email'").should("exist");
+      cy.get("[data-testid='signup-password'").should("exist");
+      cy.get("[data-testid='signup-confirm-password'").should("exist");
     });
 
     it("signup password validation error", () => {
       cy.contains("Sign Up").click();
-      cy.get("#signup-password").type("test");
+      cy.get("[data-testid='signup-password'").type("test");
       cy.contains("Password requirements").should("exist");
       cy.contains("At least 8 characters").should("exist");
     });
 
     it("signup password mismatch", () => {
       cy.contains("Sign Up").click();
-      cy.get("#signup-password").type("StrongPass1!");
-      cy.get("#signup-confirm-password").type("MismatchPass1!");
+      cy.get("[data-testid='signup-password'").type("StrongPass1!");
+      cy.get("[data-testid='signup-confirm-password'").type("MismatchPass1!");
       cy.contains("Passwords do not match").should("exist");
     });
 
     it("signup password requirements are met", () => {
       cy.contains("Sign Up").click();
-      cy.get("#signup-password").type("StrongPass1!");
+      cy.get("[data-testid='signup-password'").type("StrongPass1!");
       cy.contains("Password meets all requirements").should("exist");
     });
 
@@ -60,11 +60,11 @@ describe("LoginPage", () => {
 
 
       cy.contains("Sign Up").click();
-      cy.get("#signup-username").type("testUser1");
-      cy.get("#signup-email").type("testuser1@gmail.com");
-      cy.get("#signup-password").type("StrongPass1!");
-      cy.get("#signup-confirm-password").type("StrongPass1!");
-      cy.get("#signup-button").click();
+      cy.get("[data-testid='signup-username'").type("testUser1");
+      cy.get("[data-testid='signup-email'").type("testuser1@gmail.com");
+      cy.get("[data-testid='signup-password'").type("StrongPass1!");
+      cy.get("[data-testid='signup-confirm-password'").type("StrongPass1!");
+      cy.get("[data-testid='signup-button'").click();
 
       cy.wait("@signupRequest");
       // cy.wait("@autoLoginRequest");
@@ -76,48 +76,48 @@ describe("LoginPage", () => {
 
   describe("Login", () => {
     it("shows error for empty login fields", () => {
-      cy.get("#login-button").click();
+      cy.get("[data-testid='login-button'").click();
       cy.contains("All fields are required").should("exist");
     });
-    
+
     it("handles login failure - incorrect email ", () => {
       cy.intercept("POST", "/auth/login", {
         statusCode: 401,
         body: { message: "Invalid email or password" },
       }).as("loginRequest");
-  
-      cy.get("#login-email").type("testuser1@gmail.co");
-      cy.get("#login-password").type("testUser@301");
-      cy.get("#login-button").click();
-  
+
+      cy.get("[data-testid='login-email'").type("testuser1@gmail.co");
+      cy.get("[data-testid='login-password'").type("testUser@301");
+      cy.get("[data-testid='login-button'").click();
+
       cy.wait("@loginRequest");
       cy.contains("Invalid email or password").should("exist");
     });
-   
+
     it("handles login failure - incorrect password ", () => {
       cy.intercept("POST", "/auth/login", {
         statusCode: 401,
         body: { message: "Invalid email or password" },
       }).as("loginRequest");
-  
-      cy.get("#login-email").type("testuser1@gmail.com");
-      cy.get("#login-password").type("testUser@30");
-      cy.get("#login-button").click();
-  
+
+      cy.get("[data-testid='login-email'").type("testuser1@gmail.com");
+      cy.get("[data-testid='login-password'").type("testUser@30");
+      cy.get("[data-testid='login-button'").click();
+
       cy.wait("@loginRequest");
       cy.contains("Invalid email or password").should("exist");
     });
-    
+
     it("handles login failure - incorrect email and password ", () => {
       cy.intercept("POST", "/auth/login", {
         statusCode: 401,
         body: { message: "Invalid email or password" },
       }).as("loginRequest");
-  
-      cy.get("#login-email").type("testuser1@gmail.com");
-      cy.get("#login-password").type("testUser@30");
-      cy.get("#login-button").click();
-  
+
+      cy.get("[data-testid='login-email'").type("testuser1@gmail.com");
+      cy.get("[data-testid='login-password'").type("testUser@30");
+      cy.get("[data-testid='login-button'").click();
+
       cy.wait("@loginRequest");
       cy.contains("Invalid email or password").should("exist");
     });
@@ -128,9 +128,9 @@ describe("LoginPage", () => {
         body: { message: "Login successful" },
       }).as("loginRequest");
 
-      cy.get("#login-email").type("testuser1@gmail.com");
-      cy.get("#login-password").type("testUser@301");
-      cy.get("#login-button").click();
+      cy.get("[data-testid='login-email'").type("testuser1@gmail.com");
+      cy.get("[data-testid='login-password'").type("testUser@301");
+      cy.get("[data-testid='login-button'").click();
 
       cy.wait("@loginRequest");
       cy.url().should("include", "/home");

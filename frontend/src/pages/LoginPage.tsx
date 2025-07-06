@@ -56,20 +56,20 @@ export default function LoginPage() {
 
     try {
       console.log("🔍 Attempting login with:", { email: loginEmail });
-      
+
       const result = await authService.login({ 
         email: loginEmail, 
         password: loginPassword 
       });
-      
+
       console.log("🔍 Login result:", result);
-      
+
       if (result?.message === "Login successful") {
         // Store user data from response
         if (result.username) localStorage.setItem("username", result.username);
         if (result.userId) localStorage.setItem("userId", result.userId);
         if (result.email) localStorage.setItem("userEmail", result.email);
-        
+
         setError("");
         console.log("✅ Login successful, navigating to dashboard");
         navigate("/home"); // ✅ Navigate to dashboard to test
@@ -127,16 +127,16 @@ export default function LoginPage() {
       console.log("Signup result:", signupResult);
 
       // Check if signup was successful
-      if (signupResult?.message === "Signup successful" || 
-          signupResult?.message === "User created successfully" ||
-          signupResult?.status === "success" ||
-          signupResult?.success === true) {
-        
+      if (signupResult?.message === "Signup successful" ||
+        signupResult?.message === "User created successfully" ||
+        signupResult?.status === "success" ||
+        signupResult?.success === true) {
+
         // If signup successful, automatically log them in
         try {
-          const loginResult = await authService.login({ 
-            email: signupEmail, 
-            password: signupPassword 
+          const loginResult = await authService.login({
+            email: signupEmail,
+            password: signupPassword
           });
 
           console.log("Auto-login result:", loginResult);
@@ -153,7 +153,7 @@ export default function LoginPage() {
             if (loginResult.userId || loginResult.user?.id) {
               localStorage.setItem("userId", loginResult.userId || loginResult.user.id);
             }
-            
+
             setError("");
             navigate("/home");
           } else {
@@ -298,6 +298,7 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1">Email</label>
                         <Input
+                          data-testid="login-email"
                           type="email"
                           placeholder="you@example.com"
                           className="bg-muted border-muted h-11"
@@ -309,6 +310,7 @@ export default function LoginPage() {
                         <label className="text-labelText px-1">Password</label>
                         <div className="relative">
                           <Input
+                            data-testid="login-password"
                             type={toggleLoginPassword ? "text" : "password"}
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
@@ -337,7 +339,7 @@ export default function LoginPage() {
                         </button>
                       </div>
 
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleLogin}>
+                      <Button data-testid="login-button" className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleLogin}>
                         Login
                       </Button>
 
@@ -359,6 +361,7 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1 text-sm">Username</label>
                         <Input
+                          data-testid="signup-username"
                           type="text"
                           placeholder="Username"
                           className="bg-muted border-muted h-11"
@@ -369,6 +372,7 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <label className="text-labelText px-1 text-sm">Email</label>
                         <Input
+                          data-testid="signup-email"
                           type="email"
                           placeholder="you@example.com"
                           className="bg-muted border-muted h-11"
@@ -380,6 +384,7 @@ export default function LoginPage() {
                         <label className="text-labelText px-1">Password</label>
                         <div className="relative">
                           <Input
+                            data-testid="signup-password"
                             type={togglePassword ? "text" : "password"}
                             placeholder="Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
@@ -399,7 +404,7 @@ export default function LoginPage() {
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Password Requirements */}
                         {showPasswordRequirements && signupPassword.length > 0 && !Object.values(passwordValidation).every(Boolean) && (
                           <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
@@ -443,6 +448,7 @@ export default function LoginPage() {
                         <label className="text-labelText px-1">Confirm Password</label>
                         <div className="relative">
                           <Input
+                            data-testid="signup-confirm-password"
                             type={toggleConfirmPassword ? "text" : "password"}
                             placeholder="Confirm Password"
                             className="bg-muted border-muted h-11 pr-12 w-full"
@@ -464,7 +470,7 @@ export default function LoginPage() {
                           </div>
                         )}
                       </div>
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
+                      <Button data-testid="signup-button" className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
                         Sign Up
                       </Button>
 
@@ -483,7 +489,7 @@ export default function LoginPage() {
                 </>
               )}
 
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {error && <p data-testid="error-message" className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
           </Card>
         </div>
