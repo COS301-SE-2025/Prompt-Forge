@@ -26,8 +26,8 @@ interface MyPrompt {
   isPrivate: boolean
   isFavorite: boolean
   authorName: string
-  isPublished: boolean // ✅ Add this property
-  publishedAt?: string // ✅ Add this property
+  isPublished: boolean 
+  publishedAt?: string 
 }
 
 interface UserProfile {
@@ -61,23 +61,23 @@ export default function MyPromptsPage() {
         // Check if user is logged in (you can also check localStorage)
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-          console.log("❌ User not authenticated, redirecting to login")
+          console.log("User not authenticated, redirecting to login")
           navigate('/login')
           return
         }
 
         setIsAuthenticated(true)
 
-        // ✅ Get user profile using JWT token (sent via cookies)
+        // Get user profile using JWT token (sent via cookies)
         console.log("🔍 Fetching user profile...")
         const response = await httpClient.get('/user/me')
 
         if (response.ok) {
           const userData: UserProfile = await response.json()
           setUserProfile(userData)
-          console.log("✅ User profile loaded:", userData)
+          console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login")
+          console.log(" Unauthorized, redirecting to login")
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -86,7 +86,7 @@ export default function MyPromptsPage() {
           throw new Error('Failed to fetch user profile')
         }
       } catch (error) {
-        console.error("❌ Auth check failed:", error)
+        console.error(" Auth check failed:", error)
         // Don't redirect on network errors, just continue without profile
         setIsAuthenticated(true) // Allow fallback behavior
       }
@@ -108,19 +108,19 @@ export default function MyPromptsPage() {
       try {
         let authorId: string | null = null
 
-        // ✅ Try to get authorId from user profile (preferred)
+        // Try to get authorId from user profile (preferred)
         if (userProfile?.userId) {
           authorId = userProfile.userId
           console.log("🔍 Using authorId from profile:", authorId)
         } 
-        // ✅ Fallback: get from localStorage if profile not loaded yet
+        // Fallback: get from localStorage if profile not loaded yet
         else {
           authorId = localStorage.getItem('userId')
           console.log("🔍 Using authorId from localStorage:", authorId)
         }
 
         if (!authorId) {
-          console.log("⚠️ No authorId available, using empty prompts")
+          console.log("No authorId available, using empty prompts")
           setMyPrompts([])
           setFilteredPrompts([])
           setLoading(false)
@@ -129,14 +129,14 @@ export default function MyPromptsPage() {
 
         console.log("🔍 Fetching prompts for authorId:", authorId)
         
-        // ✅ Fetch prompts using JWT authentication (cookies)
+        // Fetch prompts using JWT authentication (cookies)
         const response = await httpClient.get(`/prompts/author/${authorId}`)
         
         if (response.ok) {
           let prompts = await response.json()
           if (!Array.isArray(prompts)) prompts = []
           
-          console.log(`✅ Fetched ${prompts.length} prompts for user`)
+          console.log(`Fetched ${prompts.length} prompts for user`)
 
           // Map backend fields to frontend MyPrompt interface
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
@@ -155,8 +155,8 @@ export default function MyPromptsPage() {
             isPrivate: p.visibility !== "public",
             isFavorite: false, // Default, backend does not provide
             authorName: userProfile?.username || "You",
-            isPublished: p.visibility === "public" || p.publishedAt !== null, // ✅ Add this
-            publishedAt: p.publishedAt // ✅ Add this
+            isPublished: p.visibility === "public" || p.publishedAt !== null, 
+            publishedAt: p.publishedAt 
           }))
 
           setMyPrompts(mappedPrompts)
@@ -165,7 +165,7 @@ export default function MyPromptsPage() {
           const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
           setAvailableCategories(categories)
         } else if (response.status === 401) {
-          console.log("❌ Unauthorized, redirecting to login")
+          console.log("Unauthorized, redirecting to login")
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -174,7 +174,7 @@ export default function MyPromptsPage() {
           throw new Error(`Failed to fetch prompts: ${response.status}`)
         }
       } catch (error) {
-        console.error("❌ Error fetching prompts:", error)
+        console.error("Error fetching prompts:", error)
         setMyPrompts([])
         setFilteredPrompts([])
       } finally {
@@ -182,11 +182,11 @@ export default function MyPromptsPage() {
       }
     }
 
-    // ✅ Only fetch prompts when authenticated AND we have either profile or localStorage userId
+    // Only fetch prompts when authenticated AND we have either profile or localStorage userId
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate]) // ✅ Remove userProfile from dependencies
+  }, [isAuthenticated, navigate]) //Remove userProfile from dependencies
 
   // Filtering logic
   useEffect(() => {
@@ -244,12 +244,12 @@ export default function MyPromptsPage() {
       const response = await httpClient.delete(`/prompts/${id}`)
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
-        console.log("✅ Prompt deleted successfully")
+        console.log("Prompt deleted successfully")
       } else {
         throw new Error("Failed to delete prompt")
       }
     } catch (error) {
-      console.error("❌ Error deleting prompt:", error)
+      console.error("Error deleting prompt:", error)
       // For now, still remove from UI even if backend fails
       setMyPrompts((prev) => prev.filter((p) => p.id !== id))
     }
@@ -258,7 +258,7 @@ export default function MyPromptsPage() {
   const handleToggleFavorite = async (id: string) => {
     // For now, just update locally since backend doesn't support favorites yet
     setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)))
-    console.log("✅ Favorite toggled (local only)")
+    console.log("Favorite toggled (local only)")
   }
 
   const handleCopyPrompt = async (content: string, id: string) => {
@@ -291,7 +291,7 @@ export default function MyPromptsPage() {
   const handlePublishPrompt = async (id: string, isCurrentlyPublished: boolean) => {
     try {
       const action = isCurrentlyPublished ? "unpublish" : "publish"
-      console.log(`🔄 ${action}ing prompt ${id}...`)
+      console.log(` ${action}ing prompt ${id}...`)
       
       // For now, just update local state (you can add API call later)
       setMyPrompts((prev) => prev.map((p) => 
@@ -305,9 +305,9 @@ export default function MyPromptsPage() {
           : p
       ))
       
-      console.log(`✅ Prompt ${action}ed successfully`)
+      console.log(`Prompt ${action}ed successfully`)
     } catch (error) {
-      console.error(`❌ Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
+      console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }
   }
 
@@ -464,7 +464,7 @@ export default function MyPromptsPage() {
                       onCopy={handleCopyPrompt}
                       copiedId={copiedId}
                       content={prompt.content}
-                      onPublish={handlePublishPrompt} // ✅ Make sure this is included
+                      onPublish={handlePublishPrompt}
                     />
                   ))}
                 </div>
@@ -505,12 +505,12 @@ export default function MyPromptsPage() {
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
                   isOwned={true} // Since this is MyPromptsPage
-                  isPublished={prompt.isPublished || false} // ✅ Make sure this is included
+                  isPublished={prompt.isPublished || false} 
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}
                   onCopy={handleCopyPrompt}
-                  onPublish={handlePublishPrompt} // ✅ Make sure this is included
+                  onPublish={handlePublishPrompt}
                   copiedId={copiedId}
                   content={prompt.content || ""}
                 />

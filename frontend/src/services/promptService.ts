@@ -1,7 +1,7 @@
-import { Query } from "@/Models/Query";
+import { Query } from "@/models/Query";
 import HttpClient from "./httpClient";
 import { Prompt, Tag, PromptWithTags,  MarketplacePrompt } from "@/Models/Prompt";
-import { Review,ReviewsApiResponse } from '@/Models/Reviews';
+import { Review,ReviewsApiResponse } from '@/models/Reviews';
 
 export class PromptService {
     private httpClient = HttpClient;
@@ -234,7 +234,7 @@ export class PromptService {
     })
 
     if (!response.ok) {
-      // ✅ Better error message extraction
+      // Better error message extraction
       let errorMessage = `HTTP error! status: ${response.status}`
       
       try {
