@@ -605,6 +605,7 @@ export default function MyPromptsPage() {
                 >
                   Previous
                 </Button>
+
                 {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
                   let pageNumber
                   if (totalPages <= 5) {
@@ -616,23 +617,25 @@ export default function MyPromptsPage() {
                   } else {
                     pageNumber = currentPage - 2 + i
                   }
+
                   return (
                     <Button
                       key={pageNumber}
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(pageNumber)}
-                      className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
+                      className={`min-w-[2.5rem] ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}`}
                     >
                       {pageNumber}
                     </Button>
                   )
                 })}
+
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage >= totalPages}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </Button>
