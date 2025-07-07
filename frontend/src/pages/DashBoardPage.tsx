@@ -2089,11 +2089,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = () => {
       const username = localStorage.getItem('username');
+
       const userId = localStorage.getItem('userId');
       if (username && username !== 'Guest' && userId) {
         setIsAuthenticated(true);
         setCurrentUserId(userId);
       } else {
+
         setIsAuthenticated(false);
         navigate('/login');
       }
@@ -2156,14 +2158,17 @@ export default function DashboardPage() {
           setLoadingPrompts(false);
           return;
         }
+
         const response = await fetch(`http://localhost:8080/prompts/author/${userId}`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
+
         });
         if (response.ok) {
           let prompts = await response.json();
           if (!Array.isArray(prompts)) prompts = [];
+
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
             id: p.id,
             title: p.title,
@@ -2182,6 +2187,8 @@ export default function DashboardPage() {
           }));
           setMyPrompts(mappedPrompts);
         } else if (response.status === 401) {
+
+
           localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
@@ -2200,10 +2207,12 @@ export default function DashboardPage() {
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
+
       if (!isAuthenticated) return;
       setLoading(true);
       setError(null);
       try {
+
         const response = await fetch("http://localhost:8080/api/dashboard", {
           method: 'GET',
           credentials: 'include',
@@ -2212,7 +2221,9 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json();
           setDashboard(data);
+
         } else if (response.status === 401) {
+
           localStorage.removeItem('username');
           localStorage.removeItem('userId');
           setIsAuthenticated(false);
@@ -2222,9 +2233,11 @@ export default function DashboardPage() {
           throw new Error(`Failed to fetch dashboard data: ${response.status}`);
         }
       } catch (err) {
+
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
       } finally {
         setLoading(false);
+
       }
     };
     if (isAuthenticated) fetchDashboardData();
@@ -2304,19 +2317,23 @@ export default function DashboardPage() {
   // Handlers for StandardPromptCard
   const handleDeletePrompt = async (id: string) => {
     try {
+
       const response = await fetch(`http://localhost:8080/prompts/${id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
+
       });
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id));
+
       }
     } catch {}
   };
 
   const handleToggleFavorite = async (id: string) => {
     try {
+
       const response = await fetch(`http://localhost:8080/prompts/${id}/favorite`, {
         method: 'POST',
         credentials: 'include',
@@ -2324,6 +2341,7 @@ export default function DashboardPage() {
       });
       if (response.ok) {
         setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));
+
       }
     } catch {
       setMyPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)));

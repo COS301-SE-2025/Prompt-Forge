@@ -5,6 +5,4 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @PropertySource("file:.env")
-public class EnvConfig {
-    // No additional code needed
-}
+public class EnvConfig {}
