@@ -9,7 +9,7 @@ import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
 import { MyPrompt } from "@/Models/MyPrompt"
-import { UserProfile } from "@/Models/User"
+import { UserProfile } from "@/models/User"
 import { PromptService } from "@/services/promptService"
 
 
