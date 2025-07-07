@@ -455,8 +455,8 @@ export const PromptDetails = () => {
               </div>
             )}
 
-            {/* Only allow reviews if user owns the prompt or it's free */}
-            {canViewContent && (
+            {/* Only allow reviews if user owns the prompt or it's free AND user is not the author */}
+            {canViewContent && currentUserId !== prompt.authorId && (
               <>
                 {editingReviewData ? (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
@@ -506,6 +506,19 @@ export const PromptDetails = () => {
                   />
                 )}
               </>
+            )}
+
+            {/* Show message if user is the author */}
+            {canViewContent && currentUserId === prompt.authorId && (
+              <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <MessageSquare className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="font-medium text-gray-700 dark:text-gray-300">You can't review your own prompt</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Authors cannot leave reviews on their own prompts</p>
+                </div>
+              </div>
             )}
           </Card>
         </div>
