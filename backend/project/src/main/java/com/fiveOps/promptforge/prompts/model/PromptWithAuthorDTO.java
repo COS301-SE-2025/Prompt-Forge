@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PromptWithAuthorDTO {
+
   UUID getId();
 
   UUID getAuthorId();
@@ -26,4 +27,5 @@ public interface PromptWithAuthorDTO {
   String[] getTagNames();
 
   String getUsername(); // (JOINed)
+
 }

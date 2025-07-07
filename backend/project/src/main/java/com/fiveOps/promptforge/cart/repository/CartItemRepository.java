@@ -23,6 +23,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
       value =
           """
               SELECT
+
                          c.id AS cart_item_id,
                          cart_user.user_id AS user_id,
                          author_user.username AS username,
@@ -49,6 +50,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
               """,
       nativeQuery = true)
   Page<Object[]> findCartItemsWithTagsByUserId(@Param("userId") UUID userId, Pageable pageable);
+
 
   @Query(
       value =
