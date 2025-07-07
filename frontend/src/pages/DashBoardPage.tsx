@@ -2115,7 +2115,7 @@ export default function DashboardPage() {
       if (!isAuthenticated || !currentUserId) return;
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/users/${currentUserId}`, {
+        const response = await fetch(`/users/${currentUserId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -2159,7 +2159,7 @@ export default function DashboardPage() {
           return;
         }
 
-        const response = await fetch(`http://localhost:8080/prompts/author/${userId}`, {
+        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -2251,7 +2251,7 @@ export default function DashboardPage() {
       await Promise.all(
         myPrompts.map(async (prompt) => {
           try {
-            const response = await fetch(`http://localhost:8080/store/prompts/${prompt.id}/reviews`, {
+            const response = await fetch(`http://localhost:8080/api/store/prompts/${prompt.id}/reviews`, {
               method: 'GET',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
