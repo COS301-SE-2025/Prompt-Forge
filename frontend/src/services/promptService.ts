@@ -50,7 +50,7 @@ export class PromptService {
   async fetchMarketplacePrompts(searchStructure:Query,page: number): Promise<any> {
     try {
 
-      //filter=new && tags=all && search!=""
+      //filter=... && tags=... && search!=""
       if(searchStructure.search!==""){
         const promptResponse = await this.httpClient.get(`/store/prompts/search?query=${encodeURIComponent(searchStructure.search)}`)
         const prompts = await promptResponse.json();
@@ -76,6 +76,9 @@ export class PromptService {
         //filter=all && tags=all && search=""
         const promptsResponse = await this.httpClient.get(`/store/prompts?page=${page}&size=12`)
         const prompts = await promptsResponse.json();
+        console.log("prompts:");
+        console.log(prompts);
+        
         return prompts;
       }
       
@@ -87,7 +90,12 @@ export class PromptService {
       }
       
       if(searchStructure.filter === "all"){
-        return this.getByCategory(searchStructure.tag);
+        console.log("herrreeee byCat");
+        this.getByCategory(searchStructure.tag,page)
+        .then(console.log)
+        // console.log("thi.getbycat", log);
+        
+        return this.getByCategory(searchStructure.tag,page);
       }
 
       if(searchStructure.search ===""){  
@@ -125,6 +133,17 @@ export class PromptService {
     }
   }
   
+  async getPurchasedPrompts(page:number,size:number) {
+    try {
+      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}`)
+      return promptResponse.json();
+      // return prompts;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+  }
+  
   async fetchTags() {
     try {
       const response = await this.httpClient.get('/store/prompts/tags');
@@ -147,9 +166,9 @@ export class PromptService {
     }
   }
 
-  async getByCategory(category: string) {
+  async getByCategory(category: string,page:number) {
     try {
-      const response = await this.httpClient.get(`/store/prompts/filter/tag/${category}`);
+      const response = await this.httpClient.get(`/store/prompts/filter/tag/${category}?page=${page}&size=12`);
       return response.json();
     } catch (error) {
       console.error(error);
