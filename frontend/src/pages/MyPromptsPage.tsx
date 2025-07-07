@@ -13,6 +13,8 @@ import { UserProfile } from "@/Models/User"
 import { PromptService } from "@/services/promptService"
 
 
+
+
 const PROMPTS_PER_PAGE = 12
 
 export default function MyPromptsPage() {
@@ -39,7 +41,9 @@ export default function MyPromptsPage() {
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
 
+
           console.log("User not authenticated, redirecting to login")
+
 
           navigate('/login')
           return
@@ -55,11 +59,13 @@ export default function MyPromptsPage() {
           const userData: UserProfile = await response.json()
           setUserProfile(userData)
 
+
           console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
           console.log("Unauthorized, redirecting to login")
 
     
+
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -67,7 +73,9 @@ export default function MyPromptsPage() {
         }
       } catch (error) {
 
+
         console.error("Auth check failed:", error)
+
         // Don't redirect on network errors, just continue without profile
         setIsAuthenticated(true) // Allow fallback behavior
 
@@ -86,12 +94,16 @@ export default function MyPromptsPage() {
       setLoading(true)
       try {
         let authorId: string | null = null
+
+
         if (userProfile?.userId) {
           authorId = userProfile.userId
 
           console.log("Using authorId from profile:", authorId)
         } 
+
         //Fallback: get from localStorage if profile not loaded yet
+
         else {
           authorId = localStorage.getItem('userId')
           console.log("Using authorId from localStorage:", authorId)
@@ -100,7 +112,6 @@ export default function MyPromptsPage() {
         if (!authorId) {
 
           console.log("No authorId available, using empty prompts")
-
 
           setMyPrompts([])
           setFilteredPrompts([])
@@ -111,7 +122,9 @@ export default function MyPromptsPage() {
 
         console.log("Fetching prompts for authorId:", authorId)
         
+
         //Fetch prompts using JWT authentication (cookies)
+
         const response = await httpClient.get(`/prompts/author/${authorId}`)
         const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
         console.log("purchasedPrompts");
@@ -120,6 +133,7 @@ export default function MyPromptsPage() {
         if (response.ok) {
           let prompts = await response.json()
           if (!Array.isArray(prompts)) prompts = []
+
           prompts = [...prompts, ...purchasedPrompts.content]
           console.log(`Fetched ${prompts.length} prompts for user`)
 
@@ -157,6 +171,7 @@ export default function MyPromptsPage() {
           const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
           setAvailableCategories(categories)
         } else if (response.status === 401) {
+
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
           navigate('/login')
@@ -207,6 +222,7 @@ export default function MyPromptsPage() {
     }
     fetchRatings()
   }, [myPrompts])
+
 
 
   // Filtering logic
@@ -261,6 +277,8 @@ export default function MyPromptsPage() {
       const response = await httpClient.delete(`/prompts/${id}`)
       if (response.ok) {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+
+
       } else {
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
       }
@@ -308,8 +326,8 @@ export default function MyPromptsPage() {
     try {
 
       const action = isCurrentlyPublished ? "unpublish" : "publish"
-      console.log(`${action}ing prompt ${id}...`)
-      
+
+      console.log(`${action}ing prompt ${id}...`)      
       // For now, just update local state (you can add API call later)
       setMyPrompts((prev) => prev.map((p) => 
         p.id === id 
@@ -524,8 +542,10 @@ export default function MyPromptsPage() {
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
                   isOwned={true} // Since this is MyPromptsPage
+
                   isPublished={prompt.isPublished || false}
                   isBought = {prompt.isBought}
+
 
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
