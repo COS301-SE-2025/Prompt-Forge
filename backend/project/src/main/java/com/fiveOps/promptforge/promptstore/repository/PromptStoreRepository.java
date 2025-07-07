@@ -250,4 +250,6 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
           + "AND p.publishedAt IS NOT NULL ORDER BY p.publishedAt DESC")
   List<Prompt> findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(String visibility);
 
+  Boolean existsByIdAndAuthorId(UUID id, UUID authorId);
+
 }
