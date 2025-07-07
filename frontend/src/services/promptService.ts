@@ -1,7 +1,7 @@
-import { Query } from "@/Models/Query";
+import { Query } from "@/models/Query";
 import HttpClient from "./httpClient";
 import { Prompt, Tag, PromptWithTags,  MarketplacePrompt } from "@/Models/Prompt";
-import { Review,ReviewsApiResponse } from '@/Models/Reviews';
+import { Review,ReviewsApiResponse } from '@/models/Reviews';
 
 export class PromptService {
     private httpClient = HttpClient;
@@ -246,6 +246,7 @@ export class PromptService {
   }
 
   async postReview(promptId: string, reviewData: { rating: number; comment: string }) {
+
         try {
             const response = await this.httpClient.post(`/store/prompts/${promptId}/reviews`, {
                 rating: reviewData.rating,
