@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/store/prompts")
 @RequiredArgsConstructor
 public class PromptStoreController {
+
   private final PromptStoreService storeService;
   private final UserService userService;
 

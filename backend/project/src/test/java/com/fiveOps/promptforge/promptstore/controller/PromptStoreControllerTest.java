@@ -175,6 +175,7 @@ class PromptStoreControllerReviewTest {
     when(authentication.getName()).thenReturn("test@example.com");
     when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
 
+
     // Act
     ResponseEntity<Void> response =
         promptStoreController.deleteReview(testPromptId, reviewId, authentication);
