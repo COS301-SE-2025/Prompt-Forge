@@ -21,29 +21,28 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
        @Query(value = """
               SELECT
-                         c.id AS cart_item_id,
-                         cart_user.user_id AS user_id,
-                         author_user.username AS username,
-                         p.prompt_id AS prompt_id,
-                         p.title AS prompt_title,
-                         ARRAY_AGG(t.name) AS prompt_tags,
-                         p.price AS prompt_price,
-                         author_user.username AS author_username
-                     FROM cart_items c
-                     JOIN users cart_user ON c.user_id = cart_user.user_id
-                     JOIN prompts p ON c.prompt_id = p.prompt_id
-                     JOIN users author_user ON p.author_id = author_user.user_id
-                     JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-                     WHERE cart_user.user_id = :userId
-                     GROUP BY
-                         c.id,
-                         cart_user.user_id,
-                         cart_user.username,
-                         p.prompt_id,
-                         p.title,
-                         p.price,
-                         author_user.username
-
+              c.id AS cart_item_id,
+              cart_user.user_id AS user_id,
+              author_user.username AS username,
+              p.prompt_id AS prompt_id,
+              p.title AS prompt_title,
+              ARRAY_AGG(t.name) AS prompt_tags,
+              p.price AS prompt_price,
+              author_user.username AS author_username
+              FROM cart_items c
+              JOIN users cart_user ON c.user_id = cart_user.user_id
+              JOIN prompts p ON c.prompt_id = p.prompt_id
+              JOIN users author_user ON p.author_id = author_user.user_id
+              JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+              WHERE cart_user.user_id = :userId
+              GROUP BY
+              c.id,
+              cart_user.user_id,
+              cart_user.username,
+              p.prompt_id,
+              p.title,
+              p.price,
+              author_user.username
               """, nativeQuery = true)
        Page<Object[]> findCartItemsWithTagsByUserId(@Param("userId") UUID userId, Pageable pageable);
 
