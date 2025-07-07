@@ -116,7 +116,8 @@ public class PromptService {
   }
 
 
-    public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts(UUID userId,Pageable pageable) {
+    public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts
+    (UUID userId,Pageable pageable) {
         System.out.println("getPurchasedPromptsByUserId");
         System.out.println(promptRepository.getPurchasedPromptsByUserId(userId, pageable));
         return promptRepository.getPurchasedPromptsByUserId(userId,pageable);

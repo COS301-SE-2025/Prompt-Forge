@@ -76,60 +76,20 @@ public class PromptStoreService {
         .collect(Collectors.toList());
   }
 
-  public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagName(
-      String tagName, Pageable pageable) {
-    UUID tagId = tagService.getTagIdByName(tagName);
-    return promptStoreRepository.findPublicByTagId(tagId, pageable);
-  }
-
-  public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagNameAndFilter(
-      String tagName, String filter, Pageable pageable) {
-    UUID tagId = tagService.getTagIdByName(tagName);
-    if (filter.toLowerCase().equals("featured")) {
-      return promptStoreRepository.findPublicByTagIdAndFeatured(tagId, pageable);
-    }
-
-    return promptStoreRepository.findByTagAndNew(tagId, pageable);
-  }
-
-  public Page<Map<String, PromptWithAuthorDTO>> getNew(Pageable pageable) {
-    return promptStoreRepository.findNew(pageable);
-  }
 
   public Boolean isPromptBought(UUID userID, UUID promptId) {
     return purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
   }
 
-  @Transactional
-  public PromptPurchase purchasePrompt(UUID promptId, UUID userId) {
-    Prompt prompt = promptService.getPromptById(promptId);
 
-    if (prompt == null) {
-      throw new PurchaseException("Prompt with ID " + promptId + " not found in database");
-    }
-
-    if (purchaseRepository.existsByPromptIdAndUserId(promptId, userId)) {
-      throw new PurchaseException("Prompt already purchased");
-    }
-
-    PromptPurchase purchase =
-        PromptPurchase.builder()
-            .promptId(promptId)
-            .userId(userId)
-            .pricePaid(prompt.getPrice())
-            .visibility("public")
-            .build();
-
-
-    return purchaseRepository.save(purchase);
-  }
-
-    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagName(String tagName, Pageable pageable) {
+    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagName(
+      String tagName, Pageable pageable) {
         UUID tagId = tagService.getTagIdByName(tagName);
         return promptStoreRepository.findPublicByTagId(tagId, pageable);
     }
     
-    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagNameAndFilter(String tagName, String filter, Pageable pageable) {  
+    public Page<Map<String, PromptWithAuthorDTO>> getPublicByTagNameAndFilter(
+      String tagName, String filter, Pageable pageable) {  
         UUID tagId = tagService.getTagIdByName(tagName);
         if(filter.toLowerCase().equals("featured")){
             return promptStoreRepository.findPublicByTagIdAndFeatured(tagId, pageable);
@@ -148,7 +108,8 @@ public class PromptStoreService {
         probe.setAuthorId(userID); // you want all prompts in the "Marketing" category
         probe.setId(promptId); // you want all prompts in the "Marketing" category
 
-        return promptStoreRepository.existsByIdAndAuthorId(promptId,userID) || purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
+        return promptStoreRepository.existsByIdAndAuthorId(promptId,userID) 
+        || purchaseRepository.existsByPromptIdAndUserId(promptId, userID);
     }
     
     @Transactional
