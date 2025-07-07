@@ -29,7 +29,7 @@ import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 
   @Autowired private UserService userService;
