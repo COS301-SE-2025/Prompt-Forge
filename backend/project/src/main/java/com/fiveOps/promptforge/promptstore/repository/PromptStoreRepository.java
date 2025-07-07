@@ -35,6 +35,7 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
               prompts p
        JOIN users u ON p.author_id = u.user_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE p.visibility = 'public'
        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
 
 

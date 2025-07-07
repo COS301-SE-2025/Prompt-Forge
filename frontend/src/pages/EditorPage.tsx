@@ -57,6 +57,7 @@ export default function EditorPage() {
       cardBg: "bg-violet-500/10 border-violet-500/20",
       selectedBg: "bg-violet-500/20 border-violet-500/40",
       textColor: "text-violet-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(139,69,255,0.3)] hover:border-violet-500/50",
       available: true,
       model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
     },
@@ -69,6 +70,7 @@ export default function EditorPage() {
       cardBg: "bg-green-500/10 border-green-500/20",
       selectedBg: "bg-green-500/20 border-green-500/40",
       textColor: "text-green-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       available: true,
     },
     {
@@ -80,6 +82,7 @@ export default function EditorPage() {
       cardBg: "bg-orange-500/10 border-orange-500/20",
       selectedBg: "bg-orange-500/20 border-orange-500/40",
       textColor: "text-orange-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
       available: true,
     },
     {
@@ -91,6 +94,7 @@ export default function EditorPage() {
       cardBg: "bg-purple-500/10 border-purple-500/20",
       selectedBg: "bg-purple-500/20 border-purple-500/40",
       textColor: "text-purple-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:border-purple-500/50",
       available: true,
     },
   ]
@@ -145,7 +149,7 @@ export default function EditorPage() {
     const data = await editorService.promptOpenRouter(requestBody);
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
-      // ✅ Display rating immediately when ready
+      //Display rating immediately when ready
       setRatingResponse(decodeUnicode(data.choices[0].message.content))
     } else {
       setRatingResponse("Could not generate rating - unexpected response format")
@@ -154,7 +158,7 @@ export default function EditorPage() {
     console.error("❌ Rating error:", error);
     setRatingResponse("Error generating rating: " + error)
   } finally {
-    setIsLoadingRating(false) // ✅ Stop loading immediately when rating is ready
+    setIsLoadingRating(false) //Stop loading immediately when rating is ready
   }
 }
 
@@ -193,7 +197,7 @@ export default function EditorPage() {
     const data = await editorService.promptOpenRouter(requestBody);
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
-      // ✅ Display suggestion immediately when ready
+      //Display suggestion immediately when ready
       setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
       setLastSuggestedPrompt(prompt)
     } else {
@@ -203,7 +207,7 @@ export default function EditorPage() {
     console.error("❌ Suggestion error:", error);
     setSuggestionResponse("Error analyzing prompt: " + error)
   } finally {
-    setIsLoadingSuggestion(false) // ✅ Stop loading immediately when suggestion is ready
+    setIsLoadingSuggestion(false) //Stop loading immediately when suggestion is ready
   }
 }
 
@@ -234,7 +238,7 @@ export default function EditorPage() {
       setAiResponse(decodeUnicode(aiResponseText))
       setLastTestedPrompt(promptText)
       
-      // ✅ Start rating and suggestion immediately WITHOUT waiting
+      //Start rating and suggestion immediately WITHOUT waiting
       // Fire and forget - they'll update UI when ready
       getRating(promptText, decodeUnicode(aiResponseText))
       getSuggested(promptText, decodeUnicode(aiResponseText))
@@ -243,7 +247,7 @@ export default function EditorPage() {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     setAiResponse(`Error: ${errorMessage}`)
   } finally {
-    setIsLoading(false) // ✅ This will stop loading immediately after test response
+    setIsLoading(false) //This will stop loading immediately after test response
   }
 }
 
@@ -350,6 +354,44 @@ export default function EditorPage() {
     })
   }
 
+  // Component for rendering model cards with glow effects
+  const ModelCard = ({ model, index }: { model: any, index: number }) => (
+    <Card
+      key={index}
+      className={`p-2 lg:p-3 transition-all duration-300 cursor-pointer group hover:scale-[1.02] relative ${
+        selectedModel === index 
+          ? `${model.selectedBg} shadow-lg ${model.glowColor.replace('hover:', '')}`
+          : `${model.cardBg} ${model.glowColor}`
+      }`}
+      onClick={() => handleModelSelect(index)}
+    >
+      {selectedModel === index && (
+        <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+          <div
+            className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+          >
+            <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+          </div>
+        </div>
+      )}
+      <div className="flex items-start space-x-2">
+        <div
+          className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
+        >
+          {model.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+            {model.name}
+          </h4>
+          <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+            {model.description}
+          </p>
+        </div>
+      </div>
+    </Card>
+  )
+
   // Update the Save button (remove the complex state management):
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background">
@@ -371,7 +413,7 @@ export default function EditorPage() {
               <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
                 <History className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
-              {/* ✅ Link HelpCircle to help page */}
+              {/*Link HelpCircle to help page */}
               <Link to="/help">
                 <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
                   <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -517,38 +559,7 @@ export default function EditorPage() {
                     `}
                   >
                     {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
-                            <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
-                            >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
+                      <ModelCard key={index} model={model} index={index} />
                     ))}
                   </div>
                 </div>
@@ -599,7 +610,7 @@ export default function EditorPage() {
                   </div>
                 </div>
 
-                {/* Rating Models (same as AI Models) */}
+                {/* Rating Models */}
                 <div className="flex-shrink-0 mt-auto">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">
@@ -633,38 +644,7 @@ export default function EditorPage() {
                     `}
                   >
                     {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
-                            <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
-                            >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
+                      <ModelCard key={index} model={model} index={index} />
                     ))}
                   </div>
                 </div>
@@ -749,38 +729,7 @@ export default function EditorPage() {
                     `}
                   >
                     {aiModels.map((model, index) => (
-                      <Card
-                        key={index}
-                        className={`p-2 lg:p-3 ${
-                          selectedModel === index ? model.selectedBg : model.cardBg
-                        } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02] relative`}
-                        onClick={() => handleModelSelect(index)}
-                      >
-                        {selectedModel === index && (
-                          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
-                            <div
-                              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
-                            >
-                              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex items-start space-x-2">
-                          <div
-                            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-                          >
-                            {model.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-                              {model.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-                              {model.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
+                      <ModelCard key={index} model={model} index={index} />
                     ))}
                   </div>
                 </div>
