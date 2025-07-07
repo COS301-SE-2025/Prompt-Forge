@@ -1,4 +1,14 @@
-export interface Prompt {
+export interface APrompt {
+  id: string;
+  title: string;
+  price: number;
+  description: string;
+  publishedAt: string;
+  usageCount: number;
+  rating?: number;
+}
+
+export interface Prompt extends APrompt{
   id: string;
   authorId: string;
   title: string;
@@ -18,7 +28,7 @@ export interface Prompt {
 export interface MarketplacePrompt {
   id: string;
   authorId: string;
-  username: string;
+  authorname: string;
   title: string;
   slug: string;
   price: number;
@@ -29,6 +39,9 @@ export interface MarketplacePrompt {
   featured?: boolean;
   
 }
+
+
+
 
 export interface Tag {
   id: string

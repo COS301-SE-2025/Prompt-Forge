@@ -323,9 +323,9 @@ void deleteReview_ShouldThrowWhenNotExists() {
     void isPromptBought_ShouldReturnTrueOrFalse() {
         UUID promptId = UUID.randomUUID();
         when(purchaseRepository.existsByPromptIdAndUserId(promptId, testUserId)).thenReturn(true);
-        assertTrue(promptStoreService.isPromptBought(testUserId, promptId));
+        assertTrue(promptStoreService.isOwned(testUserId, promptId));
         when(purchaseRepository.existsByPromptIdAndUserId(promptId, testUserId)).thenReturn(false);
-        assertFalse(promptStoreService.isPromptBought(testUserId, promptId));
+        assertFalse(promptStoreService.isOwned(testUserId, promptId));
     }
 
     @Test

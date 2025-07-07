@@ -85,12 +85,15 @@ export default function MarketplacePage() {
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
     setCurrentPage(1) // ✅ Reset to page 1
+    console.log("filter:", filter);
+    
     fetchData(selectedCategory, filter, searchQuery, 1)
   }
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1) // ✅ Reset to page 1
+    console.log("category:", category);
     fetchData(category, selectedFilter, searchQuery, 1)
   }
 
@@ -136,11 +139,13 @@ export default function MarketplacePage() {
     }
   }
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1) // ✅ Reset to page 1
-    
-    fetchData(selectedCategory, selectedFilter, query, 1)
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // setSearchQuery(query)
+    if (event.key === "Enter") {
+      setCurrentPage(1) // ✅ Reset to page 1
+      
+      fetchData(selectedCategory, selectedFilter, searchQuery,1)
+    }
   }
 
   const changePage = (pageNumber: number) => {
@@ -368,7 +373,9 @@ export default function MarketplacePage() {
                     placeholder="        Search for prompts..."
                     className="bg-muted border-muted pl-10"
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e)=> setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearch}
+                  
                   />
                   {!searchQuery && (
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -455,7 +462,7 @@ export default function MarketplacePage() {
                         id={prompt.id}
                         title={prompt.title}
                         description={prompt.description}
-                        username={prompt.username}
+                        authorname={prompt.authorname}
                         price={prompt.price}
                         tags={prompt.tagnames}
                         rating={prompt.averageRating}
