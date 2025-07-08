@@ -505,7 +505,7 @@ export default function EditorPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 relative" 
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
                     }}
