@@ -237,6 +237,7 @@ export default function EditorPage() {
       }
     } catch (error) {
       console.error("❌ Rating error:", error);
+      setIsLoadingRating(false); // Ensure loading state is reset
       
       // If error occurred, try a different model automatically
       try {
@@ -271,7 +272,7 @@ export default function EditorPage() {
         setRatingResponse("Error generating rating. Please try another model: " + error);
       }
     } finally {
-      setIsLoadingRating(false);
+      setIsLoadingRating(false); // Double ensure loading state is reset
     }
   }
 
@@ -705,8 +706,23 @@ const fallbackToWorkingModel = async () => {
                 size="sm"
                 className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
                 onClick={() => {
-                  setCurrentView("rate");
-                  setCurrentPage(2);
+                  // If previous attempt failed, ensure loading state is reset
+                  setIsLoadingRating(false);
+                  
+                  // Retry logic for rating
+                  if (lastTestedPrompt) {
+                    setCurrentView("rate");
+                    setCurrentPage(2);
+                    getRating(lastTestedPrompt, aiResponse);
+                  } else if (promptText) {
+                    // If no test has been run but there's prompt text, let user know
+                    setCurrentView("rate");
+                    setCurrentPage(2);
+                    setRatingResponse("Please test your prompt first before rating.");
+                  } else {
+                    setCurrentView("rate");
+                    setCurrentPage(2);
+                  }
                 }}
               >
                 <Star className="h-3 w-3 mr-1" />
