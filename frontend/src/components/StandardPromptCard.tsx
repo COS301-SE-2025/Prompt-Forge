@@ -1,20 +1,20 @@
 import { useState } from "react"
 import { Button } from "./ui/Button"
 import { Card } from "./ui/Card"
-import { 
-  Star, 
-  User, 
-  Copy, 
-  Edit, 
-  Trash2, 
-  Heart, 
-  Play, 
+import {
+  Star,
+  User,
+  Copy,
+  Edit,
+  Trash2,
+  Heart,
+  Play,
   Check,
-  Globe, 
+  Globe,
   Lock
 } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Category, CategoryColors } from "@/Models/Prompt"
+import { Category, CategoryColors } from "@/models/Prompt"
 
 // Update the interface to make onEdit optional
 interface StandardPromptCardProps {
@@ -32,7 +32,7 @@ interface StandardPromptCardProps {
   authorName: string
   isOwned: boolean
   isPublished?: boolean // ✅ Add this
-  isBought:boolean
+  isBought: boolean
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
@@ -107,15 +107,15 @@ export function StandardPromptCard({
                   // Simple color rotation based on index
                   const colors = [
                     "bg-blue-100 text-blue-800",
-                    "bg-green-100 text-green-800", 
+                    "bg-green-100 text-green-800",
                     "bg-purple-100 text-purple-800",
                     "bg-orange-100 text-orange-800",
                     "bg-pink-100 text-pink-800"
                   ];
                   const colorClass = colors[index % colors.length];
-                  
+
                   return (
-                    <span 
+                    <span
                       key={tag}
                       className={`text-xs font-medium px-2 py-1 rounded ${colorClass}`}
                     >
@@ -130,9 +130,9 @@ export function StandardPromptCard({
                 )}
               </div>
             )}
-            
+
             {/* Rating and favorite button */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
                 <span className="text-xs ml-1">{rating.toFixed(1)}</span>
@@ -166,35 +166,35 @@ export function StandardPromptCard({
             <div className="flex items-center gap-2">
               {/* Usage count */}
               <span className="text-xs text-muted-foreground">{displayUsage} uses</span>
-              
+
               {/* Category */}
               {category && (
                 <span className="text-xs text-muted-foreground">• {category}</span>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-2">
               {/* Price - only for non-owned prompts */}
               {!isOwned && price !== undefined && (
                 <div className="text-xs font-medium group-hover:text-[#3ebb9e] transition-colors duration-300">${price.toFixed(2)}</div>
               )}
-              
+
               {/* Author info - only for non-owned prompts */}
-              {!isOwned && authorName && (
+              {isBought && authorName && (
                 <div className="flex items-center">
-                  <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center group-hover:bg-[#3ebb9e]/10 transition-colors duration-300">
-                    <User className="h-3 w-3 group-hover:text-[#3ebb9e] transition-colors duration-300" />
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 transition-colors duration-300">
+                    <User className="h-3 w-3 text-[#3ebb9e] transition-colors duration-300" />
                   </div>
-                  <span className="text-xs ml-1 text-muted-foreground">@{authorName}</span>
+                  <span className="text-xs ml-1 text-[#3ebb93]">@{authorName}</span>
                 </div>
               )}
-              
+
               {/* Private indicator - only for owned prompts */}
-              {isBought === true && (
+              {/* {isBought === true && (
                 <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
                   Bought
                 </span>
-              )}
+              )} */}
 
               {isBought === false && isOwned && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
@@ -232,8 +232,8 @@ export function StandardPromptCard({
 
               {/* Test Prompt button - always visible if content is available */}
               {content && (
-                <Link 
-                  to="/editor" 
+                <Link
+                  to="/editor"
                   state={{ promptText: content }}
                   title="Test this prompt"
                   onClick={(e) => e.stopPropagation()}
@@ -247,17 +247,16 @@ export function StandardPromptCard({
                   </Button>
                 </Link>
               )}
-              
+
               {/* Publish/Unpublish button - only for owned prompts */}
-              {!isBought && isOwned &&  onPublish && (
+              {!isBought && isOwned && onPublish && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 ${
-                    isPublished 
-                      ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50" 
+                  className={`h-8 w-8 ${isPublished
+                      ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       : "text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                  } group-hover:shadow-sm group-hover:shadow-blue-500/20 transition-all duration-300`}
+                    } group-hover:shadow-sm group-hover:shadow-blue-500/20 transition-all duration-300`}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -272,27 +271,27 @@ export function StandardPromptCard({
                   )}
                 </Button>
               )}
-              
+
               {/* Edit button - only for owned prompts */}
               {isOwned && onEdit && (
-                <Link 
-                  to="/submit" 
+                <Link
+                  to="/submit"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleEdit()
                   }}
                 >
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 group-hover:shadow-sm group-hover:shadow-[#3ebb9e]/20 transition-all duration-300" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 group-hover:shadow-sm group-hover:shadow-[#3ebb9e]/20 transition-all duration-300"
                     title="Edit prompt"
                   >
                     <Edit className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   </Button>
                 </Link>
               )}
-              
+
               {/* Delete button - only for owned prompts */}
               {isOwned && onDelete && (
                 <Button
@@ -310,11 +309,11 @@ export function StandardPromptCard({
                 </Button>
               )}
             </div>
-            
+
             {/* Buy/Add to cart button - only for non-owned prompts */}
             {!isOwned && price !== undefined && (
               <div className="border-l border-border">
-                <Button 
+                <Button
                   className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3 group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25 transition-all duration-300"
                   onClick={(e) => {
                     e.preventDefault()
