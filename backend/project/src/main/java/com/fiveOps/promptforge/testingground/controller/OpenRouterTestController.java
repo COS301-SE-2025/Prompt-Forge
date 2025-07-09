@@ -1,7 +1,5 @@
 package com.fiveOps.promptforge.testingground.controller;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -85,7 +83,8 @@ public class OpenRouterTestController {
             .status(e.getStatusCode())
             .body(Map.of(
               "error", e.getResponseBodyAsString(),
-              "userMessage", "The model " + model + " is currently unavailable. Please try another model."
+              "userMessage", "The model " + model + 
+              " is currently unavailable. Please try another model."
             ));
         }
         return ResponseEntity
