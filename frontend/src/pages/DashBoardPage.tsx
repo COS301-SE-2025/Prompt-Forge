@@ -566,7 +566,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* My Prompts Section */}
+          {/* My Prompts Section below here*/}
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">My Prompts</h2>
