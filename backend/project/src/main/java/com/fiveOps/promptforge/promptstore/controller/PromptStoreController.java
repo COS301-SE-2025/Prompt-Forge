@@ -116,9 +116,8 @@ public class PromptStoreController {
   @GetMapping("/filter/tag/{tagName}")
   public Page<Map<String, PromptWithAuthorDTO>> filterByTagName(
       @PathVariable String tagName, @PageableDefault(size = 10) Pageable pageable) {
-    String formattedTagName =
-        tagName.substring(0, 1).toUpperCase() + tagName.substring(1).toLowerCase();
-    return storeService.getPublicByTagName(formattedTagName, pageable);
+
+    return storeService.getPublicByTagName(tagName, pageable);
   }
 
   @GetMapping("/filter")
