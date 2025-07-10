@@ -9,15 +9,13 @@ import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
-import type { PromptWithTags, Review } from "@/Models/Prompt"
+import type { PromptWithTags, Review } from "@/models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
 import httpClient from "../services/httpClient"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
-  console.log("id", id);
-  
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -42,9 +40,6 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
-        console.log("promptData");
-        console.log(promptData);
-        
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
