@@ -143,7 +143,7 @@ export default function MyPromptsPage() {
                 description: p.description || "",
                 content: p.content || "",
                 category: "General", // Default, backend does not provide
-                tags: p.tagames || [],
+                tags: p.tagnames || [],
                 createdAt: p.createdAt,
                 updatedAt: p.publishedAt || p.createdAt,
                 rating: averageRating || 0, // Default, backend does not provide
