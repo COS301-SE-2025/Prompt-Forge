@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react"
 import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
-import { Sparkles, Star, User, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
+import { Tag, MarketplacePrompt } from "@/models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
