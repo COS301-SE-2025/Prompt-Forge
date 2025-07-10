@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Button } from "./ui/Button"
 import { Card } from "./ui/Card"
 import {
@@ -103,9 +102,7 @@ export function StandardPromptCard({
             {/* Tags - Using same styling as PromptCard */}
             {displayTags.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {displayTags.slice(0, 3).map((tag, index) => {
-
-
+                {displayTags.slice(0, 3).map((tag) => {
                   return (
                     <span
                       key={tag}
