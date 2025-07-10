@@ -373,6 +373,7 @@ const fallbackToWorkingModel = async () => {
   setIsLoading(false);
 };
 
+  // Modify the testPrompt function to not automatically trigger rating and suggestion:
   const testPrompt = async () => {
   if (promptText === lastTestedPrompt && !uploadedImage) {
     setCurrentView("test")
@@ -423,9 +424,9 @@ const fallbackToWorkingModel = async () => {
       setAiResponse(decodeUnicode(aiResponseText))
       setLastTestedPrompt(promptText)
       
-      // Start rating and suggestion processes without waiting
-      getRating(promptText, decodeUnicode(aiResponseText))
-      getSuggested(promptText, decodeUnicode(aiResponseText))
+      // REMOVE THESE LINES to prevent automatic rating and suggestion
+      // getRating(promptText, decodeUnicode(aiResponseText))
+      // getSuggested(promptText, decodeUnicode(aiResponseText))
     } else if (data.error) {
       // Format user-friendly error message
       let errorMessage = data.error.userMessage || data.error.message;
@@ -498,7 +499,7 @@ const fallbackToWorkingModel = async () => {
 
     // Add prompt section
     doc.setFontSize(12);
-    doc.text('Prompt:', margin, margin + (lineHeight * 4));
+    doc.text('Prompt', margin, margin + (lineHeight * 4));
     doc.setFontSize(10);
     const promptLines = doc.splitTextToSize(promptText, pageWidth - (margin * 2));
     doc.text(promptLines, margin, margin + (lineHeight * 5));
@@ -713,7 +714,12 @@ const fallbackToWorkingModel = async () => {
                   if (lastTestedPrompt) {
                     setCurrentView("rate");
                     setCurrentPage(2);
-                    getRating(lastTestedPrompt, aiResponse);
+                    
+                    // Add a small delay before making the API call
+                    setRatingResponse("Preparing to rate your prompt...");
+                    setTimeout(() => {
+                      getRating(lastTestedPrompt, aiResponse);
+                    }, 1000); // 1 second delay
                   } else if (promptText) {
                     // If no test has been run but there's prompt text, let user know
                     setCurrentView("rate");
@@ -732,9 +738,19 @@ const fallbackToWorkingModel = async () => {
                 size="sm"
                 className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
                 onClick={() => {
-                  getSuggested(promptText, aiResponse);
                   setCurrentView("suggest");
                   setCurrentPage(3);
+                  
+                  // Only make API call if we have a tested prompt
+                  if (lastTestedPrompt) {
+                    setSuggestionResponse("Preparing suggestions...");
+                    // Add a small delay before making the API call
+                    setTimeout(() => {
+                      getSuggested(lastTestedPrompt, aiResponse);
+                    }, 1000); // 1 second delay
+                  } else {
+                    setSuggestionResponse("Please test your prompt first before requesting suggestions.");
+                  }
                 }}
               >
                 <HelpCircle className="h-3 w-3 mr-1" />

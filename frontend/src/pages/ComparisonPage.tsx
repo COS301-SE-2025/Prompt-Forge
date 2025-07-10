@@ -35,9 +35,10 @@ export default function ComparisonsPage() {
   const [editorACollapsed, setEditorACollapsed] = useState(false)
   const [editorBCollapsed, setEditorBCollapsed] = useState(false)
 
+  // Update the model definitions to match EditorPage
   const aiModels = [
     {
-      name: "Deepseek",
+      name: "Deepseek R1",
       shortName: "Deepseek",
       description: "Advanced reasoning and code generation",
       icon: "🔮",
@@ -49,12 +50,13 @@ export default function ComparisonsPage() {
       selectedGlow: "shadow-[0_0_15px_rgba(139,69,255,0.4)] border-violet-500/60",
       available: true,
       model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+      supportsImages: false,
     },
     {
-      name: "Meta: Llama 4 Maverick",
+      name: "Meta Llama 4 Maverick",
       shortName: "Llama-4",
-      description: "Advanced coding, reasoning, long context, and image benchmarks",
-      icon: "🤖",
+      description: "Advanced coding, reasoning, long context, and image understanding",
+      icon: "🦙",
       iconBg: "bg-gradient-to-br from-green-500 to-emerald-600",
       cardBg: "bg-green-500/10 border-green-500/20",
       selectedBg: "bg-green-500/20 border-green-500/40",
@@ -63,25 +65,12 @@ export default function ComparisonsPage() {
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
       model: "meta-llama/llama-4-maverick:free",
+      supportsImages: true,
     },
     {
-      name: "Kimi Dev 72b",
-      shortName: "Kimi Dev",
-      description: "specializes in software engineering tasks, code generation, and unit test creation.",
-      icon: "🧠",
-      iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
-      cardBg: "bg-orange-500/10 border-orange-500/20",
-      selectedBg: "bg-orange-500/20 border-orange-500/40",
-      textColor: "text-orange-400",
-      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
-      selectedGlow: "shadow-[0_0_15px_rgba(249,115,22,0.4)] border-orange-500/60",
-      available: true,
-      model: "moonshotai/kimi-dev-72b:free",
-    },
-    {
-      name: "Google: Gemini 2.0",
+      name: "Google Gemini 2.0 Flash",
       shortName: "Gemini-2",
-      description: "Gemini 2 models supports text output, with image and audio output capabilities",
+      description: "Multimodal AI with image and text understanding capabilities",
       icon: "💎",
       iconBg: "bg-gradient-to-br from-purple-500 to-indigo-600",
       cardBg: "bg-purple-500/10 border-purple-500/20",
@@ -91,6 +80,22 @@ export default function ComparisonsPage() {
       selectedGlow: "shadow-[0_0_15px_rgba(168,85,247,0.4)] border-purple-500/60",
       available: true,
       model: "google/gemini-2.0-flash-exp:free",
+      supportsImages: true,
+    },
+    {
+      name: "Kimi Dev 72B",
+      shortName: "Kimi Dev",
+      description: "Specialized for software engineering tasks and code generation",
+      icon: "🧠",
+      iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
+      cardBg: "bg-orange-500/10 border-orange-500/20",
+      selectedBg: "bg-orange-500/20 border-orange-500/40",
+      textColor: "text-orange-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(249,115,22,0.4)] border-orange-500/60",
+      available: true,
+      model: "moonshotai/kimi-dev-72b:free",
+      supportsImages: false,
     },
   ]
 
@@ -103,50 +108,85 @@ export default function ComparisonsPage() {
       .replace(/\*([^*]+)\*/g, "$1")
   }
 
+  // Update the testPrompt function in ComparisonPage.tsx to properly send model info
   const testPrompt = async (side: "A" | "B") => {
     const promptText = side === "A" ? promptTextA : promptTextB
     const setIsLoading = side === "A" ? setIsLoadingA : setIsLoadingB
     const setAiResponse = side === "A" ? setAiResponseA : setAiResponseB
+    const modelIndex = side === "A" ? selectedModelA : selectedModelB
 
     setIsLoading(true)
     setAiResponse("Generating response...")
 
     try {
-      // ✅ Send just the prompt text string, like your test.html does
+      // Create request body with proper structure including model
+      const requestBody = {
+        model: aiModels[modelIndex].model,
+        messages: [{
+          role: "user",
+          content: promptText
+        }]
+      };
+
+      console.log(`🚀 Test request for side ${side}:`, requestBody);
+      
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(promptText), // ✅ Send string directly, not wrapped in object
-      })
+        body: JSON.stringify(requestBody), // Send properly structured request
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
-      // ✅ Handle the response (should be in standard OpenAI format now)
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        const aiResponseText = data.choices[0].message.content
-        setAiResponse(decodeUnicode(aiResponseText))
+        const aiResponseText = data.choices[0].message.content;
+        setAiResponse(decodeUnicode(aiResponseText));
+      } else if (data.error) {
+        // Format user-friendly error message
+        let errorMessage = data.error.userMessage || data.error.message;
+        
+        // Special handling for common errors
+        if (data.error.status === 503) {
+          // Service unavailable - model not available
+          errorMessage = `The selected model (${aiModels[modelIndex].name}) is currently unavailable. Please try another model.`;
+        } else if (data.error.status === 429) {
+          // Rate limit
+          errorMessage = "Rate limit exceeded. You've made too many requests to this model. Please try another model or wait a few minutes.";
+        }
+        
+        setAiResponse(`Error: ${errorMessage}`);
       } else {
         console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
         setAiResponse("Received unexpected response format");
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
-      setAiResponse(`Error: ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      setAiResponse(`Error: ${errorMessage}`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
+  // Update the testBothPrompts function to include a delay between requests
   const testBothPrompts = async () => {
-    await Promise.all([testPrompt("A"), testPrompt("B")])
+    // Test prompt A first
+    await testPrompt("A");
+    
+    // Add a 1-second delay before testing prompt B to avoid rate limits
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Then test prompt B
+    await testPrompt("B");
   }
 
+  // Update the getRating function to match EditorPage's approach
   const getRating = async () => {
     setIsLoadingRating(true)
     setRatingResponse("Analyzing both responses...")
 
+    // Create rating prompt
     const ratingPrompt = `
 Compare these two AI responses to similar prompts:
 
@@ -176,26 +216,87 @@ Please provide:
 3. Identify which response better addresses the prompt and why
 4. Suggest improvements for both prompts
 5. Highlight any significant differences in approach or quality
-`
+`;
 
     try {
-      // ✅ Send just the rating prompt string, like your test.html does
+      // Use a reliable model for comparison (Deepseek or Kimi)
+      const reliableModelIndex = aiModels.findIndex(model => 
+        model.name.includes("Deepseek") || model.name.includes("Kimi")
+      );
+      
+      // Default to the first model if no "reliable" one is found
+      const modelToUse = reliableModelIndex !== -1 ? reliableModelIndex : 0;
+      
+      const requestBody = {
+        model: aiModels[modelToUse].model,
+        messages: [{
+          role: "user",
+          content: ratingPrompt,
+        }]
+      };
+
+      console.log("🚀 Comparison rating request:", requestBody);
+      
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(ratingPrompt), // ✅ Send string directly
-      })
+        body: JSON.stringify(requestBody),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
+      
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setRatingResponse(decodeUnicode(data.choices[0].message.content))
+        setRatingResponse(decodeUnicode(data.choices[0].message.content));
+      } else if (data.error) {
+        let errorMessage = data.error.userMessage || data.error.message;
+        
+        // If rate limited, try a different model
+        if (data.error.status === 429) {
+          // Try a different model
+          const alternativeIndex = aiModels.findIndex((_, i) => i !== modelToUse);
+          if (alternativeIndex !== -1) {
+            setRatingResponse("Rate limit exceeded. Trying with " + aiModels[alternativeIndex].name + "...");
+            
+            const fallbackRequestBody = {
+              model: aiModels[alternativeIndex].model,
+              messages: [{
+                role: "user",
+                content: ratingPrompt,
+              }]
+            };
+            
+            const fallbackResponse = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fallbackRequestBody),
+            });
+            
+            const fallbackData = await fallbackResponse.json();
+            
+            if (fallbackData.choices && fallbackData.choices[0] && fallbackData.choices[0].message) {
+              setRatingResponse(decodeUnicode(fallbackData.choices[0].message.content) + 
+                "\n\n(Rating provided by " + aiModels[alternativeIndex].name + ")");
+            } else {
+              setRatingResponse(`Error: Could not generate comparison with any model. ${errorMessage}`);
+            }
+          } else {
+            setRatingResponse(`Error: ${errorMessage}`);
+          }
+        } else {
+          setRatingResponse(`Error: ${errorMessage}`);
+        }
+      } else {
+        setRatingResponse("Could not generate comparison - unexpected response format");
       }
     } catch (error) {
-      setRatingResponse("Error generating rating: " + error)
+      console.error("❌ Comparison error:", error);
+      setRatingResponse("Error generating comparison: " + error);
     } finally {
-      setIsLoadingRating(false)
+      setIsLoadingRating(false);
     }
   }
 
