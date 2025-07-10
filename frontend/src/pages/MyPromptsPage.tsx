@@ -8,7 +8,7 @@ import { Star, Search, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
-import { MyPrompt } from "@/Models/MyPrompt"
+import { MyPrompt } from "@/models/MyPrompt"
 import { UserProfile } from "@/models/User"
 import { PromptService } from "@/services/promptService"
 
@@ -18,7 +18,7 @@ import { PromptService } from "@/services/promptService"
 const PROMPTS_PER_PAGE = 12
 
 export default function MyPromptsPage() {
-  const promptService = new PromptService ();
+  const promptService = new PromptService();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
   const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
@@ -63,8 +63,6 @@ export default function MyPromptsPage() {
           console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
           console.log("Unauthorized, redirecting to login")
-
-    
 
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
@@ -134,38 +132,33 @@ export default function MyPromptsPage() {
           let prompts = await response.json()
           if (!Array.isArray(prompts)) prompts = []
 
-          prompts = [...prompts, ...purchasedPrompts.content]
-          console.log(`Fetched ${prompts.length} prompts for user`)
-
+          prompts = [...prompts, ...purchasedPrompts.content]  
           // Map backend fields to frontend MyPrompt interface
           const mappedPrompts: MyPrompt[] = await Promise.all(
             prompts.map(async (p: any) => {
-            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
-            console.log(p);
-            
-            return {
-              id: p.id,
-              title: p.title,
-              description: p.description || "",
-              content: p.content || "",
-              category: "General", // Default, backend does not provide
-              tags: p.tagNames || [],
-              createdAt: p.createdAt,
-              updatedAt: p.publishedAt || p.createdAt,
-              rating: averageRating || 0, // Default, backend does not provide
-              uses: 0,   // Default, backend does not provide
-              featured: p.featured || false,
-              price: p.price || 0,
-              isPrivate: p.visibility !== "public",
-              isFavorite: false, // Default, backend does not provide
-              authorName: p.authorname ||userProfile?.username || "You",
-              isBought: p.purchaseid?true:false ,
-              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
-              publishedAt: p.publishedAt // Add this
-            }
-
-        
-          }))
+              const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+              return {
+                id: p.id,
+                title: p.title,
+                description: p.description || "",
+                content: p.content || "",
+                category: "General", // Default, backend does not provide
+                tags: p.tagames || [],
+                createdAt: p.createdAt,
+                updatedAt: p.publishedAt || p.createdAt,
+                rating: averageRating || 0, // Default, backend does not provide
+                uses: 0,   // Default, backend does not provide
+                featured: p.featured || false,
+                price: p.price || 0,
+                isPrivate: p.visibility !== "public",
+                isFavorite: false, // Default, backend does not provide
+                authorName: p.authorname || userProfile?.username || "You",
+                isBought: p.purchaseid ? true : false,
+                isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+                publishedAt: p.publishedAt // Add this
+              }
+            })
+          )
           setMyPrompts(mappedPrompts)
           setFilteredPrompts(mappedPrompts)
           const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
@@ -327,17 +320,17 @@ export default function MyPromptsPage() {
 
       const action = isCurrentlyPublished ? "unpublish" : "publish"
 
-      console.log(`${action}ing prompt ${id}...`)      
+      console.log(`${action}ing prompt ${id}...`)
       // For now, just update local state (you can add API call later)
-      setMyPrompts((prev) => prev.map((p) => 
-        p.id === id 
-          ? { 
-              ...p, 
-              isPrivate: isCurrentlyPublished, 
+      setMyPrompts((prev) => prev.map((p) =>
+        p.id === id
+          ? {
+            ...p,
+            isPrivate: isCurrentlyPublished,
 
-              isPublished: !isCurrentlyPublished,
-              publishedAt: isCurrentlyPublished ? undefined : new Date().toISOString()
-            }
+            isPublished: !isCurrentlyPublished,
+            publishedAt: isCurrentlyPublished ? undefined : new Date().toISOString()
+          }
           : p
       ))
 
@@ -389,9 +382,8 @@ export default function MyPromptsPage() {
                   <Button
                     key={filter.value}
                     variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${
-                      selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                    }`}
+                    className={`w-full justify-start text-sm h-8 px-2 ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      }`}
                     onClick={() => setSelectedFilter(filter.value)}
                   >
                     {filter.label}
@@ -404,9 +396,8 @@ export default function MyPromptsPage() {
                   <Button
                     key={category}
                     variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${
-                      selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                    }`}
+                    className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      }`}
                     onClick={() => setSelectedCategory(category)}
                   >
                     {category === "all" ? "All" : category}
@@ -530,8 +521,6 @@ export default function MyPromptsPage() {
                   id={prompt.id}
                   title={prompt.title}
                   description={prompt.description}
-
-                  
                   rating={avgRatingMap[prompt.id] ?? 0}
                   uses={prompt.uses || 0}
                   price={prompt.price || 0}
@@ -544,7 +533,7 @@ export default function MyPromptsPage() {
                   isOwned={true} // Since this is MyPromptsPage
 
                   isPublished={prompt.isPublished || false}
-                  isBought = {prompt.isBought}
+                  isBought={prompt.isBought}
 
 
                   onEdit={handleEditPrompt}
@@ -645,4 +634,5 @@ export default function MyPromptsPage() {
         </div>
       </div>
     </div>
-  )}
+  )
+}
