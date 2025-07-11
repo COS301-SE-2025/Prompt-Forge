@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenRouter Test</title>
+    <title>OpenRouter Streaming Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,41 +36,420 @@
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 4px;
+            min-height: 100px;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .toggle-label {
+            margin-right: 10px;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .debug-log {
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>OpenRouter Chat Test</h2>
+        
+        <label for="model">Model:</label>
+        <select id="model">
+            <option value="deepseek/deepseek-r1-0528-qwen3-8b:free">DeepSeek Qwen3 8B (Free)</option>
+            <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B (Free)</option>
+            <option value="anthropic/claude-3-haiku-20240307">Claude 3 Haiku</option>
+        </select>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">Enable Streaming:</span>
+            <label class="toggle">
+                <input type="checkbox" id="streamToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">Typing Speed (ms):</span>
+            <input type="range" id="typingSpeed" min="10" max="100" value="25" oninput="updateTypingSpeed()">
+            <span id="speedValue">5ms</span>
+        </div>
+        
         <textarea id="prompt" rows="4">What is the meaning of life?</textarea>
-        <button onclick="sendPrompt()">Send</button>
-        <pre id="response"></pre>
+        
+        <div class="actions">
+            <button onclick="sendPrompt()">Send</button>
+            <button onclick="testConnection()" style="background-color: #28a745;">Test Connection</button>
+        </div>
+        
+        <pre id="response">Response will appear here...</pre>
+        
+        <h3>Debug Logs</h3>
+        <div id="logs" class="debug-log"></div>
     </div>
 
     <script>
-        async function sendPrompt() {
+        // Log function for debugging
+        function log(message) {
+            const logsElement = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logsElement.scrollTop = logsElement.scrollHeight;
+        }
+        
+        // ✅ IMPROVED: Typing effect class with better performance
+        class TypingEffect {
+            constructor(element, speed = 30) {
+                this.element = element;
+                this.speed = speed; // milliseconds between characters
+                this.queue = [];
+                this.isTyping = false;
+                this.currentText = '';
+                this.batchSize = 5; // Process multiple characters per frame for better performance
+                this.animationId = null;
+            }
+            
+            addText(text) {
+                // Add characters to queue
+                this.queue.push(...text.split(''));
+                
+                // Start processing if not already running
+                if (!this.isTyping) {
+                    this.startTyping();
+                }
+            }
+            
+            startTyping() {
+                if (this.isTyping) return;
+                this.isTyping = true;
+                this.typeNextBatch();
+            }
+            
+            typeNextBatch() {
+                if (this.queue.length === 0) {
+                    // Finished typing - remove cursor
+                    this.element.textContent = this.currentText;
+                    this.isTyping = false;
+                    return;
+                }
+                
+                // Process a batch of characters to improve performance
+                const charsToProcess = Math.min(this.batchSize, this.queue.length);
+                
+                for (let i = 0; i < charsToProcess; i++) {
+                    if (this.queue.length > 0) {
+                        const char = this.queue.shift();
+                        this.currentText += char;
+                    }
+                }
+                
+                // Update display with cursor
+                this.element.textContent = this.currentText + '|';
+                
+                // Schedule next batch
+                this.animationId = setTimeout(() => {
+                    this.typeNextBatch();
+                }, this.speed);
+            }
+            
+            clear() {
+                // Cancel any pending animation
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+                
+                this.queue = [];
+                this.currentText = '';
+                this.element.textContent = '';
+                this.isTyping = false;
+            }
+            
+            setSpeed(speed) {
+                this.speed = speed;
+            }
+            
+            setBatchSize(size) {
+                this.batchSize = Math.max(1, size); // Ensure at least 1 character per batch
+            }
+            
+            // ✅ NEW: Method to instantly complete typing (skip animation)
+            complete() {
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+                
+                // Add all remaining characters at once
+                while (this.queue.length > 0) {
+                    this.currentText += this.queue.shift();
+                }
+                
+                this.element.textContent = this.currentText;
+                this.isTyping = false;
+            }
+        }
+        
+        // ✅ Initialize typing effect
+        let typingEffect;
+        
+        // Update typing speed from slider
+        function updateTypingSpeed() {
+            const speed = document.getElementById('typingSpeed').value;
+            document.getElementById('speedValue').textContent = speed + 'ms';
+            if (typingEffect) {
+                typingEffect.setSpeed(parseInt(speed));
+                
+                // Adjust batch size based on speed for better performance
+                if (speed < 20) {
+                    typingEffect.setBatchSize(3); // Faster typing, smaller batches
+                } else if (speed < 50) {
+                    typingEffect.setBatchSize(2); // Medium speed
+                } else {
+                    typingEffect.setBatchSize(1); // Slower typing, single characters
+                }
+            }
+        }
+        
+        // Test the API connection
+        async function testConnection() {
             const responseElement = document.getElementById('response');
-            responseElement.textContent = 'Sending request...';
+            responseElement.textContent = 'Testing connection...';
+            
+            log('Testing OpenRouter API connection...');
             
             try {
-                const response = await fetch('http://localhost:8080/api/test/openrouter/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(document.getElementById('prompt').value)
+                const response = await fetch('http://localhost:8080/api/test/openrouter/test-connection', {
+                    method: 'POST'
                 });
                 
-                const data = await response.json();
-                console.log('Response:', data);
+                log(`Connection test response status: ${response.status}`);
                 
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    responseElement.textContent = data.choices[0].message.content;
+                const data = await response.json();
+                log(`Connection test result: ${JSON.stringify(data)}`);
+                
+                responseElement.textContent = 'Connection test result:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                log(`Connection test error: ${error.message}`);
+                responseElement.textContent = `Connection test error: ${error.message}`;
+            }
+        }
+        
+        // Send a prompt to the API
+        async function sendPrompt() {
+            const responseElement = document.getElementById('response');
+            
+            // ✅ Initialize typing effect BEFORE starting the request
+            const speed = parseInt(document.getElementById('typingSpeed').value);
+            typingEffect = new TypingEffect(responseElement, speed);
+            typingEffect.clear();
+            
+            // Set initial batch size based on speed
+            if (speed < 20) {
+                typingEffect.setBatchSize(3);
+            } else if (speed < 50) {
+                typingEffect.setBatchSize(2);
+            } else {
+                typingEffect.setBatchSize(1);
+            }
+            
+            const promptText = document.getElementById('prompt').value;
+            const modelName = document.getElementById('model').value;
+            const streamEnabled = document.getElementById('streamToggle').checked;
+            
+            log(`Sending ${streamEnabled ? 'streaming' : 'non-streaming'} request to model: ${modelName}`);
+            
+            // Create the request body
+            const requestBody = {
+                model: modelName,
+                messages: [
+                    {
+                        role: "user",
+                        content: promptText
+                    }
+                ],
+                stream: streamEnabled
+            };
+            
+            log(`Request body: ${JSON.stringify(requestBody)}`);
+            
+            try {
+                if (streamEnabled) {
+                    // Use the dedicated streaming endpoint
+                    const response = await fetch('http://localhost:8080/api/test/openrouter/chat/stream', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    log(`Response status: ${response.status} ${response.statusText}`);
+                    log(`Content-Type: ${response.headers.get('Content-Type')}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        log(`Error response: ${errorText}`);
+                        responseElement.textContent = `Error: ${response.status} ${response.statusText}\n${errorText}`;
+                        return;
+                    }
+                    
+                    // Process streaming response
+                    const reader = response.body?.getReader();
+                    if (!reader) {
+                        throw new Error('Response body is not readable');
+                    }
+                    
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    
+                    log('Starting to process stream...');
+                    
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            
+                            if (done) {
+                                log('Stream complete');
+                                break;
+                            }
+                            
+                            // Decode chunk and add to buffer
+                            const chunk = decoder.decode(value, { stream: true });
+                            buffer += chunk;
+                            
+                            // Process complete lines from buffer
+                            while (true) {
+                                const lineEnd = buffer.indexOf('\n');
+                                if (lineEnd === -1) break;
+                                
+                                const line = buffer.slice(0, lineEnd).trim();
+                                buffer = buffer.slice(lineEnd + 1);
+                                
+                                if (line === '') continue;
+                                
+                                // Skip processing comments
+                                if (line.startsWith(':')) {
+                                    continue;
+                                }
+                                
+                                if (line.startsWith('data: ')) {
+                                    const data = line.slice(6);
+                                    
+                                    if (data === '[DONE]') {
+                                        log('End of stream marker received');
+                                        continue;
+                                    }
+                                    
+                                    try {
+                                        const parsed = JSON.parse(data);
+                                        
+                                        // Check for error
+                                        if (parsed.error) {
+                                            const errorMsg = parsed.error.message || "Unknown error";
+                                            log(`Error in stream: ${errorMsg}`);
+                                            responseElement.textContent = `Error: ${errorMsg}`;
+                                            continue;
+                                        }
+                                        
+                                        // Extract content from delta format
+                                        if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+                                            const content = parsed.choices[0].delta.content;
+                                            if (content) {
+                                                log(`Content: "${content}"`);
+                                                // ✅ Add content immediately as it arrives
+                                                typingEffect.addText(content);
+                                            }
+                                        }
+                                    } catch (e) {
+                                        log(`Error parsing JSON: ${e.message}, Line: ${line}`);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (streamError) {
+                        log(`Stream processing error: ${streamError.message}`);
+                        responseElement.textContent += `\n\nError: ${streamError.message}`;
+                    } finally {
+                        reader.cancel();
+                    }
                 } else {
-                    responseElement.textContent = JSON.stringify(data, null, 2);
+                    // Handle non-streaming response
+                    const response = await fetch('http://localhost:8080/api/test/openrouter/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    log(`Response status: ${response.status} ${response.statusText}`);
+                    
+                    const data = await response.json();
+                    log(`Received response: ${JSON.stringify(data).substring(0, 100)}...`);
+                    
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        // ✅ Use typing effect for non-streaming too
+                        typingEffect.addText(data.choices[0].message.content);
+                    } else if (data.error) {
+                        responseElement.textContent = `Error: ${data.error.message || JSON.stringify(data.error)}`;
+                    } else {
+                        responseElement.textContent = JSON.stringify(data, null, 2);
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
+                log(`Fetch error: ${error.message}`);
                 responseElement.textContent = 'Error: ' + error.message;
             }
         }
