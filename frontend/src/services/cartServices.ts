@@ -45,26 +45,24 @@ export class CartService {
     }
   }
 
-  async checkout(prompts: EnrichedPrompt[]) {
+  async checkout(prompts: EnrichedPrompt[], total:number) {
     try {
 
       // Get userId from localStorage
-      const userId = localStorage.getItem('userId');
+      // const userId = localStorage.getItem('userId');
 
       // Map EnrichedPrompt to backend-compatible format
       const mappedPrompts = prompts.map(prompt => ({
         cartItemId: prompt.cartItemId,
-        userId: userId, // Include userId from localStorage
         promptId: prompt.promptId,
         promptTitle: prompt.promptTitle,
         promptTags: prompt.promptTags,
         promptPrice: prompt.promptPrice,
-        username: prompt.username // Include username as it's part of CartItemDTO
-        // Exclude averageRating, reviewCount, and fetchData as they're not needed for checkout
+        authorName: prompt.authorName
       }));
 
 
-      const Response = await this.httpClient.post(`/cart/checkout`, { "prompts": mappedPrompts });
+      const Response = await this.httpClient.post(`/cart/checkout`, {total: total, "prompts": mappedPrompts });
       // const prompt: Prompt = await promptResponse.json();
       const rsp = await Response.json()
 

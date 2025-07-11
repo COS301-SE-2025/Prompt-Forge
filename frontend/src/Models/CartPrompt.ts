@@ -8,7 +8,7 @@ export interface CartPrompt {
     promptPrice: number;
     // rating: number;
     // author: string;
-    username: string;
+    authorName: string;
     fetchData:()=>Promise<void>
     // removeItem: (id: string) => void;
   }
