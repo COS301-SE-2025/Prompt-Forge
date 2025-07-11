@@ -67,4 +67,9 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
   @Transactional
   @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId AND c.prompt.id = :promptId")
   void deleteByUserIdAndPromptId(@Param("userId") UUID userId, @Param("promptId") UUID promptId);
+  
+  @Modifying
+  @Transactional
+  @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId")
+  void deletebyUserID(@Param("userId") UUID userId);
 }
