@@ -26,7 +26,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
                          c.id AS cart_item_id,
                          cart_user.user_id AS user_id,
-                         author_user.username AS username,
+                         author_user.username AS authorName,
                          p.prompt_id AS prompt_id,
                          p.title AS prompt_title,
                          ARRAY_AGG(t.name) AS prompt_tags,
