@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentService {
 
   private final RestTemplate restTemplate;
-  private final String gatewayURL = "https:// api.paystack.co/";
+  private final String gatewayURL = "https://api.paystack.co/";
 
   public void inititalizeSingleAuthorPayment(UUID authorID,Double amount) {
     
