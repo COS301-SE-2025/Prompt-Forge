@@ -53,26 +53,26 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="bg-card border-b border-border">
-      <div className="container mx-auto flex h-14 items-center px-4">
-        <div className="mr-4 flex">
-          <Link to="/home" className="flex items-center space-x-2">
-            <div className="bg-[#00876e]/10 p-1 rounded-lg">
-              <BrainCircuit className="w-6 h-6 text-[#3ebb9e]" />
+    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border">
+      <div className="container mx-auto flex h-20 items-center px-6">
+        <div className="mr-6 flex">
+          <Link to="/home" className="flex items-center space-x-3">
+            <div className="bg-[#00876e]/10 p-2 rounded-xl">
+              <BrainCircuit className="w-8 h-8 text-[#3ebb9e]" />
             </div>
-            <span className="font-bold text-lg">Prompt Forge</span>
+            <span className="font-bold text-2xl">Prompt Forge</span>
           </Link>
         </div>
         {/* Desktop nav */}
-        <nav className="hidden md:flex flex-1 items-center justify-center space-x-4 text-sm">
+        <nav className="hidden md:flex flex-1 items-center justify-center space-x-8 text-base">
           {navItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
               className={cn(
-                "transition-colors hover:text-foreground",
+                "transition-colors hover:text-foreground px-3 py-2 rounded-lg hover:bg-muted",
                 pathname === item.href 
-                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  ? "text-[#3ebb9e] font-semibold bg-[#3ebb9e]/10" 
                   : "text-muted-foreground",
               )}
             >
@@ -85,35 +85,35 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full"
+            className="rounded-full w-12 h-12"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Open navigation menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-7 w-7" />
           </Button>
         </div>
         {/* Theme/User controls */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="rounded-full hover:rotate-180 transition-transform duration-500"
+                className="rounded-full hover:rotate-180 transition-transform duration-500 w-12 h-12"
               >
-                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {theme === "dark" ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
               </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button variant="ghost" size="icon" className="rounded-full w-12 h-12">
             <Link
               to="/cart"
-              className="rounded-full"
+              className="rounded-full flex items-center justify-center w-full h-full"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-6 w-6" />
             </Link>
           </Button>
 
           <div className="relative" ref={dropdownRef}>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              <User className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="rounded-full w-12 h-12" onClick={() => setDropdownOpen(!dropdownOpen)}>
+              <User className="h-6 w-6" />
             </Button>
 
             {dropdownOpen && (
@@ -151,15 +151,15 @@ export default function Header() {
       </div>
       {/* Mobile nav menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden bg-card border-t border-border px-4 py-2">
+        <nav className="md:hidden bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-t border-border px-6 py-4">
           {navItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
               className={cn(
-                "block py-2 text-base transition-colors hover:text-foreground",
+                "block py-3 text-lg transition-colors hover:text-foreground rounded-lg px-3 hover:bg-muted",
                 pathname === item.href 
-                  ? "text-[#3ebb9e] font-medium" // ✅ Changed to green
+                  ? "text-[#3ebb9e] font-semibold bg-[#3ebb9e]/10"
                   : "text-muted-foreground",
               )}
               onClick={() => setMobileMenuOpen(false)}
@@ -170,9 +170,9 @@ export default function Header() {
           <Link
             to="/help"
             className={cn(
-              "block py-2 text-base transition-colors hover:text-foreground",
+              "block py-3 text-lg transition-colors hover:text-foreground rounded-lg px-3 hover:bg-muted",
               pathname === "/help" 
-                ? "text-[#3ebb9e] font-medium"
+                ? "text-[#3ebb9e] font-semibold bg-[#3ebb9e]/10"
                 : "text-muted-foreground",
             )}
             onClick={() => setMobileMenuOpen(false)}

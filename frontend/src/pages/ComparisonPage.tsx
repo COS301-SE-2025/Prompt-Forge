@@ -45,41 +45,52 @@ export default function ComparisonsPage() {
       cardBg: "bg-violet-500/10 border-violet-500/20",
       selectedBg: "bg-violet-500/20 border-violet-500/40",
       textColor: "text-violet-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(139,69,255,0.3)] hover:border-violet-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(139,69,255,0.4)] border-violet-500/60",
       available: true,
       model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
     },
     {
-      name: "ChatGPT-4",
-      shortName: "GPT-4",
-      description: "Latest GPT model with advanced reasoning",
+      name: "Meta: Llama 4 Maverick",
+      shortName: "Llama-4",
+      description: "Advanced coding, reasoning, long context, and image benchmarks",
       icon: "🤖",
       iconBg: "bg-gradient-to-br from-green-500 to-emerald-600",
       cardBg: "bg-green-500/10 border-green-500/20",
       selectedBg: "bg-green-500/20 border-green-500/40",
       textColor: "text-green-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
+      model: "meta-llama/llama-4-maverick:free",
     },
     {
-      name: "Claude 3.7",
-      shortName: "Claude",
-      description: "Advanced reasoning capabilities",
+      name: "Kimi Dev 72b",
+      shortName: "Kimi Dev",
+      description: "specializes in software engineering tasks, code generation, and unit test creation.",
       icon: "🧠",
       iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
       cardBg: "bg-orange-500/10 border-orange-500/20",
       selectedBg: "bg-orange-500/20 border-orange-500/40",
       textColor: "text-orange-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(249,115,22,0.4)] border-orange-500/60",
       available: true,
+      model: "moonshotai/kimi-dev-72b:free",
     },
     {
-      name: "Gemini",
-      shortName: "Gemini",
-      description: "Multimodal AI processing",
+      name: "Google: Gemini 2.0",
+      shortName: "Gemini-2",
+      description: "Gemini 2 models supports text output, with image and audio output capabilities",
       icon: "💎",
       iconBg: "bg-gradient-to-br from-purple-500 to-indigo-600",
       cardBg: "bg-purple-500/10 border-purple-500/20",
       selectedBg: "bg-purple-500/20 border-purple-500/40",
       textColor: "text-purple-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:border-purple-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(168,85,247,0.4)] border-purple-500/60",
       available: true,
+      model: "google/gemini-2.0-flash-exp:free",
     },
   ]
 
@@ -300,7 +311,7 @@ Please provide:
               </div>
 
               {/* Prompt A Editor Section */}
-              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorACollapsed ? "flex-none" : "flex-1"}`}>
+              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorACollapsed ? "flex-none h-auto" : "flex-none h-64"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt A</h3>
                   <div className="flex items-center space-x-1">
@@ -327,11 +338,7 @@ Please provide:
               </div>
 
               {/* Response A */}
-              <div
-                className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${
-                  responseACollapsed ? "flex-none" : "h-1/2"
-                }`}
-              >
+              <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${responseACollapsed ? "flex-none h-auto" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Response A</h3>
                   <div className="flex items-center space-x-1">
@@ -404,7 +411,7 @@ Please provide:
               </div>
 
               {/* Prompt B Editor Section */}
-              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorBCollapsed ? "flex-none" : "flex-1"}`}>
+              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorBCollapsed ? "flex-none h-auto" : "flex-none h-64"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt B</h3>
                   <div className="flex items-center space-x-1">
@@ -431,11 +438,7 @@ Please provide:
               </div>
 
               {/* Response B */}
-              <div
-                className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${
-                  responseBCollapsed ? "flex-none" : "h-1/2"
-                }`}
-              >
+              <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${responseBCollapsed ? "flex-none h-auto" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Response B</h3>
                   <div className="flex items-center space-x-1">
@@ -614,14 +617,16 @@ Please provide:
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-2 ${/* Reduced padding */
-                        selectedModelA === index ? model.selectedBg : model.cardBg
-                      } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02]`}
+                      className={`p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
+                        selectedModelA === index 
+                          ? `${model.selectedBg} ${model.selectedGlow}`
+                          : `${model.cardBg} ${model.glowColor}`
+                      }`}
                       onClick={() => setSelectedModelA(index)}
                     >
                       <div className="flex items-center space-x-2"> {/* Reduced spacing */}
                         <div
-                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg flex-shrink-0`} /* Smaller icon container */
+                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`} /* Smaller icon container */
                         >
                           {model.icon}
                         </div>
@@ -653,14 +658,16 @@ Please provide:
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-2 ${
-                        selectedModelB === index ? model.selectedBg : model.cardBg
-                      } hover:bg-opacity-80 transition-all duration-200 cursor-pointer group hover:scale-[1.02]`}
+                      className={`p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
+                        selectedModelB === index 
+                          ? `${model.selectedBg} ${model.selectedGlow}`
+                          : `${model.cardBg} ${model.glowColor}`
+                      }`}
                       onClick={() => setSelectedModelB(index)}
                     >
                       <div className="flex items-center space-x-2">
                         <div
-                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg flex-shrink-0`}
+                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                         >
                           {model.icon}
                         </div>
