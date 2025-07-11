@@ -2,9 +2,13 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown } from "lucide-react"
-import { useState } from "react"
+import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown, Settings } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { useTypingEffect } from "@/hooks/useTypingEffect";
+import { StreamingDisplay } from "@/components/StreamingDisplay";
+import { StreamingControls } from "@/components/StreamingControls";
+import { StreamingService } from "@/services/streamingService";
 
 const defaultPrompt = `Write your prompt here...
 
@@ -35,9 +39,44 @@ export default function ComparisonsPage() {
   const [editorACollapsed, setEditorACollapsed] = useState(false)
   const [editorBCollapsed, setEditorBCollapsed] = useState(false)
 
+  // Add streaming related state
+  const [streamingEnabled, setStreamingEnabled] = useState(true);
+  const [typingSpeed, setTypingSpeed] = useState(75);
+  const [showStreamingControls, setShowStreamingControls] = useState(false);
+
+  // Initialize typing effects for both responses
+  const typingEffectA = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+  const typingEffectB = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+  const typingEffectRating = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+
+  // Create streaming service
+  const streamingService = new StreamingService();
+
+  // Update typing effects when speed changes
+  useEffect(() => {
+    typingEffectA.setSpeed(typingSpeed);
+    typingEffectA.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+    
+    typingEffectB.setSpeed(typingSpeed);
+    typingEffectB.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+    
+    typingEffectRating.setSpeed(typingSpeed);
+    typingEffectRating.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+  }, [typingSpeed]);
+
+  // Update the model definitions to match EditorPage
   const aiModels = [
     {
-      name: "Deepseek",
+      name: "Deepseek R1",
       shortName: "Deepseek",
       description: "Advanced reasoning and code generation",
       icon: "🔮",
@@ -49,12 +88,13 @@ export default function ComparisonsPage() {
       selectedGlow: "shadow-[0_0_15px_rgba(139,69,255,0.4)] border-violet-500/60",
       available: true,
       model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+      supportsImages: false,
     },
     {
-      name: "Meta: Llama 4 Maverick",
+      name: "Meta Llama 4 Scout",
       shortName: "Llama-4",
-      description: "Advanced coding, reasoning, long context, and image benchmarks",
-      icon: "🤖",
+      description: "Advanced coding, reasoning, long context, and image understanding",
+      icon: "🦙",
       iconBg: "bg-gradient-to-br from-green-500 to-emerald-600",
       cardBg: "bg-green-500/10 border-green-500/20",
       selectedBg: "bg-green-500/20 border-green-500/40",
@@ -62,26 +102,13 @@ export default function ComparisonsPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-maverick:free",
+      model: "meta-llama/llama-4-scout:free",
+      supportsImages: true,
     },
     {
-      name: "Kimi Dev 72b",
-      shortName: "Kimi Dev",
-      description: "specializes in software engineering tasks, code generation, and unit test creation.",
-      icon: "🧠",
-      iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
-      cardBg: "bg-orange-500/10 border-orange-500/20",
-      selectedBg: "bg-orange-500/20 border-orange-500/40",
-      textColor: "text-orange-400",
-      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
-      selectedGlow: "shadow-[0_0_15px_rgba(249,115,22,0.4)] border-orange-500/60",
-      available: true,
-      model: "moonshotai/kimi-dev-72b:free",
-    },
-    {
-      name: "Google: Gemini 2.0",
+      name: "Google Gemini 2.0 Flash",
       shortName: "Gemini-2",
-      description: "Gemini 2 models supports text output, with image and audio output capabilities",
+      description: "Multimodal AI with image and text understanding capabilities",
       icon: "💎",
       iconBg: "bg-gradient-to-br from-purple-500 to-indigo-600",
       cardBg: "bg-purple-500/10 border-purple-500/20",
@@ -91,6 +118,22 @@ export default function ComparisonsPage() {
       selectedGlow: "shadow-[0_0_15px_rgba(168,85,247,0.4)] border-purple-500/60",
       available: true,
       model: "google/gemini-2.0-flash-exp:free",
+      supportsImages: true,
+    },
+    {
+      name: "Kimi Dev 72B",
+      shortName: "Kimi Dev",
+      description: "Specialized for software engineering tasks and code generation",
+      icon: "🧠",
+      iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
+      cardBg: "bg-orange-500/10 border-orange-500/20",
+      selectedBg: "bg-orange-500/20 border-orange-500/40",
+      textColor: "text-orange-400",
+      glowColor: "hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:border-orange-500/50",
+      selectedGlow: "shadow-[0_0_15px_rgba(249,115,22,0.4)] border-orange-500/60",
+      available: true,
+      model: "moonshotai/kimi-dev-72b:free",
+      supportsImages: false,
     },
   ]
 
@@ -103,50 +146,83 @@ export default function ComparisonsPage() {
       .replace(/\*([^*]+)\*/g, "$1")
   }
 
+  // Update the testPrompt function to support streaming
   const testPrompt = async (side: "A" | "B") => {
-    const promptText = side === "A" ? promptTextA : promptTextB
-    const setIsLoading = side === "A" ? setIsLoadingA : setIsLoadingB
-    const setAiResponse = side === "A" ? setAiResponseA : setAiResponseB
+    const promptText = side === "A" ? promptTextA : promptTextB;
+    const setIsLoading = side === "A" ? setIsLoadingA : setIsLoadingB;
+    const setAiResponse = side === "A" ? setAiResponseA : setAiResponseB;
+    const modelIndex = side === "A" ? selectedModelA : selectedModelB;
+    const typingEffect = side === "A" ? typingEffectA : typingEffectB;
 
-    setIsLoading(true)
-    setAiResponse("Generating response...")
+    setIsLoading(true);
+    
+    if (streamingEnabled) {
+      setAiResponse(""); // Clear for streaming
+      typingEffect.clear();
+    } else {
+      setAiResponse("Generating response...");
+    }
 
     try {
-      // ✅ Send just the prompt text string, like your test.html does
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(promptText), // ✅ Send string directly, not wrapped in object
-      })
+      // Create request body
+      const requestBody = streamingService.createImageRequestBody(
+        promptText,
+        null, // No image support in comparison mode yet
+        aiModels[modelIndex].model
+      );
 
-      const data = await response.json()
-
-      // ✅ Handle the response (should be in standard OpenAI format now)
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        const aiResponseText = data.choices[0].message.content
-        setAiResponse(decodeUnicode(aiResponseText))
-      } else {
-        console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
-        setAiResponse("Received unexpected response format");
-      }
+      console.log(`🚀 Test request for side ${side}:`, requestBody);
+      
+      // Use streamingService to handle the request
+      await streamingService.streamRequest(
+        requestBody,
+        streamingEnabled,
+        {
+          onContent: (content: string) => {
+            if (streamingEnabled) {
+              typingEffect.addText(content);
+            } else {
+              setAiResponse(streamingService.decodeUnicode(content));
+            }
+          },
+          onComplete: () => {
+            setIsLoading(false);
+            // Save the response if it was streaming
+            if (streamingEnabled && typingEffect.displayText) {
+              setAiResponse(typingEffect.displayText);
+            }
+          },
+          onError: (error: string) => {
+            setIsLoading(false);
+            setAiResponse(`Error: ${error}`);
+          }
+        }
+      );
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
-      setAiResponse(`Error: ${errorMessage}`)
-    } finally {
-      setIsLoading(false)
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      setAiResponse(`Error: ${errorMessage}`);
+      setIsLoading(false);
     }
   }
 
+  // Update the testBothPrompts function to include a delay between requests
   const testBothPrompts = async () => {
-    await Promise.all([testPrompt("A"), testPrompt("B")])
+    // Test prompt A first
+    await testPrompt("A");
+    
+    // Add a 1-second delay before testing prompt B to avoid rate limits
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Then test prompt B
+    await testPrompt("B");
   }
 
+  // Update the getRating function to match EditorPage's approach
   const getRating = async () => {
     setIsLoadingRating(true)
     setRatingResponse("Analyzing both responses...")
 
+    // Create rating prompt
     const ratingPrompt = `
 Compare these two AI responses to similar prompts:
 
@@ -176,26 +252,87 @@ Please provide:
 3. Identify which response better addresses the prompt and why
 4. Suggest improvements for both prompts
 5. Highlight any significant differences in approach or quality
-`
+`;
 
     try {
-      // ✅ Send just the rating prompt string, like your test.html does
+      // Use a reliable model for comparison (Deepseek or Kimi)
+      const reliableModelIndex = aiModels.findIndex(model => 
+        model.name.includes("Deepseek") || model.name.includes("Kimi")
+      );
+      
+      // Default to the first model if no "reliable" one is found
+      const modelToUse = reliableModelIndex !== -1 ? reliableModelIndex : 0;
+      
+      const requestBody = {
+        model: aiModels[modelToUse].model,
+        messages: [{
+          role: "user",
+          content: ratingPrompt,
+        }]
+      };
+
+      console.log("🚀 Comparison rating request:", requestBody);
+      
       const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(ratingPrompt), // ✅ Send string directly
-      })
+        body: JSON.stringify(requestBody),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
+      
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setRatingResponse(decodeUnicode(data.choices[0].message.content))
+        setRatingResponse(decodeUnicode(data.choices[0].message.content));
+      } else if (data.error) {
+        let errorMessage = data.error.userMessage || data.error.message;
+        
+        // If rate limited, try a different model
+        if (data.error.status === 429) {
+          // Try a different model
+          const alternativeIndex = aiModels.findIndex((_, i) => i !== modelToUse);
+          if (alternativeIndex !== -1) {
+            setRatingResponse("Rate limit exceeded. Trying with " + aiModels[alternativeIndex].name + "...");
+            
+            const fallbackRequestBody = {
+              model: aiModels[alternativeIndex].model,
+              messages: [{
+                role: "user",
+                content: ratingPrompt,
+              }]
+            };
+            
+            const fallbackResponse = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fallbackRequestBody),
+            });
+            
+            const fallbackData = await fallbackResponse.json();
+            
+            if (fallbackData.choices && fallbackData.choices[0] && fallbackData.choices[0].message) {
+              setRatingResponse(decodeUnicode(fallbackData.choices[0].message.content) + 
+                "\n\n(Rating provided by " + aiModels[alternativeIndex].name + ")");
+            } else {
+              setRatingResponse(`Error: Could not generate comparison with any model. ${errorMessage}`);
+            }
+          } else {
+            setRatingResponse(`Error: ${errorMessage}`);
+          }
+        } else {
+          setRatingResponse(`Error: ${errorMessage}`);
+        }
+      } else {
+        setRatingResponse("Could not generate comparison - unexpected response format");
       }
     } catch (error) {
-      setRatingResponse("Error generating rating: " + error)
+      console.error("Comparison error:", error);
+      setRatingResponse("Error generating comparison: " + error);
     } finally {
-      setIsLoadingRating(false)
+      setIsLoadingRating(false);
     }
   }
 
@@ -206,6 +343,11 @@ Please provide:
     setAiResponseB("AI response to prompt B will appear here...")
     setRatingResponse("")
     setShowRatingPanel(false)
+    
+    // Clear typing effects
+    typingEffectA.clear();
+    typingEffectB.clear();
+    typingEffectRating.clear();
   }
 
   const copyToClipboard = async (text: string) => {
@@ -279,7 +421,7 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
                 <div className="flex items-center space-x-1">
-                  {/* ✅ Add Save button for Prompt A */}
+                  {/*Add Save button for Prompt A */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -301,7 +443,7 @@ Please provide:
                   >
                     <ArrowLeftRight className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/* ✅ Add Help button */}
+                  {/*Add Help button */}
                   <Link to="/help">
                     <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
                       <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -363,16 +505,13 @@ Please provide:
                 {!responseACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
-                      {isLoadingA ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating response...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                          {aiResponseA}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
+                        isLoading={isLoadingA}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="AI response to prompt A will appear here..."
+                        className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 )}
@@ -388,7 +527,7 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
                 <div className="flex items-center space-x-1">
-                  {/* ✅ Add Save button for Prompt B */}
+                  {/*Add Save button for Prompt B */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -401,7 +540,7 @@ Please provide:
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/* ✅ Replace the existing HelpCircle with linked Help button */}
+                  {/*Replace the existing HelpCircle with linked Help button */}
                   <Link to="/help">
                     <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
                       <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -484,7 +623,7 @@ Please provide:
             </div>
           </div>
 
-          {/* ✅ Update the bottom action bar to include save options */}
+          {/*Update the bottom action bar to include save options */}
           <div className="h-12 border-t border-border px-3 bg-background flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button 
@@ -497,7 +636,7 @@ Please provide:
                 Reset
               </Button>
               
-              {/* ✅ Add quick save buttons in bottom bar */}
+              {/*Add quick save buttons in bottom bar */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -572,9 +711,13 @@ Please provide:
                     <span>Analyzing responses...</span>
                   </div>
                 ) : (
-                  <pre className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                    {ratingResponse || "Click 'Rate' to compare both responses..."}
-                  </pre>
+                  <StreamingDisplay
+                    content={streamingEnabled ? typingEffectRating.displayText : ratingResponse}
+                    isLoading={isLoadingRating}
+                    streamingEnabled={streamingEnabled}
+                    placeholder="Click 'Rate' to compare both responses..."
+                    className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                  />
                 )}
               </div>
             </div>
@@ -705,6 +848,23 @@ Please provide:
               </Button>
             </div>
           </div>
+        )}
+
+        {/* Add Streaming Controls Panel */}
+        {showStreamingControls && (
+          <StreamingControls
+            streamingEnabled={streamingEnabled}
+            setStreamingEnabled={setStreamingEnabled}
+            typingSpeed={typingSpeed}
+            setTypingSpeed={setTypingSpeed}
+            isLoading={isLoadingA || isLoadingB || isLoadingRating}
+            isTyping={typingEffectA.isTyping || typingEffectB.isTyping || typingEffectRating.isTyping}
+            onSkipAnimation={() => {
+              if (typingEffectA.isTyping) typingEffectA.complete();
+              if (typingEffectB.isTyping) typingEffectB.complete();
+              if (typingEffectRating.isTyping) typingEffectRating.complete();
+            }}
+          />
         )}
       </div>
     </div>
