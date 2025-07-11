@@ -2,9 +2,13 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown } from "lucide-react"
-import { useState } from "react"
+import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown, Settings } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { useTypingEffect } from "@/hooks/useTypingEffect";
+import { StreamingDisplay } from "@/components/StreamingDisplay";
+import { StreamingControls } from "@/components/StreamingControls";
+import { StreamingService } from "@/services/streamingService";
 
 const defaultPrompt = `Write your prompt here...
 
@@ -34,6 +38,40 @@ export default function ComparisonsPage() {
   const [responseBCollapsed, setResponseBCollapsed] = useState(false)
   const [editorACollapsed, setEditorACollapsed] = useState(false)
   const [editorBCollapsed, setEditorBCollapsed] = useState(false)
+
+  // Add streaming related state
+  const [streamingEnabled, setStreamingEnabled] = useState(true);
+  const [typingSpeed, setTypingSpeed] = useState(75);
+  const [showStreamingControls, setShowStreamingControls] = useState(false);
+
+  // Initialize typing effects for both responses
+  const typingEffectA = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+  const typingEffectB = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+  const typingEffectRating = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+
+  // Create streaming service
+  const streamingService = new StreamingService();
+
+  // Update typing effects when speed changes
+  useEffect(() => {
+    typingEffectA.setSpeed(typingSpeed);
+    typingEffectA.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+    
+    typingEffectB.setSpeed(typingSpeed);
+    typingEffectB.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+    
+    typingEffectRating.setSpeed(typingSpeed);
+    typingEffectRating.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+  }, [typingSpeed]);
 
   // Update the model definitions to match EditorPage
   const aiModels = [
@@ -108,63 +146,61 @@ export default function ComparisonsPage() {
       .replace(/\*([^*]+)\*/g, "$1")
   }
 
-  // Update the testPrompt function in ComparisonPage.tsx to properly send model info
+  // Update the testPrompt function to support streaming
   const testPrompt = async (side: "A" | "B") => {
-    const promptText = side === "A" ? promptTextA : promptTextB
-    const setIsLoading = side === "A" ? setIsLoadingA : setIsLoadingB
-    const setAiResponse = side === "A" ? setAiResponseA : setAiResponseB
-    const modelIndex = side === "A" ? selectedModelA : selectedModelB
+    const promptText = side === "A" ? promptTextA : promptTextB;
+    const setIsLoading = side === "A" ? setIsLoadingA : setIsLoadingB;
+    const setAiResponse = side === "A" ? setAiResponseA : setAiResponseB;
+    const modelIndex = side === "A" ? selectedModelA : selectedModelB;
+    const typingEffect = side === "A" ? typingEffectA : typingEffectB;
 
-    setIsLoading(true)
-    setAiResponse("Generating response...")
+    setIsLoading(true);
+    
+    if (streamingEnabled) {
+      setAiResponse(""); // Clear for streaming
+      typingEffect.clear();
+    } else {
+      setAiResponse("Generating response...");
+    }
 
     try {
-      // Create request body with proper structure including model
-      const requestBody = {
-        model: aiModels[modelIndex].model,
-        messages: [{
-          role: "user",
-          content: promptText
-        }]
-      };
+      // Create request body
+      const requestBody = streamingService.createImageRequestBody(
+        promptText,
+        null, // No image support in comparison mode yet
+        aiModels[modelIndex].model
+      );
 
       console.log(`🚀 Test request for side ${side}:`, requestBody);
       
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody), // Send properly structured request
-      });
-
-      const data = await response.json();
-
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        const aiResponseText = data.choices[0].message.content;
-        setAiResponse(decodeUnicode(aiResponseText));
-      } else if (data.error) {
-        // Format user-friendly error message
-        let errorMessage = data.error.userMessage || data.error.message;
-        
-        // Special handling for common errors
-        if (data.error.status === 503) {
-          // Service unavailable - model not available
-          errorMessage = `The selected model (${aiModels[modelIndex].name}) is currently unavailable. Please try another model.`;
-        } else if (data.error.status === 429) {
-          // Rate limit
-          errorMessage = "Rate limit exceeded. You've made too many requests to this model. Please try another model or wait a few minutes.";
+      // Use streamingService to handle the request
+      await streamingService.streamRequest(
+        requestBody,
+        streamingEnabled,
+        {
+          onContent: (content: string) => {
+            if (streamingEnabled) {
+              typingEffect.addText(content);
+            } else {
+              setAiResponse(streamingService.decodeUnicode(content));
+            }
+          },
+          onComplete: () => {
+            setIsLoading(false);
+            // Save the response if it was streaming
+            if (streamingEnabled && typingEffect.displayText) {
+              setAiResponse(typingEffect.displayText);
+            }
+          },
+          onError: (error: string) => {
+            setIsLoading(false);
+            setAiResponse(`Error: ${error}`);
+          }
         }
-        
-        setAiResponse(`Error: ${errorMessage}`);
-      } else {
-        console.warn(`⚠️ Unexpected response structure for ${side}:`, data);
-        setAiResponse("Received unexpected response format");
-      }
+      );
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       setAiResponse(`Error: ${errorMessage}`);
-    } finally {
       setIsLoading(false);
     }
   }
@@ -293,7 +329,7 @@ Please provide:
         setRatingResponse("Could not generate comparison - unexpected response format");
       }
     } catch (error) {
-      console.error("❌ Comparison error:", error);
+      console.error("Comparison error:", error);
       setRatingResponse("Error generating comparison: " + error);
     } finally {
       setIsLoadingRating(false);
@@ -307,6 +343,11 @@ Please provide:
     setAiResponseB("AI response to prompt B will appear here...")
     setRatingResponse("")
     setShowRatingPanel(false)
+    
+    // Clear typing effects
+    typingEffectA.clear();
+    typingEffectB.clear();
+    typingEffectRating.clear();
   }
 
   const copyToClipboard = async (text: string) => {
@@ -380,7 +421,7 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
                 <div className="flex items-center space-x-1">
-                  {/* ✅ Add Save button for Prompt A */}
+                  {/*Add Save button for Prompt A */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -402,7 +443,7 @@ Please provide:
                   >
                     <ArrowLeftRight className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/* ✅ Add Help button */}
+                  {/*Add Help button */}
                   <Link to="/help">
                     <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
                       <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -464,16 +505,13 @@ Please provide:
                 {!responseACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto">
-                      {isLoadingA ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating response...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                          {aiResponseA}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
+                        isLoading={isLoadingA}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="AI response to prompt A will appear here..."
+                        className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 )}
@@ -489,7 +527,7 @@ Please provide:
               <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
                 <div className="flex items-center space-x-1">
-                  {/* ✅ Add Save button for Prompt B */}
+                  {/*Add Save button for Prompt B */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -502,7 +540,7 @@ Please provide:
                   <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/* ✅ Replace the existing HelpCircle with linked Help button */}
+                  {/*Replace the existing HelpCircle with linked Help button */}
                   <Link to="/help">
                     <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
                       <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -585,7 +623,7 @@ Please provide:
             </div>
           </div>
 
-          {/* ✅ Update the bottom action bar to include save options */}
+          {/*Update the bottom action bar to include save options */}
           <div className="h-12 border-t border-border px-3 bg-background flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button 
@@ -598,7 +636,7 @@ Please provide:
                 Reset
               </Button>
               
-              {/* ✅ Add quick save buttons in bottom bar */}
+              {/*Add quick save buttons in bottom bar */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -673,9 +711,13 @@ Please provide:
                     <span>Analyzing responses...</span>
                   </div>
                 ) : (
-                  <pre className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                    {ratingResponse || "Click 'Rate' to compare both responses..."}
-                  </pre>
+                  <StreamingDisplay
+                    content={streamingEnabled ? typingEffectRating.displayText : ratingResponse}
+                    isLoading={isLoadingRating}
+                    streamingEnabled={streamingEnabled}
+                    placeholder="Click 'Rate' to compare both responses..."
+                    className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                  />
                 )}
               </div>
             </div>
@@ -806,6 +848,23 @@ Please provide:
               </Button>
             </div>
           </div>
+        )}
+
+        {/* Add Streaming Controls Panel */}
+        {showStreamingControls && (
+          <StreamingControls
+            streamingEnabled={streamingEnabled}
+            setStreamingEnabled={setStreamingEnabled}
+            typingSpeed={typingSpeed}
+            setTypingSpeed={setTypingSpeed}
+            isLoading={isLoadingA || isLoadingB || isLoadingRating}
+            isTyping={typingEffectA.isTyping || typingEffectB.isTyping || typingEffectRating.isTyping}
+            onSkipAnimation={() => {
+              if (typingEffectA.isTyping) typingEffectA.complete();
+              if (typingEffectB.isTyping) typingEffectB.complete();
+              if (typingEffectRating.isTyping) typingEffectRating.complete();
+            }}
+          />
         )}
       </div>
     </div>
