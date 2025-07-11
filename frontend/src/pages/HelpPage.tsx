@@ -531,12 +531,12 @@ export default function HelpPage() {
         {/* Navigation */}
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="bg-[#00876e]/10 p-2 rounded-lg">
-                  <BrainCircuit className="w-6 h-6 text-[#3ebb9e]" />
+            <div className="flex justify-between items-center h-20">
+              <Link to="/" className="flex items-center space-x-3">
+                <div className="bg-[#00876e]/10 p-2 rounded-xl">
+                  <BrainCircuit className="w-8 h-8 text-[#3ebb9e]" />
                 </div>
-                <span className="text-xl font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
+                <span className="text-2xl font-bold">Prompt Forge</span>
               </Link>
               <div className="flex items-center space-x-4">
                 <Button 
@@ -580,15 +580,15 @@ export default function HelpPage() {
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-[#00876e]/10 p-2 rounded-lg">
-                <BrainCircuit className="w-6 h-6 text-[#3ebb9e]" />
+          <div className="flex justify-between items-center h-20">
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="bg-[#00876e]/10 p-2 rounded-xl">
+                <BrainCircuit className="w-8 h-8 text-[#3ebb9e]" />
               </div>
-              <span className="text-xl font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
+              <span className="text-2xl font-bold">Prompt Forge</span>
             </Link>
             <div className="flex items-center space-x-4">
-              <Link to="/" className="text-sm font-medium hover:text-[#3ebb9e] transition-colors">
+              <Link to="/" className="text-md font-medium hover:text-[#3ebb9e] transition-colors">
                 Back to Home
               </Link>
               <Link to="/home">

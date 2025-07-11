@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react"
 import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
-import { Sparkles, Star, User, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
+import { Tag, MarketplacePrompt } from "@/models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
@@ -84,7 +83,7 @@ export default function MarketplacePage() {
 
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
-    setCurrentPage(1) // ✅ Reset to page 1
+    setCurrentPage(1) //Reset to page 1
     console.log("filter:", filter);
     
     fetchData(selectedCategory, filter, searchQuery, 1)
@@ -92,7 +91,7 @@ export default function MarketplacePage() {
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    setCurrentPage(1) // ✅ Reset to page 1
+    setCurrentPage(1) //Reset to page 1
     console.log("category:", category);
     fetchData(category, selectedFilter, searchQuery, 1)
   }
@@ -114,7 +113,7 @@ export default function MarketplacePage() {
 
   const fetchData = async (tag = "all", filter = "all", search = "", page = 1) => {
     setLoading(true);
-    setCurrentPage(page) // ✅ Update current page
+    setCurrentPage(page) //Update current page
     
     try {
       const pageData = await promptService.fetchMarketplacePrompts({ tag, filter, search }, page - 1);
@@ -125,7 +124,7 @@ export default function MarketplacePage() {
       setPromptsFound(pageData.totalElements || 0);
       setLoading(false);
       
-      // ✅ Load ratings in background
+      //Load ratings in background
       setRatingsLoading(true);
       const enrichedPrompts = await enrichPromptsWithRatings(pageData.content || []);
       setCurrentPrompts(enrichedPrompts);
@@ -142,7 +141,7 @@ export default function MarketplacePage() {
   const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
     // setSearchQuery(query)
     if (event.key === "Enter") {
-      setCurrentPage(1) // ✅ Reset to page 1
+      setCurrentPage(1) //Reset to page 1
       
       fetchData(selectedCategory, selectedFilter, searchQuery,1)
     }
@@ -152,7 +151,7 @@ export default function MarketplacePage() {
     fetchData(selectedCategory, selectedFilter, searchQuery, pageNumber)
   }
 
-  // ✅ Load initial data and categories when component mounts
+  //Load initial data and categories when component mounts
   useEffect(() => {
     fetchAvailableCategories() // Fetch categories first
     fetchData() // Then fetch prompts
@@ -257,7 +256,7 @@ export default function MarketplacePage() {
 
             <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
             <div className="space-y-1">
-              {/* ✅ All Categories button */}
+              {/*All Categories button */}
               <Button
                 variant="ghost"
                 className={`w-full justify-start text-sm h-8 px-2 ${
@@ -268,7 +267,7 @@ export default function MarketplacePage() {
                 All Categories
               </Button>
               
-              {/* ✅ Render actual tags from database - simplified version */}
+              {/*Render actual tags from database - simplified version */}
               {availableCategories.map((tag) => (
                 <Button
                   key={tag.id || tag.name}
@@ -279,7 +278,7 @@ export default function MarketplacePage() {
                   onClick={() => handleCategoryChange(tag.name)}
                 >
                   <span className="truncate">{tag.name}</span>
-                  {/* ✅ Removed promptCount display */}
+                  {/*Removed promptCount display */}
                 </Button>
               ))}
               
@@ -290,7 +289,7 @@ export default function MarketplacePage() {
                 </div>
               )}
               
-              {/* ✅ Show empty state if no categories */}
+              {/*Show empty state if no categories */}
               {!categoriesLoading && availableCategories.length === 0 && (
                 <div className="text-xs text-muted-foreground px-2 py-1">
                   No categories found
@@ -523,7 +522,7 @@ export default function MarketplacePage() {
                             variant={currentPage === pageNumber ? "default" : "outline"}
                             size="sm"
                             onClick={() => changePage(pageNumber)}
-                            className={currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}
+                            className={`min-w-[2.5rem] ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}`}
                           >
                             {pageNumber}
                           </Button>
