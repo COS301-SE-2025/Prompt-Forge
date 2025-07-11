@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.cart.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,24 +19,17 @@ import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class CartItemService {
 
   private final CartItemRepository cartItemRepository;
   private final UserRepository userRepository;
   private final PromptRepository promptRepository;
   private final PromptStoreService promptStoreService;
-
-  public CartItemService(
-      CartItemRepository cartItemRepository,
-      UserRepository userRepository,
-      PromptRepository promptRepository,
-      PromptStoreService promptStoreService) {
-    this.cartItemRepository = cartItemRepository;
-    this.userRepository = userRepository;
-    this.promptRepository = promptRepository;
-    this.promptStoreService = promptStoreService;
-  }
+  private final PaymentService paymentService;
 
   public Page<CartItemDTO> getCartItemsForUser(UUID userId, Pageable pageable) {
     Page<Object[]> results = cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable);
@@ -46,7 +40,7 @@ public class CartItemService {
                 row -> {
                   UUID cartItemId = (UUID) row[0];
                   UUID fetchedUserId = (UUID) row[1];
-                  String username = (String) row[2];
+                  String authorName = (String) row[2];
                   UUID promptId = (UUID) row[3];
                   String promptTitle = (String) row[4];
                   String[] promptTags = (String[]) row[5];
@@ -55,7 +49,7 @@ public class CartItemService {
                   return new CartItemDTO(
                       cartItemId,
                       fetchedUserId,
-                      username,
+                      authorName,
                       promptId,
                       promptTitle,
                       promptTags,
@@ -91,6 +85,10 @@ public class CartItemService {
 
   public void removeItemFromCart(UUID userId, UUID promptId) {
     cartItemRepository.deleteByUserIdAndPromptId(userId, promptId);
+  }
+  
+  public void removeItemsFromCartByUserID(UUID userId) {
+    cartItemRepository.deletebyUserID(userId);
   }
 
   public Boolean isPromptAddedToCart(UUID userId, UUID promptId) {
