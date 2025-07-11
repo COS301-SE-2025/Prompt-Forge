@@ -2,12 +2,16 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
 import { jsPDF } from 'jspdf';
 import { Editor } from "@/services/editorService"
+import { useTypingEffect } from "@/hooks/useTypingEffect"
+import { StreamingDisplay } from "@/components/StreamingDisplay";
+import { StreamingControls } from "@/components/StreamingControls";
+import { StreamingService } from "@/services/streamingService";
 
 type ViewType = "test" | "rate" | "suggest";
 
@@ -25,6 +29,7 @@ export default function EditorPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const editorService = new Editor();
+  const streamingService = new StreamingService();
 
   const [promptText, setPromptText] = useState(defaultPrompt)
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
@@ -42,12 +47,29 @@ export default function EditorPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // NEW: Add streaming controls
+  const [streamingEnabled, setStreamingEnabled] = useState(true);
+  const [typingSpeed, setTypingSpeed] = useState(75);
+  const [showStreamingControls, setShowStreamingControls] = useState(false);
+
+  // NEW: Initialize typing effect
+  const typingEffect = useTypingEffect({ 
+    speed: typingSpeed, 
+    batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
+  });
+
   // Auto-fill prompt if coming from a card
   useEffect(() => {
     if (location.state?.promptText) {
       setPromptText(location.state.promptText)
     }
   }, [location.state])
+
+  // NEW: Update typing effect when speed changes
+  useEffect(() => {
+    typingEffect.setSpeed(typingSpeed);
+    typingEffect.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
+  }, [typingSpeed, typingEffect]);
 
   // Define available models with their capabilities
   const aiModels = [
@@ -111,7 +133,6 @@ export default function EditorPage() {
       model: "moonshotai/kimi-dev-72b:free",
       supportsImages: false,
     },
-    
   ]
 
   // Function to handle image upload
@@ -136,6 +157,9 @@ export default function EditorPage() {
 
   const handleModelSelect = (index: number) => {
     setSelectedModel(index)
+    if (streamingEnabled && typingEffect.isTyping) {
+      typingEffect.complete(); // Complete any ongoing typing
+    }
     setAiResponse(`Testing with ${aiModels[index].name}...`)
   }
 
@@ -150,185 +174,178 @@ export default function EditorPage() {
       .replace(/\*([^*]+)\*/g, '$1')  // Remove markdown italic
   }
 
-  // Update the getRating function to handle different model capabilities
   const getRating = async (prompt: string, response: string) => {
-    setIsLoadingRating(true)
-    setRatingResponse("Rating your prompt...")
+  setIsLoadingRating(true)
+  setRatingResponse("")
+  
+  // Reset typing effect for rating
+  typingEffect.clear();
 
-    // Create a simplified rating prompt for models that struggle with complex instructions
-    const simpleRatingPrompt = `
-      I need to rate this prompt on a scale of 1-10 and explain why:
-      "${prompt}"
-      
-      The AI responded with:
-      "${response}"
-      
-      Rating (1-10): 
-      Explanation: 
-      Improvement suggestions:
-    `;
+  // Create a simplified rating prompt for models that struggle with complex instructions
+  const simpleRatingPrompt = `
+    I need to rate this prompt on a scale of 1-10 and explain why:
+    "${prompt}"
+    
+    The AI responded with:
+    "${response}"
+    
+    Rating (1-10): 
+    Explanation: 
+    Improvement suggestions:
+  `;
 
-    // Create a detailed rating prompt for models that can handle complex instructions
-    const detailedRatingPrompt = `
-      Given this prompt:
-      ---
-      ${prompt}
-      ---
+  // Create a detailed rating prompt for models that can handle complex instructions
+  const detailedRatingPrompt = `
+    Given this prompt:
+    ---
+    ${prompt}
+    ---
 
-      And this AI response:
-      ---
-      ${response}
-      ---
+    And this AI response:
+    ---
+    ${response}
+    ---
 
-      Please:
-      1. Rate the effectiveness of the prompt (1-10)
-      2. Explain why you gave this rating
-      3. Provide specific suggestions to improve the prompt
-      4. Point out any potential issues or ambiguities
-    `;
+    Please:
+    1. Rate the effectiveness of the prompt (1-10)
+    2. Explain why you gave this rating
+    3. Provide specific suggestions to improve the prompt
+    4. Point out any potential issues or ambiguities
+  `;
 
-    try {
-      // Choose the appropriate prompt based on the model
-      const useSimplePrompt = 
-        aiModels[selectedModel].name.includes("Gemini") || 
-        aiModels[selectedModel].name.includes("Llama");
-      
-      const ratingPrompt = useSimplePrompt ? simpleRatingPrompt : detailedRatingPrompt;
+  try {
+    // Choose the appropriate prompt based on the model
+    const useSimplePrompt = 
+      aiModels[selectedModel].name.includes("Gemini") || 
+      aiModels[selectedModel].name.includes("Llama");
+    
+    const ratingPrompt = useSimplePrompt ? simpleRatingPrompt : detailedRatingPrompt;
 
-      const requestBody = {
-        model: aiModels[selectedModel].model,
-        messages: [{
-          role: "user",
-          content: ratingPrompt,
-        }]
-      };
+    const requestBody = {
+      model: aiModels[selectedModel].model,
+      messages: [{
+        role: "user",
+        content: ratingPrompt,
+      }],
+      stream: streamingEnabled
+    };
 
-      console.log("🚀 Rating request:", requestBody);
-      const data = await editorService.promptOpenRouter(requestBody);
-      
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        // Display rating immediately when ready
-        setRatingResponse(decodeUnicode(data.choices[0].message.content))
-      } else if (data.error) {
-        // If the model has an error, try with a simpler prompt as fallback
-        if (!useSimplePrompt) {
-          // Try again with simpler prompt
-          const fallbackRequestBody = {
-            model: aiModels[selectedModel].model,
-            messages: [{
-              role: "user",
-              content: simpleRatingPrompt,
-            }]
-          };
-          
-          console.log("🚀 Fallback rating request:", fallbackRequestBody);
-          const fallbackData = await editorService.promptOpenRouter(fallbackRequestBody);
-          
-          if (fallbackData.choices && fallbackData.choices[0] && fallbackData.choices[0].message) {
-            setRatingResponse(decodeUnicode(fallbackData.choices[0].message.content));
+    console.log("🚀 Rating request:", requestBody);
+    
+    // Use streamingService to handle the request
+    await streamingService.streamRequest(
+      requestBody,
+      streamingEnabled,
+      {
+        onContent: (content: string) => {
+          if (streamingEnabled) {
+            typingEffect.addText(content);
           } else {
-            setRatingResponse(`Error: ${data.error.message || JSON.stringify(data.error)}`);
+            setRatingResponse(streamingService.decodeUnicode(content));
           }
-        } else {
-          setRatingResponse(`Error: ${data.error.message || JSON.stringify(data.error)}`);
-        }
-      } else {
-        setRatingResponse("Could not generate rating - unexpected response format")
-      }
-    } catch (error) {
-      console.error("❌ Rating error:", error);
-      setIsLoadingRating(false); // Ensure loading state is reset
-      
-      // If error occurred, try a different model automatically
-      try {
-        // Find a model that's more reliable for ratings (like Deepseek or Kimi)
-        const fallbackModelIndex = aiModels.findIndex(model => 
-          model.name.includes("Deepseek") || model.name.includes("Kimi")
-        );
-        
-        if (fallbackModelIndex !== -1 && fallbackModelIndex !== selectedModel) {
-          setRatingResponse("Rating with original model failed. Trying with " + aiModels[fallbackModelIndex].name + "...");
-          
-          const fallbackRequestBody = {
-            model: aiModels[fallbackModelIndex].model,
-            messages: [{
-              role: "user",
-              content: detailedRatingPrompt,
-            }]
-          };
-          
-          const fallbackData = await editorService.promptOpenRouter(fallbackRequestBody);
-          
-          if (fallbackData.choices && fallbackData.choices[0] && fallbackData.choices[0].message) {
-            setRatingResponse(decodeUnicode(fallbackData.choices[0].message.content) + 
-              "\n\n(Rating provided by " + aiModels[fallbackModelIndex].name + ")");
-          } else {
-            throw new Error("Fallback model also failed");
+        },
+        onComplete: () => {
+          setIsLoadingRating(false);
+          // Save the response if it was streaming
+          if (streamingEnabled && typingEffect.displayText) {
+            setRatingResponse(typingEffect.displayText);
           }
-        } else {
-          throw error; // Re-throw if no suitable fallback found
+          console.log("Rating completed");
+        },
+        onError: (error: string) => {
+          setIsLoadingRating(false);
+          setRatingResponse(`Error: ${error}`);
+          
+          // Try to find a working model on error
+          if (error.includes("unavailable") || error.includes("503")) {
+            fallbackToWorkingModel();
+          }
         }
-      } catch (fallbackError) {
-        setRatingResponse("Error generating rating. Please try another model: " + error);
       }
-    } finally {
-      setIsLoadingRating(false); // Double ensure loading state is reset
-    }
+    );
+  } catch (error) {
+    console.error("❌ Rating error:", error);
+    setIsLoadingRating(false);
+    setRatingResponse("Error generating rating: " + error);
+  }
+}
+const getSuggested = async (prompt: string, response: string) => {
+  // Check if prompt has changed
+  if (prompt === lastSuggestedPrompt) {
+    setCurrentView("suggest")
+    setCurrentPage(3)
+    return
   }
 
-  const getSuggested = async (prompt: string, response: string) => {
-    // Check if prompt has changed
-    if (prompt === lastSuggestedPrompt) {
-      setCurrentView("suggest")
-      setCurrentPage(3)
-      return
-    }
+  setIsLoadingSuggestion(true)
+  setSuggestionResponse("")
+  
+  // Reset typing effect for suggestions
+  typingEffect.clear();
 
-    setIsLoadingSuggestion(true)
-    setSuggestionResponse("Analyzing your prompt...")
+  const suggestionPrompt = `
+    Given this prompt:
+    ---
+    ${prompt}
+    ---
 
-    const suggestionPrompt = `
-      Given this prompt:
-      ---
-      ${prompt}
-      ---
-
-      Please:
-      1. Rewrite the prompt to improve its effectiveness
-      2. Explain what improvements were made and why
-      3. Provide alternative versions if applicable
-      `
+    Please:
+    1. Rewrite the prompt to improve its effectiveness
+    2. Explain what improvements were made and why
+    3. Provide alternative versions if applicable
+    `
   
   try {
-    // Fix: Add model field to the request
+    // Create request body
     const requestBody = {
-      model: aiModels[selectedModel].model, // Added missing model field
+      model: aiModels[selectedModel].model,
       messages: [{
         role: "user",
         content: suggestionPrompt,
-      }]
+      }],
+      stream: streamingEnabled
     }
 
     console.log("🚀 Suggestion request:", requestBody);
-    const data = await editorService.promptOpenRouter(requestBody);
     
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      setSuggestionResponse(decodeUnicode(data.choices[0].message.content))
-      setLastSuggestedPrompt(prompt)
-    } else if (data.error) {
-      // Handle error in response
-      setSuggestionResponse(`Error: ${data.error.message || JSON.stringify(data.error)}`)
-    } else {
-      setSuggestionResponse("Could not generate suggestions - unexpected response format")
-    }
+    // Use streamingService to handle the request
+    await streamingService.streamRequest(
+      requestBody,
+      streamingEnabled,
+      {
+        onContent: (content: string) => {
+          if (streamingEnabled) {
+            typingEffect.addText(content);
+          } else {
+            setSuggestionResponse(streamingService.decodeUnicode(content));
+          }
+        },
+        onComplete: () => {
+          setIsLoadingSuggestion(false);
+          setLastSuggestedPrompt(prompt);
+          // Save the response if it was streaming
+          if (streamingEnabled && typingEffect.displayText) {
+            setSuggestionResponse(typingEffect.displayText);
+          }
+          console.log("✅ Suggestion completed");
+        },
+        onError: (error: string) => {
+          setIsLoadingSuggestion(false);
+          setSuggestionResponse(`Error: ${error}`);
+          
+          // Try to find a working model on error
+          if (error.includes("unavailable") || error.includes("503")) {
+            fallbackToWorkingModel();
+          }
+        }
+      }
+    );
   } catch (error) {
-    console.error("❌ Suggestion error:", error);
+    console.error("Suggestion error:", error);
     setSuggestionResponse("Error analyzing prompt: " + error)
-  } finally {
-    setIsLoadingSuggestion(false)
+    setIsLoadingSuggestion(false);
   }
 }
-
 // Add this function after the getRating and getSuggested functions
 const fallbackToWorkingModel = async () => {
   // Try models in order until one works
@@ -373,92 +390,79 @@ const fallbackToWorkingModel = async () => {
   setIsLoading(false);
 };
 
-  // Modify the testPrompt function to not automatically trigger rating and suggestion:
+  // ✅ UPDATED: Modified testPrompt function to support streaming
   const testPrompt = async () => {
-  if (promptText === lastTestedPrompt && !uploadedImage) {
+    if (promptText === lastTestedPrompt && !uploadedImage) {
+      setCurrentView("test")
+      setCurrentPage(1)
+      return
+    }
+
+    setIsLoading(true)
     setCurrentView("test")
     setCurrentPage(1)
-    return
-  }
 
-  setIsLoading(true)
-  setAiResponse("Generating response...")
-  setCurrentView("test")
-  setCurrentPage(1)
-
-  try {
-    let content: any;
+    // Clear typing effect and reset display
+    typingEffect.clear();
     
-    // Create content based on whether there's an image or not
-    if (uploadedImage && aiModels[selectedModel].supportsImages) {
-      content = [
+    if (streamingEnabled) {
+      setAiResponse(""); // Clear for streaming
+    } else {
+      setAiResponse("Generating response...");
+    }
+
+    try {
+      // Create request body using streamingService
+      const requestBody = streamingService.createImageRequestBody(
+        promptText,
+        uploadedImage,
+        aiModels[selectedModel].model
+      );
+
+      console.log("🚀 Test request with model:", aiModels[selectedModel].name);
+      
+      // Use streamingService to handle the request
+      await streamingService.streamRequest(
+        requestBody,
+        streamingEnabled,
         {
-          type: "text",
-          text: promptText
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: uploadedImage
+          onContent: (content: string) => {
+            if (streamingEnabled) {
+              typingEffect.addText(content);
+            } else {
+              setAiResponse(streamingService.decodeUnicode(content));
+            }
+          },
+          onComplete: () => {
+            setIsLoading(false);
+            setLastTestedPrompt(promptText);
+            // Save the response if it was streaming
+            if (streamingEnabled && typingEffect.displayText) {
+              setAiResponse(typingEffect.displayText);
+            }
+            console.log("✅ Streaming completed");
+          },
+          onError: (error: string) => {
+            setIsLoading(false);
+            setAiResponse(`Error: ${error}`);
+            
+            // Try to find a working model on error
+            if (error.includes("unavailable") || error.includes("503")) {
+              fallbackToWorkingModel();
+            }
           }
         }
-      ];
-    } else {
-      content = promptText;
-    }
-
-    // Create request body with the appropriate content format
-    const requestBody = {
-      model: aiModels[selectedModel].model,
-      messages: [{
-        role: "user",
-        content: content
-      }]
-    };
-
-    console.log("🚀 Test request:", requestBody);
-    const data = await editorService.promptOpenRouter(requestBody);
-    
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      const aiResponseText = data.choices[0].message.content
-      setAiResponse(decodeUnicode(aiResponseText))
-      setLastTestedPrompt(promptText)
-      
-      // REMOVE THESE LINES to prevent automatic rating and suggestion
-      // getRating(promptText, decodeUnicode(aiResponseText))
-      // getSuggested(promptText, decodeUnicode(aiResponseText))
-    } else if (data.error) {
-      // Format user-friendly error message
-      let errorMessage = data.error.userMessage || data.error.message;
-      
-      // Special handling for common errors
-      if (data.error.status === 503) {
-        // Service unavailable - model not available
-        errorMessage = `The selected model (${aiModels[selectedModel].name}) is currently unavailable.`;
-        setAiResponse(`Error: ${errorMessage}\n\nAttempting to find a working model...`);
-        
-        // Try to find a working model
-        fallbackToWorkingModel();
-        return;
-      } else if (data.error.status === 429) {
-        // Rate limit
-        errorMessage = "Rate limit exceeded. You've made too many requests to this model. Please try another model or wait a few minutes.";
-      }
-      
+      );
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       setAiResponse(`Error: ${errorMessage}`);
-    } else {
-      setAiResponse("Received unexpected response format. Please try again.");
+      setIsLoading(false);
     }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
-    setAiResponse(`Error: ${errorMessage}`)
-  } finally {
-    setIsLoading(false)
   }
-}
 
   const handleReset = () => {
     setPromptText(defaultPrompt)
+    typingEffect.clear(); //NEW: Clear typing effect
     setAiResponse("AI response to your prompt here...")
     setRatingResponse("")
     setLastTestedPrompt("")
@@ -627,6 +631,16 @@ const fallbackToWorkingModel = async () => {
               <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
                 <History className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
+              {/*NEW: Add streaming controls button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 lg:h-8 lg:w-8"
+                onClick={() => setShowStreamingControls(!showStreamingControls)}
+                title="Streaming settings"
+              >
+                <Settings className="h-3 w-3 lg:h-4 lg:w-4" />
+              </Button>
               {/*Link HelpCircle to help page */}
               <Link to="/help">
                 <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
@@ -635,6 +649,19 @@ const fallbackToWorkingModel = async () => {
               </Link>
             </div>
           </div>
+
+          {/*NEW: Streaming controls panel */}
+          {showStreamingControls && (
+            <StreamingControls
+              streamingEnabled={streamingEnabled}
+              setStreamingEnabled={setStreamingEnabled}
+              typingSpeed={typingSpeed}
+              setTypingSpeed={setTypingSpeed}
+              isLoading={isLoading || isLoadingRating || isLoadingSuggestion}
+              isTyping={typingEffect.isTyping}
+              onSkipAnimation={() => typingEffect.complete()}
+            />
+          )}
 
           <div className="flex-1 bg-gray-100 dark:bg-card rounded-lg p-3 mb-3 min-h-0">
             <textarea
@@ -699,9 +726,10 @@ const fallbackToWorkingModel = async () => {
                 size="sm" 
                 className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8" 
                 onClick={testPrompt}
+                disabled={isLoading}
               >
                 <Play className="h-3 w-3 mr-1" />
-                Test Prompt
+                {isLoading ? "Testing..." : "Test Prompt"}
               </Button>
               <Button
                 size="sm"
@@ -710,24 +738,25 @@ const fallbackToWorkingModel = async () => {
                   // If previous attempt failed, ensure loading state is reset
                   setIsLoadingRating(false);
                   
+                  // Clear previous response if switching views
+                  if (currentView !== "rate") {
+                    typingEffect.clear();
+                  }
+                  
+                  // Set the view and page
+                  setCurrentView("rate");
+                  setCurrentPage(2);
+                  
                   // Retry logic for rating
                   if (lastTestedPrompt) {
-                    setCurrentView("rate");
-                    setCurrentPage(2);
-                    
                     // Add a small delay before making the API call
                     setRatingResponse("Preparing to rate your prompt...");
                     setTimeout(() => {
-                      getRating(lastTestedPrompt, aiResponse);
-                    }, 1000); // 1 second delay
+                      getRating(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
+                    }, 100); 
                   } else if (promptText) {
                     // If no test has been run but there's prompt text, let user know
-                    setCurrentView("rate");
-                    setCurrentPage(2);
                     setRatingResponse("Please test your prompt first before rating.");
-                  } else {
-                    setCurrentView("rate");
-                    setCurrentPage(2);
                   }
                 }}
               >
@@ -738,6 +767,12 @@ const fallbackToWorkingModel = async () => {
                 size="sm"
                 className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
                 onClick={() => {
+                  // Clear previous response if switching views
+                  if (currentView !== "suggest") {
+                    typingEffect.clear();
+                  }
+                  
+                  // Set the view and page
                   setCurrentView("suggest");
                   setCurrentPage(3);
                   
@@ -746,8 +781,8 @@ const fallbackToWorkingModel = async () => {
                     setSuggestionResponse("Preparing suggestions...");
                     // Add a small delay before making the API call
                     setTimeout(() => {
-                      getSuggested(lastTestedPrompt, aiResponse);
-                    }, 1000); // 1 second delay
+                      getSuggested(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
+                    }, 100);
                   } else {
                     setSuggestionResponse("Please test your prompt first before requesting suggestions.");
                   }
@@ -760,7 +795,7 @@ const fallbackToWorkingModel = async () => {
           </div>
         </div>
 
-        {/* Right Panel - Content remains mostly the same but update AI model section */}
+        {/* Right Panel - Update AI Response section to use typing effect */}
         <div className="bg-background p-3 lg:p-4 flex flex-col min-h-0 overflow-hidden">
           <h2 className="text-lg lg:text-xl font-semibold text-foreground mb-3 lg:mb-4">
             {currentView === "test" ? "Test Your Prompt" : currentView === "rate" ? "Rate Prompt" : "Suggested Improvements"}
@@ -778,7 +813,7 @@ const fallbackToWorkingModel = async () => {
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6"
-                        onClick={() => copyToClipboard(aiResponse)}
+                        onClick={() => copyToClipboard(streamingEnabled ? typingEffect.displayText : aiResponse)}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -786,7 +821,7 @@ const fallbackToWorkingModel = async () => {
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6"
-                        onClick={() => downloadAsPDF(promptText, aiResponse, aiModels[selectedModel].name)}
+                        onClick={() => downloadAsPDF(promptText, streamingEnabled ? typingEffect.displayText : aiResponse, aiModels[selectedModel].name)}
                       >
                         <Download className="h-3 w-3" />
                       </Button>
@@ -798,16 +833,15 @@ const fallbackToWorkingModel = async () => {
                     }}
                   >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
-                      {isLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating response...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap">
-                          {aiResponse}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={currentView === "test" 
+                          ? (streamingEnabled ? typingEffect.displayText : aiResponse)
+                          : "Click 'Test Prompt' to see the AI response here..."}
+                        isLoading={isLoading}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="Click 'Test Prompt' to see the AI response here..."
+                        className="text-xs lg:text-sm text-muted-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 </div>
@@ -857,10 +891,44 @@ const fallbackToWorkingModel = async () => {
                     <button
                       key={page}
                       onClick={() => {
-                        setCurrentPage(page)
-                        if (page === 2) setCurrentView("rate")
-                        else if (page === 3) setCurrentView("suggest")
-                        else setCurrentView("test")
+                        // Save current content based on current view before switching
+                        const currentDisplayText = typingEffect.displayText;
+                        if (currentDisplayText) {
+                          if (currentView === "test") {
+                            setAiResponse(currentDisplayText);
+                          } else if (currentView === "rate") {
+                            setRatingResponse(currentDisplayText);
+                          } else if (currentView === "suggest") {
+                            setSuggestionResponse(currentDisplayText);
+                          }
+                        }
+                        
+                        // Update page state
+                        setCurrentPage(page);
+                        
+                        // Clear typing effect before switching views
+                        typingEffect.clear();
+                        
+                        // Set the new view and restore content based on the page number
+                        if (page === 1) {
+                          setCurrentView("test");
+                          // Restore test content if available
+                          if (aiResponse && aiResponse !== "AI response to your prompt here...") {
+                            typingEffect.setText(aiResponse);
+                          }
+                        } else if (page === 2) {
+                          setCurrentView("rate");
+                          // Restore rating content if available
+                          if (ratingResponse) {
+                            typingEffect.setText(ratingResponse);
+                          }
+                        } else if (page === 3) {
+                          setCurrentView("suggest");
+                          // Restore suggestion content if available
+                          if (suggestionResponse) {
+                            typingEffect.setText(suggestionResponse);
+                          }
+                        }
                       }}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
@@ -875,7 +943,7 @@ const fallbackToWorkingModel = async () => {
               </>
             ) : currentView === "rate" ? (
               <>
-                {/* Rating Response Area */}
+                {/* Rating Response Area - updated to use StreamingDisplay */}
                 <div className="flex-1 min-h-0 flex flex-col">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
@@ -883,16 +951,15 @@ const fallbackToWorkingModel = async () => {
                     }}
                   >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
-                      {isLoadingRating ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin text-amber-500" />
-                          <span className="text-amber-500">Rating your prompt...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs lg:text-sm text-gray-800 dark:text-foreground whitespace-pre-wrap">
-                          {ratingResponse || "Click 'Rate' button to analyze your prompt..."}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={currentView === "rate" 
+                          ? (streamingEnabled ? typingEffect.displayText : ratingResponse)
+                          : "Click 'Rate' button to analyze your prompt..."}
+                        isLoading={isLoadingRating}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="Click 'Rate' button to analyze your prompt..."
+                        className="text-xs lg:text-sm text-gray-800 dark:text-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 </div>
@@ -942,10 +1009,10 @@ const fallbackToWorkingModel = async () => {
                     <button
                       key={page}
                       onClick={() => {
-                        setCurrentPage(page)
-                        if (page === 1) setCurrentView("test")
-                        else if (page === 3) setCurrentView("suggest")
-                        else setCurrentView("rate")
+                        setCurrentPage(page);
+                        if (page === 1) setCurrentView("test");
+                        else if (page === 3) setCurrentView("suggest");
+                        else setCurrentView("rate");
                       }}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
@@ -960,7 +1027,7 @@ const fallbackToWorkingModel = async () => {
               </>
             ) : (
               <>
-                {/* Suggestion Response Area */}
+                {/* Suggestion Response Area - updated to use StreamingDisplay */}
                 <div className="flex-1 min-h-0 flex flex-col">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
@@ -968,16 +1035,15 @@ const fallbackToWorkingModel = async () => {
                     }}
                   >
                     <div className="absolute inset-0 p-3 overflow-y-auto">
-                      {isLoadingSuggestion ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin text-violet-500" />
-                          <span className="text-violet-500">Generating suggestions...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs lg:text-sm text-gray-800 dark:text-foreground whitespace-pre-wrap">
-                          {suggestionResponse || "Click 'Suggest' button to get prompt improvements..."}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={currentView === "suggest" 
+                          ? (streamingEnabled ? typingEffect.displayText : suggestionResponse)
+                          : "Click 'Suggest' button to get prompt improvements..."}
+                        isLoading={isLoadingSuggestion}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="Click 'Suggest' button to get prompt improvements..."
+                        className="text-xs lg:text-sm text-gray-800 dark:text-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1027,10 +1093,10 @@ const fallbackToWorkingModel = async () => {
                     <button
                       key={page}
                       onClick={() => {
-                        setCurrentPage(page)
-                        if (page === 1) setCurrentView("test")
-                        else if (page === 2) setCurrentView("rate")
-                        else if (page === 3) setCurrentView("suggest")
+                        setCurrentPage(page);
+                        if (page === 1) setCurrentView("test");
+                        else if (page === 2) setCurrentView("rate");
+                        else if (page === 3) setCurrentView("suggest");
                       }}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
