@@ -19,11 +19,12 @@ export const CartSummary = ({
 }: CartSummaryProps) => {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const cartService = new CartService()
-
+  const tax = subtotal * 0.1 // 10% tax
+  const total = subtotal + tax
   const handleCheckout = async () => {
     setIsCheckingOut(true)
     try {
-      const response = await cartService.checkout(prompts)
+      const response = await cartService.checkout(prompts, parseFloat(total.toFixed(2)))
 
       // Debug: log the response to see its structure
       console.log("Checkout response:", response)
@@ -49,8 +50,6 @@ export const CartSummary = ({
     }
   }
 
-  const tax = subtotal * 0.1 // 10% tax
-  const total = subtotal + tax
 
   return (
     <div className="bg-card border rounded-lg p-6 sticky top-6">
