@@ -101,7 +101,6 @@ public class CartItemService {
 
   public void checkout(String customerEmail, List<CartItemDTO> prompts, Double total) {
     UUID userId = userService.getUserIdByEmail(customerEmail);
-    UUID prevPromptAuthorID = null; // authId of previous prompt
     ArrayList<UUID> authors = new ArrayList<UUID>();
     try {
       for (int i = 0; i < prompts.size(); i++) {
@@ -114,22 +113,18 @@ public class CartItemService {
           throw new Exception("invalid prompt - " + promptId);
         }
         UUID promptAuthorID = prompt.getAuthorId();
-        if(prevPromptAuthorID != null) {
-          if(prevPromptAuthorID != promptAuthorID) {
-            authors.add(promptAuthorID);
-          }
-        }
-        else{
+        if(!authors.contains(promptAuthorID)){
           authors.add(promptAuthorID);
         }
 
-        prevPromptAuthorID = promptAuthorID;
       }
       
-      if (total != 0) {
+      System.out.println("\n\nauthors.size():"+authors.size());
+      System.out.println("\n\ntotal:"+total);
+      if (total > 0) {
         if(authors.size() == 1) {
-          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(prevPromptAuthorID);
-          paymentService.inititalizeSingleAuthorPayment(customerEmail,subaccountCode,prevPromptAuthorID, total);
+          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authors.get(0));
+          paymentService.inititalizeSingleAuthorPayment(customerEmail,subaccountCode,authors.get(0), total);
         }
         else{
         }
