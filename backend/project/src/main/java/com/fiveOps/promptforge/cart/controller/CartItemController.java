@@ -94,9 +94,10 @@ public class CartItemController {
       @RequestBody CartCheckoutRequest request, Authentication authentication) {
     try {
       String userEmail = authentication.getName();
-      UUID userId = userService.getUserIdByEmail(userEmail);
       List<CartItemDTO> prompts = request.getPrompts();
-      cartItemService.checkout(userId, prompts);
+      
+      cartItemService.checkout(userEmail, prompts, request.getTotal());
+
       String promptString = (prompts.size() > 1) ? "Prompts" : "Prompt";
       return ResponseEntity.ok(new CartItemResponse(promptString + " purchased successfully."));
     } catch (Exception e) {
