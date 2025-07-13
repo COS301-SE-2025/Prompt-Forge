@@ -18,6 +18,7 @@ import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,8 +29,10 @@ public class CartItemService {
   private final CartItemRepository cartItemRepository;
   private final UserRepository userRepository;
   private final PromptRepository promptRepository;
-  private final PromptStoreService promptStoreService;
   private final PaymentService paymentService;
+  private final PromptStoreService promptStoreService;
+  private final UserService userService;
+  private final BankDetailsService bankDetailsService;
 
   public Page<CartItemDTO> getCartItemsForUser(UUID userId, Pageable pageable) {
     Page<Object[]> results = cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable);
@@ -96,39 +99,57 @@ public class CartItemService {
     return records.size() > 0;
   }
 
-  public void checkout(UUID userId, List<CartItemDTO> prompts) {
-
+  public void checkout(String customerEmail, List<CartItemDTO> prompts, Double total) {
+    UUID userId = userService.getUserIdByEmail(customerEmail);
+    UUID prevPromptAuthorID = null; // authId of previous prompt
+    ArrayList<UUID> authors = new ArrayList<UUID>();
     try {
       for (int i = 0; i < prompts.size(); i++) {
         CartItemDTO cartItem = prompts.get(i);
         UUID promptId = cartItem.getPromptId();
 
         Prompt prompt = promptRepository.findById(promptId).orElse(null);
-        if (prompt == null) {
-          try {
-            removeItemFromCart(userId, promptId);
-            System.out.println("Removed invalid cart item for prompt: " + promptId);
-          } catch (Exception e) {
-            System.out.println("Failed to remove invalid cart item: " + e.getMessage());
+        if(prompt == null) {
+          System.out.println("invalid cart item: " + promptId);
+          throw new Exception("invalid prompt - " + promptId);
+        }
+        UUID promptAuthorID = prompt.getAuthorId();
+        if(prevPromptAuthorID != null) {
+          if(prevPromptAuthorID != promptAuthorID) {
+            authors.add(promptAuthorID);
           }
-
-          // Skip this prompt and continue with others
-          continue;
+        }
+        else{
+          authors.add(promptAuthorID);
         }
 
-        System.out.println(
-            "Found prompt: " + prompt.getTitle() + " (Price: " + prompt.getPrice() + ")");
+        prevPromptAuthorID = promptAuthorID;
+      }
+      
+      if (total != 0) {
+        if(authors.size() == 1) {
+          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(prevPromptAuthorID);
+          paymentService.inititalizeSingleAuthorPayment(customerEmail,subaccountCode,prevPromptAuthorID, total);
+        }
+        else{
+        }
+      }
 
-        // Proceed with purchase
+
+
+      for (int i = 0; i < prompts.size(); i++) {
+        UUID promptId = prompts.get(i).getPromptId();
         promptStoreService.purchasePrompt(promptId, userId);
         removeItemFromCart(userId, promptId);
         System.out.println("Successfully purchased prompt: " + promptId);
       }
-      System.out.println("Checkout completed successfully");
+
+      System.out.println("\n\nCheckout completed successfully");
     } catch (Exception e) {
       System.out.println("error purchasing:");
       System.out.println(e);
       // TODO: handle exception
     }
   }
+  
 }
