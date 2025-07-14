@@ -1,7 +1,9 @@
 package com.fiveOps.promptforge.cart.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -98,8 +100,10 @@ public class CartItemService {
   }
 
   public void checkout(String customerEmail, List<CartItemDTO> prompts, Double total) {
+    Integer roundedTotalInCents = (int)Math.round(total*100);
     UUID userId = userService.getUserIdByEmail(customerEmail);
-    ArrayList<UUID> authors = new ArrayList<UUID>();
+    Map<UUID, Integer> authorShares = new HashMap<>();
+
     try {
       for (int i = 0; i < prompts.size(); i++) {
         CartItemDTO cartItem = prompts.get(i);
@@ -110,22 +114,43 @@ public class CartItemService {
           System.out.println("invalid cart item: " + promptId);
           throw new Exception("invalid prompt - " + promptId);
         }
-        UUID promptAuthorID = prompt.getAuthorId();
-        if (!authors.contains(promptAuthorID)) {
-          authors.add(promptAuthorID);
-        }
 
+        UUID promptAuthorID = prompt.getAuthorId();
+        int price = (int) Math.round(prompt.getPrice() * 100);
+
+        // Accumulate the share for each author
+        if(price > 0) {
+          authorShares.put(promptAuthorID, authorShares.getOrDefault(promptAuthorID, 0) + price);
+        }
       }
 
-      System.out.println("\n\nauthors.size():" + authors.size());
-      System.out.println("\n\ntotal:" + total);
-      if (total > 0) {
-        if (authors.size() == 1) {
-          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authors.get(0));
+      if (roundedTotalInCents > 0) {
+        if(authorShares.size() == 1) {
+          Map.Entry<UUID, Integer> authorShareEntry = authorShares.entrySet().iterator().next();
+          UUID authorId = authorShareEntry.getKey();
+          // Integer authorShare = authorShareEntry.getValue();
+          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
           paymentService.inititalizeSingleAuthorPayment(customerEmail,
-              subaccountCode, authors.get(0), (int)Math.round(total*100));
-        } 
+              subaccountCode, authorId, roundedTotalInCents);
+        }
         else {
+          // Prepare Paystack subaccounts payload
+          List<Map<String, Object>> subaccounts = new ArrayList<>();
+          Integer totalCalculated = 0;
+
+          for (Map.Entry<UUID, Integer> entry : authorShares.entrySet()) {
+            UUID authorId = entry.getKey();
+            Integer authorShare = entry.getValue();
+            totalCalculated += authorShare;
+            String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
+            Map<String, Object> sub = new HashMap<>();
+            sub.put("subaccount", subaccountCode);
+            sub.put("share", authorShare); // share in kobo
+            subaccounts.add(sub);
+          }
+          String access_code = paymentService.initializeSplitPayment(customerEmail, subaccounts, roundedTotalInCents);
+          // return access_code;
+      
         }
       }
 
