@@ -24,7 +24,7 @@ jobs:
       - name: Build and Test Backend
         working-directory: ./backend/project
         env:
-          # Override with H2 in-memory database for testing
+          # Override database properties for testing
           SPRING_DATASOURCE_JDBC_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
           SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
           SPRING_DATASOURCE_USERNAME: sa
@@ -42,7 +42,6 @@ jobs:
         working-directory: ./backend/project
         run: mvn -B checkstyle:check
 
-      # Frontend steps...
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
