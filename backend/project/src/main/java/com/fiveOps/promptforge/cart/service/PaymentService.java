@@ -1,7 +1,5 @@
 package com.fiveOps.promptforge.cart.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -26,22 +24,19 @@ public class PaymentService {
   @Value("${paystack.secret-key}")
   private String paystackSecretKey;
 
-  public void inititalizeSingleAuthorPayment(String customerEmail, String subaccountCode, UUID authorID, Double amount) {
+  public void inititalizeSingleAuthorPayment(String customerEmail, String subaccountCode,
+    UUID authorID, int amount) {
     String secretKey = "Bearer "+paystackSecretKey;
 
     //headers
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     headers.set("Authorization", secretKey);
-
-    BigDecimal bd = new BigDecimal(amount).setScale(2, RoundingMode.HALF_UP);
-    Double rounded = bd.doubleValue();
-    String amountString = String.format("%.2f",rounded).replace(",", "");
     
     // Body
     Map<String, Object> body = new HashMap<>();
     body.put("email", customerEmail);
-    body.put("amount", amountString);
+    body.put("amount", amount);
 
     body.put("subaccount", subaccountCode);
     body.put("bearer", "subaccount");
