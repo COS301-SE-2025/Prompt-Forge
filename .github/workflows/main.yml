@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Backend (Java/Spring Boot)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -23,28 +21,18 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Create .env file for backend tests
-      - name: Create .env file
-        working-directory: ./backend/project
-        run: |
-          echo "spring.datasource.jdbc-url=${{ secrets.SPRING_DATASOURCE_JDBC_URL }}" > .env
-          echo "spring.datasource.username=${{ secrets.SPRING_DATASOURCE_USERNAME }}" >> .env
-          echo "spring.datasource.password=${{ secrets.SPRING_DATASOURCE_PASSWORD }}" >> .env
-          echo "spring.datasource.driver-class-name=${{ secrets.SPRING_DATASOURCE_DRIVER_CLASS_NAME }}" >> .env
-          echo "openrouter.api.key=${{ secrets.OPENROUTER_API_KEY }}" >> .env
-          echo "openrouter.base.url=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
-          echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> .env
-
       - name: Build and Test Backend
         working-directory: ./backend/project
         env:
-          SPRING_DATASOURCE_JDBC_URL: ${{ secrets.SPRING_DATASOURCE_JDBC_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${{ secrets.SPRING_DATASOURCE_DRIVER_CLASS_NAME }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          # Override database properties for testing
+          SPRING_DATASOURCE_JDBC_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_DATASOURCE_USERNAME: sa
+          SPRING_DATASOURCE_PASSWORD: ""
+          # Mock other values
+          OPENROUTER_API_KEY: fake-test-key
+          OPENROUTER_BASE_URL: https://mock-api.com
+          JWT_SECRET: dGVzdC1zZWNyZXQ=
         run: |
           mvn -B clean install
           mvn -B test
@@ -54,7 +42,6 @@ jobs:
         working-directory: ./backend/project
         run: mvn -B checkstyle:check
 
-      # Frontend (React/TypeScript)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
