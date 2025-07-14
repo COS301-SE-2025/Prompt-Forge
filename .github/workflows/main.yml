@@ -23,8 +23,28 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # Create .env file for backend tests
+      - name: Create .env file
+        working-directory: ./backend/project
+        run: |
+          echo "spring.datasource.jdbc-url=${{ secrets.SPRING_DATASOURCE_JDBC_URL }}" > .env
+          echo "spring.datasource.username=${{ secrets.SPRING_DATASOURCE_USERNAME }}" >> .env
+          echo "spring.datasource.password=${{ secrets.SPRING_DATASOURCE_PASSWORD }}" >> .env
+          echo "spring.datasource.driver-class-name=${{ secrets.SPRING_DATASOURCE_DRIVER_CLASS_NAME }}" >> .env
+          echo "openrouter.api.key=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+          echo "openrouter.base.url=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
+          echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> .env
+
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          SPRING_DATASOURCE_JDBC_URL: ${{ secrets.SPRING_DATASOURCE_JDBC_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${{ secrets.SPRING_DATASOURCE_DRIVER_CLASS_NAME }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
           mvn -B test
