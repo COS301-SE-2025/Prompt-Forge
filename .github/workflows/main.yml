@@ -25,15 +25,16 @@ jobs:
       - name: Create .env file for testing
         working-directory: ./backend/project
         run: |
-          echo "spring.datasource.jdbc-url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" > .env
+          echo "spring.datasource.jdbc-url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE" > .env
           echo "spring.datasource.username=sa" >> .env
           echo "spring.datasource.password=" >> .env
           echo "spring.datasource.driver-class-name=org.h2.Driver" >> .env
           echo "spring.jpa.hibernate.ddl-auto=create-drop" >> .env
           echo "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect" >> .env
           echo "spring.jpa.show-sql=false" >> .env
-          echo "spring.jpa.properties.hibernate.format_sql=false" >> .env
-          echo "spring.jpa.defer-datasource-initialization=false" >> .env
+          echo "spring.jpa.properties.hibernate.hbm2ddl.auto=create-drop" >> .env
+          echo "spring.jpa.properties.hibernate.globally_quoted_identifiers=true" >> .env
+          echo "spring.jpa.defer-datasource-initialization=true" >> .env
           echo "openrouter.api.key=fake-test-key" >> .env
           echo "openrouter.base.url=https://mock-api.com" >> .env
           echo "jwt.secret=dGVzdC1zZWNyZXQta2V5LWZvci10ZXN0aW5nLW9ubHk=" >> .env
