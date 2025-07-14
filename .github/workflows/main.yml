@@ -21,14 +21,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Create .env file with real database
+      - name: Create .env file
         working-directory: ./backend/project
         run: |
           echo "spring.datasource.jdbc-url=${{ secrets.DB_URL }}" > .env
           echo "spring.datasource.username=${{ secrets.DB_USER }}" >> .env
           echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> .env
           echo "spring.datasource.driver-class-name=org.postgresql.Driver" >> .env
-          echo "spring.jpa.hibernate.ddl-auto=validate" >> .env
           echo "openrouter.api.key=${{ secrets.OPENROUTER_API_KEY }}" >> .env
           echo "openrouter.base.url=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
           echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> .env
