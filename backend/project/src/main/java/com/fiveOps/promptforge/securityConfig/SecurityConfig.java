@@ -53,6 +53,7 @@ public class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
+        // THIS WAS MISSING - Exception handling for 401 status codes
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint((request, response, authException) -> {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -92,7 +93,8 @@ public class SecurityConfig {
 
     source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
     source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
-    source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
+    source.registerCorsConfiguration("/api/comparison/**", 
+        noCredentialsConfig);
 
     source.registerCorsConfiguration("/**", defaultConfig);
 
