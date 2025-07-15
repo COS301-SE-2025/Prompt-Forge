@@ -64,6 +64,30 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Create ESLint config
+        working-directory: ./frontend
+        run: |
+          cat > .eslintrc.js << 'EOF'
+          module.exports = {
+            env: {
+              browser: true,
+              es2021: true,
+              node: true
+            },
+            extends: [
+              'eslint:recommended'
+            ],
+            parserOptions: {
+              ecmaVersion: 12,
+              sourceType: 'module'
+            },
+            rules: {
+              'no-unused-vars': 'warn',
+              'no-console': 'warn'
+            }
+          };
+          EOF
+
       - name: Lint Frontend
         working-directory: ./frontend
         run: npx eslint .
