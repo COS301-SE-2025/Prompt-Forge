@@ -92,10 +92,10 @@ class DtoGettersSettersTest {
 
   @Test
   void testTopRankingPromptDTONegativeAndZeroRating() {
-    TopRankingPromptDTO dto = new TopRankingPromptDTO(null, "Test", -2.0);
+    TopRankingPromptDTO dto = new TopRankingPromptDTO(null, "test", -2.0);
 
     assertNull(dto.getPromptId());
-    assertEquals("Test", dto.getTitle());
+    assertEquals("test", dto.getTitle());
     assertEquals(-2.0, dto.getAvgRating());
 
     dto.setAvgRating(0.0);
