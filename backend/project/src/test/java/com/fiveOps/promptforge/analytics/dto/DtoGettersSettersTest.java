@@ -6,10 +6,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.fiveOps.promptforge.analytics.dto.FeaturedPromptDTO;
-import com.fiveOps.promptforge.analytics.dto.TopRankingPromptDTO;
-import com.fiveOps.promptforge.analytics.dto.TrendingPromptDTO;
-
 class DtoGettersSettersTest {
 
   @Test
