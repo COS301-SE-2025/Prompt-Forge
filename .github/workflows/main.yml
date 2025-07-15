@@ -53,6 +53,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          
+      - name: Generate package-lock.json
+        working-directory: ./frontend
+        run: npm install
 
       - name: Install frontend dependencies
         working-directory: ./frontend
