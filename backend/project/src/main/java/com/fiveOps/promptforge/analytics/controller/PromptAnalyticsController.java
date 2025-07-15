@@ -11,7 +11,6 @@ import com.fiveOps.promptforge.analytics.dto.TopRankingPromptDTO;
 import com.fiveOps.promptforge.analytics.dto.TrendingPromptDTO;
 import com.fiveOps.promptforge.analytics.services.PromptAnalyticsService;
 
-
 @RestController
 @RequestMapping("/api/analytics")
 public class PromptAnalyticsController {

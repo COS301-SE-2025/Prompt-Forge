@@ -42,11 +42,7 @@ public class JwtUtil {
   }
 
   public Claims extractAllClaims(String token) {
-    return Jwts.parser()
-        .verifyWith(getSigningKey())
-        .build()
-        .parseSignedClaims(token)
-        .getPayload();
+    return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
   }
 
   public boolean isTokenExpired(String token) {
@@ -60,10 +56,7 @@ public class JwtUtil {
 
   public boolean validateToken(String token) {
     try {
-      Jwts.parser()
-          .verifyWith(getSigningKey())
-          .build()
-          .parseSignedClaims(token);
+      Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
       return !isTokenExpired(token);
     } catch (Exception e) {
       return false;
