@@ -1,6 +1,18 @@
 import HttpClient from "./httpClient";
 import { EnrichedPrompt } from "@/models/CartPrompt";
 
+
+export interface PaymentAccessCodeAndReference{
+  amount:number
+  customerEmail:string
+  reference:string
+}
+interface APIResponse{
+  status:"success"|"error"
+  message:string
+  data: PaymentAccessCodeAndReference
+}
+
 export class CartService {
   private httpClient = HttpClient;
 
@@ -45,7 +57,37 @@ export class CartService {
     }
   }
 
-  async checkout(prompts: EnrichedPrompt[], total:number) {
+  async checkout(prompts: EnrichedPrompt[]) {
+    try {
+      // Map EnrichedPrompt to backend-compatible format
+      const mappedPrompts = prompts.map(prompt => ({
+        cartItemId: prompt.cartItemId,
+        promptId: prompt.promptId,
+        promptTitle: prompt.promptTitle,
+        promptTags: prompt.promptTags,
+        promptPrice: prompt.promptPrice,
+        authorName: prompt.authorName
+      }));
+
+      const Response = await this.httpClient.post(`/cart/checkout`, {"prompts": mappedPrompts });
+      const rsp:APIResponse = await Response.json();
+      console.log("rsp:", rsp);
+      
+      if(rsp.status == "success"){
+        return rsp.message
+      }
+      throw new Error(rsp.message)
+      // }
+      
+      // Ensure tagIds exists and is an array
+      // return rsp;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  
+  async initializePayment(prompts: EnrichedPrompt[], total:number) {
     try {
 
       // Get userId from localStorage
@@ -61,13 +103,20 @@ export class CartService {
         authorName: prompt.authorName
       }));
 
-
-      const Response = await this.httpClient.post(`/cart/checkout`, {total: total, "prompts": mappedPrompts });
-      // const prompt: Prompt = await promptResponse.json();
-      const rsp = await Response.json()
+      
+      if (total > 0) {
+        const Response = await this.httpClient.post(`/payment/initialize`, {total: total, "prompts": mappedPrompts });
+        const rsp:APIResponse = await Response.json();
+        if(rsp.status == "success"){
+          return rsp.data
+        }
+        throw new Error(rsp.message)
+      }
+      
+      throw new Error("amount must be greater than zero")
 
       // Ensure tagIds exists and is an array
-      return rsp;
+      // return rsp;
     } catch (error) {
       console.error(error);
       throw error;
