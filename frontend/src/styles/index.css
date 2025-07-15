@@ -337,4 +337,23 @@ input:-webkit-autofill:active {
   .animation-delay-900 {
     animation-delay: 0.9s;
   }
+
+  /* Fade In and Fade Out Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .animate-fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+  }
 }
