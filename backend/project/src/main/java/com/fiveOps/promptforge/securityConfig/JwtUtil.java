@@ -7,7 +7,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
-import io.github.cdimascio.dotenv.Dotenv;
+// import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -15,8 +15,11 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-  Dotenv dotenv = Dotenv.load();
-  String secret = dotenv.get("JWT_SECRET");
+
+  @Value("${jwt.secret}")
+    private String secretKey;
+  // Dotenv dotenv = Dotenv.load();
+  // String secret = dotenv.get("JWT_SECRET");
 
   private SecretKey getSigningKey() {
     byte[] keyBytes = Base64.getDecoder().decode(secret);
