@@ -14,8 +14,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 @Configuration
 public class SecurityConfig {
 
@@ -53,6 +51,7 @@ public class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
+
         // THIS WAS MISSING - Exception handling for 401 status codes
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint((request, response, authException) -> {
@@ -62,6 +61,7 @@ public class SecurityConfig {
             }))
         .sessionManagement(sm -> 
             sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
         .httpBasic(httpBasic -> httpBasic.disable())
         .formLogin(formLogin -> formLogin.disable())
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -74,17 +74,14 @@ public class SecurityConfig {
 
     CorsConfiguration defaultConfig = new CorsConfiguration();
     defaultConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
-    defaultConfig.setAllowedMethods(
-        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     defaultConfig.setAllowedHeaders(Arrays.asList("*"));
     defaultConfig.setAllowCredentials(true);
     defaultConfig.setMaxAge(3600L);
 
     CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-    noCredentialsConfig.setAllowedOriginPatterns(
-        Arrays.asList("http://localhost:5173"));
-    noCredentialsConfig.setAllowedMethods(
-        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
+    noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
     noCredentialsConfig.setAllowCredentials(false);
     noCredentialsConfig.setMaxAge(3600L);
