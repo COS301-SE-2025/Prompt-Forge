@@ -54,9 +54,9 @@ jobs:
             globals \
             eslint-plugin-react-hooks \
             eslint-plugin-react-refresh \
+            typescript-eslint \  # Add this line
             @typescript-eslint/eslint-plugin \
             @typescript-eslint/parser
-            @eslint/eslintrc
 
       - name: Install frontend dependencies
         working-directory: ./frontend
