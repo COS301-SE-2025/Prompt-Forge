@@ -32,7 +32,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
-          mvn -B clean test
+          mvn -B test
           mvn -B jacoco:report
 
       - name: Lint Backend
@@ -43,6 +43,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          
+      - name: Generate package-lock.json
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm install --save-dev eslint@^8.0.0
 
       - name: Install frontend dependencies
         working-directory: ./frontend
