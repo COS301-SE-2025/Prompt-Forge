@@ -22,109 +22,97 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
   @Query(
       value =
           """
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM
-              prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public'
-       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM
+            prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public'
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       countQuery =
           """
-
-       SELECT COUNT(DISTINCT p.prompt_id)
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public'
-       """,
+        SELECT COUNT(DISTINCT p.prompt_id)
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public'
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> getPublicPromptsWithAuthorAndTags(Pageable pageable);
-
 
   @Query(
       value =
           """
-              SELECT
-                     p.prompt_id AS id,
-                     p.author_id AS authorId,
-                     p.title AS title,
-                     p.slug AS slug,
-                     p.description AS description,
-                     p.price AS price,
-                     u.username AS username,
-                     array_agg(t.name) AS tagNames
-              FROM
-                     prompts p
-              JOIN users u ON p.author_id = u.user_id
-              LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-              WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
-
-              GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-              """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM
+            prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> findPublicByTagId(
       @Param("tagId") UUID tagId, Pageable pageable);
 
-
   @Query(
       value =
           """
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM
-              prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.featured = true
-       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM
+            prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.featured = true
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> findByFeatured(Pageable pageable);
 
   @Query(
       value =
           """
-
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM
-              prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE visibility='public' AND p.featured = true AND :tagId = ANY(p.prompt_tags)
-
-       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM
+            prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE visibility='public' AND p.featured = true AND :tagId = ANY(p.prompt_tags)
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> findPublicByTagIdAndFeatured(
       @Param("tagId") UUID tagId, Pageable pageable);
@@ -132,69 +120,62 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
   @Query(
       value =
           """
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-
-       WHERE p.visibility = 'public' AND p.created_At >= NOW() - INTERVAL '7 days'
-
-                GROUP BY p.prompt_id, u.username, p.author_id,
-                p.title, p.slug,p.description, p.price
-
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND p.created_At >= NOW() - INTERVAL '7 days'
+        GROUP BY p.prompt_id, u.username, p.author_id,
+        p.title, p.slug,p.description, p.price
+        """,
       countQuery =
           """
-       SELECT COUNT(DISTINCT p.prompt_id)
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public'
-       AND p.created_at >= NOW() - INTERVAL '7 days'
-       """,
+        SELECT COUNT(DISTINCT p.prompt_id)
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public'
+        AND p.created_at >= NOW() - INTERVAL '7 days'
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> findNew(Pageable pageable);
 
   @Query(
       value =
           """
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
-       AND p.created_At >= NOW() - INTERVAL '7 days'
-       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
+        AND p.created_At >= NOW() - INTERVAL '7 days'
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       countQuery =
           """
-
-       SELECT COUNT(DISTINCT p.prompt_id)
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
-       AND p.created_at >= NOW() - INTERVAL '7 days'
-       """,
+        SELECT COUNT(DISTINCT p.prompt_id)
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND :tagId = ANY(p.prompt_tags)
+        AND p.created_at >= NOW() - INTERVAL '7 days'
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> findByTagAndNew(
       @Param("tagId") UUID tagId, Pageable pageable);
@@ -204,42 +185,33 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
   @Query(
       value =
           """
-       SELECT
-              p.prompt_id AS id,
-              p.author_id AS authorId,
-              p.title AS title,
-              p.slug AS slug,
-              p.description AS description,
-              p.price AS price,
-              u.username AS authorName,
-              array_agg(t.name) AS tagNames
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-
-       WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-       AND p.visibility = 'public'
-       GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
-
-       """,
+        SELECT
+            p.prompt_id AS id,
+            p.author_id AS authorId,
+            p.title AS title,
+            p.slug AS slug,
+            p.description AS description,
+            p.price AS price,
+            u.username AS authorName,
+            array_agg(t.name) AS tagNames
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+        AND p.visibility = 'public'
+        GROUP BY p.prompt_id, u.username, p.author_id, p.title, p.slug,p.description, p.price
+        """,
       countQuery =
           """
-       SELECT COUNT(DISTINCT p.prompt_id)
-       FROM prompts p
-       JOIN users u ON p.author_id = u.user_id
-       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-
-       """,
+        SELECT COUNT(DISTINCT p.prompt_id)
+        FROM prompts p
+        JOIN users u ON p.author_id = u.user_id
+        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+        WHERE p.visibility = 'public' AND LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+        """,
       nativeQuery = true)
   Page<Map<String, PromptWithAuthorDTO>> searchPublicByTitle(
       @Param("searchTerm") String searchTerm, Pageable pageable);
-
-  //     // Renamed this method to avoid conflicts and use different return type
-  //     @Query("SELECT p FROM Prompt p WHERE " +
-  //            "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
-  //            "AND p.visibility = 'public'")
-  //     List<Prompt> searchPublicByTitleList(@Param("query") String query);
 
   @Query("SELECT p FROM Prompt p WHERE " + "p.visibility = 'public' AND p.price <= :maxPrice")
   List<Prompt> findPublicUnderPrice(@Param("maxPrice") double maxPrice);
@@ -252,5 +224,4 @@ public interface PromptStoreRepository extends JpaRepository<Prompt, UUID> {
   List<Prompt> findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(String visibility);
 
   Boolean existsByIdAndAuthorId(UUID id, UUID authorId);
-
 }
