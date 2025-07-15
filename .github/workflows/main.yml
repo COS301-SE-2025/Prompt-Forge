@@ -50,6 +50,7 @@ jobs:
           npm install
           npm install --save-dev eslint@^8.0.0
           npm install eslint-plugin-react-hooks --save-dev
+          npm install eslint-plugin-react-refresh --save-dev
 
 
       - name: Install frontend dependencies
