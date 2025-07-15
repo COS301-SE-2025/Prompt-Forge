@@ -9,6 +9,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       # Checkout repository
@@ -23,11 +33,19 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Wait for PostgreSQL
+        run: sleep 10
+
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
         run: |
           mvn -B clean install
-          mvn -B test
+          mvn -B test -Dspring.profiles.active=test
           mvn -B jacoco:report
 
       - name: Lint Backend
