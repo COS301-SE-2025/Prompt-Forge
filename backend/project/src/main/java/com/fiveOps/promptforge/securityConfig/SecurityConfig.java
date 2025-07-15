@@ -51,17 +51,7 @@ public class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-
-        // THIS WAS MISSING - Exception handling for 401 status codes
-        .exceptionHandling(ex -> ex
-            .authenticationEntryPoint((request, response, authException) -> {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"Unauthorized\"}");
-            }))
-        .sessionManagement(sm -> 
-            sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .httpBasic(httpBasic -> httpBasic.disable())
         .formLogin(formLogin -> formLogin.disable())
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -90,8 +80,7 @@ public class SecurityConfig {
 
     source.registerCorsConfiguration("/api/test/**", noCredentialsConfig);
     source.registerCorsConfiguration("/api/editor/**", noCredentialsConfig);
-    source.registerCorsConfiguration("/api/comparison/**", 
-        noCredentialsConfig);
+    source.registerCorsConfiguration("/api/comparison/**", noCredentialsConfig);
 
     source.registerCorsConfiguration("/**", defaultConfig);
 
