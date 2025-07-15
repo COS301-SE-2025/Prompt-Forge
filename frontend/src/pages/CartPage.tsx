@@ -114,7 +114,6 @@ export default function CartPage() {
                         <CartSummary 
                             subtotal={subtotal} 
                             prompts={cartItems} 
-                            setCartItems={setCartItems}
                             onCheckoutSuccess={handleCheckoutSuccess}
                         />
                     )}
