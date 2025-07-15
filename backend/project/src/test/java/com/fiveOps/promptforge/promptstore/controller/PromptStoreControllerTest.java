@@ -244,9 +244,9 @@ class PromptStoreControllerReviewTest {
     Pageable pageable = mock(Pageable.class);
     String tagName = "test";
     Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
-    when(storeService.getPublicByTagName("Test", pageable)).thenReturn(page);
+    when(storeService.getPublicByTagName("test", pageable)).thenReturn(page);
     assertEquals(page, promptStoreController.filterByTagName(tagName, pageable));
-    verify(storeService).getPublicByTagName("Test", pageable);
+    verify(storeService).getPublicByTagName("test", pageable);
   }
 
   @Test
@@ -255,9 +255,9 @@ class PromptStoreControllerReviewTest {
     String tagName = "test";
     String filter = "popular";
     Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
-    when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(page);
+    when(storeService.getPublicByTagNameAndFilter("test", filter, pageable)).thenReturn(page);
     assertEquals(page, promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
-    verify(storeService).getPublicByTagNameAndFilter("Test", filter, pageable);
+    verify(storeService).getPublicByTagNameAndFilter("test", filter, pageable);
   }
 
   @Test
@@ -359,7 +359,7 @@ class PromptStoreControllerReviewTest {
   void filterByTagName_ShouldHandleNullPage() {
     Pageable pageable = mock(Pageable.class);
     String tagName = "test";
-    when(storeService.getPublicByTagName("Test", pageable)).thenReturn(null);
+    when(storeService.getPublicByTagName("test", pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagName(tagName, pageable));
   }
 
@@ -368,7 +368,7 @@ class PromptStoreControllerReviewTest {
     Pageable pageable = mock(Pageable.class);
     String tagName = "test";
     String filter = "popular";
-    when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(null);
+    when(storeService.getPublicByTagNameAndFilter("test", filter, pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
   }
 
