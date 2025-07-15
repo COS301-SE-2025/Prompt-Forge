@@ -85,6 +85,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+
       - name: Create .env file for CI
         working-directory: ./backend/project
         run: |
@@ -94,6 +95,7 @@ jobs:
           echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
           echo "OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
 
       - name: Build and Test Backend
         working-directory: ./backend/project
