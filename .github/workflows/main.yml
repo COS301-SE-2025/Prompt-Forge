@@ -32,7 +32,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
-          mvn -B test
+          mvn -B clean test
           mvn -B jacoco:report
 
       - name: Lint Backend
