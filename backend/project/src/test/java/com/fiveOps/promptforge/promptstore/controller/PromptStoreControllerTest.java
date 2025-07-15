@@ -175,7 +175,6 @@ class PromptStoreControllerReviewTest {
     when(authentication.getName()).thenReturn("test@example.com");
     when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
 
-
     // Act
     ResponseEntity<Void> response =
         promptStoreController.deleteReview(testPromptId, reviewId, authentication);
@@ -252,12 +251,12 @@ class PromptStoreControllerReviewTest {
   @Test
   void filterByTagNameAndFilter_ShouldReturnFilteredPrompts() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
+    String tagName = "Test";
     String filter = "popular";
     Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
-    when(storeService.getPublicByTagNameAndFilter("test", filter, pageable)).thenReturn(page);
+    when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(page);
     assertEquals(page, promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
-    verify(storeService).getPublicByTagNameAndFilter("test", filter, pageable);
+    verify(storeService).getPublicByTagNameAndFilter("Test", filter, pageable);
   }
 
   @Test
@@ -358,17 +357,17 @@ class PromptStoreControllerReviewTest {
   @Test
   void filterByTagName_ShouldHandleNullPage() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
-    when(storeService.getPublicByTagName("test", pageable)).thenReturn(null);
+    String tagName = "Test";
+    when(storeService.getPublicByTagName("Test", pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagName(tagName, pageable));
   }
 
   @Test
   void filterByTagNameAndFilter_ShouldHandleNullPage() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
+    String tagName = "Test";
     String filter = "popular";
-    when(storeService.getPublicByTagNameAndFilter("test", filter, pageable)).thenReturn(null);
+    when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));
   }
 
