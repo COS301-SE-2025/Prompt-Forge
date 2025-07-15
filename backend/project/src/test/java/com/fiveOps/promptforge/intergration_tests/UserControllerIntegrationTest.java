@@ -436,4 +436,4 @@ class UserControllerIntegrationTest {
         .perform(get("/api/user/me/following").cookie(new Cookie("token", token)))
         .andExpect(status().isOk());
   }
-} 
+}

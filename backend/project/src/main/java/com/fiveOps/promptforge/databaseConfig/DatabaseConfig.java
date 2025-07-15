@@ -45,7 +45,6 @@
 // //   }
 // // }
 
-
 // package com.fiveOps.promptforge.databaseConfig;
 
 // import java.sql.Connection;
@@ -71,7 +70,7 @@
 //     String password = dotenv.get("DB_PASSWORD");
 
 //     // Debug output with proper line length
-//     System.out.println("DB_URL: " + 
+//     System.out.println("DB_URL: " +
 //         (url != null ? url.substring(0, Math.min(url.length(), 30)) + "..." : "NULL"));
 //     System.out.println("DB_USER: " + (username != null ? username : "NULL"));
 //     System.out.println("DB_PASSWORD: " + (password != null ? "***" : "NULL"));
