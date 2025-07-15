@@ -56,6 +56,7 @@ jobs:
             eslint-plugin-react-refresh \
             @typescript-eslint/eslint-plugin \
             @typescript-eslint/parser
+            @eslint/eslintrc
 
       - name: Install frontend dependencies
         working-directory: ./frontend
