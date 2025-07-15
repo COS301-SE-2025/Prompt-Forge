@@ -21,21 +21,15 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Create .env file with your GitHub secrets
-      - name: Create .env file
-        working-directory: ./backend/project
-        run: |
-          echo "DB_URL=${{ secrets.DB_URL }}" > .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
-          echo "OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "Created .env file:"
-          cat .env
-
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
           mvn -B test
