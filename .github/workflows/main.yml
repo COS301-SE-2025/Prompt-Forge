@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Backend (Java/Spring Boot)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -25,16 +23,22 @@ jobs:
 
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
-          mvn -B test
+          mvn -B clean test
           mvn -B jacoco:report
 
       - name: Lint Backend
         working-directory: ./backend/project
         run: mvn -B checkstyle:check
 
-      # Frontend (React/TypeScript)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -43,6 +47,30 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: Create ESLint config
+        working-directory: ./frontend
+        run: |
+          cat > .eslintrc.js << 'EOF'
+          module.exports = {
+            env: {
+              browser: true,
+              es2021: true,
+              node: true
+            },
+            extends: [
+              'eslint:recommended'
+            ],
+            parserOptions: {
+              ecmaVersion: 12,
+              sourceType: 'module'
+            },
+            rules: {
+              'no-unused-vars': 'warn',
+              'no-console': 'warn'
+            }
+          };
+          EOF
 
       - name: Lint Frontend
         working-directory: ./frontend
