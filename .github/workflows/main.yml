@@ -48,9 +48,15 @@ jobs:
         working-directory: ./frontend
         run: |
           npm install
-          npm install --save-dev eslint@^8.0.0
-          npm install eslint-plugin-react-hooks --save-dev
-          npm install eslint-plugin-react-refresh --save-dev
+          npm install --save-dev \
+            eslint@^8.0.0 \
+            @eslint/js \
+            globals \
+            eslint-plugin-react-hooks \
+            eslint-plugin-react-refresh \
+            @typescript-eslint/eslint-plugin \
+            @typescript-eslint/parser
+
 
 
       - name: Install frontend dependencies
