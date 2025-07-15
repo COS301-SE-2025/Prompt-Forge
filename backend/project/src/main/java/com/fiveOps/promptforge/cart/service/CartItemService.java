@@ -1,9 +1,6 @@
 package com.fiveOps.promptforge.cart.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -31,10 +28,8 @@ public class CartItemService {
   private final CartItemRepository cartItemRepository;
   private final UserRepository userRepository;
   private final PromptRepository promptRepository;
-  private final PaymentService paymentService;
   private final PromptStoreService promptStoreService;
   private final UserService userService;
-  private final BankDetailsService bankDetailsService;
 
   public Page<CartItemDTO> getCartItemsForUser(UUID userId, Pageable pageable) {
     Page<Object[]> results = cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable);
@@ -99,72 +94,23 @@ public class CartItemService {
     return records.size() > 0;
   }
 
-  public void checkout(String customerEmail, List<CartItemDTO> prompts, Double total) {
-    Integer roundedTotalInCents = (int)Math.round(total*100);
+  public void purchase(String customerEmail, List<CartItemDTO> prompts) 
+  throws Exception{
     UUID userId = userService.getUserIdByEmail(customerEmail);
-    Map<UUID, Integer> authorShares = new HashMap<>();
 
-    try {
-      for (int i = 0; i < prompts.size(); i++) {
-        CartItemDTO cartItem = prompts.get(i);
-        UUID promptId = cartItem.getPromptId();
-
-        Prompt prompt = promptRepository.findById(promptId).orElse(null);
-        if (prompt == null) {
-          System.out.println("invalid cart item: " + promptId);
-          throw new Exception("invalid prompt - " + promptId);
-        }
-
-        UUID promptAuthorID = prompt.getAuthorId();
-        int price = (int) Math.round(prompt.getPrice() * 100);
-
-        // Accumulate the share for each author
-        if(price > 0) {
-          authorShares.put(promptAuthorID, authorShares.getOrDefault(promptAuthorID, 0) + price);
-        }
-      }
-
-      if (roundedTotalInCents > 0) {
-        if(authorShares.size() == 1) {
-          Map.Entry<UUID, Integer> authorShareEntry = authorShares.entrySet().iterator().next();
-          UUID authorId = authorShareEntry.getKey();
-          // Integer authorShare = authorShareEntry.getValue();
-          String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
-          paymentService.inititalizeSingleAuthorPayment(customerEmail,
-              subaccountCode, authorId, roundedTotalInCents);
-        }
-        else {
-          // Prepare Paystack subaccounts payload
-          List<Map<String, Object>> subaccounts = new ArrayList<>();
-          Integer totalCalculated = 0;
-
-          for (Map.Entry<UUID, Integer> entry : authorShares.entrySet()) {
-            UUID authorId = entry.getKey();
-            Integer authorShare = entry.getValue();
-            totalCalculated += authorShare;
-            String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
-            Map<String, Object> sub = new HashMap<>();
-            sub.put("subaccount", subaccountCode);
-            sub.put("share", authorShare); // share in kobo
-            subaccounts.add(sub);
-          }
-          String access_code = paymentService.initializeSplitPayment(customerEmail, subaccounts, roundedTotalInCents);
-          // return access_code;
-      
-        }
-      }
-
+    try{
       for (int i = 0; i < prompts.size(); i++) {
         UUID promptId = prompts.get(i).getPromptId();
         promptStoreService.purchasePrompt(promptId, userId);
-        removeItemFromCart(userId, promptId);
         System.out.println("Successfully purchased prompt: " + promptId);
       }
-
+      removeItemsFromCartByUserID(userId);
       System.out.println("\n\nCheckout completed successfully");
-    } catch (Exception e) {
-      System.out.println("error purchasing:");
+    } 
+    catch (Exception e) {
+      System.out.println("error adding to cart:");
       System.out.println(e);
+      throw e;
       // TODO: handle exception
     }
   }
