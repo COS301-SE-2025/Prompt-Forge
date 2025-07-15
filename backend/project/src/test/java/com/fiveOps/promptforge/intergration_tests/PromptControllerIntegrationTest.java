@@ -502,7 +502,7 @@ class PromptControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/prompts")
+            post("/api/prompts")
                 .cookie(new Cookie("token", authToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newPrompt)))
@@ -520,7 +520,7 @@ class PromptControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/prompts")
+            post("/api/prompts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newPrompt)))
         .andExpect(status().isUnauthorized());
