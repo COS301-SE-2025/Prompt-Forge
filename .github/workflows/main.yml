@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Create .env file using GitHub secrets
+      # Create .env file with your GitHub secrets
       - name: Create .env file
         working-directory: ./backend/project
         run: |
@@ -31,6 +31,8 @@ jobs:
           echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
           echo "OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "Created .env file:"
+          cat .env
 
       - name: Build and Test Backend
         working-directory: ./backend/project
@@ -56,4 +58,6 @@ jobs:
         working-directory: ./frontend
         run: npx eslint .
 
-     
+      - name: Run Frontend Tests and Coverage
+        working-directory: ./frontend
+        run: npx jest --coverage
