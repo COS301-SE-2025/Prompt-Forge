@@ -43,12 +43,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+
       - name: Generate package-lock.json
         working-directory: ./frontend
         run: |
           npm install
           npm install --save-dev eslint@^8.0.0
+          npm install eslint-plugin-react-hooks --save-dev
+
 
       - name: Install frontend dependencies
         working-directory: ./frontend
