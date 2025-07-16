@@ -6,10 +6,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.fiveOps.promptforge.analytics.dto.FeaturedPromptDTO;
-import com.fiveOps.promptforge.analytics.dto.TopRankingPromptDTO;
-import com.fiveOps.promptforge.analytics.dto.TrendingPromptDTO;
-
 class DtoGettersSettersTest {
 
   @Test
@@ -92,10 +88,10 @@ class DtoGettersSettersTest {
 
   @Test
   void testTopRankingPromptDTONegativeAndZeroRating() {
-    TopRankingPromptDTO dto = new TopRankingPromptDTO(null, "Test", -2.0);
+    TopRankingPromptDTO dto = new TopRankingPromptDTO(null, "test", -2.0);
 
     assertNull(dto.getPromptId());
-    assertEquals("Test", dto.getTitle());
+    assertEquals("test", dto.getTitle());
     assertEquals(-2.0, dto.getAvgRating());
 
     dto.setAvgRating(0.0);

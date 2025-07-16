@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Backend (Java/Spring Boot)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -25,6 +23,13 @@ jobs:
 
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
           mvn -B test
@@ -34,11 +39,24 @@ jobs:
         working-directory: ./backend/project
         run: mvn -B checkstyle:check
 
-      # Frontend (React/TypeScript)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Generate package-lock.json
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm install --save-dev \
+            eslint@^8.0.0 \
+            @eslint/js \
+            globals \
+            eslint-plugin-react-hooks \
+            eslint-plugin-react-refresh \
+            typescript-eslint \  # Add this line
+            @typescript-eslint/eslint-plugin \
+            @typescript-eslint/parser
 
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -46,7 +64,7 @@ jobs:
 
       - name: Lint Frontend
         working-directory: ./frontend
-        run: npx eslint .
+        run: npx eslint . --config eslint.config.js
 
       - name: Run Frontend Tests and Coverage
         working-directory: ./frontend
