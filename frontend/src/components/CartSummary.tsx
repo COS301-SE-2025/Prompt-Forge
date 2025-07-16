@@ -36,13 +36,12 @@ export const CartSummary = ({
         cartService.initializePayment(prompts, parseFloat(total.toFixed(2)))
         .then((result: PaymentAccessCodeAndReference )=>{
 
-          
           var handler = PaystackPop.setup({
             key: 'pk_test_b8d73ecfdb50d9ef78e703219f665f9cd9255aa9',
             email: result.customerEmail,
             amount: result.amount, // This amount must match what was initialized in the backend
             reference: result.reference,  // Use the reference from backend initialization
-            callback: function (response) {
+            callback: function (response:{status:string}) {
               if(response.status == "success"){
                 cartService.checkout(prompts)
                 .then(() => {
