@@ -35,7 +35,6 @@ export const CartSummary = ({
       else {
         cartService.initializePayment(prompts, parseFloat(total.toFixed(2)))
         .then((result: PaymentAccessCodeAndReference )=>{
-
           var handler = PaystackPop.setup({
             key: 'pk_test_b8d73ecfdb50d9ef78e703219f665f9cd9255aa9',
             email: result.customerEmail,
@@ -61,8 +60,12 @@ export const CartSummary = ({
           handler.openIframe();
           
         })
+        .catch((error)=>{
+          alert(error.message)
+        })
       }
     } catch (error: any) {
+      alert("Checkout failed:"+ error)
       console.error("Checkout failed:", error)
       alert("Checkout failed: " + (error.message || "Unknown error"))
     } finally {
