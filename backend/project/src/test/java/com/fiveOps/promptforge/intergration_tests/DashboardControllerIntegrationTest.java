@@ -258,16 +258,16 @@ class DashboardControllerIntegrationTest {
     return authToken;
   }
 
-  @AfterEach
-  void cleanup() {
-    // Get all prompts for the user and delete them
-    if (userId != null) {
-      List<Prompt> prompts = promptService.getPromptsByAuthor(userId);
-      prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
-    }
-    // Clean up user
-    userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
-  }
+  // @AfterEach
+  // void cleanup() {
+  //   // Get all prompts for the user and delete them
+  //   if (userId != null) {
+  //     List<Prompt> prompts = promptService.getPromptsByAuthor(userId);
+  //     prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
+  //   }
+  //   // Clean up user
+  //   userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
+  // }
 
   @Test
   @Order(1)
