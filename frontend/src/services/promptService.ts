@@ -164,6 +164,17 @@ export class PromptService {
       throw error;
     }
   }
+ 
+  async getPromptsByAuthor(authorId: string) {
+    try {
+      const response = await this.httpClient.get(`/prompts/author/${authorId}`);
+      return response.json();
+    }
+    catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 
   async getByCategory(category: string, page: number) {
     try {      
