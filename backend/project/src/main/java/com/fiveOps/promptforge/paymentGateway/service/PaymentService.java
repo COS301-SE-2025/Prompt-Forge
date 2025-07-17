@@ -34,8 +34,9 @@ public class PaymentService {
   @Value("${paystack.secret-key}")
   private String paystackSecretKey;
 
-  public TransactionInitializationResponse inititalizeSingleAuthorPayment(String customerEmail, String subaccountCode,
-      UUID authorID, int amount) {
+  public TransactionInitializationResponse inititalizeSingleAuthorPayment(String customerEmail,
+    String subaccountCode, UUID authorID, int amount) {
+
     String secretKey = "Bearer " + paystackSecretKey;
 
     // headers
@@ -129,9 +130,9 @@ public class PaymentService {
     }
   }
 
-  public TransactionInitializationResponse initializePayment(String customerEmail, List<CartItemDTO> prompts,
-      Double total)
-      throws Exception {
+  public TransactionInitializationResponse initializePayment(String customerEmail,
+   List<CartItemDTO> prompts, Double total) throws Exception {
+    
     Integer roundedTotalInCents = (int) Math.round(total * 100);
     Map<UUID, Integer> authorShares = new HashMap<>();
     if (roundedTotalInCents <= 0)
