@@ -30,11 +30,11 @@ public class PaymentsController {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
 
-      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService.initializePayment(userEmail,
-          prompts, request.getTotal());
+      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService
+        .initializePayment(userEmail, prompts, request.getTotal());
 
-      return ResponseEntity.ok(new APIResponse("success", "Transaction initialization successful",
-          transactionAccessCodeAndReference));
+      return ResponseEntity.ok(new APIResponse("success",
+        "Transaction initialization successful", transactionAccessCodeAndReference));
     } catch (Exception e) {
       System.err.println("Checkout error: " + e.getMessage());
       e.printStackTrace();
