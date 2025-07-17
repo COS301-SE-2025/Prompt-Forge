@@ -1,16 +1,18 @@
 package com.fiveOps.promptforge.prompts.service;
 
 import java.util.List;
-import java.util.Map;
+// import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
 @Service
@@ -27,8 +29,12 @@ public class PromptService {
     return promptRepository.findAll();
   }
 
-  public List<Prompt> getPromptsByAuthor(UUID authorId) {
-    return promptRepository.findByAuthorId(authorId);
+  public List<PromptWithAuthorDTO> getPromptsByAuthor(UUID authorId) {
+    List<PromptWithAuthorDTO> prompts = promptRepository.findByAuthorId(authorId);
+    for (int i = 0; i < prompts.size(); i++) {
+      System.out.println(prompts.get(i).getAuthorId());
+    }
+    return prompts;
   }
 
   public Prompt getPromptById(UUID id) {
@@ -116,11 +122,13 @@ public class PromptService {
   }
 
 
-    public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts
-    (UUID userId,Pageable pageable) {
-        System.out.println("getPurchasedPromptsByUserId");
-        System.out.println(promptRepository.getPurchasedPromptsByUserId(userId, pageable));
-        return promptRepository.getPurchasedPromptsByUserId(userId,pageable);
-    }
+  public Page<PromptWithSourceDTO> getPurchasedPrompts
+  (UUID userId,Pageable pageable) {
+   
+    List<PromptWithSourceDTO> prompts = promptRepository.getPurchasedPromptsByUserId(
+      userId, pageable.getPageSize(),(int)pageable.getOffset());
+    long totalElements = promptRepository.countPurchasedPrompts(userId);
+    return new PageImpl<>(prompts,pageable,totalElements);
+  }
 }
 

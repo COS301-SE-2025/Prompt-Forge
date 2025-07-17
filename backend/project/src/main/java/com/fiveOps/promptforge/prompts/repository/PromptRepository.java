@@ -1,11 +1,8 @@
 package com.fiveOps.promptforge.prompts.repository;
 
 import java.util.List;
-import java.util.Map;
+// import java.util.Map;
 import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
@@ -23,7 +21,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
   List<Prompt> findByVisibility(String visibility);
 
   // List<Prompt> findByCategoryAndVisibility(String category, String visibility);
-  List<Prompt> findByAuthorId(UUID authorId);
+  List<PromptWithAuthorDTO> findByAuthorId(UUID authorId);
 
   List<Prompt> findByTitleContainingIgnoreCase(String title);
 
@@ -51,7 +49,8 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               p.description AS description,
               p.price AS price,
               author_user.username AS authorName,
-              array_agg(t.name) AS tagNames
+              array_agg(t.name) AS tagNames,
+              'purchased' AS source
        FROM
               purchased_prompts pp
        JOIN prompts p ON pp.prompt_id = p.prompt_id
@@ -60,6 +59,8 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        WHERE pp.user_id = :user_id
        GROUP BY pp.purchase_id, p.prompt_id, author_user.username, 
        p.author_id, p.title, p.slug,p.description, p.price
+       LIMIT :limit
+       OFFSET :offset
        """, 
        countQuery = """
        SELECT
@@ -67,9 +68,19 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        FROM
               purchased_prompts pp
        WHERE pp.user_id = :user_id
+       LIMIT :limit
+       OFFSET :offset
        """,
        nativeQuery = true)
-       Page<Map<String, PromptWithAuthorDTO>> getPurchasedPromptsByUserId(
-        @Param("user_id") UUID userId, Pageable pageable);
-    
+       List<PromptWithSourceDTO> getPurchasedPromptsByUserId(
+        @Param("user_id") UUID userId, @Param("limit") int limit, @Param("offset") int offset);
+
+       
+       @Query(value = """
+       SELECT COUNT(*)
+       FROM purchased_prompts p
+       WHERE p.user_id = :userId
+       """,
+       nativeQuery = true)
+       long countPurchasedPrompts(@Param("userId") UUID userId);
 }

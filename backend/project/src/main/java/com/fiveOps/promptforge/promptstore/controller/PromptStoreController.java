@@ -136,10 +136,10 @@ public class PromptStoreController {
     return storeService.getNew(pageable);
   }
 
-  @GetMapping("/filter/author/{authorId}")
-  public List<Prompt> getPublicPromptsByAuthor(@PathVariable UUID authorId) {
-    return storeService.getPublicPromptsByAuthor(authorId);
-  }
+  // @GetMapping("/filter/author/{authorId}")
+  // public List<Prompt> getPublicPromptsByAuthor(@PathVariable UUID authorId) {
+  //   return storeService.getPublicPromptsByAuthor(authorId);
+  // }
 
   @DeleteMapping("/{promptId}")
   public ResponseEntity<Void> deleteListing(
