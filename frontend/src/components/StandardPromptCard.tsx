@@ -31,7 +31,7 @@ interface StandardPromptCardProps {
   authorName: string
   isOwned: boolean
   isPublished?: boolean // ✅ Add this
-  isBought: boolean
+  source: string
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
@@ -56,7 +56,7 @@ export function StandardPromptCard({
   authorName,
   isOwned = false,
   isPublished = false, // ✅ Add this
-  isBought,
+  source,
   onEdit,
   onDelete,
   onToggleFavorite,
@@ -167,7 +167,7 @@ export function StandardPromptCard({
               )}
 
               {/* Author info - only for non-owned prompts */}
-              {isBought && authorName && (
+              {source==="purchased" && authorName && (
                 <div className="flex items-center">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 transition-colors duration-300">
                     <User className="h-3 w-3 text-[#3ebb9e] transition-colors duration-300" />
@@ -183,12 +183,12 @@ export function StandardPromptCard({
                 </span>
               )} */}
 
-              {isBought === false && isOwned && isPrivate && (
+              {source === "authored" && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
                   Private
                 </span>
               )}
-              {isBought === false && isOwned && !isPrivate && (
+              {source === "authored" && !isPrivate && (
                 <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
                   Public
                 </span>
@@ -241,7 +241,7 @@ export function StandardPromptCard({
               )}
 
               {/* Publish/Unpublish button - only for owned prompts */}
-              {!isBought && isOwned && onPublish && (
+              {source === "authored" && isOwned && onPublish && (
                 <Button
                   variant="ghost"
                   size="icon"

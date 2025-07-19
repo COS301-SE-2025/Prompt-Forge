@@ -12,9 +12,6 @@ import { MyPrompt } from "@/models/MyPrompt"
 import { UserProfile } from "@/models/User"
 import { PromptService } from "@/services/promptService"
 
-
-
-
 const PROMPTS_PER_PAGE = 12
 
 export default function MyPromptsPage() {
@@ -33,6 +30,7 @@ export default function MyPromptsPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
+  const [totalPages, setTotalPages] = useState<number>(0)
 
   // Check authentication and get user profile
   useEffect(() => {
@@ -40,10 +38,7 @@ export default function MyPromptsPage() {
       try {
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-
-
           console.log("User not authenticated, redirecting to login")
-
 
           navigate('/login')
           return
@@ -93,22 +88,17 @@ export default function MyPromptsPage() {
       try {
         let authorId: string | null = null
 
-
         if (userProfile?.userId) {
           authorId = userProfile.userId
 
           console.log("Using authorId from profile:", authorId)
         } 
-
-        //Fallback: get from localStorage if profile not loaded yet
-
-        else {
+        else { //Fallback: get from localStorage if profile not loaded yet
           authorId = localStorage.getItem('userId')
           console.log("Using authorId from localStorage:", authorId)
-
         }
-        if (!authorId) {
 
+        if (!authorId) {
           console.log("No authorId available, using empty prompts")
 
           setMyPrompts([])
@@ -117,59 +107,54 @@ export default function MyPromptsPage() {
           return
         }
 
-
-        console.log("Fetching prompts for authorId:", authorId)
-        
-
         //Fetch prompts using JWT authentication (cookies)
+        console.log("Fetching prompts for authorId:", authorId)
+        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, currentPage - 1, 12)
+        console.log("userPromptsPage:",userPromptsPage);
+        setTotalPages(userPromptsPage.totalPages);
 
-        const response = await httpClient.get(`/prompts/author/${authorId}`)
-        const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
-        console.log("purchasedPrompts");
-        console.log(purchasedPrompts);
+        console.log("totalPages:", totalPages);
         
-        if (response.ok) {
-          let prompts = await response.json()
-          if (!Array.isArray(prompts)) prompts = []
 
-          prompts = [...prompts, ...purchasedPrompts.content]  
-          // Map backend fields to frontend MyPrompt interface
-          const mappedPrompts: MyPrompt[] = await Promise.all(
-            prompts.map(async (p: any) => {
-              const { averageRating } = await promptService.getPromptRatingSummary(p.id)
-              return {
-                id: p.id,
-                title: p.title,
-                description: p.description || "",
-                content: p.content || "",
-                category: "General", // Default, backend does not provide
-                tags: p.tagnames || [],
-                createdAt: p.createdAt,
-                updatedAt: p.publishedAt || p.createdAt,
-                rating: averageRating || 0, // Default, backend does not provide
-                uses: 0,   // Default, backend does not provide
-                featured: p.featured || false,
-                price: p.price || 0,
-                isPrivate: p.visibility !== "public",
-                isFavorite: false, // Default, backend does not provide
-                authorName: p.authorname || userProfile?.username || "You",
-                isBought: p.purchaseid ? true : false,
-                isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
-                publishedAt: p.publishedAt // Add this
-              }
-            })
-          )
-          setMyPrompts(mappedPrompts)
-          setFilteredPrompts(mappedPrompts)
-          const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
-          setAvailableCategories(categories)
-        } else if (response.status === 401) {
+        let prompts = userPromptsPage.content
+        console.log("prompts:", prompts);
+        
+        if (!Array.isArray(prompts)) prompts = []
 
-          localStorage.removeItem('username')
-          localStorage.removeItem('userId')
-          navigate('/login')
-          return
-        }
+        prompts = [...prompts]  
+        // Map backend fields to frontend MyPrompt interface
+        const mappedPrompts: MyPrompt[] = await Promise.all(
+          prompts.map(async (p: any) => {
+            console.log("authorname:", p.authorName);
+            
+            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description || "",
+              content: p.content || "",
+              category: "General", // Default, backend does not provide
+              tags: p.tagNames || [],
+              createdAt: p.createdAt,
+              updatedAt: p.publishedAt || p.createdAt,
+              rating: averageRating || 0, // Default, backend does not provide
+              uses: 0,   // Default, backend does not provide
+              featured: p.featured || false,
+              price: p.price || 0,
+              isPrivate: p.visibility !== "public",
+              isFavorite: false, // Default, backend does not provide
+              authorName: p.authorName || userProfile?.username || "You",
+              source:p.source,
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+              publishedAt: p.publishedAt // Add this
+            }
+          })
+        )
+        setMyPrompts(mappedPrompts)
+        setFilteredPrompts(mappedPrompts)
+        const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
+        setAvailableCategories(categories)
+        
       } catch (error) {
 
         console.error("Error fetching prompts:", error)
@@ -184,7 +169,7 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate, userProfile])
+  }, [isAuthenticated, navigate, userProfile,currentPage])
 
   // Fetch avgRating for each prompt using the reviews endpoint
   useEffect(() => {
@@ -239,21 +224,20 @@ export default function MyPromptsPage() {
         (selectedFilter === "recent" && isRecent) ||
 
         (selectedFilter === "popular" && prompt.uses > 30) ||
-        (selectedFilter === "purchased" && prompt.isBought === true)
+        (selectedFilter === "purchased" && prompt.source === "purchased")
         
 
       return matchesSearch && matchesCategory && matchesFilter
     })
     setFilteredPrompts(filtered)
-    setCurrentPage(1)
+    // setCurrentPage(1)
   }, [searchQuery, selectedCategory, selectedFilter, myPrompts])
 
   // Pagination
-  const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
-  const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
-  const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
-  const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
-  const favoritePrompts = myPrompts.filter((prompt) => prompt.isFavorite).slice(0, 4)
+  // const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
+  // const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
+  // const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
+  // const favoritePrompts = myPrompts.filter((prompt) => prompt.isFavorite).slice(0, 4)
 
   const filters = [
     { value: "all", label: "All" },
@@ -439,6 +423,11 @@ export default function MyPromptsPage() {
                     New Prompt
                   </Button>
                 </Link>
+                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white" onClick={()=>{console.log(currentPage);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Current page
+                  </Button>
               </div>
             </div>
 
@@ -460,7 +449,7 @@ export default function MyPromptsPage() {
             </div>
 
             {/* Favorite Prompts */}
-            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && favoritePrompts.length > 0 && (
+            {/* {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && favoritePrompts.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center mb-4">
                   <Star className="h-5 w-5 mr-2 text-yellow-400" />
@@ -482,7 +471,7 @@ export default function MyPromptsPage() {
                       tags={prompt.tags}
                       category={prompt.category}
                       authorName={prompt.authorName || userProfile?.username || "You"}
-                      isBought={prompt.isBought}
+                      source={prompt.source}
                       isOwned={true}
                       onEdit={handleEditPrompt}
                       onDelete={handleDeletePrompt}
@@ -495,7 +484,7 @@ export default function MyPromptsPage() {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Results */}
             <div className="flex items-center justify-between mb-4">
@@ -515,7 +504,7 @@ export default function MyPromptsPage() {
 
             {/* Prompts Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {currentPrompts.map((prompt) => (
+              {myPrompts.map((prompt) => (
                 <StandardPromptCard
                   key={prompt.id}
                   id={prompt.id}
@@ -531,11 +520,8 @@ export default function MyPromptsPage() {
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
                   isOwned={true} // Since this is MyPromptsPage
-
                   isPublished={prompt.isPublished || false}
-                  isBought={prompt.isBought}
-
-
+                  source={prompt.source}
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}
