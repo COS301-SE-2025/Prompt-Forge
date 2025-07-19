@@ -33,7 +33,10 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               'authored' AS source
        FROM
               prompts p
+       JOIN users author_user ON author_user.user_id = p.author_id 
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.author_id = :authorId
+       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price 
        LIMIT :limit
        OFFSET :offset
        """, nativeQuery = true)
