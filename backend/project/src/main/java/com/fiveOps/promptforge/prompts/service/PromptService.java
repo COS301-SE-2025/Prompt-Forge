@@ -158,7 +158,8 @@ public class PromptService {
           promptRepository.findByAuthorId(userId, remaining, 0);
         combined.addAll(authoredPrompts);
       }
-    } else {//purchased prompts exhausted; fetch authored prompts only
+    } 
+    else {//purchased prompts exhausted; fetch authored prompts only
       int authoredOffset = (int) (offset - totalPurchased);
       List<PromptWithSourceDTO> authoredPrompts =
         promptRepository.findByAuthorId(userId, pageSize, authoredOffset);
