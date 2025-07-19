@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.prompts.service;
 
+import java.util.ArrayList;
 import java.util.List;
 // import java.util.Map;
 import java.util.UUID;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
@@ -29,12 +29,13 @@ public class PromptService {
     return promptRepository.findAll();
   }
 
-  public List<PromptWithAuthorDTO> getPromptsByAuthor(UUID authorId) {
-    List<PromptWithAuthorDTO> prompts = promptRepository.findByAuthorId(authorId);
-    for (int i = 0; i < prompts.size(); i++) {
-      System.out.println(prompts.get(i).getAuthorId());
-    }
-    return prompts;
+  public Page<PromptWithSourceDTO> getPromptsByAuthor(UUID authorId,Pageable pageable) {
+    int offset = (int)pageable.getPageNumber()-1*pageable.getPageSize();
+    List<PromptWithSourceDTO> prompts = promptRepository.findByAuthorId(authorId,
+      pageable.getPageSize(),offset);
+
+    long totalElements = promptRepository.countAuthoredPrompts(authorId);
+    return new PageImpl<>(prompts, pageable, totalElements);
   }
 
   public Prompt getPromptById(UUID id) {
@@ -129,6 +130,42 @@ public class PromptService {
       userId, pageable.getPageSize(),(int)pageable.getOffset());
     long totalElements = promptRepository.countPurchasedPrompts(userId);
     return new PageImpl<>(prompts,pageable,totalElements);
+  }
+  
+  public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPrompts
+  (UUID userId,Pageable pageable) {
+
+    int pageSize = pageable.getPageSize();
+    int offset = (int) pageable.getOffset();
+
+    long totalPurchased = promptRepository.countPurchasedPrompts(userId);
+    long totalAuthored = promptRepository.countAuthoredPrompts(userId);
+    long totalElements = totalPurchased + totalAuthored;
+
+    List<PromptWithSourceDTO> combined = new ArrayList<>();
+
+    if (offset < totalPurchased) {
+      int purchasedLimit = Math.min(pageSize, (int) (totalPurchased - offset));
+      List<PromptWithSourceDTO> purchasedPrompts =
+        promptRepository.getPurchasedPromptsByUserId(userId, purchasedLimit, offset);
+      combined.addAll(purchasedPrompts);
+
+      int remaining = pageSize - purchasedPrompts.size();
+      if (remaining > 0) {
+        /*start authored prompts from 0 if the end of purchased prompts is reached 
+        and dont add up to the limit*/
+        List<PromptWithSourceDTO> authoredPrompts =
+          promptRepository.findByAuthorId(userId, remaining, 0);
+        combined.addAll(authoredPrompts);
+      }
+    } else {//purchased prompts exhausted; fetch authored prompts only
+      int authoredOffset = (int) (offset - totalPurchased);
+      List<PromptWithSourceDTO> authoredPrompts =
+        promptRepository.findByAuthorId(userId, pageSize, authoredOffset);
+      combined.addAll(authoredPrompts);
+    }
+
+    return new PageImpl<>(combined, pageable, totalElements);
   }
 }
 
