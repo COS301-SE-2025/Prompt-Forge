@@ -134,7 +134,7 @@ export class PromptService {
 
   async getPurchasedPrompts(page: number, size: number) {
     try {
-      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}`)
+      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}&offset=0`)
       return promptResponse.json();
       // return prompts;
     } catch (error) {
@@ -165,9 +165,20 @@ export class PromptService {
     }
   }
  
-  async getPromptsByAuthor(authorId: string) {
+  async getPromptsByAuthor(authorId: string,page:number,size:number) {
     try {
-      const response = await this.httpClient.get(`/prompts/author/${authorId}`);
+      const response = await this.httpClient.get(`/prompts/author/${authorId}?page=${page}&size=${size}`);
+      return response.json();
+    }
+    catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  
+  async getAuthoredAndPurchasedPrompts(authorId: string,page:number,size:number) {
+    try {
+      const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?page=${page}&size=${size}`);
       return response.json();
     }
     catch (error) {
