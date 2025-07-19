@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 
 @Repository
@@ -21,7 +20,32 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
   List<Prompt> findByVisibility(String visibility);
 
   // List<Prompt> findByCategoryAndVisibility(String category, String visibility);
-  List<PromptWithAuthorDTO> findByAuthorId(UUID authorId);
+  @Query(value = """
+       SELECT
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              author_user.username AS authorName,
+              array_agg(t.name) AS tagNames,
+              'authored' AS source
+       FROM
+              prompts p
+       WHERE p.author_id = :authorId
+       LIMIT :limit
+       OFFSET :offset
+       """, nativeQuery = true)
+  List<PromptWithSourceDTO> findByAuthorId(@Param("authorId") UUID authorId,
+       @Param("limit") int limit, @Param("offset") int offset);
+
+  @Query(value = """
+       SELECT COUNT(*)
+       FROM prompts p
+       WHERE p.author_id = :authorId
+       """, nativeQuery = true)
+  long countAuthoredPrompts(@Param("authorId") UUID authorId);
 
   List<Prompt> findByTitleContainingIgnoreCase(String title);
 
@@ -59,15 +83,6 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        WHERE pp.user_id = :user_id
        GROUP BY pp.purchase_id, p.prompt_id, author_user.username, 
        p.author_id, p.title, p.slug,p.description, p.price
-       LIMIT :limit
-       OFFSET :offset
-       """, 
-       countQuery = """
-       SELECT
-             *
-       FROM
-              purchased_prompts pp
-       WHERE pp.user_id = :user_id
        LIMIT :limit
        OFFSET :offset
        """,
