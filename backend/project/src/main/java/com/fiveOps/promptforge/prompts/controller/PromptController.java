@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
@@ -48,8 +47,9 @@ public class PromptController {
   }
 
   @GetMapping("/author/{authorId}")
-  public ResponseEntity<List<PromptWithAuthorDTO>> getPromptsByAuthor(@PathVariable UUID authorId) {
-    return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId));
+  public ResponseEntity<Page<PromptWithSourceDTO>> getPromptsByAuthor(@PathVariable UUID authorId,
+    Pageable pageable) {
+    return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId,pageable));
   }
 
   @GetMapping("/{id}")
@@ -187,4 +187,12 @@ public class PromptController {
         return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
         
     }
+
+    @GetMapping("/myprompts/{userId}")
+    public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
+      @PathVariable UUID userId, Pageable pageable) {
+        
+      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+    }
 }
+
