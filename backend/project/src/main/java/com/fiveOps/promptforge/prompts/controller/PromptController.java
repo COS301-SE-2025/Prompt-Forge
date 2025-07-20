@@ -194,5 +194,12 @@ public class PromptController {
         
       return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
     }
+    
+    @GetMapping("/myprompts/{userId}/tag/{tagId}")
+    public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
+      @PathVariable UUID userId, @PathVariable UUID tagId, Pageable pageable) {
+        
+      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPromptsByTagID(userId ,tagId, pageable));
+    }
 }
 
