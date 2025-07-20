@@ -157,7 +157,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
        WHERE p.user_id = :userId AND :tagId = ANY(t.prompt_tags)
        """, nativeQuery = true)
-       long countPurchasedPromptsByTagName(@Param("userId") UUID userId);
+       long countPurchasedPromptsByTagName(@Param("userId") UUID userId, @Param("tagId") UUID tagId);
        
        @Query(value = """
        SELECT COUNT(*)
