@@ -42,6 +42,29 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        """, nativeQuery = true)
   List<PromptWithSourceDTO> findByAuthorId(@Param("authorId") UUID authorId,
        @Param("limit") int limit, @Param("offset") int offset);
+       
+@Query(value = """
+       SELECT
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              author_user.username AS authorName,
+              array_agg(t.name) AS tagNames,
+              'authored' AS source
+       FROM
+              prompts p
+       JOIN users author_user ON author_user.user_id = p.author_id 
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE p.author_id = :authorId AND :tagId = ANY(p.prompt_tags)
+       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price 
+       LIMIT :limit
+       OFFSET :offset
+       """, nativeQuery = true)
+  List<PromptWithSourceDTO> findByAuthorIdAndByTagName(@Param("authorId") UUID authorId, 
+       @Param("tagId") UUID tagId, @Param("limit") int limit, @Param("offset") int offset);
 
   @Query(value = """
        SELECT COUNT(*)
@@ -49,6 +72,13 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        WHERE p.author_id = :authorId
        """, nativeQuery = true)
   long countAuthoredPrompts(@Param("authorId") UUID authorId);
+  
+  @Query(value = """
+       SELECT COUNT(*)
+       FROM prompts p
+       WHERE p.author_id = :authorId AND :tagId = ANY(p.prompt_tags)
+       """, nativeQuery = true)
+  long countByAuthoredAndTags(@Param("authorId") UUID authorId, @Param("tagId") UUID tagId);
 
   List<Prompt> findByTitleContainingIgnoreCase(String title);
 
