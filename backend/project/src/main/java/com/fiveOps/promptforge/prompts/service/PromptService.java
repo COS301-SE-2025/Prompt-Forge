@@ -170,7 +170,8 @@ public class PromptService {
   }
   
   public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPromptsByTagID
-  (UUID userId,UUID tagId, Pageable pageable) {
+  (UUID userId,String tagName, Pageable pageable) {
+    UUID tagId = tagService.getTagIdByName(tagName);
 
     int pageSize = pageable.getPageSize();
     int offset = (int) pageable.getOffset();
