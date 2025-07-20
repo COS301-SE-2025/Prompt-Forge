@@ -8,6 +8,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.checkerframework.checker.units.qual.t;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -195,11 +196,11 @@ public class PromptController {
       return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
     }
     
-    @GetMapping("/myprompts/{userId}/tag/{tagId}")
+    @GetMapping("/myprompts/{userId}/tag/{tagName}")
     public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
-      @PathVariable UUID userId, @PathVariable UUID tagId, Pageable pageable) {
+      @PathVariable UUID userId, @PathVariable String tagName, Pageable pageable) {
         
-      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPromptsByTagID(userId ,tagId, pageable));
+      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPromptsByTagID(userId ,tagName, pageable));
     }
 }
 
