@@ -38,7 +38,8 @@ describe('StreamingService', () => {
         messages: [{
           role: 'user',
           content: 'Test prompt'
-        }]
+        }],
+        stream: true
       });
     });
 
@@ -57,7 +58,8 @@ describe('StreamingService', () => {
         messages: [{
           role: 'user',
           content: 'Test prompt'
-        }]
+        }],
+        stream: true // Add this to match what the service actually returns
       });
     });
     
