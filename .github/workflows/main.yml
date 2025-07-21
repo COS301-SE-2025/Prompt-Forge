@@ -60,7 +60,7 @@ jobs:
 
       - name: Lint Frontend
         working-directory: ./frontend
-        run: npx eslint . --config eslint.config.js
+        run: npm run lint
 
       - name: Run Frontend Tests and Coverage
         working-directory: ./frontend
