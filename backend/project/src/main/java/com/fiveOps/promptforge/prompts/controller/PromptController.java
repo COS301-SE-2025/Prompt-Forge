@@ -190,17 +190,25 @@ public class PromptController {
 
     @GetMapping("/myprompts/{userId}")
     public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
-      @PathVariable UUID userId, Pageable pageable) {
-        
+      @PathVariable UUID userId ,@RequestParam(required = false) String tagName,
+        @RequestParam(required = false) String filtername, Pageable pageable){
+      if(tagName == null && filtername == null){
+        return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+      }
+      
+      if(filtername == null){
+        return ResponseEntity.ok(promptService
+        .getAuthoredAndPurchasedPromptsByTagID(userId ,tagName, pageable));
+        // return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+      }
+
+      if(tagName == null){
+        //TODO: 
+      }
+
+      //TODO:  
       return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
     }
     
-    @GetMapping("/myprompts/{userId}/tag/{tagName}")
-    public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
-      @PathVariable UUID userId, @PathVariable String tagName, Pageable pageable) {
-        
-      return ResponseEntity.ok(promptService
-      .getAuthoredAndPurchasedPromptsByTagID(userId ,tagName, pageable));
-    }
 }
 
