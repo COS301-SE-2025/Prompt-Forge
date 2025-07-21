@@ -115,7 +115,7 @@ export default function EditorPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:border-purple-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(168,85,247,0.4)] border-purple-500/60",
       available: true,
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "google/gemma-3-4b-it:free",
       supportsImages: true,
     },
     {
