@@ -3,6 +3,11 @@ import 'web-streams-polyfill';
 import 'whatwg-fetch';
 import { TextEncoder, TextDecoder } from 'util';
 
+// Add jest to globals
+declare global {
+  const jest: any;
+}
+
 // Polyfill TextEncoder/TextDecoder
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
