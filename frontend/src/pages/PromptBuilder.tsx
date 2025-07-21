@@ -420,7 +420,16 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
   }
 
   const handleTemplateClick = (template: Template) => {
-    useTemplate(template)
+    // Directly implement the template logic here instead of calling useTemplate
+    setSelectedTemplate(template)
+    setGeneratedPrompt(template.template)
+    setPromptIdea(`Using template: ${template.name}`)
+    setShowTemplates(false)
+
+    if (template.persona) {
+      const persona = personas.find((p) => p.id === template.persona)
+      if (persona) setSelectedPersona(persona)
+    }
   }
 
   return (
@@ -572,7 +581,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                   <div className="mt-4 pt-4 border-t border-border">
                     <div className="flex items-center space-x-4">
                       <div className="flex-1">
-                        <Label htmlFor="prompt-name" className="text-sm font-medium text-foreground">
+                        <Label htmlFor="prompt-name" className="text-sm font-medium text-foreground pb-1 block">
                           Save as:
                         </Label>
                         <Input
