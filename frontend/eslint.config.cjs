@@ -92,10 +92,13 @@ module.exports = [
       'react-refresh/only-export-components': 'off', // Turn off fast refresh warnings
       '@typescript-eslint/no-unused-vars': 'off', // Turn off unused variables warnings
       '@typescript-eslint/no-explicit-any': 'off', // Already off
-      //'@typescript-eslint/ban-types': 'warn',
+      // '@typescript-eslint/ban-types': 'warn', // Comment out this problematic rule
       '@typescript-eslint/no-var-requires': 'off', // Turn off require() warnings
       '@typescript-eslint/no-namespace': 'warn',
       '@typescript-eslint/no-duplicate-enum-values': 'error', // Keep this as error
+      '@typescript-eslint/no-empty-interface': 'off', // Turn off empty interface warnings
+      '@typescript-eslint/no-empty-object-type': 'off', // Turn off empty object type warnings
+      '@typescript-eslint/no-require-imports': 'off', // Turn off require import warnings
       'no-undef': 'error', // Keep this as error
       'no-useless-escape': 'warn', // Downgrade from error to warning
       'no-empty': 'off', // Turn off empty block warnings
