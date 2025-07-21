@@ -100,7 +100,7 @@ export default function EditorPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-scout:free",
+      model: "meta-llama/llama-4-scout",
       supportsImages: true,
     },
     {
