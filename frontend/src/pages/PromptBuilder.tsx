@@ -380,13 +380,6 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                <Wand2 className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Prompt Builder</h1>
-                <p className="text-muted-foreground">Transform your ideas into powerful, optimized prompts</p>
-              </div>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline" onClick={() => setShowTemplates(true)} className="flex items-center space-x-2">
@@ -418,7 +411,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
                   <User className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                   Choose Your Profile
-                </h2>
+                </h2>Fprom
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {personas.map((persona) => (
                     <Card
