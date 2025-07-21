@@ -137,13 +137,112 @@ export class StreamingService {
     prompt: string, 
     image: string | null, 
     modelId: string,
-    supportsImages: boolean // Add this parameter
+    supportsImages: boolean
   ): StreamingRequest {
-    let content: any;
+    // Clean the prompt text - remove any text matching the default placeholder
+    const defaultPlaceholder = "Write your prompt here...";
+    let cleanPrompt = prompt.trim();
     
-    // Only include image if model supports it
-    if (image && image !== "loading" && supportsImages) {
-      console.log(`Creating image request for model ${modelId} that supports images`);
+    // Check if the prompt contains only the placeholder text
+    if (cleanPrompt.includes(defaultPlaceholder) || !cleanPrompt) {
+      cleanPrompt = "";
+    }
+    
+    // Define minimalPrompt at the top level so it's accessible throughout the function
+    const minimalPrompt = "Please describe this image in detail.";
+    
+    // Case 1: Only image, no text - use minimal prompt
+    if (!cleanPrompt && image && image !== "loading" && supportsImages) {
+      console.log(`Creating image-only request for model ${modelId}`);
+      
+      try {
+        // Validate image
+        if (!image.startsWith('data:image/')) {
+          console.error("Invalid image format - doesn't start with data:image/");
+          throw new Error("Invalid image format");
+        }
+        
+        // For Llama models
+        if (modelId.includes("llama")) {
+          // Extract media type and base64 data
+          const mediaType = image.split(';')[0].split(':')[1] || "image/jpeg";
+          const base64Data = image.split(',')[1];
+          
+          if (!base64Data || base64Data.length < 1000) {
+            console.error("Image data appears corrupted or too small");
+            throw new Error("Invalid image data");
+          }
+          
+          console.log("Using Llama 4 image-only format");
+          
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: minimalPrompt },
+                {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: mediaType,
+                    data: base64Data
+                  }
+                }
+              ]
+            }]
+          };
+        } 
+        // For Gemini models
+        else if (modelId.includes("gemini")) {
+          console.log("Using Gemini image-only format");
+          
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: minimalPrompt },
+                {
+                  type: "image",
+                  image_url: { url: image }
+                }
+              ]
+            }]
+          };
+        }
+        // Generic fallback for other models
+        else {
+          console.log("Using generic image-only format");
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: minimalPrompt },
+                {
+                  type: "image_url",
+                  image_url: { url: image }
+                }
+              ]
+            }]
+          };
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        // Fall back to text-only if image processing fails
+        return {
+          model: modelId,
+          messages: [{
+            role: "user",
+            content: minimalPrompt
+          }]
+        };
+      }
+    } 
+    // Case 2: Both text and image
+    else if (cleanPrompt && image && image !== "loading" && supportsImages) {
+      console.log(`Creating text+image request for model ${modelId}`);
       
       try {
         // Check if image format is valid
@@ -152,7 +251,7 @@ export class StreamingService {
           throw new Error("Invalid image format");
         }
         
-        // For Llama models - OpenRouter endpoint seems to have issues with Llama 4 images
+        // For Llama models
         if (modelId.includes("llama")) {
           // Extract media type and base64 data
           const mediaType = image.split(';')[0].split(':')[1] || "image/jpeg";
@@ -165,66 +264,86 @@ export class StreamingService {
           
           console.log(`Using Llama 4 image format with media type: ${mediaType}`);
           
-          // This is the format Llama 4 is supposed to use, but may still fail due to API issues
-          content = [
-            { type: "text", text: prompt },
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: base64Data
-              }
-            }
-          ];
-          
-          // For debugging - log a sample of the image data
-          console.log(`Image data sample: ${base64Data.substring(0, 20)}...`);
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: cleanPrompt },
+                {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: mediaType,
+                    data: base64Data
+                  }
+                }
+              ]
+            }]
+          };
         } 
         // For Gemini models
         else if (modelId.includes("gemini")) {
           console.log("Using Gemini image format");
           
-          // Check if image is too large for Gemini (typically has ~10MB limit)
-          if (image.length > 10 * 1024 * 1024) {
-            console.warn("Image may be too large for Gemini - expect possible errors");
-          }
-          
-          content = [
-            { type: "text", text: prompt },
-            {
-              type: "image",
-              image_url: { url: image }
-            }
-          ];
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: cleanPrompt },
+                {
+                  type: "image",
+                  image_url: { url: image }
+                }
+              ]
+            }]
+          };
         }
         // Generic fallback for other models
         else {
           console.log("Using generic image format");
-          content = [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: { url: image }
-            }
-          ];
+          return {
+            model: modelId,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: cleanPrompt },
+                {
+                  type: "image_url",
+                  image_url: { url: image }
+                }
+              ]
+            }]
+          };
         }
       } catch (error) {
         console.error("Error processing image:", error);
-        content = prompt;
+        // Fall back to text-only if image processing fails
+        return {
+          model: modelId,
+          messages: [{
+            role: "user",
+            content: cleanPrompt
+          }]
+        };
       }
-    } else {
-      console.log(`Creating text-only request for model ${modelId}`);
-      content = prompt;
     }
-    
-    return {
-      model: modelId,
-      messages: [{
-        role: "user",
-        content: content
-      }]
-    };
+    // Case 3: Text only (no image or image not supported)
+    else {
+      console.log(`Creating text-only request for model ${modelId}`);
+      
+      // If no valid prompt and no image, use a simple greeting
+      const finalPrompt = cleanPrompt || "Hello";
+      
+      return {
+        model: modelId,
+        messages: [{
+          role: "user",
+          content: finalPrompt
+        }]
+      };
+    }
   }
   
   /**

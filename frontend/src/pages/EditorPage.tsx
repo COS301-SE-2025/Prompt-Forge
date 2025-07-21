@@ -594,7 +594,7 @@ const fallbackToWorkingModel = async () => {
                 <div class="flex items-start">
                   <div class="flex-shrink-0 mt-0.5">
                     <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm8-8a8 8 0 11-16 0 8 8 0 0116 0zM10 9a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
                   </div>
                   <div class="ml-3 flex-1">
@@ -889,7 +889,7 @@ const fallbackToWorkingModel = async () => {
           {aiModels[selectedModel].supportsImages && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Image Input</h3>
+                <h3 className="text-xs font-medium text-muted-foreground">Image Input</h3>
                 {uploadedImage && (
                   <Button 
                     variant="ghost" 
@@ -1018,7 +1018,7 @@ const fallbackToWorkingModel = async () => {
             {currentView === "test" ? (
               <>
                 {/* AI Response */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
                     <div className="flex items-center space-x-1">
