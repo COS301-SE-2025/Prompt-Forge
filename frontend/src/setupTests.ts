@@ -2,6 +2,9 @@ import '@testing-library/jest-dom';
 import 'web-streams-polyfill';
 import 'whatwg-fetch';
 import { TextEncoder, TextDecoder } from 'util';
+// Import ReadableStream and fetch properly
+import { ReadableStream as WebReadableStream } from 'web-streams-polyfill';
+import fetchMock from 'jest-fetch-mock';
 
 // Add jest to globals
 declare global {
@@ -14,13 +17,12 @@ global.TextDecoder = TextDecoder;
 
 // Mock ReadableStream
 if (typeof window.ReadableStream === 'undefined') {
-  const { ReadableStream } = require('web-streams-polyfill');
-  global.ReadableStream = ReadableStream;
+  global.ReadableStream = WebReadableStream;
 }
 
 // Mock fetch if not already mocked
 if (!global.fetch) {
-  global.fetch = require('jest-fetch-mock');
+  global.fetch = fetchMock;
 }
 
 // Mock window.matchMedia
