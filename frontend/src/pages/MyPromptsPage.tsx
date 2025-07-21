@@ -111,19 +111,16 @@ export default function MyPromptsPage() {
         //Fetch prompts using JWT authentication (cookies)
         console.log("Fetching prompts for authorId:", authorId)
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
-        console.log("userPromptsPage:",userPromptsPage);
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
         
 
         let prompts = userPromptsPage.content
-        console.log("prompts:", prompts);
         
         if (!Array.isArray(prompts)) prompts = []
         // Map backend fields to frontend MyPrompt interface
         const mappedPrompts: MyPrompt[] = await Promise.all(
           prompts.map(async (p: any) => {
-            console.log("authorname:", p.authorName);
             const { averageRating } = await promptService.getPromptRatingSummary(p.id)
             return {
               id: p.id,
@@ -240,25 +237,18 @@ export default function MyPromptsPage() {
 
         //Fetch prompts using JWT authentication (cookies)
         console.log("Fetching prompts for authorId:", authorId)
-        console.log("selectedCategory:", selectedCategory);
         
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
-        console.log("userPromptsPage:", userPromptsPage);
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
-        console.log("totalPages:", totalPages);
-
 
         let prompts = userPromptsPage.content
-        console.log("prompts:", prompts);
 
         if (!Array.isArray(prompts)) prompts = []
 
         // Map backend fields to frontend MyPrompt interface
         const mappedPrompts: MyPrompt[] = await Promise.all(
           prompts.map(async (p: any) => {
-            console.log("authorname:", p.authorName);
-
             const { averageRating } = await promptService.getPromptRatingSummary(p.id)
             return {
               id: p.id,
@@ -288,10 +278,7 @@ export default function MyPromptsPage() {
         const tagNamesString = localStorage.getItem("tagNames");
         let tags = ["all"]
         if (tagNamesString != null) {
-          tags = [...tags,...JSON.parse(tagNamesString)];
-          console.log("tags:", tags);
-          
-          // const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
+          tags = [...tags,...JSON.parse(tagNamesString)];          
         }
         else {
           //TODO: fetch tags from API
@@ -307,9 +294,6 @@ export default function MyPromptsPage() {
         setLoading(false)
       }
     }
-    // availableCategories
-    console.log("availableCategories:", availableCategories);
-    console.log("selectedCategory:", selectedCategory);
     
     fetchMyPrompts()
   }, [searchQuery, selectedCategory, selectedFilter])
@@ -499,11 +483,6 @@ export default function MyPromptsPage() {
                     New Prompt
                   </Button>
                 </Link>
-                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white" onClick={()=>{console.log(currentPage);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Current page
-                  </Button>
               </div>
             </div>
 
