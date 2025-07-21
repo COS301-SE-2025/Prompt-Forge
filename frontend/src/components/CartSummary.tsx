@@ -3,6 +3,7 @@ import { CartService } from "@/services/cartServices"
 import { Dispatch, SetStateAction, useState } from "react"
 //import { Link } from "react-router-dom"
 import { Button } from "./ui/Button"
+import { Loader2 } from "lucide-react"
 
 interface CartSummaryProps {
   subtotal: number
@@ -74,13 +75,13 @@ export const CartSummary = ({
       </div>
 
       <Button
+        className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
         onClick={handleCheckout}
         disabled={isCheckingOut || prompts.length === 0}
-        className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
       >
         {isCheckingOut ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" data-testid="loading-spinner" />
             Processing...
           </>
         ) : (
