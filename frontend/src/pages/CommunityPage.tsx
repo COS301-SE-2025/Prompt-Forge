@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import {
-  ArrowLeft,
+  //ArrowLeft,
   Star,
   MessageCircle,
   ThumbsUp,
@@ -57,7 +57,7 @@ export default function CommunityPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("rating")
   const [searchQuery, setSearchQuery] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
+  //const [showFilters, setShowFilters] = useState(false)
 
   // Mock data for prompts
   const prompts: Prompt[] = [

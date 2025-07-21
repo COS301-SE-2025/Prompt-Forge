@@ -50,10 +50,10 @@ describe('DashboardCard Component', () => {
     
     expect(screen.getByText('Average Rating')).toBeInTheDocument();
     expect(screen.getByText('4.2')).toBeInTheDocument();
-    expect(screen.getByText(/\-2\.3.*last month/)).toBeInTheDocument();
+    expect(screen.getByText(/-2\.3.*last month/)).toBeInTheDocument();
     
     // In loss mode, should display red text
-    const percentElement = screen.getByText(/\-2\.3/);
+    const percentElement = screen.getByText(/-2\.3/);
     expect(percentElement.className).toContain('text-red-500');
   });
 

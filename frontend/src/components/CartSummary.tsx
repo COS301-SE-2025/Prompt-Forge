@@ -1,7 +1,7 @@
 import { EnrichedPrompt } from "@/models/CartPrompt"
 import { CartService } from "@/services/cartServices"
 import { Dispatch, SetStateAction, useState } from "react"
-import { Link } from "react-router-dom"
+//import { Link } from "react-router-dom"
 import { Button } from "./ui/Button"
 
 interface CartSummaryProps {

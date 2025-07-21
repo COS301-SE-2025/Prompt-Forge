@@ -168,7 +168,8 @@ export default function ComparisonsPage() {
       const requestBody = streamingService.createImageRequestBody(
         promptText,
         null, // No image support in comparison mode yet
-        aiModels[modelIndex].model
+        aiModels[modelIndex].model,
+        aiModels[modelIndex].supportsImages // Add the missing parameter
       );
 
       console.log(`🚀 Test request for side ${side}:`, requestBody);
