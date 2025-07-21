@@ -131,7 +131,7 @@ export class StreamingService {
   }
   
   /**
-   * Improved image handling with better validation and logging
+   * Improved image handling with OpenRouter-specific format
    */
   public createImageRequestBody(
     prompt: string, 
@@ -139,21 +139,19 @@ export class StreamingService {
     modelId: string,
     supportsImages: boolean
   ): StreamingRequest {
-    // Clean the prompt text - remove any text matching the default placeholder
+    // Clean the prompt text
     const defaultPlaceholder = "Write your prompt here...";
     let cleanPrompt = prompt.trim();
     
-    // Check if the prompt contains only the placeholder text
     if (cleanPrompt.includes(defaultPlaceholder) || !cleanPrompt) {
       cleanPrompt = "";
     }
     
-    // Define minimalPrompt at the top level so it's accessible throughout the function
-    const minimalPrompt = "Please describe this image in detail.";
+    const minimalPrompt = "What is in this image?";
     
     // Case 1: Only image, no text - use minimal prompt
     if (!cleanPrompt && image && image !== "loading" && supportsImages) {
-      console.log(`Creating image-only request for model ${modelId}`);
+      console.log(`Creating image-only request for model ${modelId} - OpenRouter format`);
       
       try {
         // Validate image
@@ -162,87 +160,43 @@ export class StreamingService {
           throw new Error("Invalid image format");
         }
         
-        // For Llama models
-        if (modelId.includes("llama")) {
-          // Extract media type and base64 data
-          const mediaType = image.split(';')[0].split(':')[1] || "image/jpeg";
-          const base64Data = image.split(',')[1];
-          
-          if (!base64Data || base64Data.length < 1000) {
-            console.error("Image data appears corrupted or too small");
-            throw new Error("Invalid image data");
-          }
-          
-          console.log("Using Llama 4 image-only format");
-          
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: minimalPrompt },
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: mediaType,
-                    data: base64Data
-                  }
+        // For all models, use OpenRouter's standardized format
+        console.log("Using OpenRouter standard image format");
+        
+        return {
+          model: modelId,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: minimalPrompt
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: image
                 }
-              ]
-            }]
-          };
-        } 
-        // For Gemini models
-        else if (modelId.includes("gemini")) {
-          console.log("Using Gemini image-only format");
-          
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: minimalPrompt },
-                {
-                  type: "image",
-                  image_url: { url: image }
-                }
-              ]
-            }]
-          };
-        }
-        // Generic fallback for other models
-        else {
-          console.log("Using generic image-only format");
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: minimalPrompt },
-                {
-                  type: "image_url",
-                  image_url: { url: image }
-                }
-              ]
-            }]
-          };
-        }
+              }
+            ]
+          }],
+          stream: true
+        };
       } catch (error) {
         console.error("Error processing image:", error);
-        // Fall back to text-only if image processing fails
         return {
           model: modelId,
           messages: [{
             role: "user",
             content: minimalPrompt
-          }]
+          }],
+          stream: true
         };
       }
     } 
     // Case 2: Both text and image
     else if (cleanPrompt && image && image !== "loading" && supportsImages) {
-      console.log(`Creating text+image request for model ${modelId}`);
+      console.log(`Creating text+image request for model ${modelId} - OpenRouter format`);
       
       try {
         // Check if image format is valid
@@ -251,81 +205,37 @@ export class StreamingService {
           throw new Error("Invalid image format");
         }
         
-        // For Llama models
-        if (modelId.includes("llama")) {
-          // Extract media type and base64 data
-          const mediaType = image.split(';')[0].split(':')[1] || "image/jpeg";
-          const base64Data = image.split(',')[1];
-          
-          if (!base64Data || base64Data.length < 1000) {
-            console.error("Image data appears corrupted or too small");
-            throw new Error("Invalid image data");
-          }
-          
-          console.log(`Using Llama 4 image format with media type: ${mediaType}`);
-          
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: cleanPrompt },
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: mediaType,
-                    data: base64Data
-                  }
+        // For all models, use OpenRouter's standardized format
+        console.log("Using OpenRouter standard image format");
+        
+        return {
+          model: modelId,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: cleanPrompt
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: image
                 }
-              ]
-            }]
-          };
-        } 
-        // For Gemini models
-        else if (modelId.includes("gemini")) {
-          console.log("Using Gemini image format");
-          
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: cleanPrompt },
-                {
-                  type: "image",
-                  image_url: { url: image }
-                }
-              ]
-            }]
-          };
-        }
-        // Generic fallback for other models
-        else {
-          console.log("Using generic image format");
-          return {
-            model: modelId,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: cleanPrompt },
-                {
-                  type: "image_url",
-                  image_url: { url: image }
-                }
-              ]
-            }]
-          };
-        }
+              }
+            ]
+          }],
+          stream: true
+        };
       } catch (error) {
         console.error("Error processing image:", error);
-        // Fall back to text-only if image processing fails
         return {
           model: modelId,
           messages: [{
             role: "user",
             content: cleanPrompt
-          }]
+          }],
+          stream: true
         };
       }
     }
@@ -333,7 +243,6 @@ export class StreamingService {
     else {
       console.log(`Creating text-only request for model ${modelId}`);
       
-      // If no valid prompt and no image, use a simple greeting
       const finalPrompt = cleanPrompt || "Hello";
       
       return {
@@ -341,7 +250,8 @@ export class StreamingService {
         messages: [{
           role: "user",
           content: finalPrompt
-        }]
+        }],
+        stream: true
       };
     }
   }
