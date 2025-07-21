@@ -64,4 +64,4 @@ jobs:
 
       - name: Run Frontend Tests and Coverage
         working-directory: ./frontend
-        run: npx jest --coverage
+        run: npm run test
