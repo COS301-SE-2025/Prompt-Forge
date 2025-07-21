@@ -100,7 +100,7 @@ export default function EditorPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-scout:free",
+      model: "meta-llama/llama-4-scout",
       supportsImages: true,
     },
     {
@@ -136,15 +136,62 @@ export default function EditorPage() {
   ]
 
   // Function to handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Add this improved function to your EditorPage component
+
+// Function to handle image upload with validation
+const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUploadedImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    // Show loading state
+    setUploadedImage("loading");
+    
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`Image too large (max ${maxSize/1024/1024}MB)`);
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Invalid image format (must be JPEG, PNG, GIF, or WEBP)');
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    
+    // Convert to data URL
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageDataUrl = event.target?.result as string;
+      
+      // Additional validation using StreamingService
+      const validatedImage = streamingService.validateAndOptimizeImage(
+        imageDataUrl, 
+        aiModels[selectedModel].model
+      );
+      
+      if (validatedImage) {
+        setUploadedImage(validatedImage);
+        console.log("Image uploaded and validated successfully");
+      } else {
+        setUploadedImage(null);
+        alert("The image could not be processed. Please try a different image.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    
+    reader.onerror = () => {
+      alert("Failed to read image file");
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   // Function to remove uploaded image
@@ -156,12 +203,20 @@ export default function EditorPage() {
   };
 
   const handleModelSelect = (index: number) => {
-    setSelectedModel(index)
+    setSelectedModel(index);
     if (streamingEnabled && typingEffect.isTyping) {
       typingEffect.complete(); // Complete any ongoing typing
     }
-    setAiResponse(`Testing with ${aiModels[index].name}...`)
-  }
+    
+    // Clear image if new model doesn't support images
+    if (uploadedImage && !aiModels[index].supportsImages) {
+      handleRemoveImage();
+      // Show notification to user
+      alert("Image has been removed as the selected model doesn't support images.");
+    }
+    
+    setAiResponse(`Testing with ${aiModels[index].name}...`);
+  };
 
   const decodeUnicode = (str: string) => {
     return str
@@ -354,11 +409,35 @@ const fallbackToWorkingModel = async () => {
   
   setAiResponse("The selected model is unavailable. Trying alternative models...");
   
+  // Create a status update element in the UI with improved styling
+  const statusElement = document.createElement('div');
+  statusElement.className = 'fixed bottom-4 left-4 bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 p-4 rounded-lg shadow-lg z-50 max-w-lg text-blue-800 dark:text-blue-200 animate-fade-in';
+  statusElement.innerHTML = `
+    <div class="flex items-center">
+      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="text-sm">Finding an available model...</span>
+    </div>
+  `;
+  document.body.appendChild(statusElement);
   for (let i = 0; i < aiModels.length; i++) {
     if (i === originalModel) continue; // Skip the one that failed
     
     try {
       console.log(`Trying model ${aiModels[i].name}...`);
+      
+      // Update status with improved styling
+      statusElement.innerHTML = `
+        <div class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm">Testing ${aiModels[i].name}...</span>
+        </div>
+      `;
       
       const testRequest = {
         model: aiModels[i].model,
@@ -368,13 +447,49 @@ const fallbackToWorkingModel = async () => {
         }]
       };
       
-      const response = await editorService.promptOpenRouter(testRequest);
+      // Add a timeout for the request
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout")), 5000)
+      );
       
-      if (response.choices && response.choices[0] && !response.error) {
+      // Race between the actual request and the timeout
+      const response = await Promise.race([
+        editorService.promptOpenRouter(testRequest),
+        timeoutPromise
+      ]);
+      
+      if (response && response.choices && response.choices[0] && !response.error) {
         // Found working model
         foundWorkingModel = true;
         setSelectedModel(i);
-        setAiResponse(`Switched to ${aiModels[i].name} because the original model was unavailable. Try your prompt again.`);
+        
+        // Update status to success with improved styling
+        statusElement.innerHTML = `
+          <div class="flex items-center">
+            <svg class="h-5 w-5 text-green-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-sm">Switched to ${aiModels[i].name}</span>
+          </div>
+        `;
+
+        // Keep success message visible longer (3 seconds)
+        setTimeout(() => {
+          statusElement.classList.add('animate-fade-out');
+          setTimeout(() => {
+            if (document.body.contains(statusElement)) {
+              document.body.removeChild(statusElement);
+            }
+          }, 500);
+        }, 3000); // Increased from 2000ms to 3000ms
+        
+        setAiResponse(`Switched to ${aiModels[i].name} because ${aiModels[originalModel].name} is currently unavailable. Try your prompt again.`);
+        
+        // If there was an uploaded image and the new model doesn't support images, warn the user
+        if (uploadedImage && !aiModels[i].supportsImages) {
+          setAiResponse(prev => prev + "\n\nNOTE: Your uploaded image has been ignored because the new model doesn't support images.");
+        }
+        
         break;
       }
     } catch (error) {
@@ -383,8 +498,30 @@ const fallbackToWorkingModel = async () => {
   }
   
   if (!foundWorkingModel) {
+    // Update status to failure
+    statusElement.innerHTML = `
+      <div class="flex items-center">
+        <svg class="h-4 w-4 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>All models unavailable</span>
+      </div>
+    `;
+    
+    setTimeout(() => {
+      statusElement.classList.add('animate-fade-out');
+      setTimeout(() => {
+        if (document.body.contains(statusElement)) {
+          document.body.removeChild(statusElement);
+        }
+      }, 300);
+    }, 3000);
+    
     setSelectedModel(originalModel); // Revert to original model
-    setAiResponse("All models are currently unavailable. Please try again later.");
+    setAiResponse(
+      "All models are currently unavailable. Please try again later or check your connection. " +
+      "This could be due to high demand or a temporary service disruption."
+    );
   }
   
   setIsLoading(false);
@@ -413,10 +550,12 @@ const fallbackToWorkingModel = async () => {
 
     try {
       // Create request body using streamingService
+      // In your testPrompt function:
       const requestBody = streamingService.createImageRequestBody(
         promptText,
         uploadedImage,
-        aiModels[selectedModel].model
+        aiModels[selectedModel].model,
+        aiModels[selectedModel].supportsImages // Pass this parameter
       );
 
       console.log("🚀 Test request with model:", aiModels[selectedModel].name);
@@ -444,11 +583,85 @@ const fallbackToWorkingModel = async () => {
           },
           onError: (error: string) => {
             setIsLoading(false);
-            setAiResponse(`Error: ${error}`);
             
-            // Try to find a working model on error
-            if (error.includes("unavailable") || error.includes("503")) {
+            // Create a popup alert for model unavailability
+            const showModelErrorAlert = (modelName: string, errorType: string) => {
+              const errorAlert = document.createElement('div');
+              // Make the popup wider (max-w-md -> max-w-lg), reduce transparency (bg-red-50 -> bg-red-100)
+              // and add more contrast to dark mode version
+              errorAlert.className = 'fixed bottom-4 right-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 p-4 rounded-lg shadow-lg z-50 max-w-lg text-red-800 dark:text-red-200 animate-fade-in';
+              errorAlert.innerHTML = `
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mt-0.5">
+                    <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <h3 class="text-sm font-medium">Model Unavailable</h3>
+                    <div class="mt-1 text-xs">
+                      <p>${aiModels[selectedModel].name} is currently unavailable (${errorType}).</p>
+                      <p class="mt-1">Switching to an available alternative model...</p>
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(errorAlert);
+              
+              // Increase display time from 5 seconds to 10 seconds
+              setTimeout(() => {
+                errorAlert.classList.add('animate-fade-out');
+                setTimeout(() => {
+                  if (document.body.contains(errorAlert)) {
+                    document.body.removeChild(errorAlert);
+                  }
+                }, 500); // Increased animation duration from 300ms to 500ms
+              }, 10000); // Increased from 5000ms to 10000ms (10 seconds)
+            };
+            
+            // Handle Llama-specific 404 errors
+            if (error.includes("404") && aiModels[selectedModel].model.includes("llama")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "404 Not Found");
+              
+              setAiResponse(
+                `Error: The Meta Llama 4 model is currently unavailable (404 error).\n\n` +
+                `Meta occasionally takes this model offline for maintenance or updates.\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
+              // Wait a moment before trying alternatives (for better UX)
+              setTimeout(() => fallbackToWorkingModel(), 1000);
+            } 
+            // Handle Gemini-specific rate limit errors
+            else if (error.includes("429") && aiModels[selectedModel].model.includes("gemini")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "429 Rate Limited");
+              
+              setAiResponse(
+                `Error: Google Gemini has reached its rate limit (429 error).\n\n` +
+                `This is usually due to:\n` +
+                `• High API usage\n` +
+                `• Image processing limits\n` +
+                `• Temporary service constraints\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
+              setTimeout(() => fallbackToWorkingModel(), 1000);
+            }
+            // Handle general unavailability
+            else if (error.includes("unavailable") || error.includes("503")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "503 Unavailable");
+              
+              setAiResponse(
+                `Error: The selected model is unavailable.\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
               fallbackToWorkingModel();
+            }
+            // For other errors, just display them
+            else {
+              setAiResponse(`Error: ${error}`);
             }
           }
         }

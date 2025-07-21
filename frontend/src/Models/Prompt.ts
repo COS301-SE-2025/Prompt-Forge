@@ -116,9 +116,8 @@ export enum CategoryColors {
     "Design" = "bg-pink-500/20 text-pink-400",
     "SEO"= "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
     "Content"= "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-    "default" = "bg-blue-500/20 text-blue-400",
+    "default" = "bg-amber-500/20 text-amber-600", // Changed to a warm amber color
     "null" = "bg-transparent"
-  
 }
 
 export type Category = keyof typeof CategoryColors;

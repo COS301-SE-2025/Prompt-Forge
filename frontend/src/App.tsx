@@ -16,6 +16,7 @@ import { PromptPage } from "./pages/PromptPage"
 import ComparisonPage from "./pages/ComparisonPage"
 import HelpPage from "./pages/HelpPage"
 import WarPage from "./pages/PromptWars"
+import BuilderPage from "./pages/PromptBuilder"
 
 
 
@@ -44,6 +45,7 @@ function App() {
           <Route path="/comparison" element={<ComparisonPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/war" element={<WarPage />} />
+          <Route path="/builder" element={<BuilderPage />} />
         </Routes>
       </main>
     </div>
