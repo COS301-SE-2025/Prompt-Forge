@@ -18,13 +18,15 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
-    { name: "Home", href: "/home" },
+
     { name: "Dashboard", href: "/dashboard" },
     { name: "Testing Ground", href: "/editor" },
     { name: "Comparison", href: "/comparison" },
+    { name: "Prompt Builder", href: "/builder" },
     { name: "My Prompts", href: "/my-prompts" },
     { name: "Marketplace", href: "/marketplace" },
     { name: "Community", href: "/community" },
+    
   ]
 
   const handleLogout = async () => {

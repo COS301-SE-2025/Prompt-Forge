@@ -471,7 +471,7 @@ Please provide:
                 {!editorACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
                       placeholder="Write your first prompt here..."
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
@@ -505,7 +505,7 @@ Please provide:
                 </div>
                 {!responseACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
-                    <div className="h-full overflow-y-auto">
+                    <div className="h-full overflow-y-auto custom-scrollbar">
                       <StreamingDisplay
                         content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
                         isLoading={isLoadingA}
@@ -568,7 +568,7 @@ Please provide:
                 {!editorBCollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
                       placeholder="Write your second prompt here..."
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
@@ -602,7 +602,7 @@ Please provide:
                 </div>
                 {!responseBCollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
-                    <div className="h-full overflow-y-auto">
+                    <div className="h-full overflow-y-auto custom-scrollbar">
                       {isLoadingB ? (
                         <div className="flex items-center space-x-2">
                           <RotateCcw className="h-4 w-4 animate-spin" />
@@ -705,7 +705,7 @@ Please provide:
             </div>
 
             <div className="flex-1 p-4 overflow-hidden"> {/* Changed from overflow-y-auto */}
-              <div className="bg-gray-100 dark:bg-muted rounded-lg p-4 h-full overflow-y-auto"> {/* Added h-full and overflow-y-auto */}
+              <div className="bg-gray-100 dark:bg-muted rounded-lg p-4 h-full overflow-y-auto custom-scrollbar"> {/* Added h-full and overflow-y-auto */}
                 {isLoadingRating ? (
                   <div className="flex items-center space-x-2">
                     <RotateCcw className="h-4 w-4 animate-spin" />
@@ -751,7 +751,7 @@ Please provide:
               </Button>
             </div>
 
-            <div className="flex-1 p-3 space-y-4"> {/* Reduced padding and spacing */}
+            <div className="flex-1 p-3 space-y-4 overflow-y-auto custom-scrollbar"> {/* Reduced padding and spacing */}
               {/* Model A Selection */}
               <div>
                 <h4 className="text-sm font-medium text-foreground mb-2"> {/* Reduced margin */}
