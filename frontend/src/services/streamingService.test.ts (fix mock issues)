@@ -1,0 +1,32 @@
+const mockRequestBody = { model: 'test-model', messages: [{ role: 'user', content: 'Hello' }] };
+
+jest.mock('../editorService', () => ({
+    promptOpenRouter: jest.fn(),
+    promptOpenRouterStream: jest.fn(),
+}));
+
+import { createImageRequestBody } from './streamingService';
+import { promptOpenRouter, promptOpenRouterStream } from '../editorService';
+
+describe('StreamingService', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('should call promptOpenRouter with correct parameters', async () => {
+        await createImageRequestBody(mockRequestBody);
+        expect(promptOpenRouter).toHaveBeenCalledWith(mockRequestBody);
+    });
+
+    test('should call promptOpenRouterStream when streaming is enabled', async () => {
+        await createImageRequestBody(mockRequestBody, true);
+        expect(promptOpenRouterStream).toHaveBeenCalledWith(mockRequestBody);
+    });
+
+    test('should handle errors correctly', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+        await createImageRequestBody({ model: 'invalid-model', messages: [] });
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Image data appears corrupted or too small");
+        consoleErrorSpy.mockRestore();
+    });
+});

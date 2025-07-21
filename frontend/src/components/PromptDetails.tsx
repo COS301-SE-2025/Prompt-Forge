@@ -19,7 +19,7 @@ export const PromptDetails = () => {
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  //const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
@@ -120,18 +120,18 @@ export const PromptDetails = () => {
     })
   }
 
-  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
-    try {
-      await promptService.postReview(id!, review)
+  // const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+  //   try {
+  //     await promptService.postReview(id!, review)
       
-      // Refresh reviews after successful submission
-      const reviewsData = await promptService.getPromptReviews(id!)
-      setReviews(reviewsData)
-    } catch (err) {
-      console.error("Review submission error:", err)
-      alert("Failed to submit review")
-    }
-  }
+  //     // Refresh reviews after successful submission
+  //     const reviewsData = await promptService.getPromptReviews(id!)
+  //     setReviews(reviewsData)
+  //   } catch (err) {
+  //     console.error("Review submission error:", err)
+  //     alert("Failed to submit review")
+  //   }
+  // }
 
   const handleReviewUpdate = async (reviewId: string, updatedReview: { rating: number; comment: string }) => {
     try {
