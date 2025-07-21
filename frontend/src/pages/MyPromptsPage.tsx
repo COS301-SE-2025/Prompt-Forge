@@ -173,6 +173,7 @@ export default function MyPromptsPage() {
   }, [isAuthenticated, navigate, userProfile,currentPage])
 
   // Fetch avgRating for each prompt using the reviews endpoint
+  //TODO: change the function to not send a request to the backend for each prompt
   useEffect(() => {
     const fetchRatings = async () => {
       if (!myPrompts.length) return
@@ -201,8 +202,6 @@ export default function MyPromptsPage() {
     }
     fetchRatings()
   }, [myPrompts])
-
-
 
   // Filtering logic
   useEffect(() => {
