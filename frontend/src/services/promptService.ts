@@ -183,7 +183,7 @@ export class PromptService {
         return response.json();
       }
       if (tagName !== "all" && filterName === "all") {
-        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}/tag/${tagName}?page=${page}&size=${size}`);
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&page=${page}&size=${size}`);
         return response.json();
       }
 
