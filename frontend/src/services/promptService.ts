@@ -176,10 +176,21 @@ export class PromptService {
     }
   }
   
-  async getAuthoredAndPurchasedPrompts(authorId: string,page:number,size:number) {
+  async getAuthoredAndPurchasedPrompts(authorId: string, tagName: string | null, filterName: string | null, page:number,size:number) {
     try {
-      const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?page=${page}&size=${size}`);
-      return response.json();
+      if (tagName ==="all" && filterName === "all") {        
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?page=${page}&size=${size}`);
+        return response.json();
+      }
+      if (tagName !== "all" && filterName === "all") {
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}/tag/${tagName}?page=${page}&size=${size}`);
+        return response.json();
+      }
+
+      /*TODO:
+        if (tagName === "all" && filterName !== "all") 
+        if (tagName !== "all" && filterName !== "all") 
+      */
     }
     catch (error) {
       console.error(error);
@@ -249,7 +260,13 @@ export class PromptService {
   async getAllTags(): Promise<Tag[]> {
     try {
       const response = await this.httpClient.get('/store/prompts/tags');
-      return response.json();
+      const tags = await response.json();
+      const tagNames = tags.map((tag:Tag)=>tag.name)
+      console.log("tagNames:", tagNames);
+      
+      localStorage.setItem("tagNames", JSON.stringify(tagNames))
+      console.log("local tags:", localStorage.getItem("tagNames"));      
+      return tags
     } catch (error) {
       console.error(error);
       throw error;

@@ -18,7 +18,7 @@ export default function MyPromptsPage() {
   const promptService = new PromptService();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
-  const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
+  // const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -31,6 +31,7 @@ export default function MyPromptsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
   const [totalPages, setTotalPages] = useState<number>(0)
+  const [promptCount, setPromptCount] = useState<number>(0)
 
   // Check authentication and get user profile
   useEffect(() => {
@@ -102,31 +103,27 @@ export default function MyPromptsPage() {
           console.log("No authorId available, using empty prompts")
 
           setMyPrompts([])
-          setFilteredPrompts([])
+          // setFilteredPrompts([])
           setLoading(false)
           return
         }
 
         //Fetch prompts using JWT authentication (cookies)
         console.log("Fetching prompts for authorId:", authorId)
-        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, currentPage - 1, 12)
+        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         console.log("userPromptsPage:",userPromptsPage);
         setTotalPages(userPromptsPage.totalPages);
-
-        console.log("totalPages:", totalPages);
+        setPromptCount(userPromptsPage.totalElements)
         
 
         let prompts = userPromptsPage.content
         console.log("prompts:", prompts);
         
         if (!Array.isArray(prompts)) prompts = []
-
-        prompts = [...prompts]  
         // Map backend fields to frontend MyPrompt interface
         const mappedPrompts: MyPrompt[] = await Promise.all(
           prompts.map(async (p: any) => {
             console.log("authorname:", p.authorName);
-            
             const { averageRating } = await promptService.getPromptRatingSummary(p.id)
             return {
               id: p.id,
@@ -151,16 +148,23 @@ export default function MyPromptsPage() {
           })
         )
         setMyPrompts(mappedPrompts)
-        setFilteredPrompts(mappedPrompts)
-        const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
-        setAvailableCategories(categories)
+        // setFilteredPrompts(mappedPrompts)
+
+        const tagNamesString = localStorage.getItem("tagNames");
+        let tags = ["all"]
+        if (tagNamesString != null){
+          tags = [...tags,...JSON.parse(tagNamesString)];
+        }
+        else{
+          //TODO: fetch tags from API
+        }        
+        setAvailableCategories(tags)
         
       } catch (error) {
 
         console.error("Error fetching prompts:", error)
 
         setMyPrompts([])
-        setFilteredPrompts([])
       } finally {
         setLoading(false)
       }
@@ -205,39 +209,110 @@ export default function MyPromptsPage() {
 
   // Filtering logic
   useEffect(() => {
-    if (myPrompts.length === 0) return
-    const filtered = myPrompts.filter((prompt) => {
-      const matchesSearch = searchQuery
-        ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          prompt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          prompt.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        : true
-      const matchesCategory = selectedCategory === "all" ? true : prompt.category === selectedCategory
-      const oneWeekAgo = new Date()
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      const isRecent = new Date(prompt.updatedAt) > oneWeekAgo
-      const matchesFilter =
-        selectedFilter === "all" ||
-        (selectedFilter === "favorites" && prompt.isFavorite) ||
-        (selectedFilter === "private" && prompt.isPrivate) ||
-        (selectedFilter === "public" && !prompt.isPrivate) ||
-        (selectedFilter === "recent" && isRecent) ||
+    //TODO: create a global fetchMyPrompts function for reuse (the one below is literally the same as the other)
+    const fetchMyPrompts = async () => {
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        let authorId: string | null = null
 
-        (selectedFilter === "popular" && prompt.uses > 30) ||
-        (selectedFilter === "purchased" && prompt.source === "purchased")
+        if (userProfile?.userId) {
+          authorId = userProfile.userId
+
+          console.log("Using authorId from profile:", authorId)
+        }
+        else { //Fallback: get from localStorage if profile not loaded yet
+          authorId = localStorage.getItem('userId')
+          console.log("Using authorId from localStorage:", authorId)
+        }
+
+        if (!authorId) {
+          console.log("No authorId available, using empty prompts")
+
+          setMyPrompts([])
+          // setFilteredPrompts([])
+          setLoading(false)
+          return
+        }
+
+        //Fetch prompts using JWT authentication (cookies)
+        console.log("Fetching prompts for authorId:", authorId)
+        console.log("selectedCategory:", selectedCategory);
         
+        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
+        console.log("userPromptsPage:", userPromptsPage);
+        setTotalPages(userPromptsPage.totalPages);
+        setPromptCount(userPromptsPage.totalElements)
+        console.log("totalPages:", totalPages);
 
-      return matchesSearch && matchesCategory && matchesFilter
-    })
-    setFilteredPrompts(filtered)
-    // setCurrentPage(1)
-  }, [searchQuery, selectedCategory, selectedFilter, myPrompts])
 
-  // Pagination
-  // const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
-  // const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
-  // const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
-  // const favoritePrompts = myPrompts.filter((prompt) => prompt.isFavorite).slice(0, 4)
+        let prompts = userPromptsPage.content
+        console.log("prompts:", prompts);
+
+        if (!Array.isArray(prompts)) prompts = []
+
+        // Map backend fields to frontend MyPrompt interface
+        const mappedPrompts: MyPrompt[] = await Promise.all(
+          prompts.map(async (p: any) => {
+            console.log("authorname:", p.authorName);
+
+            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description || "",
+              content: p.content || "",
+              category: "General", // Default, backend does not provide
+              tags: p.tagNames || [],
+              createdAt: p.createdAt,
+              updatedAt: p.publishedAt || p.createdAt,
+              rating: averageRating || 0, // Default, backend does not provide
+              uses: 0,   // Default, backend does not provide
+              featured: p.featured || false,
+              price: p.price || 0,
+              isPrivate: p.visibility !== "public",
+              isFavorite: false, // Default, backend does not provide
+              authorName: p.authorName || userProfile?.username || "You",
+              source: p.source,
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+              publishedAt: p.publishedAt // Add this
+            }
+          })
+        )
+        setMyPrompts(mappedPrompts)
+        // setFilteredPrompts(mappedPrompts)
+
+        const tagNamesString = localStorage.getItem("tagNames");
+        let tags = ["all"]
+        if (tagNamesString != null) {
+          tags = [...tags,...JSON.parse(tagNamesString)];
+          console.log("tags:", tags);
+          
+          // const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
+        }
+        else {
+          //TODO: fetch tags from API
+        }
+        setAvailableCategories(tags)
+
+      } catch (error) {
+
+        console.error("Error fetching prompts:", error)
+
+        setMyPrompts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    // availableCategories
+    console.log("availableCategories:", availableCategories);
+    console.log("selectedCategory:", selectedCategory);
+    
+    fetchMyPrompts()
+  }, [searchQuery, selectedCategory, selectedFilter])
 
   const filters = [
     { value: "all", label: "All" },
@@ -385,6 +460,7 @@ export default function MyPromptsPage() {
                     onClick={() => setSelectedCategory(category)}
                   >
                     {category === "all" ? "All" : category}
+                    {/* {category === "all"?"yesss":"nooo"} */}
                   </Button>
                 ))}
               </div>
@@ -498,7 +574,7 @@ export default function MyPromptsPage() {
                       : "All Prompts"}
               </h2>
               <div className="text-sm text-muted-foreground">
-                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
+                {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
               </div>
             </div>
 
@@ -534,7 +610,7 @@ export default function MyPromptsPage() {
             </div>
 
             {/* Empty State */}
-            {filteredPrompts.length === 0 && !loading && (
+            {promptCount=== 0 && !loading && (
               <div className="text-center py-12">
                 <div className="text-muted-foreground mb-4">
                   <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
