@@ -1,8 +1,5 @@
-import { Query } from "@/models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt";
-import { Review, ReviewsApiResponse } from '@/models/Reviews';
-import { EnrichedPrompt } from "@/Models/CartPrompt";
+import { EnrichedPrompt } from "@/models/CartPrompt";
 
 export class CartService {
   private httpClient = HttpClient;

@@ -9,19 +9,17 @@ import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
-import type { PromptWithTags, Review } from "@/Models/Prompt"
+import type { PromptWithTags, Review } from "@/models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
 import httpClient from "../services/httpClient"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
-  console.log("id", id);
-  
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  //const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
@@ -42,9 +40,6 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
-        console.log("promptData");
-        console.log(promptData);
-        
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
@@ -115,6 +110,12 @@ export const PromptDetails = () => {
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
 
   const handlePurchase = async () => {
+    // Prevent authors from purchasing their own prompts
+    if (currentUserId === prompt?.authorId) {
+      alert("You cannot purchase your own prompt");
+      return;
+    }
+
     cartService.addToCart(id)
     .then(res => {
       alert(res.message);
@@ -125,18 +126,18 @@ export const PromptDetails = () => {
     })
   }
 
-  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
-    try {
-      await promptService.postReview(id!, review)
+  // const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+  //   try {
+  //     await promptService.postReview(id!, review)
       
-      // Refresh reviews after successful submission
-      const reviewsData = await promptService.getPromptReviews(id!)
-      setReviews(reviewsData)
-    } catch (err) {
-      console.error("Review submission error:", err)
-      alert("Failed to submit review")
-    }
-  }
+  //     // Refresh reviews after successful submission
+  //     const reviewsData = await promptService.getPromptReviews(id!)
+  //     setReviews(reviewsData)
+  //   } catch (err) {
+  //     console.error("Review submission error:", err)
+  //     alert("Failed to submit review")
+  //   }
+  // }
 
   const handleReviewUpdate = async (reviewId: string, updatedReview: { rating: number; comment: string }) => {
     try {
@@ -352,7 +353,7 @@ export const PromptDetails = () => {
                 <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
                 Prompt
               </h2>
-              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto custom-scrollbar">
                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-mono">
                   {prompt.content}
                 </p>
@@ -536,19 +537,20 @@ export const PromptDetails = () => {
                   </p>
                 </div>
 
-                {userOwnsPrompt ? (
+                {currentUserId === prompt.authorId ? (
+                  <div className="text-center py-3 px-4 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-lg">
+                    <span className="text-sm font-medium">📝 Your Prompt</span>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">You cannot purchase your own prompt</p>
+                  </div>
+                ) : userOwnsPrompt ? (
                   <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
                     <span className="text-sm font-medium">✓ Owned</span>
                   </div>
-                ) :
-                
-                userAddedToCart? (
-                    <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
-                      <span className="text-sm font-medium">✓ Added to cart</span>
-                    </div>
-                ):
-                
-                (
+                ) : userAddedToCart ? (
+                  <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
+                    <span className="text-sm font-medium">✓ Added to cart</span>
+                  </div>
+                ) : (
                   <PurchaseButton
                     price={prompt.price}
                     onClick={handlePurchase}

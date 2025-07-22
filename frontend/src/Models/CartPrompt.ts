@@ -1,8 +1,10 @@
+import { Category } from "./Prompt";
+
 export interface CartPrompt {
     cartItemId: string;
     promptId: string;
     promptTitle: string;
-    promptTags: string[];
+    promptTags: Category[];
     promptPrice: number;
     // rating: number;
     // author: string;
