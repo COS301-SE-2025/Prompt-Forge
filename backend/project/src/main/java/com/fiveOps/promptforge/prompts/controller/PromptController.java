@@ -1,16 +1,16 @@
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -123,7 +123,6 @@ public class PromptController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body("{\"error\": \"Internal server error: " + e.getMessage() + "\"}");
     }
-
   }
 
   @PutMapping("/{id}")
@@ -168,23 +167,21 @@ public class PromptController {
 
     if (onlyPublic != null && onlyPublic) {
       return ResponseEntity.ok(promptService.searchPublicByTitle(query));
-
     }
     return ResponseEntity.ok(promptService.searchByTitle(query));
   }
 
   @GetMapping("/purchased")
-    public ResponseEntity<Page<Map<String,PromptWithAuthorDTO>>> getPurchasedPrompts(
+  public ResponseEntity<Page<Map<String, PromptWithAuthorDTO>>> getPurchasedPrompts(
       Pageable pageable, Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            return ResponseEntity.status(401).build();
-        }
-        String userEmail = authentication.getName();
-        UUID userId = userService.getUserIdByEmail(userEmail);
-        System.out.println("\nuserEmail in purchased:"+userEmail);
-        System.out.println("\nuserId in purchased:"+userId);
-        System.out.println(userId);
-        return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
-        
+    if (authentication == null || authentication.getName() == null) {
+      return ResponseEntity.status(401).build();
     }
+    String userEmail = authentication.getName();
+    UUID userId = userService.getUserIdByEmail(userEmail);
+    System.out.println("\nuserEmail in purchased:" + userEmail);
+    System.out.println("\nuserId in purchased:" + userId);
+    System.out.println(userId);
+    return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
+  }
 }

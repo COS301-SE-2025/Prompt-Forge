@@ -19,8 +19,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    // Add Cypress types for component tests
-    "types": ["cypress"]
+    // Add both Cypress and Jest types
+    "types": ["cypress", "jest", "@testing-library/jest-dom"]
   },
   "include": [
     "src",
@@ -28,10 +28,7 @@
     "**/*.cy.ts"
   ],
   "exclude": [
-    "node_modules",
-    "**/*.test.*",
-    "**/*.spec.*",
-    "**/setupTests.ts"
+    "node_modules"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

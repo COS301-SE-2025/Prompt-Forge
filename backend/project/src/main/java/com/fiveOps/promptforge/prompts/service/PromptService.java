@@ -136,12 +136,10 @@ public Map<String, Object> generateTagsForPrompt(UUID promptId) {
     return promptRepository.searchPublicByTitle(searchTerm);
   }
 
-
-    public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts
-    (UUID userId,Pageable pageable) {
-        System.out.println("getPurchasedPromptsByUserId");
-        System.out.println(promptRepository.getPurchasedPromptsByUserId(userId, pageable));
-        return promptRepository.getPurchasedPromptsByUserId(userId,pageable);
-    }
+  public Page<Map<String, PromptWithAuthorDTO>> getPurchasedPrompts(
+      UUID userId, Pageable pageable) {
+    System.out.println("getPurchasedPromptsByUserId");
+    System.out.println(promptRepository.getPurchasedPromptsByUserId(userId, pageable));
+    return promptRepository.getPurchasedPromptsByUserId(userId, pageable);
+  }
 }
-

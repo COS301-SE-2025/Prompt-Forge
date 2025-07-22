@@ -1,10 +1,12 @@
+import { Category } from "./Prompt"
+
 export interface MyPrompt {
   id: string
   title: string
   description: string
   content: string
   category: string
-  tags: string[]
+  tags: Category[]
   createdAt: string
   updatedAt: string
   rating: number

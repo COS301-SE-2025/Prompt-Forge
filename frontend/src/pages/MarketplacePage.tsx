@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react"
 import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
-import { Sparkles, Star, User, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Prompt, Tag, PromptWithTags, MarketplacePrompt } from "@/Models/Prompt"
+import { Tag, MarketplacePrompt } from "@/models/Prompt"
 
 const PROMPTS_PER_PAGE = 12
 
@@ -237,8 +236,8 @@ export default function MarketplacePage() {
     <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
       <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex flex-col">
-          <div className="flex-1 overflow-y-auto">
+        <div className="w-48 bg-muted border-r border-border p-4 hidden md:flex flex-col">
+          <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[calc(100vh-6rem)]">
             <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
             <div className="space-y-1 mb-6">
               {filters.map((filter) => (
@@ -302,7 +301,7 @@ export default function MarketplacePage() {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
             <div className="max-w-6xl mx-auto">
               {/* Header and Mobile Filters */}
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
@@ -319,7 +318,7 @@ export default function MarketplacePage() {
 
               {showFilters && (
                 <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Filters</h4>
                       {filters.map((filter) => (
