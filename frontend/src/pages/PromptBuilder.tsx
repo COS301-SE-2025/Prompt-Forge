@@ -165,7 +165,7 @@ const aiModels = [
     glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
     selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
     available: true,
-    model: "meta-llama/llama-4-scout:free",
+    model: "meta-llama/llama-4-scout",
     supportsImages: true,
   },
   {
@@ -284,14 +284,12 @@ export default function PromptBuilderPage() {
     if (!promptIdea.trim() || !selectedPersona) return
 
     setIsGenerating(true)
+    setGeneratedPrompt("") // Clear previous content
     
-    typingEffect.clear();
+    // Clear typing effect properly
+    typingEffect.clear()
     
-    if (streamingEnabled) {
-      setGeneratedPrompt(""); // Clear for streaming
-    } else {
-      setGeneratedPrompt("Generating prompt...");
-    }
+    let accumulatedContent = "" // Track accumulated content
 
     try {
       const personaContext = `You are helping a ${selectedPersona.name} (${selectedPersona.description}) who ${selectedPersona.useCase.toLowerCase()}.`
@@ -316,7 +314,7 @@ Transform the user's idea into a professional, effective prompt that maximizes A
           },
           {
             role: "user",
-            content: `Please transform this basic idea into a well-structured, effective prompt:
+            content: `Please transform this basic idea into a well-structured, effective prompt, ONLY give me the prompt text without any additional explanation or context:
 
 "${promptIdea}"
 
@@ -332,22 +330,25 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
         streamingEnabled,
         {
           onContent: (content: string) => {
+            accumulatedContent += content // Always accumulate
+            
             if (streamingEnabled) {
-              typingEffect.addText(content);
+              typingEffect.addText(content)
             } else {
-              setGeneratedPrompt(streamingService.decodeUnicode(content));
+              const decodedContent = streamingService.decodeUnicode(content)
+              setGeneratedPrompt(decodedContent)
+              accumulatedContent = decodedContent
             }
           },
           onComplete: () => {
-            setIsGenerating(false);
-            if (streamingEnabled && typingEffect.displayText) {
-              setGeneratedPrompt(typingEffect.displayText);
-            }
-            console.log("✅ Prompt generation completed");
+            setIsGenerating(false)
+            // Always set the final accumulated content
+            setGeneratedPrompt(accumulatedContent)
+            console.log("✅ Prompt generation completed")
           },
           onError: (error: string) => {
-            setIsGenerating(false);
-            setGeneratedPrompt(`Error: ${error}`);
+            setIsGenerating(false)
+            setGeneratedPrompt(`Error: ${error}`)
           }
         }
       );
@@ -685,8 +686,8 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
       {/* Templates Modal */}
       {showTemplates && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-border">
+          <Card className="w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
               <h2 className="text-xl font-semibold text-foreground flex items-center">
                 <BookOpen className="h-6 w-6 mr-2 text-[#3ebb9e]" />
                 Prompt Templates
@@ -696,26 +697,32 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
               </Button>
             </div>
 
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {templates.map((template) => (
-                  <Card
-                    key={template.id}
-                    className="p-4 hover:shadow-md transition-shadow"
-                    onClick={() => handleTemplateClick(template)}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-medium text-foreground mb-1">{template.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{template.description}</p>
-                        <span className="inline-block px-2 py-1 bg-muted text-xs rounded-md">{template.category}</span>
+            <div className="flex-1 overflow-hidden">
+              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {templates.map((template) => (
+                    <Card
+                      key={template.id}
+                      className="p-4 hover:shadow-md hover:shadow-[#3ebb9e]/20 dark:hover:shadow-[#3ebb9e]/10 transition-all duration-200 hover:scale-[1.02] cursor-pointer border-2 hover:border-[#3ebb9e]/30"
+                      onClick={() => handleTemplateClick(template)}
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="mb-3">
+                          <h3 className="font-medium text-foreground mb-2">{template.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
+                          <span className="inline-block px-3 py-1.5 bg-[#3ebb9e]/10 dark:bg-[#3ebb9e]/20 text-[#3ebb9e] dark:text-[#3ebb9e] border border-[#3ebb9e]/30 dark:border-[#3ebb9e]/50 text-xs rounded-full font-medium">
+                            {template.category}
+                          </span>
+                        </div>
+                        <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex-1">
+                          <p className="text-xs text-gray-700 dark:text-gray-300 font-mono leading-relaxed">
+                            {template.template}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-muted rounded-lg p-3 mb-3">
-                      <p className="text-xs text-muted-foreground">{template.template}</p>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </Card>
