@@ -1,0 +1,9 @@
+const { render, screen } = require('@testing-library/react');
+const Input = require('./Input');
+
+test('applies the correct class names', () => {
+    render(<Input className="test-class" />);
+    const input = screen.getByRole('textbox');
+    expect(input.className).toContain('test-class');
+    expect(input.className).toContain('flex');
+});

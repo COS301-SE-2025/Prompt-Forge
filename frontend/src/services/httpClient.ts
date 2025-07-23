@@ -1,5 +1,5 @@
 class HttpClient {
-  private baseURL = "http://localhost:8080";
+  private baseURL = "http://localhost:8080/api";
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
@@ -18,7 +18,7 @@ class HttpClient {
       ...options,
     };
 
-    console.log(`🌐 ${options.method || 'GET'} ${url}`);
+    console.log(` ${options.method || 'GET'} ${url}`);
     
     return fetch(url, config);
   }

@@ -10,182 +10,180 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users", indexes = {
-    @Index(name = "idx_user_email", columnList = "email", unique = true),
-    @Index(name = "idx_user_username", columnList = "username", unique = true),
-    @Index(name = "idx_user_verified", columnList = "is_verified"),
-    @Index(name = "idx_user_active", columnList = "is_active")
-})
+@Table(
+    name = "users",
+    indexes = {
+      @Index(name = "idx_user_email", columnList = "email", unique = true),
+      @Index(name = "idx_user_username", columnList = "username", unique = true),
+      @Index(name = "idx_user_verified", columnList = "is_verified"),
+      @Index(name = "idx_user_active", columnList = "is_active")
+    })
 public class User {
 
-    @Id
-    @Column(name = "user_id", nullable = false, updatable = false)
-    private UUID userId;
+  @Id
+  @Column(name = "user_id", nullable = false, updatable = false)
+  private UUID userId;
 
-    @Column(length = 255, nullable = false, unique = true)
-    private String email;
+  @Column(length = 255, nullable = false, unique = true)
+  private String email;
 
-    @Column(name = "password_hash", length = 255, nullable = false)
-    private String passwordHash;
+  @Column(name = "password_hash", length = 255, nullable = false)
+  private String passwordHash;
 
-    @Column(name = "is_verified", nullable = false)
-    private Boolean isVerified = false;
+  @Column(name = "is_verified", nullable = false)
+  private Boolean isVerified = false;
 
-    @Column(length = 50, unique = true)
-    private String username;
+  @Column(length = 50, unique = true)
+  private String username;
 
-    @Column(length = 500)
-    private String bio;
+  @Column(length = 500)
+  private String bio;
 
-    @Column(name = "profile_picture_url", length = 255)
-    private String profilePictureUrl;
+  @Column(name = "profile_picture_url", length = 255)
+  private String profilePictureUrl;
 
-    @Column(length = 20, nullable = false)
-    private String role = "buyer";
+  @Column(length = 20, nullable = false)
+  private String role = "buyer";
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+  @Column(name = "created_at", nullable = false)
+  private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(columnDefinition = "uuid[]")
-    private UUID[] badges = new UUID[]{};
+  @Column(columnDefinition = "uuid[]")
+  private UUID[] badges = new UUID[] {};
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+  @Column(name = "is_active")
+  private Boolean isActive = true;
 
-    @Column(columnDefinition = "uuid[]")
-    private UUID[] followers = new UUID[]{};
-    
-    @Column(columnDefinition = "uuid[]")
-    private UUID[] following = new UUID[]{};
-    
+  @Column(columnDefinition = "uuid[]")
+  private UUID[] followers = new UUID[] {};
 
-    // === Getters ===
+  @Column(columnDefinition = "uuid[]")
+  private UUID[] following = new UUID[] {};
 
-    public UUID getUserId() {
-        return userId;
-    }
+  // === Getters ===
 
-    public String getEmail() {
-        return email;
-    }
+  public UUID getUserId() {
+    return userId;
+  }
 
-    public String getPasswordHash() {
-        return passwordHash;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public Boolean getIsVerified() {
-        return isVerified;
-    }
+  public String getPasswordHash() {
+    return passwordHash;
+  }
 
-    public String getUsername() {
-        return username;
-    }
+  public Boolean getIsVerified() {
+    return isVerified;
+  }
 
-    public String getBio() {
-        return bio;
-    }
+  public String getUsername() {
+    return username;
+  }
 
-    public String getProfilePictureUrl() {
-        return profilePictureUrl;
-    }
+  public String getBio() {
+    return bio;
+  }
 
-    public String getRole() {
-        return role;
-    }
+  public String getProfilePictureUrl() {
+    return profilePictureUrl;
+  }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public String getRole() {
+    return role;
+  }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public UUID[] getBadges() {
-        return badges;
-    }
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
 
-    public Boolean getIsActive() {
-        return isActive;
-    }
+  public UUID[] getBadges() {
+    return badges;
+  }
 
-    public UUID[] getFollowers() {
-        return followers;
-    }
+  public Boolean getIsActive() {
+    return isActive;
+  }
 
-    public UUID[] getFollowing() {
-        return followers;
-    }
-    
-    public String getAvatarUrl() {
-        return this.profilePictureUrl;
-    }
-    
+  public UUID[] getFollowers() {
+    return followers;
+  }
 
-    // === Setters ===
+  public UUID[] getFollowing() {
+    return followers;
+  }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
+  public String getAvatarUrl() {
+    return this.profilePictureUrl;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  // === Setters ===
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
+  public void setUserId(UUID userId) {
+    this.userId = userId;
+  }
 
-    public void setIsVerified(Boolean isVerified) {
-        this.isVerified = isVerified;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+  public void setPasswordHash(String passwordHash) {
+    this.passwordHash = passwordHash;
+  }
 
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
+  public void setIsVerified(Boolean isVerified) {
+    this.isVerified = isVerified;
+  }
 
-    public void setProfilePictureUrl(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
-    }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+  public void setBio(String bio) {
+    this.bio = bio;
+  }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setProfilePictureUrl(String profilePictureUrl) {
+    this.profilePictureUrl = profilePictureUrl;
+  }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+  public void setRole(String role) {
+    this.role = role;
+  }
 
-    public void setBadges(UUID[] badges) {
-        this.badges = badges;
-    }
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
 
-    public void setFollowing(UUID[] following) {
-        this.following = following;
-    }
+  public void setBadges(UUID[] badges) {
+    this.badges = badges;
+  }
 
-    public void setFollowers(UUID[] followers) {
-        this.followers = followers;
-    }
+  public void setIsActive(Boolean isActive) {
+    this.isActive = isActive;
+  }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.profilePictureUrl = avatarUrl;
-    }
+  public void setFollowing(UUID[] following) {
+    this.following = following;
+  }
 
-   
+  public void setFollowers(UUID[] followers) {
+    this.followers = followers;
+  }
+
+  public void setAvatarUrl(String avatarUrl) {
+    this.profilePictureUrl = avatarUrl;
+  }
 }

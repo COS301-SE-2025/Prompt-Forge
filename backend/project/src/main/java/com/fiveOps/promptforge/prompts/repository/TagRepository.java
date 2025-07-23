@@ -14,29 +14,27 @@ import com.fiveOps.promptforge.prompts.model.Tag;
 @Repository
 public interface TagRepository extends JpaRepository<Tag, UUID> {
 
-    // Find tag by exact name match
-    Optional<Tag> findByName(String name);
+  // Find tag by exact name match
+  Optional<Tag> findByName(String name);
 
-    // Find tags containing search term (case-insensitive)
-    List<Tag> findByNameContainingIgnoreCase(String searchTerm);
+  // Find tags containing search term (case-insensitive)
+  List<Tag> findByNameContainingIgnoreCase(String searchTerm);
 
-    // Bulk find tags by their IDs
-    List<Tag> findAllByIdIn(List<UUID> ids);
+  // Bulk find tags by their IDs
+  List<Tag> findAllByIdIn(List<UUID> ids);
 
-    // Increment usage count for a tag
-    @Modifying
-    @Query("UPDATE Tag t SET t.usageCount = t.usageCount + 1 WHERE t.id = :tagId")
-    void incrementUsageCount(UUID tagId);
+  // Increment usage count for a tag
+  @Modifying
+  @Query("UPDATE Tag t SET t.usageCount = t.usageCount + 1 WHERE t.id = :tagId")
+  void incrementUsageCount(UUID tagId);
 
-    // Find popular tags (most used)
-    @Query("SELECT t FROM Tag t ORDER BY t.usageCount DESC LIMIT :limit")
-    List<Tag> findPopularTags(int limit);
+  // Find popular tags (most used)
+  @Query("SELECT t FROM Tag t ORDER BY t.usageCount DESC LIMIT :limit")
+  List<Tag> findPopularTags(int limit);
 
-    // Find tags by category
-    List<Tag> findByCategory(String category);
+  // Find tags by category
+  List<Tag> findByCategory(String category);
 
-    // Check if tag exists by name
-    boolean existsByName(String name);
-
-    
+  // Check if tag exists by name
+  boolean existsByName(String name);
 }
