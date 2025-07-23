@@ -1,56 +1,50 @@
 package com.fiveOps.promptforge.securityConfig;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import java.util.Base64;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import java.util.Base64;
-import java.util.Date;
-import javax.crypto.SecretKey;
-import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
 
-  Dotenv dotenv = Dotenv.load();
-  String secret = dotenv.get("JWT_SECRET");
+  @Value("${jwt.secret}")
+  private String secretKey;
 
   private SecretKey getSigningKey() {
-    byte[] keyBytes = Base64.getDecoder().decode(secret);
+    byte[] keyBytes = Base64.getDecoder().decode(secretKey);
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
   public String generateToken(String email) {
-    return Jwts
-      .builder()
-      .subject(email)  
-      .issuedAt(new Date()) 
-      .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) 
-      .signWith(getSigningKey())  
-      .compact();
+    return Jwts.builder()
+        .subject(email)
+        .issuedAt(new Date())
+        .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+        .signWith(getSigningKey())
+        .compact();
   }
 
   public String extractUsername(String token) {
-    return Jwts
-      .parser()
-      .verifyWith(getSigningKey())
-      .build()
-      .parseSignedClaims(token)  
-      .getPayload()  
-      .getSubject();
+    return Jwts.parser()
+        .verifyWith(getSigningKey())
+        .build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .getSubject();
   }
 
- 
   public Claims extractAllClaims(String token) {
-    return Jwts
-      .parser()
-      .verifyWith(getSigningKey())
-      .build()
-      .parseSignedClaims(token) 
-      .getPayload();  
+    return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
   }
 
- 
   public boolean isTokenExpired(String token) {
     try {
       Claims claims = extractAllClaims(token);
@@ -62,11 +56,7 @@ public class JwtUtil {
 
   public boolean validateToken(String token) {
     try {
-      Jwts
-        .parser()
-        .verifyWith(getSigningKey())
-        .build()
-        .parseSignedClaims(token);  
+      Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
       return !isTokenExpired(token);
     } catch (Exception e) {
       return false;

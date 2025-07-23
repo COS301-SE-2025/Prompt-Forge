@@ -2,20 +2,18 @@ name: CI Pipeline (Frontend + Backend)
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Backend (Java/Spring Boot)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -25,6 +23,13 @@ jobs:
 
       - name: Build and Test Backend
         working-directory: ./backend/project
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           mvn -B clean install
           mvn -B test
@@ -34,7 +39,6 @@ jobs:
         working-directory: ./backend/project
         run: mvn -B checkstyle:check
 
-      # Frontend (React/TypeScript)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,12 +46,22 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          npm install --save-dev \
+            eslint@latest \
+            @eslint/js@latest \
+            globals@latest \
+            eslint-plugin-react-hooks@latest \
+            eslint-plugin-react-refresh@latest \
+            typescript-eslint@latest \
+            @typescript-eslint/eslint-plugin@latest \
+            @typescript-eslint/parser@latest
+          npm ci
 
       - name: Lint Frontend
         working-directory: ./frontend
-        run: npx eslint .
+        run: npm run lint
 
       - name: Run Frontend Tests and Coverage
         working-directory: ./frontend
-        run: npx jest --coverage
+        run: npm run test
