@@ -6,23 +6,9 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowRight, Star, User, TrendingUp, Activity, Rocket } from "lucide-react";
 import { StandardPromptCard } from "../components/StandardPromptCard";
+import { MyPrompt } from '@/models/MyPrompt';
 
-type MyPrompt = {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  category: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  rating: number;
-  uses: number;
-  featured: boolean;
-  price: number;
-  isPrivate: boolean;
-  isFavorite: boolean;
-};
+
 
 type DashboardData = {
   monthlyUsage: number;
@@ -145,14 +131,18 @@ export default function DashboardPage() {
           return;
         }
 
-        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}`, {
+        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}?page=0&size=12`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
 
         });
         if (response.ok) {
-          let prompts = await response.json();
+          let page = (await response.json());
+        
+          let prompts = page.content;
+          console.log("prompts:", prompts);
+          
           if (!Array.isArray(prompts)) prompts = [];
 
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
@@ -168,8 +158,9 @@ export default function DashboardPage() {
             uses: p.uses || 0,
             featured: p.featured || false,
             price: p.price || 0,
-            isPrivate: p.visibility !== "public",
-            isFavorite: p.isFavorite || false
+            isPrivate: p.visibility === "private",
+            isFavorite: p.isFavorite || false,
+            source:p.source
           }));
           setMyPrompts(mappedPrompts);
         } else if (response.status === 401) {
@@ -611,7 +602,7 @@ export default function DashboardPage() {
                     category={prompt.category}
                     authorName={username}
                     isOwned={true}
-                    isBought={false}
+                    source={prompt.source}
                     onEdit={handleEditPrompt}
                     onDelete={handleDeletePrompt}
                     onToggleFavorite={handleToggleFavorite}
