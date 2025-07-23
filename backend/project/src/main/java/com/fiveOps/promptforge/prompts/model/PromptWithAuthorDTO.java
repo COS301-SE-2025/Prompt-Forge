@@ -12,6 +12,8 @@ public interface PromptWithAuthorDTO {
 
   String getTitle();
 
+  String getVisibility();
+
   String getSlug();
 
   String getDescription();
@@ -27,5 +29,4 @@ public interface PromptWithAuthorDTO {
   String[] getTagNames();
 
   String getAuthorName(); // (JOINed)
-
 }
