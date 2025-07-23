@@ -4,11 +4,16 @@ class HttpClient {
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
     
+    // Only set default JSON content type if body is not FormData
+    const isFormData = options.body instanceof FormData;
+    const headers = new Headers(options.headers);
+    
+    if (!isFormData && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
     const config: RequestInit = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
       credentials: 'include',
       ...options,
     };
@@ -47,6 +52,20 @@ class HttpClient {
       ...options,
       method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async uploadForm(endpoint: string, formData: FormData, options?: RequestInit): Promise<Response> {
+    // Explicitly remove Content-Type header to let browser set it automatically
+    const { headers, ...restOptions } = options || {};
+    const newHeaders = new Headers(headers);
+    newHeaders.delete('Content-Type');
+
+    return this.request(endpoint, {
+      ...restOptions,
+      method: "POST",
+      body: formData,
+      headers: newHeaders,
     });
   }
 }
