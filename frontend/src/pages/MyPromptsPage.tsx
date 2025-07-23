@@ -136,7 +136,7 @@ export default function MyPromptsPage() {
               uses: p.usageCount,   // Default, backend does not provide
               featured: p.featured || false,
               price: p.price || 0,
-              isPrivate: p.visibility !== "public",
+              isPrivate: p.visibility === "private",
               isFavorite: false, // Default, backend does not provide
               authorName: p.authorName || userProfile?.username || "You",
               source:p.source,
