@@ -157,5 +157,48 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        Page<PromptWithSourceDTO> findByAuthorIdAndVisibilityAndOptionalTag(
               @Param("authorId") UUID authorId, @Param("tagId") UUID tagId,
               @Param("visibility") String visibility, Pageable pageable);
+       
+       @Query(value = """
+       SELECT
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              author_user.username AS authorName,
+              array_agg(t.name) AS tagNames,
+              'authored' AS source,
+              (
+                     SELECT COUNT(*)
+                     FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+              ) AS usageCount
+       FROM
+              prompts p
+       JOIN users author_user ON author_user.user_id = p.author_id
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE 
+              p.author_id = :authorId
+              AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND created_at >= NOW() - INTERVAL '7 days'
+       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price
+       """, 
+       countQuery = """
+       SELECT COUNT(DISTINCT p.prompt_id)
+       FROM
+              prompts p
+       JOIN users author_user ON author_user.user_id = p.author_id
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE 
+              p.author_id = :authorId
+              AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND created_at >= NOW() - INTERVAL '7 days'
+       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price
+       """,
+       nativeQuery = true)
+       Page<PromptWithSourceDTO> findRecentPromptsByAuthorIdAndAndOptionalTag(
+              @Param("authorId") UUID authorId, @Param("tagId") UUID tagId, Pageable pageable);
+
 
 }
