@@ -31,8 +31,8 @@ public class PromptService {
 
   public Page<PromptWithSourceDTO> getPromptsByAuthor(UUID authorId,Pageable pageable) {
     int offset = (int)pageable.getPageNumber()-1*pageable.getPageSize();
-    List<PromptWithSourceDTO> prompts = promptRepository.findByAuthorIdAndOptionalTagName(authorId,null,
-      pageable.getPageSize(),offset);
+    List<PromptWithSourceDTO> prompts = promptRepository.findByAuthorIdAndOptionalTagName(authorId,
+    null, pageable.getPageSize(),offset);
 
     long totalElements = promptRepository.countAuthoredPrompts(authorId);
     return new PageImpl<>(prompts, pageable, totalElements);
@@ -132,7 +132,7 @@ public class PromptService {
     }
     List<PromptWithSourceDTO> prompts = promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(
       userId, tagId,pageable.getPageSize(),(int)pageable.getOffset());
-    long totalElements = promptRepository.countPurchasedPromptsByOptionalTagName(userId,tagId);  //thissssssssssssssss
+    long totalElements = promptRepository.countPurchasedPromptsByOptionalTagName(userId,tagId);
     return new PageImpl<>(prompts,pageable,totalElements);
   }
   
@@ -148,7 +148,7 @@ public class PromptService {
     int pageSize = pageable.getPageSize();
     int offset = (int) pageable.getOffset();
 
-    long totalPurchased = promptRepository.countPurchasedPromptsByOptionalTagName(userId,tagId); //thisssssssssssssssssssssssssssss
+    long totalPurchased = promptRepository.countPurchasedPromptsByOptionalTagName(userId,tagId);
     long totalAuthored = promptRepository.countByAuthoredAndTags(userId,tagId);
     long totalElements = totalPurchased + totalAuthored;
 
@@ -164,7 +164,8 @@ public class PromptService {
       System.out.println("offset < totalPurchased");
       int purchasedLimit = Math.min(pageSize, (int) (totalPurchased - offset));
       List<PromptWithSourceDTO> purchasedPrompts =
-      promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, purchasedLimit, offset);
+      promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, purchasedLimit,
+       offset);
       combined.addAll(purchasedPrompts);
 
       int remaining = pageSize - purchasedPrompts.size();
@@ -173,7 +174,7 @@ public class PromptService {
         /*start authored prompts from 0 if the end of purchased prompts is reached 
         and dont add up to the limit*/
         List<PromptWithSourceDTO> authoredPrompts =
-          promptRepository.findByAuthorIdAndOptionalTagName(userId, tagId, remaining, 0); //thisssssssss2
+          promptRepository.findByAuthorIdAndOptionalTagName(userId, tagId, remaining, 0);
         combined.addAll(authoredPrompts);
 
         System.out.println("authoredPrompts size:"+ authoredPrompts.size());
@@ -183,20 +184,21 @@ public class PromptService {
       System.out.println("elseeeeeeeeeeeeeee");
       int authoredOffset = (int) (offset - totalPurchased);
       List<PromptWithSourceDTO> authoredPrompts =
-        promptRepository.findByAuthorIdAndOptionalTagName(userId, tagId, pageSize, authoredOffset); ////thisssssssss2
+        promptRepository.findByAuthorIdAndOptionalTagName(userId, tagId, pageSize, authoredOffset);
       combined.addAll(authoredPrompts);
     }
     System.out.println("combined.size():"+ combined.size());
     return new PageImpl<>(combined, pageable, totalElements);
   }
 
-  // public Page<PromptWithSourceDTO> getRecentAuthoredAndPurchasedPromptsByOptionalTag(UUID userId, String tagName, Pageable pageable){
+  // public Page<PromptWithSourceDTO> getRecentAuthoredAndPurchasedPromptsByOptionalTag(UUID userId,
+  //  String tagName, Pageable pageable){
 
 
   // }
 
-  public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPromptsByFilter(UUID userId, String tagName,
-   String filter, Pageable pageable) throws RuntimeException{
+  public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPromptsByFilter(UUID userId,
+    String tagName, String filter, Pageable pageable) throws RuntimeException{
     UUID tagId = null;
     if (tagName!=null) {
       tagId = tagService.getTagIdByName(tagName);
@@ -214,9 +216,9 @@ public class PromptService {
     // if(filter == "popular")
     //   return getPopularAuthoredAndPurchasedPrompts(userId, pageable);
 
-    
     if(filter.equals("public") || filter.equals("private"))
-      return promptRepository.findByAuthorIdAndVisibilityAndOptionalTag(userId,tagId,filter,pageable);
+      return promptRepository.findByAuthorIdAndVisibilityAndOptionalTag(userId,tagId,filter,
+        pageable);
     
     if (filter.equals("purchased"))
       return getPurchasedPromptsByOptionalTag(userId, tagName, pageable);
@@ -226,37 +228,6 @@ public class PromptService {
     System.out.println("\n\n//invaliddddddddddddddd filterrrrrrrrrrrrrrrrrrrrrrrrrrrr:" + filter);
 
     throw new RuntimeException("invalid filter");
-
-
-    // long totalPurchased = promptRepository.countPurchasedPromptsByTagName(userId,tagId);
-    // long totalAuthored = promptRepository.countByAuthoredAndTags(userId,tagId);
-    // long totalElements = totalPurchased + totalAuthored;
-
-    // List<PromptWithSourceDTO> combined = new ArrayList<>();
-
-    // if (offset < totalPurchased) {
-    //   int purchasedLimit = Math.min(pageSize, (int) (totalPurchased - offset));
-    //   List<PromptWithSourceDTO> purchasedPrompts =
-    //   promptRepository.getPurchasedPromptsByUserIdAndTagName(userId, tagId, purchasedLimit, offset);
-    //   combined.addAll(purchasedPrompts);
-
-    //   int remaining = pageSize - purchasedPrompts.size();
-    //   if (remaining > 0) {
-    //     /*start authored prompts from 0 if the end of purchased prompts is reached 
-    //     and dont add up to the limit*/
-    //     List<PromptWithSourceDTO> authoredPrompts =
-    //       promptRepository.findByAuthorIdAndByTagName(userId, tagId, remaining, 0);
-    //     combined.addAll(authoredPrompts);
-    //   }
-    // } 
-    // else {//purchased prompts exhausted; fetch authored prompts only
-    //   int authoredOffset = (int) (offset - totalPurchased);
-    //   List<PromptWithSourceDTO> authoredPrompts =
-    //     promptRepository.findByAuthorIdAndByTagName(userId, tagId, pageSize, authoredOffset);
-    //   combined.addAll(authoredPrompts);
-    // }
-
-    // return new PageImpl<>(combined, pageable, totalElements);
   }
 }
 

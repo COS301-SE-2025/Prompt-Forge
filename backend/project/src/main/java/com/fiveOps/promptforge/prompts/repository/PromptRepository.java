@@ -148,11 +148,14 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               prompts p
        JOIN users author_user ON author_user.user_id = p.author_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
-       WHERE p.author_id = :authorId AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags)) AND :visibility = p.visibility
+       WHERE 
+              p.author_id = :authorId 
+              AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND :visibility = p.visibility
        GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price
        """, nativeQuery = true)
-       Page<PromptWithSourceDTO> findByAuthorIdAndVisibilityAndOptionalTag(@Param("authorId") UUID authorId,
-              @Param("tagId") UUID tagId, @Param("visibility") String visibility, Pageable pageable);
-              
+       Page<PromptWithSourceDTO> findByAuthorIdAndVisibilityAndOptionalTag(
+              @Param("authorId") UUID authorId, @Param("tagId") UUID tagId,
+              @Param("visibility") String visibility, Pageable pageable);
 
 }
