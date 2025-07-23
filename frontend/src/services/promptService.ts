@@ -134,7 +134,7 @@ export class PromptService {
 
   async getPurchasedPrompts(page: number, size: number) {
     try {
-      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}&offset=0`)
+      const promptResponse = await this.httpClient.get(`/prompts/purchased?page=${page}&size=${size}`)
       return promptResponse.json();
       // return prompts;
     } catch (error) {
@@ -182,13 +182,24 @@ export class PromptService {
         const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?page=${page}&size=${size}`);
         return response.json();
       }
+
       if (tagName !== "all" && filterName === "all") {
         const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&page=${page}&size=${size}`);
         return response.json();
       }
 
+      if (tagName === "all" && filterName !== "all"){
+        console.log("tagName === all && filterName !== all");
+        
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?filterName=${filterName}&page=${page}&size=${size}`);
+        return response.json();
+      } 
+      
+      console.log("last lappppp");
+      const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&filterName=${filterName}&page=${page}&size=${size}`);
+      return response.json();
+      
       /*TODO:
-        if (tagName === "all" && filterName !== "all") 
         if (tagName !== "all" && filterName !== "all") 
       */
     }

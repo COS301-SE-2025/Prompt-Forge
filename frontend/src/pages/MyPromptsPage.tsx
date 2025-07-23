@@ -116,6 +116,7 @@ export default function MyPromptsPage() {
         
 
         let prompts = userPromptsPage.content
+        console.log("prompts",prompts);
         
         if (!Array.isArray(prompts)) prompts = []
         // Map backend fields to frontend MyPrompt interface
@@ -132,7 +133,7 @@ export default function MyPromptsPage() {
               createdAt: p.createdAt,
               updatedAt: p.publishedAt || p.createdAt,
               rating: averageRating || 0, // Default, backend does not provide
-              uses: 0,   // Default, backend does not provide
+              uses: p.usageCount,   // Default, backend does not provide
               featured: p.featured || false,
               price: p.price || 0,
               isPrivate: p.visibility !== "public",
@@ -440,7 +441,8 @@ export default function MyPromptsPage() {
                     variant="ghost"
                     className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                       }`}
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => {setSelectedCategory(category)
+                      setCurrentPage(1)}}
                   >
                     {category === "all" ? "All" : category}
                     {/* {category === "all"?"yesss":"nooo"} */}
@@ -615,6 +617,7 @@ export default function MyPromptsPage() {
                       setSearchQuery("")
                       setSelectedCategory("all")
                       setSelectedFilter("all")
+                      setCurrentPage(1);
                     }}
                   >
                     Clear Filters
