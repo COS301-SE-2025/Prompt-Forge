@@ -3,27 +3,32 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { ReviewCard } from "./ReviewCard"
-import { BookOpen, MessageSquare, Info } from "lucide-react"
+import { BookOpen, MessageSquare, Info, Edit, Trash2 } from "lucide-react"
 import { PurchaseButton } from "./PurchaseButton"
 import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
-import type { PromptWithTags, Review } from "@/Models/Prompt"
+import type { PromptWithTags, Review } from "@/models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
+import httpClient from "../services/httpClient"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  //const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [userAddedToCart, setUserAddedToCart] = useState(false)
-  const [checkingOwnership, setCheckingOwnership] = useState(true)
+
+  const [editingReview, setEditingReview] = useState<string | null>(null)
+  const [deletingReview, setDeletingReview] = useState<string | null>(null)
+  const [editingReviewData, setEditingReviewData] = useState<{id: string, rating: number, comment: string} | null>(null)
+
   const promptService = new PromptService()
   const cartService = new CartService()
 
@@ -35,43 +40,62 @@ export const PromptDetails = () => {
 
         // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
-        
         setUserOwnsPrompt(promptData.ownership);
         setUserAddedToCart(promptData.addedToCart);
         setPrompt(promptData)
-        // Check if user owns the prompt (for paid prompts)
-        if (promptData.price > 0) {
-          setCheckingOwnership(true)
-          try {
-            // const token = localStorage.getItem("token")
-            // if (token) {
-            //   const response = await fetch(`/api/store/prompts/${id}/ownership`, {
-            //     headers: {
-            //       Authorization: `Bearer ${token}`,
-            //     },
-            //   })
-          
-
-            //   if (response.ok) {
-            //     const ownershipData = await response.json()
-            //     setUserOwnsPrompt(ownershipData.owns || false)
-            //   }
-            // }
-          } catch (ownershipError) {
-            console.warn("Could not check prompt ownership:", ownershipError)
-            setUserOwnsPrompt(false)
-          } finally {
-            setCheckingOwnership(false)
-          }
-        } else {
-          // Free prompts are always accessible
-          setUserOwnsPrompt(true)
-          setCheckingOwnership(false)
-        }
-
+    
         // Only try to fetch reviews if we got a prompt successfully
         const reviewsData = await promptService.getPromptReviews(id!)
         setReviews(reviewsData)
+        
+        // Enhanced JWT token parsing (same as MyPromptsPage)
+        const checkAuthAndGetUserId = async () => {
+          try {
+            // Check if user is logged in
+            const username = localStorage.getItem('username')
+            if (!username || username === 'Guest') {
+              console.log("User not authenticated")
+              setCurrentUserId(null)
+              return
+            }
+
+            //Get user profile using JWT token (sent via cookies)
+            console.log("Fetching user profile for review permissions...")
+            const response = await httpClient.get('/user/me')
+
+            if (response.ok) {
+              const userData = await response.json()
+              setCurrentUserId(userData.userId)
+              console.log("User profile loaded for reviews:", userData.userId)
+            } else if (response.status === 401) {
+              console.log("Unauthorized")
+              setCurrentUserId(null)
+            } else {
+              // Fallback: try to get from localStorage
+              const fallbackUserId = localStorage.getItem('userId')
+              if (fallbackUserId) {
+                setCurrentUserId(fallbackUserId)
+                console.log("Using fallback userId:", fallbackUserId)
+              } else {
+                console.log("No userId available")
+                setCurrentUserId(null)
+              }
+            }
+          } catch (error) {
+            console.error("Auth check failed:", error)
+            // Fallback: try to get from localStorage
+            const fallbackUserId = localStorage.getItem('userId')
+            if (fallbackUserId) {
+              setCurrentUserId(fallbackUserId)
+              console.log("Using fallback userId after error:", fallbackUserId)
+            } else {
+              setCurrentUserId(null)
+            }
+          }
+        }
+
+        await checkAuthAndGetUserId()
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load data")
       } finally {
@@ -86,6 +110,12 @@ export const PromptDetails = () => {
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
 
   const handlePurchase = async () => {
+    // Prevent authors from purchasing their own prompts
+    if (currentUserId === prompt?.authorId) {
+      alert("You cannot purchase your own prompt");
+      return;
+    }
+
     cartService.addToCart(id)
     .then(res => {
       alert(res.message);
@@ -96,38 +126,70 @@ export const PromptDetails = () => {
     })
   }
 
-  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+  // const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+  //   try {
+  //     await promptService.postReview(id!, review)
+      
+  //     // Refresh reviews after successful submission
+  //     const reviewsData = await promptService.getPromptReviews(id!)
+  //     setReviews(reviewsData)
+  //   } catch (err) {
+  //     console.error("Review submission error:", err)
+  //     alert("Failed to submit review")
+  //   }
+  // }
+
+  const handleReviewUpdate = async (reviewId: string, updatedReview: { rating: number; comment: string }) => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication required")
-      }
-
-      const response = await fetch(`/api/store/prompts/${id}/reviews`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          rating: review.rating,
-          comment: review.comment,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to submit review")
-      }
-
-      const newReview = await response.json()
-      setReviews((prev) => [...prev, newReview])
+      setEditingReview(reviewId)
+      await promptService.updateReview(id!, reviewId, updatedReview)
+      
+      // Refresh reviews after successful update
+      const reviewsData = await promptService.getPromptReviews(id!)
+      setReviews(reviewsData)
+      setEditingReview(null)
+      setEditingReviewData(null) // Clear edit mode
     } catch (err) {
-      console.error("Review submission error:", err)
-      alert("Failed to submit review")
+      console.error("Review update error:", err)
+      alert("Failed to update review")
+      setEditingReview(null)
     }
   }
 
-  if (loading || checkingOwnership) {
+  const handleReviewDelete = async (reviewId: string) => {
+    if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      setDeletingReview(reviewId) // Show loading state
+      await promptService.deleteReview(id!, reviewId)
+      
+      // Refresh reviews after successful deletion
+      const reviewsData = await promptService.getPromptReviews(id!)
+      setReviews(reviewsData)
+      setDeletingReview(null)
+    } catch (err) {
+      console.error("Review deletion error:", err)
+      alert("Failed to delete review")
+      setDeletingReview(null)
+    }
+  }
+
+  // Check if current user can edit/delete a review
+  const canModifyReview = (review: Review) => {
+    if (!currentUserId) return false;
+    
+    // Log for debugging
+    console.log('Current User ID:', currentUserId);
+    console.log('Review User ID:', review.userId);
+    console.log('Review object:', review);
+    
+    // Try both direct comparison and string comparison
+    return currentUserId === review.userId || currentUserId === review.userId?.toString();
+  }
+
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
@@ -291,7 +353,7 @@ export const PromptDetails = () => {
                 <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
                 Prompt
               </h2>
-              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto custom-scrollbar">
                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-mono">
                   {prompt.content}
                 </p>
@@ -338,13 +400,54 @@ export const PromptDetails = () => {
             {reviews.length > 0 ? (
               <div className="space-y-3 mb-4">
                 {reviews.map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    userName={review.userName}
-                    // date={review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "No date"}
-                    rating={review.rating}
-                    comment={review.comment}
-                  />
+                  <div key={review.id} className="relative">
+                    <ReviewCard
+                      userName={review.userName}
+                      rating={review.rating}
+                      comment={review.comment}
+                    />
+                    
+                    {/* Bigger Edit/Delete buttons for user's own reviews */}
+                    {canModifyReview(review) && (
+                      <div className="absolute top-3 right-3 flex gap-2 z-20 bg-white dark:bg-gray-800 rounded-lg">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md"
+                          onClick={() => {
+                            setEditingReviewData({
+                              id: review.id,
+                              rating: review.rating,
+                              comment: review.comment
+                            })
+                          }}
+                          disabled={editingReview === review.id}
+                          title="Edit review"
+                        >
+                          {editingReview === review.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          ) : (
+                            <Edit className="h-4 w-4 text-blue-600" />
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
+                          onClick={() => handleReviewDelete(review.id)}
+                          disabled={deletingReview === review.id}
+                          title="Delete review"
+                        >
+                          {deletingReview === review.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -353,19 +456,70 @@ export const PromptDetails = () => {
               </div>
             )}
 
-            {/* Only allow reviews if user owns the prompt or it's free */}
-            {canViewContent && (
-              <ReviewForm
-                promptId={id!}
-                onSubmitSuccess={() => {
-                  // Refresh reviews after successful submission
-                  const fetchReviews = async () => {
-                    const reviewsData = await promptService.getPromptReviews(id!)
-                    setReviews(reviewsData)
-                  }
-                  fetchReviews()
-                }}
-              />
+            {/* Only allow reviews if user owns the prompt or it's free AND user is not the author */}
+            {canViewContent && currentUserId !== prompt.authorId && (
+              <>
+                {editingReviewData ? (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                        Edit Your Review
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingReviewData(null)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <ReviewForm
+                      promptId={id!}
+                      editMode={true}
+                      initialRating={editingReviewData.rating}
+                      initialComment={editingReviewData.comment}
+                      onSubmitSuccess={() => {
+                        // Refresh reviews after successful update
+                        const fetchReviews = async () => {
+                          const reviewsData = await promptService.getPromptReviews(id!)
+                          setReviews(reviewsData)
+                        }
+                        fetchReviews()
+                        setEditingReviewData(null) // Clear edit mode
+                      }}
+                      onUpdate={(updatedReview) => {
+                        handleReviewUpdate(editingReviewData.id, updatedReview)
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <ReviewForm
+                    promptId={id!}
+                    onSubmitSuccess={() => {
+                      // Refresh reviews after successful submission
+                      const fetchReviews = async () => {
+                        const reviewsData = await promptService.getPromptReviews(id!)
+                        setReviews(reviewsData)
+                      }
+                      fetchReviews()
+                    }}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Show message if user is the author */}
+            {canViewContent && currentUserId === prompt.authorId && (
+              <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <MessageSquare className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="font-medium text-gray-700 dark:text-gray-300">You can't review your own prompt</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Authors cannot leave reviews on their own prompts</p>
+                </div>
+              </div>
             )}
           </Card>
         </div>
@@ -383,19 +537,20 @@ export const PromptDetails = () => {
                   </p>
                 </div>
 
-                {userOwnsPrompt ? (
+                {currentUserId === prompt.authorId ? (
+                  <div className="text-center py-3 px-4 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-lg">
+                    <span className="text-sm font-medium">📝 Your Prompt</span>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">You cannot purchase your own prompt</p>
+                  </div>
+                ) : userOwnsPrompt ? (
                   <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
                     <span className="text-sm font-medium">✓ Owned</span>
                   </div>
-                ) :
-                
-                userAddedToCart? (
-                    <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
-                      <span className="text-sm font-medium">✓ Added to cart</span>
-                    </div>
-                ):
-                
-                (
+                ) : userAddedToCart ? (
+                  <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
+                    <span className="text-sm font-medium">✓ Added to cart</span>
+                  </div>
+                ) : (
                   <PurchaseButton
                     price={prompt.price}
                     onClick={handlePurchase}

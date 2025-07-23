@@ -13,60 +13,58 @@ import com.fiveOps.promptforge.prompts.repository.TagRepository;
 @Service
 @Transactional
 public class TagService {
-    private final TagRepository tagRepository;
+  private final TagRepository tagRepository;
 
-    public TagService(TagRepository tagRepository) {
-        this.tagRepository = tagRepository;
-    }
+  public TagService(TagRepository tagRepository) {
+    this.tagRepository = tagRepository;
+  }
 
-    public Tag findOrCreateTag(String name) {
-        String normalizedName = normalizeTagName(name);
-        return tagRepository.findByName(normalizedName)
-            .orElseGet(() -> {
-                Tag newTag = Tag.builder()
-                    .name(normalizedName)
-                    .slug(generateSlug(normalizedName))
-                    .build();
-                return tagRepository.save(newTag);
+  public Tag findOrCreateTag(String name) {
+    String normalizedName = normalizeTagName(name);
+    return tagRepository
+        .findByName(normalizedName)
+        .orElseGet(
+            () -> {
+              Tag newTag =
+                  Tag.builder().name(normalizedName).slug(generateSlug(normalizedName)).build();
+              return tagRepository.save(newTag);
             });
-    }
+  }
 
-    public List<Tag> findOrCreateTags(List<String> tagNames) {
-        return tagNames.stream()
-            .map(this::findOrCreateTag)
-            .collect(Collectors.toList());
-    }
+  public List<Tag> findOrCreateTags(List<String> tagNames) {
+    return tagNames.stream().map(this::findOrCreateTag).collect(Collectors.toList());
+  }
 
-    @Transactional
-    public void incrementUsageCount(UUID tagId) {
-        tagRepository.incrementUsageCount(tagId);
-    }
+  @Transactional
+  public void incrementUsageCount(UUID tagId) {
+    tagRepository.incrementUsageCount(tagId);
+  }
 
-    public String normalizeTagName(String name) {
-        return name.trim();
-    }
+  public String normalizeTagName(String name) {
+    return name.trim();
+  }
 
-    public String generateSlug(String name) {
-        return name.toLowerCase()
-            .replaceAll("[^a-z0-9-]", "-")
-            .replaceAll("-+", "-");
-    }
+  public String generateSlug(String name) {
+    return name.toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("-+", "-");
+  }
 
-    public UUID getTagIdByName(String tagName) {
-    return tagRepository.findByName(tagName)
+  public UUID getTagIdByName(String tagName) {
+    return tagRepository
+        .findByName(tagName)
         .orElseThrow(() -> new RuntimeException("Tag not found: " + tagName))
         .getId();
-    }
+  }
 
-    // Add to TagService.java
-    public List<Tag> getAllTags() {
-        return tagRepository.findAll();
-    }
+  // Add to TagService.java
+  public List<Tag> getAllTags() {
+    return tagRepository.findAll();
+  }
 
-    public List<Tag> getPopularTags(int limit) {
-        return tagRepository.findPopularTags(limit);
-    }
-    public List<Tag> getTagsByIds(List<UUID> tagIds) {
+  public List<Tag> getPopularTags(int limit) {
+    return tagRepository.findPopularTags(limit);
+  }
+
+  public List<Tag> getTagsByIds(List<UUID> tagIds) {
     return tagRepository.findAllById(tagIds);
-    }
+  }
 }

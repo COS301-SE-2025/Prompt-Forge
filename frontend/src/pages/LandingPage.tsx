@@ -44,30 +44,30 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
-                <BrainCircuit className="w-6 h-6 text-[#3ebb9e] " />
+                <BrainCircuit className="w-8 h-8 text-[#3ebb9e] " />
               </div>
-              <span className="text-lg font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
+              <span className="text-2xl font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a
                 href="#features"
-                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
               >
                 Features
               </a>
               <a
                 href="#how-it-works"
-                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
               >
                 How It Works
               </a>
               {/* ✅ Replace Pricing with Help & FAQ */}
               <Link
                 to="/help"
-                className="text-sm font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
               >
                 Help & FAQ
               </Link>
