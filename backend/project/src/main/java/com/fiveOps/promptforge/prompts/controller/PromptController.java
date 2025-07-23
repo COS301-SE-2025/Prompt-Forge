@@ -184,30 +184,40 @@ public class PromptController {
         System.out.println("\nuserEmail in purchased:"+userEmail);
         System.out.println("\nuserId in purchased:"+userId);
         System.out.println(userId);
-        return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
+        return ResponseEntity.ok(promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable));
         
     }
 
     @GetMapping("/myprompts/{userId}")
     public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
       @PathVariable UUID userId ,@RequestParam(required = false) String tagName,
-        @RequestParam(required = false) String filtername, Pageable pageable){
-      if(tagName == null && filtername == null){
-        return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+        @RequestParam(required = false) String filterName, Pageable pageable){
+      System.out.println("\n\ntag:" + tagName + " and filter:" + filterName);
+
+      if(tagName == null && filterName == null){
+        System.out.println("\n\ntag and filter are null");
+
+        return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId,null, pageable));
       }
       
-      if(filtername == null){
+      if(filterName == null){
+        System.out.println("\n\nfilter is null and tag isnt");
         return ResponseEntity.ok(promptService
-        .getAuthoredAndPurchasedPromptsByTagID(userId ,tagName, pageable));
+        .getAuthoredAndPurchasedPromptsByOptionalTagID(userId, tagName, pageable));
         // return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
       }
 
       if(tagName == null){
+        System.out.println("\n\ntag is null and filter isnt");
+        return ResponseEntity.ok(promptService
+        .getAuthoredAndPurchasedPromptsByFilter(userId, tagName, filterName,  pageable));
         //TODO: 
       }
 
+      System.out.println("\n\nboth arent null");
+
       //TODO:  
-      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+      return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, filterName, pageable));
     }
     
 }
