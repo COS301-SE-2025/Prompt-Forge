@@ -4,29 +4,26 @@ class ProfileService {
   private baseUrl = "/user";
 
   async getCurrentProfile(): Promise<any> {
-    const response = await fetch(`${HttpClient.apiUrl}${this.baseUrl}/me`, {
-      credentials: "include",
-    });
+    const response = await HttpClient.get(`${this.baseUrl}/me`);
     if (!response.ok) throw new Error("Failed to fetch profile");
     return await response.json();
   }
 
   async updateCurrentProfile(data: any): Promise<any> {
-    // If user wants to remove profile picture
+    // Remove profile picture if user cleared it
     if (
       "profilePicture" in data &&
       (!data.profilePicture || data.profilePicture.trim() === "")
     ) {
       try {
         await this.deleteProfilePicture();
-        // Remove profilePicture from payload so backend doesn't overwrite it
         delete data.profilePicture;
       } catch (err) {
         console.error("Error deleting profile picture:", err);
       }
     }
 
-    // If user wants to upload a new profile picture (expects a File object)
+    // Upload new profile picture if present
     if (data.profilePicture instanceof File) {
       try {
         const url = await this.uploadProfilePicture(data.profilePicture);
@@ -37,21 +34,12 @@ class ProfileService {
       }
     }
 
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/me`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-        credentials: "include",
-      }
-    );
+    const response = await HttpClient.patch(`${this.baseUrl}/me`, data);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to update profile");
     }
+
     return await response.json();
   }
 
@@ -59,13 +47,9 @@ class ProfileService {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/upload-picture`,
-      {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      }
+    const response = await HttpClient.uploadForm(
+      `${this.baseUrl}/upload-picture`,
+      formData
     );
 
     if (!response.ok) {
@@ -74,18 +58,11 @@ class ProfileService {
     }
 
     const result = await response.json();
-    return result.url; // returns string URL
+    return result.url;
   }
 
   async deleteProfilePicture(): Promise<void> {
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/delete-picture`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
-
+    const response = await HttpClient.delete(`${this.baseUrl}/delete-picture`);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to delete picture");
