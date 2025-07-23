@@ -44,28 +44,24 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Generate package-lock.json
-        working-directory: ./frontend
-        run: |
-          npm install
-          npm install --save-dev \
-            eslint@^8.0.0 \
-            @eslint/js \
-            globals \
-            eslint-plugin-react-hooks \
-            eslint-plugin-react-refresh \
-            typescript-eslint \  # Add this line
-            @typescript-eslint/eslint-plugin \
-            @typescript-eslint/parser
-
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          npm install --save-dev \
+            eslint@latest \
+            @eslint/js@latest \
+            globals@latest \
+            eslint-plugin-react-hooks@latest \
+            eslint-plugin-react-refresh@latest \
+            typescript-eslint@latest \
+            @typescript-eslint/eslint-plugin@latest \
+            @typescript-eslint/parser@latest
+          npm ci
 
       - name: Lint Frontend
         working-directory: ./frontend
-        run: npx eslint . --config eslint.config.js
+        run: npm run lint
 
       - name: Run Frontend Tests and Coverage
         working-directory: ./frontend
-        run: npx jest --coverage
+        run: npm run test
