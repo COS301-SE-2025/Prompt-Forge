@@ -30,9 +30,8 @@ public class PromptService {
   }
 
   public Page<PromptWithSourceDTO> getPromptsByAuthor(UUID authorId,Pageable pageable) {
-    int offset = (int)pageable.getPageNumber()-1*pageable.getPageSize();
     List<PromptWithSourceDTO> prompts = promptRepository.findByAuthorIdAndOptionalTagName(authorId,
-    null, pageable.getPageSize(),offset);
+    null, pageable.getPageSize(),(int)pageable.getOffset());
 
     long totalElements = promptRepository.countAuthoredPrompts(authorId);
     return new PageImpl<>(prompts, pageable, totalElements);
@@ -191,11 +190,63 @@ public class PromptService {
     return new PageImpl<>(combined, pageable, totalElements);
   }
 
-  // public Page<PromptWithSourceDTO> getRecentAuthoredAndPurchasedPromptsByOptionalTag(UUID userId,
-  //  String tagName, Pageable pageable){
+  public Page<PromptWithSourceDTO> getRecentAuthoredAndPurchasedPromptsByOptionalTag(UUID userId,
+      String tagName, Pageable pageable) {
+
+    UUID tagId = null;
+
+    if (tagName != null) {
+      tagId = tagService.getTagIdByName(tagName);
+    }
+
+    int pageSize = pageable.getPageSize();
+    int offset = (int) pageable.getOffset();
+
+    long totalPurchased = promptRepository
+      .countPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId);
+    long totalAuthored = promptRepository.countRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId);
+    long totalElements = totalPurchased + totalAuthored;
+
+    System.out.println("\n\n///////////////////////////page:" + pageable.getPageNumber());
+    System.out.println("totalPurchased:" + totalPurchased);
+    System.out.println("totalAuthored:" + totalAuthored);
+    System.out.println("totalElements:" + totalElements);
+
+    List<PromptWithSourceDTO> combined = new ArrayList<>();
+
+    if (offset < totalPurchased) {
+      System.out.println("offset < totalPurchased");
+      int purchasedLimit = Math.min(pageSize, (int) (totalPurchased - offset));
+      List<PromptWithSourceDTO> purchasedPrompts = promptRepository
+        .getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId, purchasedLimit,
+          offset);
+      combined.addAll(purchasedPrompts);
+
+      int remaining = pageSize - purchasedPrompts.size();
+      if (remaining > 0) {
+        System.out.println("remaining > 0");
+        /*
+         * start authored prompts from 0 if the end of purchased prompts is reached
+         * and dont add up to the limit
+         */
+        List<PromptWithSourceDTO> authoredPrompts = promptRepository
+          .findRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId, remaining, 0);
+        combined.addAll(authoredPrompts);
+
+        System.out.println("authoredPrompts size:" + authoredPrompts.size());
+      }
+    } else {// purchased prompts exhausted; fetch authored prompts only
+      System.out.println("elseeeeeeeeeeeeeee");
+      int authoredOffset = (int) (offset - totalPurchased);
+      List<PromptWithSourceDTO> authoredPrompts = promptRepository.findRecentPromptsByAuthorIdAndAndOptionalTag(
+        userId, tagId, pageSize, authoredOffset);
+      combined.addAll(authoredPrompts);
+    }
+    System.out.println("combined.size():" + combined.size());
+    return new PageImpl<>(combined, pageable, totalElements);
+  }
 
 
-  // }
 
   public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPromptsByFilter(UUID userId,
     String tagName, String filter, Pageable pageable) throws RuntimeException{
@@ -209,12 +260,13 @@ public class PromptService {
 
     // if(filter == "favorites")
     //   return getFavouritePrompts(userId, pageable);
-
-    // if(filter == "recent")
-    //   return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
-    
+  
     // if(filter == "popular")
     //   return getPopularAuthoredAndPurchasedPrompts(userId, pageable);
+
+    
+    if(filter.equals("recent"))
+      return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     if(filter.equals("public") || filter.equals("private"))
       return promptRepository.findByAuthorIdAndVisibilityAndOptionalTag(userId,tagId,filter,
