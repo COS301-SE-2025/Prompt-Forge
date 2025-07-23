@@ -1,9 +1,5 @@
 package com.fiveOps.promptforge.user_profile.service;
 
-import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
-import com.fiveOps.promptforge.user_profile.dto.UserDto;
-import com.fiveOps.promptforge.user_profile.model.User;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,64 +9,65 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
+import com.fiveOps.promptforge.user_profile.dto.UserDto;
+import com.fiveOps.promptforge.user_profile.model.User;
+import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 @Service
 public class UserService {
 
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
   private final Path uploadDir = Paths.get("uploads/profile-pictures");
   private final PasswordEncoder passwordEncoder;
-  private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png", "image/gif");
+  private static final List<String> ALLOWED_MIME_TYPES =
+      List.of("image/jpeg", "image/png", "image/gif");
   private static final List<String> ALLOWED_EXTENSIONS = List.of(".jpg", ".jpeg", ".png", ".gif");
-  public UserService(
-    UserRepository userRepository,
-    PasswordEncoder passwordEncoder
-  ) {
+
+  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
   public UserDto getUserById(UUID id) {
-    User user = userRepository
-      .findById(id)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     return mapToDto(user);
   }
 
   public UserDto getUserByEmail(String email) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
     return mapToDto(user);
   }
 
   @Transactional
   public UserDto updateUser(UUID id, UpdateProfileDto dto) {
-    User user = userRepository
-      .findById(id)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     return updateUserFields(user, dto);
   }
 
   @Transactional
   public UserDto updateUserByEmail(String email, UpdateProfileDto dto) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
     return updateUserFields(user, dto);
   }
 
   private UserDto updateUserFields(User user, UpdateProfileDto dto) {
     // Email update (with uniqueness check)
-    if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(user.getEmail())) {
+    if (dto.getEmail() != null
+        && !dto.getEmail().isBlank()
+        && !dto.getEmail().equals(user.getEmail())) {
       if (userRepository.existsByEmail(dto.getEmail())) {
         throw new RuntimeException("Email is already in use");
       }
@@ -78,7 +75,9 @@ public class UserService {
     }
 
     // Username update (with uniqueness check)
-    if (dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(user.getUsername())) {
+    if (dto.getUsername() != null
+        && !dto.getUsername().isBlank()
+        && !dto.getUsername().equals(user.getUsername())) {
       if (userRepository.existsByUsername(dto.getUsername())) {
         throw new RuntimeException("Username is already taken");
       }
@@ -110,13 +109,8 @@ public class UserService {
     return mapToDto(updatedUser);
   }
 
-
   public List<UserDto> getAllUsers() {
-    return userRepository
-      .findAll()
-      .stream()
-      .map(this::mapToDto)
-      .collect(Collectors.toList());
+    return userRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
   }
 
   public void deleteUser(UUID id) {
@@ -144,43 +138,42 @@ public class UserService {
     dto.setFollowing(user.getFollowing() != null ? Arrays.asList(user.getFollowing()) : List.of());
 
     return dto;
-}
+  }
 
   public UUID getUserIdByEmail(String email) {
     return userRepository
-      .findByEmail(email)
-      .map(User::getUserId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+        .findByEmail(email)
+        .map(User::getUserId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
   public String saveProfilePicture(String email, MultipartFile file) {
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
     // 🔒 Validate the file first
     validateImageFile(file);
 
     try {
-        Files.createDirectories(uploadDir); // safe if exists
-        String filename = user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = uploadDir.resolve(filename);
-        Files.write(filePath, file.getBytes());
+      Files.createDirectories(uploadDir); // safe if exists
+      String filename =
+          user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+      Path filePath = uploadDir.resolve(filename);
+      Files.write(filePath, file.getBytes());
 
-        user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+      user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
+      user.setUpdatedAt(LocalDateTime.now());
+      userRepository.save(user);
 
-        return user.getProfilePictureUrl();
+      return user.getProfilePictureUrl();
     } catch (IOException e) {
-        throw new RuntimeException("Failed to save profile picture", e);
+      throw new RuntimeException("Failed to save profile picture", e);
     }
-}
-
+  }
 
   public void deleteProfilePicture(String email) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
     String pictureUrl = user.getProfilePictureUrl();
     if (pictureUrl == null || pictureUrl.isBlank()) {
@@ -203,21 +196,17 @@ public class UserService {
   }
 
   public List<UserDto> searchUsers(String query) {
-    List<User> matchedUsers = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-      query,
-      query
-    );
-    return matchedUsers
-      .stream()
-      .map(this::mapToDto)
-      .collect(Collectors.toList());
+    List<User> matchedUsers =
+        userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+    return matchedUsers.stream().map(this::mapToDto).collect(Collectors.toList());
   }
 
   public List<UserDto> getFollowersByEmail(String email) {
     User user = getUserEntityByEmail(email);
-    List<UUID> followerIds = user.getFollowers() != null
-      ? Arrays.asList(user.getFollowers())
-      : List.of(); // handle nulls safely
+    List<UUID> followerIds =
+        user.getFollowers() != null
+            ? Arrays.asList(user.getFollowers())
+            : List.of(); // handle nulls safely
 
     List<User> followers = userRepository.findAllById(followerIds);
     return followers.stream().map(this::mapToDto).toList();
@@ -225,24 +214,24 @@ public class UserService {
 
   private User getUserEntityByEmail(String email) {
     return userRepository
-      .findByEmail(email)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+        .findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
   public List<UserDto> getFollowingByEmail(String email) {
     User user = getUserEntityByEmail(email);
-    List<UUID> followingIds = user.getFollowing() != null
-      ? Arrays.asList(user.getFollowing())
-      : List.of();
+    List<UUID> followingIds =
+        user.getFollowing() != null ? Arrays.asList(user.getFollowing()) : List.of();
 
     List<User> following = userRepository.findAllById(followingIds);
     return following.stream().map(this::mapToDto).toList();
   }
 
   public UserDto getUserByUsername(String username) {
-    User user = userRepository
-      .findByUsername(username)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
     return mapToDto(user);
   }
 
@@ -251,28 +240,29 @@ public class UserService {
     String filename = file.getOriginalFilename();
 
     if (file.isEmpty()) {
-        throw new RuntimeException("File is empty");
+      throw new RuntimeException("File is empty");
     }
 
     // Check MIME type
     if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
-        throw new RuntimeException("Unsupported file type: " + contentType);
+      throw new RuntimeException("Unsupported file type: " + contentType);
     }
 
     // Check file extension
-    if (filename == null || ALLOWED_EXTENSIONS.stream().noneMatch(filename.toLowerCase()::endsWith)) {
-        throw new RuntimeException("Invalid file extension");
+    if (filename == null
+        || ALLOWED_EXTENSIONS.stream().noneMatch(filename.toLowerCase()::endsWith)) {
+      throw new RuntimeException("Invalid file extension");
     }
 
     // Optionally: max size (e.g., 5MB)
     if (file.getSize() > 5 * 1024 * 1024) {
-        throw new RuntimeException("File size exceeds 5MB limit");
+      throw new RuntimeException("File size exceeds 5MB limit");
     }
-}
+  }
 
   public User findByEmail(String email) {
     return userRepository
-      .findByEmail(email)
-      .orElse(null); // Return null if not found, let controller handle it
-}
+        .findByEmail(email)
+        .orElse(null); // Return null if not found, let controller handle it
+  }
 }
