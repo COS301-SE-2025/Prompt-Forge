@@ -1,0 +1,21 @@
+import { render, screen } from '@testing-library/react';
+import StreamingControls from './StreamingControls';
+
+test('calls setStreamingEnabled when switch is toggled', () => {
+  const mockSetStreamingEnabled = jest.fn();
+  render(<StreamingControls setStreamingEnabled={mockSetStreamingEnabled} />);
+  
+  const toggleSwitch = screen.getByRole('checkbox');
+  fireEvent.click(toggleSwitch);
+  
+  expect(mockSetStreamingEnabled).toHaveBeenCalled();
+});
+
+test('adjusts typing speed when slider is changed', () => {
+  render(<StreamingControls />);
+  
+  const slider = screen.getByLabelText(/Typing Speed/i);
+  fireEvent.change(slider, { target: { value: '20' } });
+  
+  expect(slider.value).toBe('20');
+});

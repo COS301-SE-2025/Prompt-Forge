@@ -29,4 +29,5 @@ public interface PromptWithAuthorDTO {
   String[] getTagNames();
 
   String getAuthorName(); // (JOINed)
+
 }

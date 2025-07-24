@@ -15,7 +15,6 @@ import com.fiveOps.promptforge.analytics.dto.FeaturedPromptDTO;
 import com.fiveOps.promptforge.analytics.dto.TopRankingPromptDTO;
 import com.fiveOps.promptforge.analytics.dto.TrendingPromptDTO;
 import com.fiveOps.promptforge.analytics.repository.PromptAnalyticsRepository;
-import com.fiveOps.promptforge.analytics.services.PromptAnalyticsServiceImpl;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
 class PromptAnalyticsServiceImplTest {

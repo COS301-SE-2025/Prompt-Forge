@@ -17,7 +17,6 @@ import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, UUID> {
 
-
   List<Prompt> findByFeaturedTrue();
 
   List<Prompt> findByVisibility(String visibility);
@@ -85,7 +84,9 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
       nativeQuery = true)
   List<Prompt> findPublicPromptsUnderPrice(@Param("maxPrice") double maxPrice);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
        SELECT
               pp.purchase_id AS purchaseId,
               p.prompt_id AS id,
@@ -373,7 +374,6 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        long countPopularAuthoredPromptsByUserIdAndOptionalTag(
               @Param("authorId") UUID authorId,
               @Param("tagId") UUID tagId);
-
 
 }
 

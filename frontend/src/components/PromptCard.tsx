@@ -19,7 +19,7 @@ export const PromptCard = ({
   id, 
   tags,
   rating, 
-  reviewCount = 0,
+  //reviewCount = 0,
   title, 
   description, 
   authorname, 

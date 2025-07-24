@@ -121,7 +121,6 @@ public class PromptService {
     return promptRepository.searchPublicByTitle(searchTerm);
   }
 
-
   public Page<PromptWithSourceDTO> getPurchasedPromptsByOptionalTag
   (UUID userId, String tagName, Pageable pageable) {
     UUID tagId = null;
@@ -341,4 +340,3 @@ public class PromptService {
     throw new RuntimeException("invalid filter");
   }
 }
-
