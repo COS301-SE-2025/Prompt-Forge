@@ -5,6 +5,7 @@ import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-r
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
 import { Tag, MarketplacePrompt } from "@/models/Prompt"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 const PROMPTS_PER_PAGE = 12
 
@@ -56,6 +57,7 @@ export default function MarketplacePage() {
   const [error, setError] = useState<string | null>(null)
   const [ratingsLoading, setRatingsLoading] = useState(false)
   const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Pagination calculations
   const [totalPages, setTotalPages] = useState<number>(1)
@@ -236,67 +238,76 @@ export default function MarketplacePage() {
     <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
       <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:flex flex-col">
-          <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[calc(100vh-6rem)]">
-            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-            <div className="space-y-1 mb-6">
-              {filters.map((filter) => (
-                <Button
-                  key={filter.value}
-                  variant="ghost"
-                  className={`w-full justify-start text-sm h-8 px-2 ${
-                    selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                  }`}
-                  onClick={() => handleFilterChange(filter.value)}
-                >
-                  {filter.label}
-                </Button>
-              ))}
-            </div>
+        <div
+          className={`transition-all duration-300 ${
+            sidebarCollapsed ? "w-12" : "w-48"
+          } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative hidden md:flex flex-col`}
+        >
+          <button
+            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+          {!sidebarCollapsed && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[calc(100vh-6rem)]">
+              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+              <div className="space-y-1 mb-6">
+                {filters.map((filter) => (
+                  <Button
+                    key={filter.value}
+                    variant="ghost"
+                    className={`w-full justify-start text-sm h-8 px-2 ${
+                      selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    }`}
+                    onClick={() => handleFilterChange(filter.value)}
+                  >
+                    {filter.label}
+                  </Button>
+                ))}
+              </div>
 
-            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
-            <div className="space-y-1">
-              {/*All Categories button */}
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${
-                  selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                }`}
-                onClick={() => handleCategoryChange("all")}
-              >
-                All Categories
-              </Button>
-              
-              {/*Render actual tags from database - simplified version */}
-              {availableCategories.map((tag) => (
+              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
+              <div className="space-y-1">
                 <Button
-                  key={tag.id || tag.name}
                   variant="ghost"
                   className={`w-full justify-start text-sm h-8 px-2 ${
-                    selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                   }`}
-                  onClick={() => handleCategoryChange(tag.name)}
+                  onClick={() => handleCategoryChange("all")}
                 >
-                  <span className="truncate">{tag.name}</span>
-                  {/*Removed promptCount display */}
+                  All Categories
                 </Button>
-              ))}
-              
-              {/* ✅ Show loading state for categories */}
-              {categoriesLoading && (
-                <div className="flex justify-center py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
-                </div>
-              )}
-              
-              {/*Show empty state if no categories */}
-              {!categoriesLoading && availableCategories.length === 0 && (
-                <div className="text-xs text-muted-foreground px-2 py-1">
-                  No categories found
-                </div>
-              )}
+                {availableCategories.map((tag) => (
+                  <Button
+                    key={tag.id || tag.name}
+                    variant="ghost"
+                    className={`w-full justify-start text-sm h-8 px-2 ${
+                      selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    }`}
+                    onClick={() => handleCategoryChange(tag.name)}
+                  >
+                    <span className="truncate">{tag.name}</span>
+                  </Button>
+                ))}
+                {categoriesLoading && (
+                  <div className="flex justify-center py-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
+                  </div>
+                )}
+                {!categoriesLoading && availableCategories.length === 0 && (
+                  <div className="text-xs text-muted-foreground px-2 py-1">
+                    No categories found
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Content */}
