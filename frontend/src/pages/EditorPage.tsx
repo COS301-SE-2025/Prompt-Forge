@@ -1157,7 +1157,7 @@ const fallbackToWorkingModel = async () => {
             ) : currentView === "rate" ? (
               <>
                 {/* Rating Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1241,7 +1241,7 @@ const fallbackToWorkingModel = async () => {
             ) : (
               <>
                 {/* Suggestion Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'

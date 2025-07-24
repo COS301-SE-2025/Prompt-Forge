@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
-import { Star, Search, Filter, Plus } from "lucide-react"
+import { Star, Search, Filter, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
@@ -33,6 +33,7 @@ export default function MyPromptsPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Check authentication and get user profile
   useEffect(() => {
@@ -373,48 +374,67 @@ export default function MyPromptsPage() {
     <div className="flex-1 flex flex-col w-full h-full min-h-screen">
       <div className="flex h-full min-h-screen">
         {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex-shrink-0 min-h-screen">
-          <div className="h-full flex flex-col">
-            <div className="flex-1">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-              <div className="space-y-1">
-                {filters.map((filter) => (
-                  <Button
-                    key={filter.value}
-                    variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+        <div
+          className={`transition-all duration-300 ${
+            sidebarCollapsed ? "w-12" : "w-48"
+          } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative`}
+        >
+          <button
+            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+          {!sidebarCollapsed && (
+            <div className="h-full flex flex-col">
+              <div className="flex-1">
+                <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+                <div className="space-y-1">
+                  {filters.map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant="ghost"
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                       }`}
-                    onClick={() => setSelectedFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </Button>
-                ))}
-              </div>
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
-              <div className="space-y-1">
-                {availableCategories.map((category) => (
-                  <Button
-                    key={category}
-                    variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      onClick={() => setSelectedFilter(filter.value)}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
+                <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
+                <div className="space-y-1">
+                  {availableCategories.map((category) => (
+                    <Button
+                      key={category}
+                      variant="ghost"
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                       }`}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category === "all" ? "All" : category}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {userProfile && (
-              <div className="border-t border-border pt-4 mt-4">
-                <div className="text-xs font-medium uppercase text-muted-foreground mb-2">User</div>
-                <div className="text-sm">
-                  <div className="font-medium">{userProfile.username}</div>
-                  <div className="text-muted-foreground text-xs">{myPrompts.length} prompts</div>
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      {category === "all" ? "All" : category}
+                    </Button>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
+              {userProfile && (
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="text-xs font-medium uppercase text-muted-foreground mb-2">User</div>
+                  <div className="text-sm">
+                    <div className="font-medium">{userProfile.username}</div>
+                    <div className="text-muted-foreground text-xs">{myPrompts.length} prompts</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Main Content */}

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button"
 import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
-import { Category } from "@/models/Prompt" // Make sure this import exists
 
 type MyPrompt = {
   id: string
@@ -43,9 +42,10 @@ type UserProfile = {
   following: number
 }
 
-const allowedTags: Category[] = [
+// Define allowed tags at the top of your file or near your imports
+const allowedTags = [
   "Writing", "Marketing", "Development", "Design", "SEO", "Content", "default", "null"
-]
+] as const;
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const [topUserPrompts, setTopUserPrompts] = useState<(MyPrompt & { avgRating: number })[]>([])
   const [loadingTopUserPrompts, setLoadingTopUserPrompts] = useState(true)
 
-  // Widget management
+  // Widget management with default widgets
   const [widgets, setWidgets] = useState<Widget[]>([
     {
       id: "total-prompts",
@@ -88,6 +88,8 @@ export default function DashboardPage() {
       component: <div></div>,
       isActive: true,
       position: 0,
+      size: "small",
+      minSize: "small",
     },
     {
       id: "average-rating",
@@ -97,6 +99,8 @@ export default function DashboardPage() {
       component: <div></div>,
       isActive: true,
       position: 1,
+      size: "small",
+      minSize: "small",
     },
     {
       id: "top-prompts",
@@ -106,6 +110,8 @@ export default function DashboardPage() {
       component: <div></div>,
       isActive: true,
       position: 2,
+      size: "medium",
+      minSize: "medium",
     },
     {
       id: "recent-activity",
@@ -115,6 +121,8 @@ export default function DashboardPage() {
       component: <div></div>,
       isActive: true,
       position: 3,
+      size: "medium",
+      minSize: "medium",
     },
   ])
 
@@ -398,7 +406,14 @@ export default function DashboardPage() {
     const savedWidgets = localStorage.getItem("dashboardWidgets")
     if (savedWidgets) {
       try {
-        setWidgets(JSON.parse(savedWidgets))
+        const parsedWidgets = JSON.parse(savedWidgets)
+        // Ensure all widgets have the required size properties
+        const updatedWidgets = parsedWidgets.map((widget: any) => ({
+          ...widget,
+          size: widget.size || "small",
+          minSize: widget.minSize || "small",
+        }))
+        setWidgets(updatedWidgets)
       } catch {
         // Keep default widgets if parsing fails
       }
@@ -491,13 +506,13 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
-      <div className="flex flex-col md:flex-row flex-1">
+      <div className="flex flex-col lg:flex-row flex-1">
         {/* Sidebar */}
-        <div className="w-full md:w-64 bg-card border-r border-border p-6">
+        <div className="w-full lg:w-64 bg-card border-r border-border p-6">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-2">
               <img
-                src={profileImage || "/placeholder.svg"}
+                src={profileImage || "/placeholder.svg?height=80&width=80"}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
                 onClick={() => navigate(`/profile/${currentUserId}`)}
@@ -538,7 +553,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 overflow-auto">
           <h1 className="text-xl font-semibold mb-6">Dashboard</h1>
 
           {/* Widget Manager */}
@@ -563,7 +578,7 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {loadingPrompts ? (
                 <div className="flex justify-center items-center h-32 col-span-full">
                   <div className="text-center">
@@ -592,8 +607,11 @@ export default function DashboardPage() {
                     isPrivate={prompt.isPrivate}
                     isFavorite={prompt.isFavorite}
                     tags={
-                      prompt.tags
-                        .map(tag => allowedTags.includes(tag as Category) ? (tag as Category) : "default")
+                      prompt.tags.map(tag =>
+                        allowedTags.includes(tag as typeof allowedTags[number])
+                          ? (tag as typeof allowedTags[number])
+                          : "default"
+                      )
                     }
                     category={prompt.category}
                     authorName={username}

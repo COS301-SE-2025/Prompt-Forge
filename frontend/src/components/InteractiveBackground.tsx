@@ -124,7 +124,7 @@ export default function InteractiveBackground() {
       const isMouseInactive = timeSinceMouseMove > 2000 // 2 seconds
 
       // Create more ambient particles when mouse is inactive
-      if (isMouseInactive && Math.random() < 0.08) {
+      if (isMouseInactive && Math.random() < 0.15) {
         particlesRef.current.push(
           createParticle(Math.random() * canvas.width, Math.random() * canvas.height, "ambient"),
         )
