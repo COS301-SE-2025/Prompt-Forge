@@ -485,7 +485,7 @@ export default function SubmitPromptPage() {
 
       setTimeout(() => {
         if (!isEditMode) {
-          // Clear form for new submissions
+          // Clear form for new submissions only
           setFormData({
             title: "",
             description: "",
@@ -504,12 +504,16 @@ export default function SubmitPromptPage() {
           setStripeAccount("")
           setCryptoAddress("")
           setCryptoNetwork("")
+          
+          // Navigate to My Prompts page only for new submissions
+          navigate("/my-prompts")
+        } else {
+          // For edit mode, just reset the edit state but stay on the same page
+          setIsEditMode(false)
+          setEditingPromptId(null)
         }
 
         setShowSuccess(false)
-        
-        // Navigate to My Prompts page
-        navigate("/my-prompts")
       }, 2000)
 
     } catch (error: any) {
@@ -728,7 +732,7 @@ export default function SubmitPromptPage() {
                     Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar ${
                       errors.description ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     }`}
                     rows={3}
@@ -779,10 +783,11 @@ export default function SubmitPromptPage() {
                     Prompt Text <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none overflow-y-auto custom-scrollbar ${
                       errors.promptText ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     }`}
-                    rows={6}
+                    rows={8}
+                    style={{ maxHeight: '200px', minHeight: '120px' }}
                     placeholder="Enter your prompt text here..."
                     value={formData.promptText}
                     onChange={(e) => handleInputChange("promptText", e.target.value)}
@@ -797,7 +802,7 @@ export default function SubmitPromptPage() {
 
                 {/* Expected Output */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Expected Output
                   </label>
                   <textarea
@@ -815,25 +820,47 @@ export default function SubmitPromptPage() {
                     Visibility
                   </label>
                   <div className="flex items-center space-x-3">
-                    <span className={`text-sm ${!formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                    <span className={`text-sm ${!formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Public
                     </span>
                     <button
                       type="button"
                       onClick={() => handleInputChange("isPrivate", !formData.isPrivate)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2 ${
-                        formData.isPrivate ? 'bg-red-500' : 'bg-[#3ebb9e]'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
+                      style={{
+                        backgroundColor: formData.isPrivate ? '#ef4444' : '#3ebb9e'
+                      }}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          formData.isPrivate ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        style={{
+                          transform: formData.isPrivate ? 'translateX(1.25rem)' : 'translateX(0)'
+                        }}
                       />
                     </button>
-                    <span className={`text-sm ${formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                    <span className={`text-sm ${formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Private
                     </span>
+                  </div>
+                </div>
+
+                {/* Visibility Warning Note */}
+                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-amber-800 dark:text-amber-200 font-medium mb-1">
+                        Important: Public Visibility is Permanent
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                        Once you make a prompt public, it cannot be changed back to private. Public prompts become part of the community marketplace and remain accessible to all users.
+                      </p>
+                      {!formData.isPrivate && (
+                        <p className="text-amber-700 dark:text-amber-300 text-xs mt-2 font-medium">
+                          ⚠️ This prompt will be publicly visible after submission
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

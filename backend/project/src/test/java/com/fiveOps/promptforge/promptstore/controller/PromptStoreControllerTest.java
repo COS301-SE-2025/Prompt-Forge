@@ -175,7 +175,6 @@ class PromptStoreControllerReviewTest {
     when(authentication.getName()).thenReturn("test@example.com");
     when(userService.getUserIdByEmail("test@example.com")).thenReturn(testUserId);
 
-
     // Act
     ResponseEntity<Void> response =
         promptStoreController.deleteReview(testPromptId, reviewId, authentication);
@@ -244,15 +243,15 @@ class PromptStoreControllerReviewTest {
     Pageable pageable = mock(Pageable.class);
     String tagName = "test";
     Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
-    when(storeService.getPublicByTagName("Test", pageable)).thenReturn(page);
+    when(storeService.getPublicByTagName("test", pageable)).thenReturn(page);
     assertEquals(page, promptStoreController.filterByTagName(tagName, pageable));
-    verify(storeService).getPublicByTagName("Test", pageable);
+    verify(storeService).getPublicByTagName("test", pageable);
   }
 
   @Test
   void filterByTagNameAndFilter_ShouldReturnFilteredPrompts() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
+    String tagName = "Test";
     String filter = "popular";
     Page<Map<String, PromptWithAuthorDTO>> page = mock(Page.class);
     when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(page);
@@ -358,7 +357,7 @@ class PromptStoreControllerReviewTest {
   @Test
   void filterByTagName_ShouldHandleNullPage() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
+    String tagName = "Test";
     when(storeService.getPublicByTagName("Test", pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagName(tagName, pageable));
   }
@@ -366,7 +365,7 @@ class PromptStoreControllerReviewTest {
   @Test
   void filterByTagNameAndFilter_ShouldHandleNullPage() {
     Pageable pageable = mock(Pageable.class);
-    String tagName = "test";
+    String tagName = "Test";
     String filter = "popular";
     when(storeService.getPublicByTagNameAndFilter("Test", filter, pageable)).thenReturn(null);
     assertNull(promptStoreController.filterByTagNameAndFilter(tagName, filter, pageable));

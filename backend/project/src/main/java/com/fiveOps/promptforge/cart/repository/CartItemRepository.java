@@ -51,7 +51,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
       nativeQuery = true)
   Page<Object[]> findCartItemsWithTagsByUserId(@Param("userId") UUID userId, Pageable pageable);
 
-
   @Query(
       value =
           """

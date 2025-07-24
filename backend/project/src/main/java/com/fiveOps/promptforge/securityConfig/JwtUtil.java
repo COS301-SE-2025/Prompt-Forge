@@ -5,9 +5,9 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -15,11 +15,11 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-  Dotenv dotenv = Dotenv.load();
-  String secret = dotenv.get("JWT_SECRET");
+  @Value("${jwt.secret}")
+  private String secretKey;
 
   private SecretKey getSigningKey() {
-    byte[] keyBytes = Base64.getDecoder().decode(secret);
+    byte[] keyBytes = Base64.getDecoder().decode(secretKey);
     return Keys.hmacShaKeyFor(keyBytes);
   }
 

@@ -8,7 +8,6 @@ export function RecentActivity({username, activity, time}:RecentActivityProps) {
     <div className="flex items-center">
         <span className="text-[#0066e2] pr-1">{username} <span className="text-muted-foreground">{activity}</span></span>
     </div>
-    <div>{time} ago</div>
+    <div>{time.includes('ago') ? time : `${time} ago`}</div>
     </div>;
 }
-  
