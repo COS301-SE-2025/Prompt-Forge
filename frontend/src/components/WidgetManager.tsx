@@ -202,6 +202,7 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
+              <p className="text-xs text-muted-foreground mb-1">Total Prompts</p>
               <p className="text-2xl font-bold">{data?.totalPrompts || 0}</p>
               <p className="text-sm text-muted-foreground">+12.5% from last month</p>
             </div>
@@ -212,6 +213,7 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
+              <p className="text-xs text-muted-foreground mb-1">Total Users</p>
               <p className="text-2xl font-bold">{data?.totalDownloads || 0}</p>
               <p className="text-sm text-muted-foreground">Active users</p>
             </div>
@@ -222,6 +224,7 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
+              <p className="text-xs text-muted-foreground mb-1">Average Rating</p>
               <p className="text-2xl font-bold">{data?.averageRating?.toFixed(1) || "0.0"}</p>
               <p className="text-sm text-muted-foreground">-2.1% from last month</p>
             </div>
@@ -232,6 +235,7 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
+              <p className="text-xs text-muted-foreground mb-1">Monthly Usage</p>
               <p className="text-2xl font-bold">{data?.monthlyUsage || 0}</p>
               <p className="text-sm text-muted-foreground">+8.2% from last month</p>
             </div>
@@ -319,8 +323,9 @@ export default function WidgetManager({
               <p className="text-sm font-semibold">Analytics Overview</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 bg-gradient-to-br from-[#e0f7fa] via-[#e3e0fa] to-[#f0fdfa] rounded-lg flex items-center justify-center shadow">
-              <ResponsiveContainer width="100%" height={220}>
+            {/* Shift chart left using justify-start */}
+            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl pl-8">
+              <ResponsiveContainer width="95%" height={220}>
                 <ReBarChart data={analyticsData}>
                   <XAxis dataKey="month" stroke="#4079ff" />
                   <YAxis stroke="#3ebb9e" />
@@ -356,8 +361,9 @@ export default function WidgetManager({
               <p className="text-sm font-semibold">Performance Metrics</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 bg-gradient-to-br from-[#e0f7fa] via-[#e3e0fa] to-[#f0fdfa] rounded-lg flex items-center justify-center shadow">
-              <ResponsiveContainer width="100%" height={220}>
+            {/* Shift chart left using justify-start */}
+            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl">
+              <ResponsiveContainer width="95%" height={220}>
                 <ReLineChart data={performanceData}>
                   <XAxis dataKey="month" stroke="#4079ff" />
                   <YAxis stroke="#3ebb9e" />
@@ -389,8 +395,9 @@ export default function WidgetManager({
               <p className="text-sm font-semibold">Category Breakdown</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 bg-gradient-to-br from-[#e0f7fa] via-[#e3e0fa] to-[#f0fdfa] rounded-lg flex items-center justify-center shadow">
-              <ResponsiveContainer width="100%" height={220}>
+            {/* Updated gradient for a more pleasing look */}
+            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-center shadow-2xl">
+              <ResponsiveContainer width="100%" height={240}>
                 <RePieChart>
                   <Pie
                     data={pieData}
