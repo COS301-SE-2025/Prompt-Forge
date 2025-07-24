@@ -204,7 +204,8 @@ public class PromptService {
 
     long totalPurchased = promptRepository
       .countPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId);
-    long totalAuthored = promptRepository.countRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId);
+    long totalAuthored = promptRepository
+      .countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId);
     long totalElements = totalPurchased + totalAuthored;
 
     System.out.println("\n\n///////////////////////////page:" + pageable.getPageNumber());
@@ -230,6 +231,64 @@ public class PromptService {
          * and dont add up to the limit
          */
         List<PromptWithSourceDTO> authoredPrompts = promptRepository
+          .findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId, remaining, 0);
+        combined.addAll(authoredPrompts);
+
+        System.out.println("authoredPrompts size:" + authoredPrompts.size());
+      }
+    } else {// purchased prompts exhausted; fetch authored prompts only
+      System.out.println("elseeeeeeeeeeeeeee");
+      int authoredOffset = (int) (offset - totalPurchased);
+      List<PromptWithSourceDTO> authoredPrompts = promptRepository
+        .findPopularAuthoredPromptsByUserIdAndOptionalTag(
+        userId, tagId, pageSize, authoredOffset);
+      combined.addAll(authoredPrompts);
+    }
+    System.out.println("combined.size():" + combined.size());
+    return new PageImpl<>(combined, pageable, totalElements);
+  }
+
+  public Page<PromptWithSourceDTO> getPopularPromptsByOptionalTag(UUID userId,
+      String tagName, Pageable pageable) {
+
+    UUID tagId = null;
+
+    if (tagName != null) {
+      tagId = tagService.getTagIdByName(tagName);
+    }
+
+    int pageSize = pageable.getPageSize();
+    int offset = (int) pageable.getOffset();
+
+    long totalPurchased = promptRepository
+      .countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId);
+    long totalAuthored = promptRepository
+      .countRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId);
+    long totalElements = totalPurchased + totalAuthored;
+
+    System.out.println("\n\n///////////////////////////page:" + pageable.getPageNumber());
+    System.out.println("totalPurchased:" + totalPurchased);
+    System.out.println("totalAuthored:" + totalAuthored);
+    System.out.println("totalElements:" + totalElements);
+
+    List<PromptWithSourceDTO> combined = new ArrayList<>();
+
+    if (offset < totalPurchased) {
+      System.out.println("offset < totalPurchased");
+      int purchasedLimit = Math.min(pageSize, (int) (totalPurchased - offset));
+      List<PromptWithSourceDTO> purchasedPrompts = promptRepository
+        .findPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, purchasedLimit,
+          offset);
+      combined.addAll(purchasedPrompts);
+
+      int remaining = pageSize - purchasedPrompts.size();
+      if (remaining > 0) {
+        System.out.println("remaining > 0");
+        /*
+         * start authored prompts from 0 if the end of purchased prompts is reached
+         * and dont add up to the limit
+         */
+        List<PromptWithSourceDTO> authoredPrompts = promptRepository
           .findRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId, remaining, 0);
         combined.addAll(authoredPrompts);
 
@@ -238,7 +297,8 @@ public class PromptService {
     } else {// purchased prompts exhausted; fetch authored prompts only
       System.out.println("elseeeeeeeeeeeeeee");
       int authoredOffset = (int) (offset - totalPurchased);
-      List<PromptWithSourceDTO> authoredPrompts = promptRepository.findRecentPromptsByAuthorIdAndAndOptionalTag(
+      List<PromptWithSourceDTO> authoredPrompts = promptRepository
+        .findRecentPromptsByAuthorIdAndAndOptionalTag(
         userId, tagId, pageSize, authoredOffset);
       combined.addAll(authoredPrompts);
     }
@@ -261,9 +321,8 @@ public class PromptService {
     // if(filter == "favorites")
     //   return getFavouritePrompts(userId, pageable);
   
-    // if(filter == "popular")
-    //   return getPopularAuthoredAndPurchasedPrompts(userId, pageable);
-
+    if(filter.equals("popular"))
+      return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
     
     if(filter.equals("recent"))
       return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
