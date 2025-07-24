@@ -10,8 +10,8 @@ class CartItemResponseTest {
   @Test
   void testConstructorAndGetter() {
     APIResponse response = new APIResponse("Success","Testing");
-    assertEquals("Success", response.getMessage());
-    assertEquals("Testing", response.getData());
+    assertEquals("Testing", response.getMessage());
+    assertEquals("Success", response.getStatus());
 
   }
 
@@ -20,7 +20,7 @@ class CartItemResponseTest {
     APIResponse response = new APIResponse("Initial","Testing");
     response.setMessage("Updated");
     assertEquals("Updated", response.getMessage());
-    assertEquals("Testing", response.getData());
+    assertEquals("Initial", response.getStatus());
   }
 
   @Test

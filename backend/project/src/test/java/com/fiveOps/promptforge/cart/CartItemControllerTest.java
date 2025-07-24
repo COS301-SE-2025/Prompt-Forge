@@ -100,7 +100,7 @@ class CartItemControllerTest {
     doNothing().when(cartItemService).removeItemFromCart(userId, promptId);
     ResponseEntity<APIResponse> response = controller.removeItemFromCart(promptId, authentication);
     assertEquals(200, response.getStatusCodeValue());
-    assertEquals("Item removed from cart.", response.getBody().getMessage());
+    assertEquals("item removed from cart.", response.getBody().getMessage());
   }
 
   @Test
