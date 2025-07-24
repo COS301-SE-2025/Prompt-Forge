@@ -324,7 +324,7 @@ export const PromptDetails = () => {
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
               <div className="flex items-center gap-1">
-                <StarRating rating={averageRating} size="sm" />
+                <StarRating value={averageRating} size="sm" />
                 <span>({reviews.length})</span>
               </div>
               {isPaidPrompt && (
@@ -390,7 +390,7 @@ export const PromptDetails = () => {
                 Reviews
               </h2>
               <div className="flex items-center gap-2">
-                <StarRating rating={averageRating} size="sm" />
+                <StarRating value={averageRating} size="sm" />
                 <span className="text-xs text-gray-600 dark:text-gray-400">
                   {reviews.length} review{reviews.length !== 1 ? "s" : ""}
                 </span>
