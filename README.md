@@ -39,6 +39,27 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
+## 👨‍💻 Team Members
+
+<div align="center">
+
+| Name                | Student Number | 
+|---------------------|----------------|
+| Katlego Mositi      | 22658395       |
+| Paballo Diyase      | 23528142       |
+| Boitumelo Mtsatse   | 23684365       |
+| Navendran Naidoo    | 21512494       |
+| Rethabile Bore      | 23772141       |
+
+</div>
+
+
+<p align="center">
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
+</p>
+
+---
+
 ## 📑 Demo 1 Documentation Links
 
 | Document                  | Link                                                    | Last Updated |
@@ -76,26 +97,53 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 The second demo will showcase a functional, integrated system that allows users to test prompts and interact with a production-ready marketplace.
 
-### ✅ Planned Demo 2 Features
+### ✅ Planned Demo 3 Features
 
 - 🧠 **Prompt Testing Ground**
-  - LLM integration
-  - Real-time testing
+  - Multiple LLM integration
+  - Image Uploads
+  - Compare prompt results across different models
+  - Real-time feedback and scoring
 
-- 🛒 **Fully Functional Prompt Marketplace**
-  - Buying and selling features
-  - Advanced filtering system
-  - User reviews and ratings
+- 🧪 **Prompt Builder**
+  - Templates for Building Prompts
+  - Profiles for different users
+  - Recommend AI Models based on profile
+  - Build your prompt based on a basic idea
+  - AI-powered prompt suggestions
+  - Category recommendations for new prompts
 
-- 🔁 **Frontend–Backend Integration**
-  - Live prompt evaluation
-  - Real-time data updates
-  - Seamless user experience
+- 🔁 **Deployment**
+  - Deployment on [https://prompt-forge.co.za/](https://prompt-forge.co.za/)
+  - AWS Free Tier & Local Dev support
+  - CI/CD pipeline with automated deployment
 
 - 📊 **Prompt Performance Metrics**
   - Usage statistics
   - Rating analytics
   - Performance comparisons
+  - Visual dashboards with charts and graphs
+
+- 🤖 **AI Suggestions**
+  - Build a Model for prompt suggestions
+  - Apply suggestions to prompt in Testing Ground
+  - Automated improvement recommendations
+
+- 🏷️ **AI Prompt Categorization**
+  - Build a Model for prompt categorization
+  - Model will provide suggested categories for new prompts
+
+- 🛠️ **Architecture & Quality**
+  - Integrated architectural diagram (3+ patterns)
+  - Deployment model & diagram
+  - Service contracts documented
+  - Automated unit & integration tests
+  - Quantified quality requirements
+
+- 👥 **Team & Project Management**
+  - Individual member profiles
+  - Scrum board/project management links
+  - Demo video and documentation links
 
 ---
 
@@ -163,68 +211,45 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ---
 
-## 📋 Demo 2 Checklist (Due: 27 June 2025)
+### Demo 3 Focus
+- System overview and functional requirements
+- Architectural decisions, patterns, and integrated architectural diagram (3+ patterns)
+- Showcase 80% project completion (Beta phase)
+- Integration testing of all subsystems/components
+- CI/CD pipeline demonstration
+- Automated unit and integration tests (no manual testing)
+- Individual member contributions since Demo 2
+- Updates to architectural design and quality requirements
+- Project management and sprint review
 
-- [X] **Core Implementation**
-  - [X] 3+ New fully integrated components
-  - [X] Complete backend-to-frontend integration
-  - [X] Functional requirements satisfied
-  - [X] Landing page implemented and live
-  - [X] In-product help menu functioning
+---
 
+## 📋 Demo 3 Checklist (Due: 20 August 2025)
+
+- [ ] **Core Implementation**
+  - [ ] 80%+ of system completed (Beta phase)
+  - [ ] Major components integrated
+  - [ ] Remaining components specified
+- [ ] **Architecture**
+  - [X] Architectural diagram (3+ patterns)
+  - [X] Deployment model & diagram
+  - [X] Service contracts documented
 - [X] **Testing & Quality**
-  - [X] Automated unit tests passing
-  - [X] Integration tests complete
-  - [X] CI/CD pipeline running tests
-  - [X] 5 quantified quality requirements
-  - [X] GitFlow structure maintained
-
-- [X] **Documentation Updates**
-  - [X] SRS Document v2
-    - [X] Updated functional requirements
-    - [X] New domain model
-    - [X] Enhanced use case diagram
-  - [X] Architecture Documentation
-    - [X] System constraints
-    - [X] Technology justifications
-
-- [X] **Demo Preparation**
-  - [X] Quality & architecture overview (3min)
-  - [X] Feature demonstrations (5min)
-  - [X] Testing walkthrough (3min)
-  - [X] Q&A prep (2min)
-  - [X] Speaking roles assigned
-  - [X] Slides prepared
-
-- [X] **Final Steps**
-  - [X] Code merged to main
-  - [ ] Mentor grading submitted
-  - [X] Repository cleaned
-  - [X] Demo slot booked
-
----
-
-## 👨‍💻 Team Members
-
-<div align="center">
-
-| Name                | Student Number | 
-|---------------------|----------------|
-| Katlego Mositi      | 22658395       |
-| Paballo Diyase      | 23528142       |
-| Boitumelo Mtsatse   | 23684365       |
-| Navendran Naidoo    | 21512494       |
-| Rethabile Bore      | 23772141       |
-
-</div>
-
-
-<p align="center">
-  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
-</p>
-
----
-
+  - [X] Automated unit & integration tests
+  - [X] CI/CD pipeline working
+  - [X] Quantified quality requirements
+- [ ] **Documentation**
+  - [ ] SRS v3 (functional, non-functional, architecture)
+  - [X] Coding standards
+  - [ ] User manual (updated)
+  - [X] Technical installation manual
+  - [ ] Project management links (scrum board)
+  - [X] Individual profiles
+- [ ] **Demo Preparation**
+  - [ ] Time management rehearsed
+  - [ ] Slides and diagrams updated
+  - [ ] All members presenting
+  - [ ] Links ready for markers
 ---
 
 ## 👥 Meet 5iveOps
