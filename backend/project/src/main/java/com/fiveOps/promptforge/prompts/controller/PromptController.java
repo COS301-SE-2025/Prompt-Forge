@@ -1,7 +1,6 @@
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
