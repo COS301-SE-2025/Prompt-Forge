@@ -260,10 +260,10 @@ export default function MyPromptsPage() {
               createdAt: p.createdAt,
               updatedAt: p.publishedAt || p.createdAt,
               rating: averageRating || 0, // Default, backend does not provide
-              uses: 0,   // Default, backend does not provide
+              uses: p.usageCount,   // Default, backend does not provide
               featured: p.featured || false,
               price: p.price || 0,
-              isPrivate: p.visibility !== "public",
+              isPrivate: p.visibility === "private",
               isFavorite: false, // Default, backend does not provide
               authorName: p.authorName || userProfile?.username || "You",
               source: p.source,

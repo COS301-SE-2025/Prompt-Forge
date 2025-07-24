@@ -264,4 +264,116 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        """, nativeQuery = true)
        long countPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(@Param("userId") UUID userId,
               @Param("tagId") UUID tagId);
+
+       @Query(value = """
+       SELECT
+              pp.purchase_id AS purchaseId,
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              p.visibility AS visibility,
+              author_user.username AS authorName,
+              array_agg(t.name) AS tagNames,
+              'purchased' AS source,
+              (
+                     SELECT COUNT(*)
+                     FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+              ) AS usageCount
+       FROM
+              purchased_prompts pp
+       JOIN prompts p ON pp.prompt_id = p.prompt_id
+       JOIN users author_user ON p.author_id = author_user.user_id
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE pp.user_id = :userId
+              AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND (
+                     SELECT COUNT(*) FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+                     ) > 1
+       GROUP BY pp.purchase_id, p.prompt_id, author_user.username,
+              p.author_id, p.title, p.slug, p.description, p.price,
+              p.visibility
+       LIMIT :limit
+       OFFSET :offset
+       """, nativeQuery = true)
+       List<PromptWithSourceDTO> findPopularPurchasedPromptsByUserIdAndOptionalTag(
+              @Param("userId") UUID userId,
+              @Param("tagId") UUID tagId,
+              @Param("limit") int limit,
+              @Param("offset") long offset);
+      
+       @Query(value = """
+
+       SELECT COUNT(*)
+       FROM purchased_prompts pp
+       WHERE pp.user_id = :userId AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND (
+                     SELECT COUNT(*) FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+              ) > 1
+       """, nativeQuery = true)
+       long countPopularPurchasedPromptsByUserIdAndOptionalTag(
+              @Param("userId") UUID userId,
+              @Param("tagId") UUID tagId);
+       
+       @Query(value = """
+       SELECT
+              p.prompt_id AS id,
+              p.author_id AS authorId,
+              p.title AS title,
+              p.slug AS slug,
+              p.description AS description,
+              p.price AS price,
+              p.visibility AS visibility,
+              author_user.username AS authorName,
+              array_agg(t.name) AS tagNames,
+              'authored' AS source,
+              (
+                     SELECT COUNT(*)
+                     FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+              ) AS usageCount
+       FROM
+              prompts p
+       JOIN purchased_prompts pp ON pp.prompt_id = p.prompt_id
+       JOIN users author_user ON p.author_id = author_user.user_id
+       LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE p.author_id = :authorId
+              AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND (
+                     SELECT COUNT(*) FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+                     ) > 1
+       GROUP BY p.prompt_id, author_user.username,
+              p.author_id, p.title, p.slug, p.description, p.price,
+              p.visibility
+       LIMIT :limit
+       OFFSET :offset
+       """, nativeQuery = true)
+       List<PromptWithSourceDTO> findPopularAuthoredPromptsByUserIdAndOptionalTag(
+              @Param("authorId") UUID authorId,
+              @Param("tagId") UUID tagId,
+              @Param("limit") int limit,
+              @Param("offset") long offset);
+      
+       @Query(value = """
+
+       SELECT COUNT(*)
+       FROM prompts p
+       WHERE p.author_id = :authorId AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
+              AND (
+                     SELECT COUNT(*) FROM purchased_prompts pp
+                     WHERE pp.prompt_id = p.prompt_id
+              ) > 1
+       """, nativeQuery = true)
+       long countPopularAuthoredPromptsByUserIdAndOptionalTag(
+              @Param("authorId") UUID authorId,
+              @Param("tagId") UUID tagId);
+
+
 }
+
