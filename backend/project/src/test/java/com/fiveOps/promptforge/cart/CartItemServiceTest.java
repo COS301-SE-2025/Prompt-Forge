@@ -7,12 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,16 +35,11 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CartItemServiceTest {
-  @Mock
-  private CartItemRepository cartItemRepository;
-  @Mock
-  private UserRepository userRepository;
-  @Mock
-  private PromptRepository promptRepository;
-  @Mock
-  private PromptStoreService promptStoreService;
-  @InjectMocks
-  private CartItemService service;
+  @Mock private CartItemRepository cartItemRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private PromptRepository promptRepository;
+  @Mock private PromptStoreService promptStoreService;
+  @InjectMocks private CartItemService service;
 
   private UUID userId;
   private UUID promptId;

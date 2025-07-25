@@ -12,9 +12,9 @@ public class CartCheckoutRequest {
   public List<CartItemDTO> getPrompts() {
     return prompts;
   }
-  
+
   public String getTransactionID() {
-      return transactionID;
+    return transactionID;
   }
 
   public void setPrompts(List<CartItemDTO> prompts) {

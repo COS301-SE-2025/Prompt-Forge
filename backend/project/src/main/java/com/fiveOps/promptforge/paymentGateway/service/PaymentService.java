@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,8 +34,8 @@ public class PaymentService {
   @Value("${paystack.secret-key}")
   private String paystackSecretKey;
 
-  public TransactionInitializationResponse inititalizeSingleAuthorPayment(String customerEmail,
-    String subaccountCode, UUID authorID, int amount) {
+  public TransactionInitializationResponse inititalizeSingleAuthorPayment(
+      String customerEmail, String subaccountCode, UUID authorID, int amount) {
 
     String secretKey = "Bearer " + paystackSecretKey;
 
@@ -56,8 +56,8 @@ public class PaymentService {
 
     // Make the POST request
     try {
-      ResponseEntity<String> response = restTemplate.postForEntity(
-          gatewayURL + "transaction/initialize", request, String.class);
+      ResponseEntity<String> response =
+          restTemplate.postForEntity(gatewayURL + "transaction/initialize", request, String.class);
 
       // Output response
       System.out.println("\n\nStatus Code: " + response.getStatusCode());
@@ -81,11 +81,10 @@ public class PaymentService {
       e.printStackTrace();
       throw new RuntimeException("Error checking out");
     }
-
   }
 
-  public TransactionInitializationResponse initializeSplitPayment(String customerEmail,
-      List<Map<String, Object>> subaccounts, int amount) {
+  public TransactionInitializationResponse initializeSplitPayment(
+      String customerEmail, List<Map<String, Object>> subaccounts, int amount) {
     String url = gatewayURL + "transaction/initialize";
 
     // Set headers
@@ -130,13 +129,12 @@ public class PaymentService {
     }
   }
 
-  public TransactionInitializationResponse initializePayment(String customerEmail,
-   List<CartItemDTO> prompts, Double total) throws Exception {
-    
+  public TransactionInitializationResponse initializePayment(
+      String customerEmail, List<CartItemDTO> prompts, Double total) throws Exception {
+
     Integer roundedTotalInCents = (int) Math.round(total * 100);
     Map<UUID, Integer> authorShares = new HashMap<>();
-    if (roundedTotalInCents <= 0)
-      throw new Exception("amount must be greater than zero");
+    if (roundedTotalInCents <= 0) throw new Exception("amount must be greater than zero");
 
     try {
       for (int i = 0; i < prompts.size(); i++) {
@@ -156,8 +154,8 @@ public class PaymentService {
         UUID authorId = authorShareEntry.getKey();
         // Integer authorShare = authorShareEntry.getValue();
         String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
-        return inititalizeSingleAuthorPayment(customerEmail,
-            subaccountCode, authorId, roundedTotalInCents);
+        return inititalizeSingleAuthorPayment(
+            customerEmail, subaccountCode, authorId, roundedTotalInCents);
       } else {
         // Prepare Paystack subaccounts payload
         List<Map<String, Object>> subaccounts = new ArrayList<>();
@@ -182,5 +180,4 @@ public class PaymentService {
       throw e;
     }
   }
-
 }
