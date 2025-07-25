@@ -9,15 +9,14 @@ import com.fiveOps.promptforge.cart.dto.APIResponse;
 class CartItemResponseTest {
   @Test
   void testConstructorAndGetter() {
-    APIResponse response = new APIResponse("Success","Testing");
+    APIResponse response = new APIResponse("Success", "Testing");
     assertEquals("Testing", response.getMessage());
     assertEquals("Success", response.getStatus());
-
   }
 
   @Test
   void testSetter() {
-    APIResponse response = new APIResponse("Initial","Testing");
+    APIResponse response = new APIResponse("Initial", "Testing");
     response.setMessage("Updated");
     assertEquals("Updated", response.getMessage());
     assertEquals("Initial", response.getStatus());
@@ -25,7 +24,7 @@ class CartItemResponseTest {
 
   @Test
   void testNullAndEmpty() {
-    APIResponse response = new APIResponse(null,null);
+    APIResponse response = new APIResponse(null, null);
     assertNull(response.getMessage());
     response.setMessage("");
     assertEquals("", response.getMessage());

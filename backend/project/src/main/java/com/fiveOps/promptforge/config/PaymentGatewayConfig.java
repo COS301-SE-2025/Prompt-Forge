@@ -8,6 +8,6 @@ import org.springframework.web.client.RestTemplate;
 public class PaymentGatewayConfig {
   @Bean
   public RestTemplate restTemplate() {
-      return new RestTemplate();
+    return new RestTemplate();
   }
 }

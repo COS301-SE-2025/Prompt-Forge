@@ -9,8 +9,7 @@ public class InitializePaymentRequest {
   private Double total;
 
   // Default constructor for JSON deserialization
-  public InitializePaymentRequest() {
-  }
+  public InitializePaymentRequest() {}
 
   public List<CartItemDTO> getPrompts() {
     return prompts;

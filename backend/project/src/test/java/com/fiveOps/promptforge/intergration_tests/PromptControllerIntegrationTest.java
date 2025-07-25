@@ -575,11 +575,10 @@ class PromptControllerIntegrationTest {
   @Test
   void whenGetPromptsByAuthor_thenReturnPagedList() throws Exception {
     mockMvc
-    .perform(get("/api/prompts/author/" + userId)
-            .cookie(new Cookie("token", authToken)))
-    .andExpect(status().isOk())
-    .andExpect(jsonPath("$.content[0].id").value(promptId.toString()))
-    .andExpect(jsonPath("$.content[0].authorId").value(userId.toString()));
+        .perform(get("/api/prompts/author/" + userId).cookie(new Cookie("token", authToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[0].id").value(promptId.toString()))
+        .andExpect(jsonPath("$.content[0].authorId").value(userId.toString()));
   }
 
   // ========== NEW REVIEW TESTS ==========

@@ -21,24 +21,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import com.fiveOps.promptforge.cart.controller.CartItemController;
-// import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
+import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
-import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.service.CartItemService;
-// import com.fiveOps.promptforge.cart.service.PaymentService;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class CartItemControllerTest {
-  @Mock
-  private CartItemService cartItemService;
-  @Mock
-  private UserService userService;
-  @Mock
-  private Authentication authentication;
-  @InjectMocks
-  private CartItemController controller;
+  @Mock private CartItemService cartItemService;
+  @Mock private UserService userService;
+  @Mock private Authentication authentication;
+  @InjectMocks private CartItemController controller;
 
   private UUID userId;
   private UUID promptId;

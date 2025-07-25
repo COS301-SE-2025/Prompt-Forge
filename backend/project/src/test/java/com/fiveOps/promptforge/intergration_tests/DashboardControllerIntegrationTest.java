@@ -267,7 +267,7 @@ class DashboardControllerIntegrationTest {
     // Get all prompts for the user and delete them
     if (userId != null) {
       Pageable pageable = PageRequest.of(0, 1000);
-      Page<PromptWithSourceDTO> page = promptService.getPromptsByAuthor(userId,pageable);
+      Page<PromptWithSourceDTO> page = promptService.getPromptsByAuthor(userId, pageable);
       List<PromptWithSourceDTO> prompts = page.getContent();
       prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
     }

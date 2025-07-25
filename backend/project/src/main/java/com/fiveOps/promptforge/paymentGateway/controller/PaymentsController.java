@@ -1,14 +1,16 @@
 package com.fiveOps.promptforge.paymentGateway.controller;
 
 import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+
 import com.fiveOps.promptforge.cart.dto.APIResponse;
+import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.paymentGateway.dto.InitializePaymentRequest;
 import com.fiveOps.promptforge.paymentGateway.dto.TransactionInitializationResponse;
 import com.fiveOps.promptforge.paymentGateway.service.PaymentService;
@@ -30,11 +32,14 @@ public class PaymentsController {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
 
-      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService
-        .initializePayment(userEmail, prompts, request.getTotal());
+      TransactionInitializationResponse transactionAccessCodeAndReference =
+          paymentService.initializePayment(userEmail, prompts, request.getTotal());
 
-      return ResponseEntity.ok(new APIResponse("success",
-        "Transaction initialization successful", transactionAccessCodeAndReference));
+      return ResponseEntity.ok(
+          new APIResponse(
+              "success",
+              "Transaction initialization successful",
+              transactionAccessCodeAndReference));
     } catch (Exception e) {
       System.err.println("Checkout error: " + e.getMessage());
       e.printStackTrace();

@@ -1,19 +1,18 @@
 package com.fiveOps.promptforge.cart.dto;
 
-
 public class APIResponse {
 
   private String message;
   private String status;
   private Object data;
 
-  public APIResponse(String status,String message) {
+  public APIResponse(String status, String message) {
     this.status = status;
     this.message = message;
     this.data = null;
   }
 
-  public APIResponse(String status,String message, Object data) {
+  public APIResponse(String status, String message, Object data) {
     this.status = status;
     this.message = message;
     this.data = data;
@@ -29,7 +28,7 @@ public class APIResponse {
   }
 
   public String getMessage() {
-      return message;
+    return message;
   }
 
   public void setStatus(String status) {
@@ -37,10 +36,10 @@ public class APIResponse {
   }
 
   public void setData(Object data) {
-      this.data = data;
+    this.data = data;
   }
 
   public void setMessage(String message) {
-      this.message = message;
+    this.message = message;
   }
 }
