@@ -172,6 +172,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -181,6 +184,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
@@ -258,16 +262,18 @@ class DashboardControllerIntegrationTest {
     return authToken;
   }
 
-  // @AfterEach
-  // void cleanup() {
-  //   // Get all prompts for the user and delete them
-  //   if (userId != null) {
-  //     List<Prompt> prompts = promptService.getPromptsByAuthor(userId);
-  //     prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
-  //   }
-  //   // Clean up user
-  //   userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
-  // }
+  @AfterEach
+  void cleanup() {
+    // Get all prompts for the user and delete them
+    if (userId != null) {
+      Pageable pageable = PageRequest.of(0, 1000);
+      Page<PromptWithSourceDTO> page = promptService.getPromptsByAuthor(userId,pageable);
+      List<PromptWithSourceDTO> prompts = page.getContent();
+      prompts.forEach(prompt -> promptService.deletePrompt(prompt.getId()));
+    }
+    // Clean up user
+    userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
+  }
 
   @Test
   @Order(1)
