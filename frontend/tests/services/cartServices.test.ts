@@ -115,24 +115,44 @@ describe('CartService', () => {
     it('processes checkout successfully', async () => {
       // Create mock prompts to pass to checkout
       const mockPrompts = [
-        { 
-          cartItemId: 'cart1', 
-          promptId: 'prompt1', 
+        {
+          cartItemId: 'cart1',
+          promptId: 'prompt1',
           promptPrice: 9.99,
-          promptTitle: 'Test Prompt' 
-        }
+          promptTitle: 'Test Prompt',
+          promptTags: ['AI'],
+          authorName: 'JohnDoe',
+        },
       ];
-      
+
+      const expectedRequestBody = {
+        prompts: [
+          {
+            cartItemId: 'cart1',
+            promptId: 'prompt1',
+            promptPrice: 9.99,
+            promptTitle: 'Test Prompt',
+            promptTags: ['AI'],
+            authorName: 'JohnDoe',
+          },
+        ],
+      };
+
+      const mockResponseJson = {
+        status: 'success',
+        message: 'Checkout completed successfully!',
+      };
+
       (httpClient.post as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ orderId: '12345' })
+        json: jest.fn().mockResolvedValue(mockResponseJson),
       });
 
       const result = await cartService.checkout(mockPrompts);
-      
-      expect(httpClient.post).toHaveBeenCalledWith('/cart/checkout', expect.any(Object));
-      expect(result).toEqual({ orderId: '12345' });
+
+      expect(httpClient.post).toHaveBeenCalledWith('/cart/checkout', expectedRequestBody);
+      expect(result).toBe('Checkout completed successfully!');
     });
+
 
     it('handles API errors during checkout', async () => {
       // Create mock prompts to pass to checkout

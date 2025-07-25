@@ -1,48 +1,72 @@
 import { EnrichedPrompt } from "@/models/CartPrompt"
-import { CartService } from "@/services/cartServices"
-import { Dispatch, SetStateAction, useState } from "react"
-//import { Link } from "react-router-dom"
+import { CartService, PaymentAccessCodeAndReference } from "@/services/cartServices"
 import { Button } from "./ui/Button"
+import PaystackPop from '@paystack/inline-js'
+import { useState } from "react"
 import { Loader2 } from "lucide-react"
 
 interface CartSummaryProps {
   subtotal: number
   prompts: EnrichedPrompt[]
-  setCartItems: Dispatch<SetStateAction<EnrichedPrompt[]>>
-  onCheckoutSuccess?: () => void
+  onCheckoutSuccess: () => void
 }
 
 export const CartSummary = ({
   subtotal,
   prompts,
-  setCartItems,
   onCheckoutSuccess
 }: CartSummaryProps) => {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const cartService = new CartService()
-
+  const tax = subtotal * 0.18 // 10% tax
+  const total = subtotal + tax
   const handleCheckout = async () => {
     setIsCheckingOut(true)
     try {
-      const response = await cartService.checkout(prompts)
+      if (total == 0) {
+        cartService.checkout(prompts)
+        .then(()=>{
+          onCheckoutSuccess() // Call success callback
+          alert("Checkout successful! Items purchased.")
+        })
+        .catch((error:string)=>{
+          alert("Checkout failed: " + (error || "Unknown error"))
+        })
+      }
+      else {
+        cartService.initializePayment(prompts, parseFloat(total.toFixed(2)))
+        .then((result: PaymentAccessCodeAndReference )=>{
+          var handler = PaystackPop.setup({
+            key: 'pk_test_b8d73ecfdb50d9ef78e703219f665f9cd9255aa9',
+            email: result.customerEmail,
+            amount: result.amount, // This amount must match what was initialized in the backend
+            reference: result.reference,  // Use the reference from backend initialization
+            callback: function (response:{status:string}) {
+              if(response.status == "success"){
+                cartService.checkout(prompts)
+                .then(() => {
+                  onCheckoutSuccess() // Call success callback
+                  alert("Checkout successful! Items purchased.")
+                })
+                .catch((error: string) => {
+                  alert("Checkout failed: " + (error || "Unknown error"))
+                })
+              }
+              // Verify on backend
+            },
+            onClose: function () {
+            }
+          });
 
-      // Debug: log the response to see its structure
-      console.log("Checkout response:", response)
-
-      // Check if the response indicates success
-      // Since the response only has a message property, check if it contains success keywords
-      if (
-        response.message &&
-        (response.message.includes("successfully") ||
-          response.message.includes("Prompts purchased successfully"))
-      ) {
-        setCartItems([]) // Clear cart immediately
-        onCheckoutSuccess?.() // Call success callback
-        alert("Checkout successful! Items purchased.")
-      } else {
-        alert("Checkout failed: " + (response.message || "Unknown error"))
+          handler.openIframe();
+          
+        })
+        .catch((error)=>{
+          alert(error.message)
+        })
       }
     } catch (error: any) {
+      alert("Checkout failed:"+ error)
       console.error("Checkout failed:", error)
       alert("Checkout failed: " + (error.message || "Unknown error"))
     } finally {
@@ -50,8 +74,6 @@ export const CartSummary = ({
     }
   }
 
-  const tax = subtotal * 0.1 // 10% tax
-  const total = subtotal + tax
 
   return (
     <div className="bg-card border rounded-lg p-6 sticky top-6">
