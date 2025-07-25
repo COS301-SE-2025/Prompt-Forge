@@ -200,6 +200,18 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- AWS SDK v2 for S3 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.20</version>            <!-- You can check for latest -->
+        </dependency>
+        <!-- Optional: for region/config loading -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+            <version>2.25.20</version>
+        </dependency>
     </dependencies>
 
     <build>
