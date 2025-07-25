@@ -2,21 +2,20 @@ import React, { Dispatch, SetStateAction } from 'react';
 import { Trash2Icon, StarIcon } from 'lucide-react';
 import { EnrichedPrompt } from '@/models/CartPrompt';
 import { Category, CategoryColors } from '@/models/Prompt';
-//import { PromptService } from '@/services/promptService';
 import { CartService } from '@/services/cartServices';
 interface CartItemProps extends EnrichedPrompt {
   fetchData: () => Promise<void>;
   setRemoving: Dispatch<SetStateAction<boolean>>;
 }
 export const CartItem = ({
-  cartItemId,
   promptId,
   promptTitle,
   promptTags,
   promptPrice,
   reviewCount,
   averageRating,
-  username,
+  authorName,
+
   fetchData,
   setRemoving
 }: CartItemProps) => {
@@ -57,7 +56,7 @@ export const CartItem = ({
       
       <h3 className="text-lg font-medium mb-1">{promptTitle || 'Untitled Prompt'}</h3>
       <div className="flex items-center text-gray-400 text-sm">
-        <span>by {username || 'Anonymous'}</span>
+        <span>by {authorName || 'Anonymous'}</span>
       </div>
     </div>
     
