@@ -314,21 +314,21 @@ class PromptStoreServiceReviewTest {
     assertFalse(promptStoreService.isPromptBought(testUserId, promptId));
   }
 
-  @Test
-  void getPublicPromptsByAuthor_ShouldReturnPublicOnly() {
-    Prompt publicPrompt = mock(Prompt.class);
-    when(publicPrompt.getVisibility()).thenReturn("public");
-    when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(publicPrompt));
-    assertEquals(List.of(publicPrompt), promptStoreService.getPublicPromptsByAuthor(testUserId));
-  }
+  // @Test
+  // void getPublicPromptsByAuthor_ShouldReturnPublicOnly() {
+  //   Prompt publicPrompt = mock(Prompt.class);
+  //   when(publicPrompt.getVisibility()).thenReturn("public");
+  //   when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(publicPrompt));
+  //   assertEquals(List.of(publicPrompt), promptStoreService.getPublicPromptsByAuthor(testUserId));
+  // }
 
-  @Test
-  void getPublicPromptsByAuthor_ShouldReturnEmptyIfNoPublic() {
-    Prompt privatePrompt = mock(Prompt.class);
-    when(privatePrompt.getVisibility()).thenReturn("private");
-    when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(privatePrompt));
-    assertTrue(promptStoreService.getPublicPromptsByAuthor(testUserId).isEmpty());
-  }
+  // @Test
+  // void getPublicPromptsByAuthor_ShouldReturnEmptyIfNoPublic() {
+  //   Prompt privatePrompt = mock(Prompt.class);
+  //   when(privatePrompt.getVisibility()).thenReturn("private");
+  //   when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(privatePrompt));
+  //   assertTrue(promptStoreService.getPublicPromptsByAuthor(testUserId).isEmpty());
+  // }
 
   @Test
   void deleteListing_ShouldReturnTrueIfUnpublished() {

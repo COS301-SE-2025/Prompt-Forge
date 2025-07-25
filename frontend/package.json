@@ -24,6 +24,7 @@
     "lint:fix": "eslint . --config eslint.config.cjs --fix"
   },
   "dependencies": {
+    "@paystack/inline-js": "^2.22.6",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/themes": "^3.2.1",
     "class-variance-authority": "^0.7.1",
@@ -34,6 +35,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.2",
+    "react-toastify": "^11.0.5",
     "recharts": "^3.1.0",
     "tailwind-merge": "^1.14.0"
   },

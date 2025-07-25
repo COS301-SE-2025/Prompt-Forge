@@ -1,28 +1,11 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { Button } from "@/components/ui/Button"
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
 import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
+import { MyPrompt } from '@/models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
 
-type MyPrompt = {
-  id: string
-  title: string
-  description: string
-  content: string
-  category: string
-  tags: string[]
-  createdAt: string
-  updatedAt: string
-  rating: number
-  uses: number
-  featured: boolean
-  price: number
-  isPrivate: boolean
-  isFavorite: boolean
-}
 
 type DashboardData = {
   monthlyUsage: number
@@ -198,14 +181,20 @@ export default function DashboardPage() {
           return
         }
 
-        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        })
+        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}?page=0&size=12`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+
+        });
         if (response.ok) {
-          let prompts = await response.json()
-          if (!Array.isArray(prompts)) prompts = []
+          let page = (await response.json());
+        
+          let prompts = page.content;
+          console.log("prompts:", prompts);
+          
+          if (!Array.isArray(prompts)) prompts = [];
+
 
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
             id: p.id,
@@ -220,10 +209,11 @@ export default function DashboardPage() {
             uses: p.uses || 0,
             featured: p.featured || false,
             price: p.price || 0,
-            isPrivate: p.visibility !== "public",
+            isPrivate: p.visibility === "private",
             isFavorite: p.isFavorite || false,
-          }))
-          setMyPrompts(mappedPrompts)
+            source:p.source
+          }));
+          setMyPrompts(mappedPrompts);
         } else if (response.status === 401) {
           localStorage.removeItem("username")
           localStorage.removeItem("userId")
@@ -616,7 +606,7 @@ export default function DashboardPage() {
                     category={prompt.category}
                     authorName={username}
                     isOwned={true}
-                    isBought={false}
+                    source={prompt.source}
                     onEdit={handleEditPrompt}
                     onDelete={handleDeletePrompt}
                     onToggleFavorite={handleToggleFavorite}

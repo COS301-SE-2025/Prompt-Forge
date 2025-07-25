@@ -1,7 +1,6 @@
 package com.fiveOps.promptforge.prompts.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
-import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
@@ -48,8 +47,9 @@ public class PromptController {
   }
 
   @GetMapping("/author/{authorId}")
-  public ResponseEntity<List<Prompt>> getPromptsByAuthor(@PathVariable UUID authorId) {
-    return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId));
+  public ResponseEntity<Page<PromptWithSourceDTO>> getPromptsByAuthor(
+      @PathVariable UUID authorId, Pageable pageable) {
+    return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId, pageable));
   }
 
   @GetMapping("/{id}")
@@ -172,7 +172,7 @@ public class PromptController {
   }
 
   @GetMapping("/purchased")
-  public ResponseEntity<Page<Map<String, PromptWithAuthorDTO>>> getPurchasedPrompts(
+  public ResponseEntity<Page<PromptWithSourceDTO>> getPurchasedPrompts(
       Pageable pageable, Authentication authentication) {
     if (authentication == null || authentication.getName() == null) {
       return ResponseEntity.status(401).build();
@@ -182,6 +182,45 @@ public class PromptController {
     System.out.println("\nuserEmail in purchased:" + userEmail);
     System.out.println("\nuserId in purchased:" + userId);
     System.out.println(userId);
-    return ResponseEntity.ok(promptService.getPurchasedPrompts(userId, pageable));
+    return ResponseEntity.ok(
+        promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable));
+  }
+
+  @GetMapping("/myprompts/{userId}")
+  public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
+      @PathVariable UUID userId,
+      @RequestParam(required = false) String tagName,
+      @RequestParam(required = false) String filterName,
+      Pageable pageable) {
+    System.out.println("\n\ntag:" + tagName + " and filter:" + filterName);
+
+    if (tagName == null && filterName == null) {
+      System.out.println("\n\ntag and filter are null");
+
+      return ResponseEntity.ok(
+          promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, null, pageable));
+    }
+
+    if (filterName == null) {
+      System.out.println("\n\nfilter is null and tag isnt");
+      return ResponseEntity.ok(
+          promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, tagName, pageable));
+      // return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
+    }
+
+    if (tagName == null) {
+      System.out.println("\n\ntag is null and filter isnt");
+      return ResponseEntity.ok(
+          promptService.getAuthoredAndPurchasedPromptsByFilter(
+              userId, tagName, filterName, pageable));
+      // TODO:
+    }
+
+    System.out.println("\n\nboth arent null");
+
+    // TODO:
+    return ResponseEntity.ok(
+        promptService.getAuthoredAndPurchasedPromptsByFilter(
+            userId, tagName, filterName, pageable));
   }
 }

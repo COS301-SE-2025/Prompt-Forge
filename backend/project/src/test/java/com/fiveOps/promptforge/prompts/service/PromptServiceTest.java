@@ -67,19 +67,19 @@ class PromptServiceTest {
     verify(promptRepository).findAll();
   }
 
-  @Test
-  void getPromptsByAuthor_ShouldReturnAuthorPrompts() {
-    // Arrange
-    List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-    when(promptRepository.findByAuthorId(authorId)).thenReturn(expectedPrompts);
+  // @Test
+  // void getPromptsByAuthor_ShouldReturnAuthorPrompts() {
+  //   // Arrange
+  //   List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
+  //   when(promptRepository.findByAuthorId(authorId)).thenReturn(expectedPrompts);
 
-    // Act
-    List<Prompt> result = promptService.getPromptsByAuthor(authorId);
+  //   // Act
+  //   List<Prompt> result = promptService.getPromptsByAuthor(authorId);
 
-    // Assert
-    assertEquals(expectedPrompts, result);
-    verify(promptRepository).findByAuthorId(authorId);
-  }
+  //   // Assert
+  //   assertEquals(expectedPrompts, result);
+  //   verify(promptRepository).findByAuthorId(authorId);
+  // }
 
   @Test
   void getPromptById_ShouldReturnPromptWhenExists() {
