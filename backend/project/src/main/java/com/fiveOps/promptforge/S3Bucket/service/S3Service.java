@@ -25,21 +25,20 @@ public class S3Service {
     this.s3Client = s3Client;
   }
 
-  public String uploadFile(MultipartFile file) throws IOException {
-    String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+public String uploadFile(MultipartFile file) throws IOException {
+  String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
 
-    PutObjectRequest putRequest =
-        PutObjectRequest.builder()
-            .bucket(bucketName)
-            .key(fileName)
-            .acl("public-read") // Optional: make public
-            .contentType(file.getContentType())
-            .build();
+  PutObjectRequest putRequest = PutObjectRequest.builder()
+      .bucket(bucketName)
+      .key(fileName)
+      .contentType(file.getContentType())
+      .build(); // ✅ no ACL
 
-    s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+  s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
 
-    return "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
-  }
+  return "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
+}
+
 
   public void deleteFile(String fileUrl) {
     if (fileUrl == null || fileUrl.isEmpty()) return;
