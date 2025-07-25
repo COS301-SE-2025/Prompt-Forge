@@ -13,7 +13,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -30,7 +29,7 @@ public class SecurityConfig {
   }
 
   @Bean
-   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(
@@ -59,26 +58,25 @@ public class SecurityConfig {
 
     return http.build();
   }
-  
+
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
 
-     CorsConfiguration defaultConfig = new CorsConfiguration();
-      defaultConfig.setAllowedOriginPatterns(Arrays.asList(
-          "http://localhost:5173"));
-      defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
-      defaultConfig.setAllowedHeaders(Arrays.asList("*"));
-      defaultConfig.setAllowCredentials(true); 
-      defaultConfig.setMaxAge(3600L);
+    CorsConfiguration defaultConfig = new CorsConfiguration();
+    defaultConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
+    defaultConfig.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    defaultConfig.setAllowedHeaders(Arrays.asList("*"));
+    defaultConfig.setAllowCredentials(true);
+    defaultConfig.setMaxAge(3600L);
 
-      
-      CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-      noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList(
-          "http://localhost:5173")); 
-      noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
-      noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
-      noCredentialsConfig.setAllowCredentials(false); 
-      noCredentialsConfig.setMaxAge(3600L);
+    CorsConfiguration noCredentialsConfig = new CorsConfiguration();
+    noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
+    noCredentialsConfig.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
+    noCredentialsConfig.setAllowCredentials(false);
+    noCredentialsConfig.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
