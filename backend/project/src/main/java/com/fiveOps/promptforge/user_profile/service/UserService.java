@@ -24,9 +24,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @Service
 public class UserService {
 
-@Autowired
-private S3Service s3Service;
-
+  @Autowired private S3Service s3Service;
 
   @Autowired private UserRepository userRepository;
 

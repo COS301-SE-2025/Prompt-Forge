@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,12 +33,10 @@ import com.fiveOps.promptforge.user_profile.service.UserService;
 @RequestMapping("/api/user")
 public class UserController {
 
+  private static final org.slf4j.Logger LOGGER =
+      org.slf4j.LoggerFactory.getLogger(UserController.class);
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
-
-  @Autowired
-  private UserService userService;
-
+  @Autowired private UserService userService;
 
   @Autowired private JwtUtil jwtUtil;
 
@@ -94,38 +93,29 @@ public class UserController {
     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication token not found");
   }
 
-
   @PostMapping(
-    value = "/upload-picture",
-    consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-    produces = MediaType.APPLICATION_JSON_VALUE
-)
-public ResponseEntity<Map<String, String>> uploadProfilePicture(
-    @RequestPart("file") MultipartFile file,  // Using @RequestPart instead of @RequestParam
-    HttpServletRequest request
-) {
+      value = "/upload-picture",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<Map<String, String>> uploadProfilePicture(
+      @RequestPart("file") MultipartFile file, // Using @RequestPart instead of @RequestParam
+      HttpServletRequest request) {
     try {
-        if (file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
-        }
+      if (file.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+      }
 
-        String email = extractEmailFromCookie(request);
-        String imageUrl = userService.saveProfilePicture(email, file);
-        
-        return ResponseEntity.ok(Map.of(
-            "url", imageUrl,
-            "message", "Profile picture uploaded successfully"
-        ));
+      String email = extractEmailFromCookie(request);
+      String imageUrl = userService.saveProfilePicture(email, file);
+
+      return ResponseEntity.ok(
+          Map.of("url", imageUrl, "message", "Profile picture uploaded successfully"));
     } catch (Exception e) {
-        logger.error("Error uploading profile picture: ", e);
-        throw new ResponseStatusException(
-            HttpStatus.INTERNAL_SERVER_ERROR, 
-            "Failed to upload profile picture", 
-            e
-        );
+      LOGGER.error("Error uploading profile picture: ", e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload profile picture", e);
     }
-}
-
+  }
 
   @DeleteMapping("/delete-picture")
   public ResponseEntity<Map<String, String>> deleteProfilePicture(HttpServletRequest request) {
