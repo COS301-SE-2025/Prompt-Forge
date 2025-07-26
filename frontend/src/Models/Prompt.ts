@@ -110,14 +110,21 @@ export interface PromptWithTags {
 }
 
 export enum CategoryColors {
-    "Writing" = "bg-blue-500/20 text-blue-400",
-    "Marketing" = "bg-purple-500/20 text-purple-400",
-    "Development" = "bg-green-500/20 text-green-400",
-    "Design" = "bg-pink-500/20 text-pink-400",
-    "SEO"= "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
-    "Content"= "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-    "default" = "bg-amber-500/20 text-amber-600", // Changed to a warm amber color
-    "null" = "bg-transparent"
+  
+  "Technical" = "bg-blue-500/20 text-blue-400",
+  "Creative Writing"= "bg-indigo-500/20 text-indigo-500",
+  "g" = "bg-purple-500/20 text-purple-400",
+  "Programming" = "bg-green-500/20 text-green-400",
+  "Design" = "bg-pink-500/20 text-pink-400",
+  "Business"= "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
+  "Problem Solving"= "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
+  "Content"= "bg-cyan-500/20 text-cyan-500",
+  "Other"= "bg-lime-300/20 text-lime-500",
+  "Development"= "bg-emerald-500/20 text-emerald-500",
+  "default" = "bg-amber-500/20 text-amber-600", // Changed to a warm amber color
+  "null" = "bg-transparent",
+  "Marketing"= "bg-fuchsia-500/20 text-fuchsia-500",
+
 }
 
 export type Category = keyof typeof CategoryColors;
