@@ -181,11 +181,11 @@ public class PromptStoreService {
   /////////////////////////////////////
 
   // Get PUBLIC prompts by author
-  public List<Prompt> getPublicPromptsByAuthor(UUID authorId) {
-    return promptService.getPromptsByAuthor(authorId).stream()
-        .filter(p -> "public".equals(p.getVisibility()))
-        .collect(Collectors.toList());
-  }
+  // public List<Prompt> getPublicPromptsByAuthor(UUID authorId) {
+  //   return promptService.getPromptsByAuthor(authorId).stream()
+  //       .filter(p -> "public".equals(p.getVisibility()))
+  //       .collect(Collectors.toList());
+  // }
 
   // Unpublish a listing (soft delete)
   @Transactional
