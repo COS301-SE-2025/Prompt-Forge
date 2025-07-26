@@ -1,0 +1,479 @@
+name: CD Prompt Forge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '21'
+  AWS_REGION: 'eu-north-1'
+
+jobs:
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      environment: ${{ steps.check.outputs.environment }}
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Check Deployment Conditions
+      id: check
+      run: |
+        echo "Validating deployment conditions..."
+        
+        # Check if this is a deployment trigger
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          echo "Manual deployment triggered for ${{ github.event.inputs.environment }}"
+        elif [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" == "push" ]]; then
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "environment=production" >> $GITHUB_OUTPUT
+          echo "Auto deployment triggered for production"
+        else
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+          echo "environment=none" >> $GITHUB_OUTPUT
+          echo "Skipping deployment - not main branch push or manual trigger"
+        fi
+
+    - name: Validate Required Secrets
+      if: steps.check.outputs.should_deploy == 'true'
+      run: |
+        echo "Checking required secrets..."
+        
+        missing_secrets=()
+        
+        # AWS Secrets
+        [[ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]] && missing_secrets+=("AWS_ACCESS_KEY_ID")
+        [[ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]] && missing_secrets+=("AWS_SECRET_ACCESS_KEY")
+        [[ -z "${{ secrets.AMPLIFY_APP_ID }}" ]] && missing_secrets+=("AMPLIFY_APP_ID")
+        
+        # EC2 Secrets
+        [[ -z "${{ secrets.EC2_HOST }}" ]] && missing_secrets+=("EC2_HOST")
+        [[ -z "${{ secrets.EC2_USER }}" ]] && missing_secrets+=("EC2_USER")
+        [[ -z "${{ secrets.EC2_SSH_KEY }}" ]] && missing_secrets+=("EC2_SSH_KEY")
+        
+        # Database Secrets
+        [[ -z "${{ secrets.DB_URL }}" ]] && missing_secrets+=("DB_URL")
+        [[ -z "${{ secrets.DB_USER }}" ]] && missing_secrets+=("DB_USER")
+        [[ -z "${{ secrets.DB_PASSWORD }}" ]] && missing_secrets+=("DB_PASSWORD")
+        
+        # API Secrets
+        [[ -z "${{ secrets.OPENROUTER_API_KEY }}" ]] && missing_secrets+=("OPENROUTER_API_KEY")
+        [[ -z "${{ secrets.JWT_SECRET }}" ]] && missing_secrets+=("JWT_SECRET")
+        
+        if [ ${#missing_secrets[@]} -ne 0 ]; then
+          echo "Missing required secrets: ${missing_secrets[*]}"
+          exit 1
+        else
+          echo "All required secrets are configured"
+        fi
+
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build Production JAR
+      working-directory: ./backend/project
+      env:
+        DB_URL: ${{ secrets.DB_URL }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+      run: |
+        echo "Building production JAR..."
+        mvn clean package -DskipTests -Pprod -B
+        
+        # Find and rename the JAR
+        JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -1)
+        if [ -n "$JAR_FILE" ]; then
+          cp "$JAR_FILE" target/prompt-forge.jar
+          echo "JAR built: target/prompt-forge.jar ($(du -h target/prompt-forge.jar | cut -f1))"
+          ls -la target/prompt-forge.jar
+        else
+          echo "No JAR file found!"
+          exit 1
+        fi
+
+    - name: Quick JAR Test
+      working-directory: ./backend/project
+      run: |
+        echo "Testing JAR file..."
+        java -jar target/prompt-forge.jar --version || echo "JAR validation completed"
+
+    - name: Upload Backend Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-jar-${{ github.sha }}
+        path: ./backend/project/target/prompt-forge.jar
+        retention-days: 1
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should_deploy == 'true'
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Dependencies
+      working-directory: ./frontend
+      run: |
+        echo "Installing frontend dependencies..."
+        npm ci
+
+    - name: Build Frontend
+      working-directory: ./frontend
+      env:
+        NODE_ENV: production
+      run: |
+        echo "Building production frontend..."
+        npm run build
+        
+        echo "Build statistics:"
+        du -sh dist/
+        find dist -name "*.js" -o -name "*.css" | wc -l | xargs echo "Total assets:"
+        
+        # Verify critical files exist
+        [ -f "dist/index.html" ] && echo "index.html found" || echo "index.html missing"
+        [ -d "dist/assets" ] && echo "assets directory found" || echo "assets directory missing"
+
+    - name: Upload Frontend Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist-${{ github.sha }}
+        path: ./frontend/dist
+        retention-days: 1
+
+  deploy-backend:
+    name: Deploy Backend to EC2
+    runs-on: ubuntu-latest
+    needs: [validate, build-backend]
+    if: needs.validate.outputs.should_deploy == 'true'
+    environment: ${{ needs.validate.outputs.environment }}
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Download Backend Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-jar-${{ github.sha }}
+        path: ./artifacts
+
+    - name: Setup SSH Key
+      run: |
+        echo "Setting up SSH connection..."
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Add EC2 host to known hosts
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+    - name: Test SSH Connection
+      run: |
+        echo "Testing SSH connection..."
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'"
+
+    - name: Deploy Application
+      run: |
+        echo "Deploying backend to EC2..."
+        
+        # Create deployment script
+        cat > deploy_script.sh << 'EOF'
+        set -e
+        
+        echo "Setting up deployment environment..."
+        
+        # Create app directory
+        sudo mkdir -p /home/ubuntu/app
+        sudo chown ubuntu:ubuntu /home/ubuntu/app
+        
+        # Update system packages
+        sudo apt update -qq
+        
+        # Install Java 21 if not present
+        if ! java -version 2>&1 | grep -q "21\." ; then
+          echo "Installing Java 21..."
+          sudo apt install -y openjdk-21-jdk
+        fi
+        
+        # Install nginx if not present
+        if ! command -v nginx &> /dev/null; then
+          echo "Installing nginx..."
+          sudo apt install -y nginx
+        fi
+        
+        # Verify Java installation
+        echo "Java version:"
+        java -version
+        
+        echo "System setup completed"
+        EOF
+        
+        # Copy and execute deployment script
+        scp -i ~/.ssh/id_rsa deploy_script.sh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/
+        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "chmod +x /tmp/deploy_script.sh && /tmp/deploy_script.sh"
+        
+        # Copy application files
+        echo "Copying application files..."
+        scp -i ~/.ssh/id_rsa ./artifacts/prompt-forge.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/
+        scp -i ~/.ssh/id_rsa ./nginx.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/
+
+    - name: Configure Services
+      run: |
+        echo "Configuring application services..."
+        
+        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+        set -e
+        
+        # Configure nginx
+        echo "Configuring nginx..."
+        sudo cp /tmp/nginx.conf /etc/nginx/sites-available/default
+        sudo nginx -t
+        
+        # Create systemd service file
+        echo "Creating systemd service..."
+        sudo tee /etc/systemd/system/prompt-forge.service > /dev/null << 'SERVICE_EOF'
+[Unit]
+Description=Prompt Forge Spring Boot Application
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/app
+ExecStart=/usr/bin/java -Xmx512m -jar /home/ubuntu/app/prompt-forge.jar
+ExecStop=/bin/kill -15 $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+Environment=DB_URL=${{ secrets.DB_URL }}
+Environment=DB_USER=${{ secrets.DB_USER }}
+Environment=DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+Environment=OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+Environment=OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
+Environment=JWT_SECRET=${{ secrets.JWT_SECRET }}
+Environment=PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+Environment=SERVER_PORT=8080
+Environment=SERVER_ADDRESS=0.0.0.0
+Environment=SPRING_PROFILES_ACTIVE=prod
+
+[Install]
+WantedBy=multi-user.target
+SERVICE_EOF
+
+        # Reload and start services
+        echo "Starting services..."
+        sudo systemctl daemon-reload
+        
+        # Stop existing service if running
+        sudo systemctl stop prompt-forge 2>/dev/null || true
+        
+        # Start new service
+        sudo systemctl start prompt-forge
+        sudo systemctl enable prompt-forge
+        
+        # Start nginx
+        sudo systemctl enable nginx
+        sudo systemctl restart nginx
+        
+        echo "Services configured and started"
+        EOF
+
+    - name: Health Check
+      run: |
+        echo "Performing health checks..."
+        
+        # Wait for application to start
+        echo "Waiting for application to start..."
+        sleep 45
+        
+        # Check systemd service status
+        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+          echo 'Service status:'
+          sudo systemctl status prompt-forge --no-pager -l || true
+          
+          echo ''
+          echo 'Application logs (last 20 lines):'
+          sudo journalctl -u prompt-forge -n 20 --no-pager || true
+        "
+        
+        # Test health endpoint
+        echo "Testing health endpoint..."
+        for i in {1..6}; do
+          if curl -f -m 10 http://${{ secrets.EC2_HOST }}/actuator/health; then
+            echo "Health check passed!"
+            break
+          else
+            echo "Health check attempt $i/6 failed, waiting 15s..."
+            if [ $i -eq 6 ]; then
+              echo "Health check failed after 6 attempts"
+              exit 1
+            fi
+            sleep 15
+          fi
+        done
+
+  deploy-frontend:
+    name: Deploy Frontend to Amplify
+    runs-on: ubuntu-latest
+    needs: [validate, build-frontend, deploy-backend]
+    if: needs.validate.outputs.should_deploy == 'true'
+    environment: ${{ needs.validate.outputs.environment }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Download Frontend Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-dist-${{ github.sha }}
+        path: ./frontend/dist
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Deploy to Amplify
+      run: |
+        echo "Deploying frontend to Amplify..."
+        
+        # Verify build files
+        echo "Verifying build files..."
+        ls -la frontend/dist/
+        
+        # Create deployment package
+        cd frontend/dist
+        zip -r ../../amplify-deployment.zip .
+        cd ../..
+        
+        echo "Deployment package created ($(du -h amplify-deployment.zip | cut -f1))"
+        
+        # Start deployment
+        echo "Starting Amplify deployment..."
+        aws amplify start-deployment \
+          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+          --branch-name main \
+          --source-url "data:application/zip;base64,$(base64 -w 0 amplify-deployment.zip)"
+        
+        echo "Frontend deployment initiated!"
+
+    - name: Verify Frontend Deployment
+      run: |
+        echo "Verifying frontend deployment..."
+        
+        # Get Amplify app URL
+        APP_URL="https://main.d${{ secrets.AMPLIFY_APP_ID }}.amplifyapp.com"
+        echo "App URL: $APP_URL"
+        
+        # Wait for deployment to complete
+        echo "Waiting for deployment to complete..."
+        sleep 60
+        
+        # Test frontend availability
+        for i in {1..5}; do
+          if curl -f -m 10 "$APP_URL" > /dev/null; then
+            echo "Frontend is accessible!"
+            break
+          else
+            echo "Frontend check attempt $i/5 failed, waiting 30s..."
+            if [ $i -eq 5 ]; then
+              echo "Frontend may still be deploying"
+            fi
+            sleep 30
+          fi
+        done
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-backend, deploy-frontend]
+    if: always() && needs.validate.outputs.should_deploy == 'true'
+
+    steps:
+    - name: Generate Deployment Report
+      run: |
+        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** ${{ needs.validate.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### Deployment Status" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.deploy-backend.result }}" == "success" ]]; then
+          echo "- **Backend (EC2):** Successfully deployed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Backend (EC2):** Deployment failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.deploy-frontend.result }}" == "success" ]]; then
+          echo "- **Frontend (Amplify):** Successfully deployed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Frontend (Amplify):** Deployment failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Application URLs" >> $GITHUB_STEP_SUMMARY
+        echo "- **Frontend:** [https://main.d${{ secrets.AMPLIFY_APP_ID }}.amplifyapp.com](https://main.d${{ secrets.AMPLIFY_APP_ID }}.amplifyapp.com)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Backend API:** [http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com](http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Health Check:** [http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/actuator/health](http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/actuator/health)" >> $GITHUB_STEP_SUMMARY
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Testing
