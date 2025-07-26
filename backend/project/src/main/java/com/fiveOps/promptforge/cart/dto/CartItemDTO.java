@@ -5,7 +5,7 @@ import java.util.UUID;
 public class CartItemDTO {
   private UUID cartItemId;
   private UUID userId;
-  private String username;
+  private String authorName;
   private UUID promptId;
   private String promptTitle;
   private String[] promptTags;
@@ -15,14 +15,14 @@ public class CartItemDTO {
   public CartItemDTO(
       UUID cartItemId,
       UUID userId,
-      String username,
+      String authorName,
       UUID promptId,
       String promptTitle,
       String[] promptTags,
       double promptPrice) {
     this.cartItemId = cartItemId;
     this.userId = userId;
-    this.username = username;
+    this.authorName = authorName;
     this.promptId = promptId;
     this.promptTitle = promptTitle;
     this.promptTags = promptTags;
@@ -48,12 +48,12 @@ public class CartItemDTO {
     this.userId = userId;
   }
 
-  public String getUsername() {
-    return username;
+  public String getAuthorName() {
+    return authorName;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
+  public void setAuthorName(String authorName) {
+    this.authorName = authorName;
   }
 
   public UUID getPromptId() {
