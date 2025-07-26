@@ -26,7 +26,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
                          c.id AS cart_item_id,
                          cart_user.user_id AS user_id,
-                         author_user.username AS username,
+                         author_user.username AS authorName,
                          p.prompt_id AS prompt_id,
                          p.title AS prompt_title,
                          ARRAY_AGG(t.name) AS prompt_tags,
@@ -66,4 +66,9 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
   @Transactional
   @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId AND c.prompt.id = :promptId")
   void deleteByUserIdAndPromptId(@Param("userId") UUID userId, @Param("promptId") UUID promptId);
+
+  @Modifying
+  @Transactional
+  @Query("DELETE FROM CartItem c WHERE c.user.userId = :userId")
+  void deletebyUserID(@Param("userId") UUID userId);
 }

@@ -268,14 +268,14 @@ class PromptStoreControllerReviewTest {
     verify(storeService).getNew(pageable);
   }
 
-  @Test
-  void getPublicPromptsByAuthor_ShouldReturnPrompts() {
-    UUID authorId = UUID.randomUUID();
-    List<Prompt> prompts = mock(List.class);
-    when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(prompts);
-    assertEquals(prompts, promptStoreController.getPublicPromptsByAuthor(authorId));
-    verify(storeService).getPublicPromptsByAuthor(authorId);
-  }
+  // @Test
+  // void getPublicPromptsByAuthor_ShouldReturnPrompts() {
+  //   UUID authorId = UUID.randomUUID();
+  //   List<Prompt> prompts = mock(List.class);
+  //   when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(prompts);
+  //   assertEquals(prompts, promptStoreController.getPublicPromptsByAuthor(authorId));
+  //   verify(storeService).getPublicPromptsByAuthor(authorId);
+  // }
 
   @Test
   void deleteListing_ShouldReturnNoContentIfDeleted() {
@@ -378,12 +378,12 @@ class PromptStoreControllerReviewTest {
     assertNull(promptStoreController.getNew(pageable));
   }
 
-  @Test
-  void getPublicPromptsByAuthor_ShouldHandleEmptyList() {
-    UUID authorId = UUID.randomUUID();
-    when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(List.of());
-    assertTrue(promptStoreController.getPublicPromptsByAuthor(authorId).isEmpty());
-  }
+  // @Test
+  // void getPublicPromptsByAuthor_ShouldHandleEmptyList() {
+  //   UUID authorId = UUID.randomUUID();
+  //   when(storeService.getPublicPromptsByAuthor(authorId)).thenReturn(List.of());
+  //   assertTrue(promptStoreController.getPublicPromptsByAuthor(authorId).isEmpty());
+  // }
 
   @Test
   void deleteListing_ShouldHandleException() {

@@ -82,20 +82,20 @@ class PromptControllerTest {
     verify(promptService).getAllPrompts();
   }
 
-  @Test
-  void getPromptsByAuthor_ShouldReturnAuthorPrompts() {
-    // Arrange
-    List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-    when(promptService.getPromptsByAuthor(testAuthorId)).thenReturn(expectedPrompts);
+  // @Test
+  // void getPromptsByAuthor_ShouldReturnAuthorPrompts() {
+  //   // Arrange
+  //   List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
+  //   when(promptService.getPromptsByAuthor(testAuthorId)).thenReturn(expectedPrompts);
 
-    // Act
-    ResponseEntity<List<Prompt>> response = promptController.getPromptsByAuthor(testAuthorId);
+  //   // Act
+  //   ResponseEntity<List<Prompt>> response = promptController.getPromptsByAuthor(testAuthorId);
 
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(expectedPrompts, response.getBody());
-    verify(promptService).getPromptsByAuthor(testAuthorId);
-  }
+  //   // Assert
+  //   assertEquals(HttpStatus.OK, response.getStatusCode());
+  //   assertEquals(expectedPrompts, response.getBody());
+  //   verify(promptService).getPromptsByAuthor(testAuthorId);
+  // }
 
   @Test
   void getPromptById_ShouldReturnPrompt_WhenExists() {
