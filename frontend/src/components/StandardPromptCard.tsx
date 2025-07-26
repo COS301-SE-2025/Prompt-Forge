@@ -178,13 +178,6 @@ export function StandardPromptCard({
                 </div>
               )}
 
-              {/* Private indicator - only for owned prompts */}
-              {/* {isBought === true && (
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
-                  Bought
-                </span>
-              )} */}
-
               {source === "authored" && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
                   Private
