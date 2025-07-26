@@ -1,0 +1,12 @@
+# Core requirements
+fastapi==0.95.2
+uvicorn==0.22.0
+transformers==4.28.1
+torch==2.0.1
+sentence-transformers==2.2.2
+scikit-learn==1.2.2
+numpy==1.24.3
+
+# Optional (for advanced NLP)
+spacy==3.5.0
+python-multipart==0.0.6
