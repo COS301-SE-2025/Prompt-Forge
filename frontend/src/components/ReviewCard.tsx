@@ -32,7 +32,7 @@ export const ReviewCard = ({
             </p>
           </div>
         </div>
-        <StarRating rating={rating} size="sm" />
+        <StarRating value={rating} size="sm" /> {/* <-- Fix: use value prop */}
       </div>
       <p className="text-sm text-muted-foreground pr-24">{comment}</p>
     </Card>

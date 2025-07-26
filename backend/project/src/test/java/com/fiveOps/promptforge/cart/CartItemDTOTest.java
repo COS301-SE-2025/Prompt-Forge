@@ -22,7 +22,7 @@ class CartItemDTOTest {
     CartItemDTO dto = new CartItemDTO();
     dto.setCartItemId(cartItemId);
     dto.setUserId(userId);
-    dto.setUsername(username);
+    dto.setAuthorName(username);
     dto.setPromptId(promptId);
     dto.setPromptTitle(promptTitle);
     dto.setPromptTags(promptTags);
@@ -30,7 +30,7 @@ class CartItemDTOTest {
 
     assertEquals(cartItemId, dto.getCartItemId());
     assertEquals(userId, dto.getUserId());
-    assertEquals(username, dto.getUsername());
+    assertEquals(username, dto.getAuthorName());
     assertEquals(promptId, dto.getPromptId());
     assertEquals(promptTitle, dto.getPromptTitle());
     assertArrayEquals(promptTags, dto.getPromptTags());
@@ -52,7 +52,7 @@ class CartItemDTOTest {
             cartItemId, userId, username, promptId, promptTitle, promptTags, promptPrice);
     assertEquals(cartItemId, dto.getCartItemId());
     assertEquals(userId, dto.getUserId());
-    assertEquals(username, dto.getUsername());
+    assertEquals(username, dto.getAuthorName());
     assertEquals(promptId, dto.getPromptId());
     assertEquals(promptTitle, dto.getPromptTitle());
     assertArrayEquals(promptTags, dto.getPromptTags());

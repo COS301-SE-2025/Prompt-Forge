@@ -32,7 +32,7 @@ interface StandardPromptCardProps {
   authorName: string
   isOwned: boolean
   isPublished?: boolean // ✅ Add this
-  isBought: boolean
+  source: string
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
@@ -57,7 +57,7 @@ export function StandardPromptCard({
   authorName,
   isOwned = false,
   isPublished = false, // ✅ Add this
-  isBought,
+  source,
   onEdit,
   onDelete,
   onToggleFavorite,
@@ -169,7 +169,7 @@ export function StandardPromptCard({
               )}
 
               {/* Author info - only for non-owned prompts */}
-              {isBought && authorName && (
+              {source==="purchased" && authorName && (
                 <div className="flex items-center">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 transition-colors duration-300">
                     <User className="h-3 w-3 text-[#3ebb9e] transition-colors duration-300" />
@@ -185,12 +185,12 @@ export function StandardPromptCard({
                 </span>
               )} */}
 
-              {isBought === false && isOwned && isPrivate && (
+              {source === "authored" && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
                   Private
                 </span>
               )}
-              {isBought === false && isOwned && !isPrivate && (
+              {source === "authored" && !isPrivate && (
                 <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
                   Public
                 </span>
@@ -204,7 +204,7 @@ export function StandardPromptCard({
           <div className="flex-1 flex items-center justify-between p-3">
             <div className="flex items-center space-x-1">
               {/* Copy button - visible for owned or bought prompts */}
-              {onCopy && (isOwned || isBought) && (
+              {onCopy && (isOwned || source == "purchased") && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -236,8 +236,10 @@ export function StandardPromptCard({
                 </Button>
               )}
 
+
               {/* Test Prompt button - always visible for owned or bought prompts */}
-              {(isOwned || isBought) && (
+              {(isOwned || source == "purchased") && (
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -275,7 +277,7 @@ export function StandardPromptCard({
               )}
 
               {/* Edit button - only for owned prompts (not bought prompts) */}
-              {isOwned && !isBought && onEdit && (
+              {isOwned && source == "authored" && onEdit && (
                 <Link
                   to="/submit"
                   onClick={(e) => {
@@ -295,7 +297,7 @@ export function StandardPromptCard({
               )}
 
               {/* Delete button - visible for owned prompts AND bought prompts */}
-              {(isOwned || isBought) && onDelete && (
+              {(isOwned || source == "purchased") && onDelete && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -305,7 +307,7 @@ export function StandardPromptCard({
                     e.stopPropagation()
                     onDelete(id)
                   }}
-                  title={isBought ? "Remove from library" : "Delete prompt"}
+                  title={source == "purchased" ? "Remove from library" : "Delete prompt"}
                 >
                   <Trash2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                 </Button>
@@ -313,7 +315,7 @@ export function StandardPromptCard({
             </div>
 
             {/* Buy/Add to cart button - only for non-owned AND non-bought prompts */}
-            {!isOwned && !isBought && price !== undefined && (
+            {!isOwned && source !== "purchased" && price !== undefined && (
               <div className="border-l border-border">
                 <Button
                   className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3 group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25 transition-all duration-300"
