@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.paymentGateway.controller;
+package com.fiveOps.promptforge.payments.controller;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
-import com.fiveOps.promptforge.paymentGateway.dto.InitializePaymentRequest;
-import com.fiveOps.promptforge.paymentGateway.dto.TransactionInitializationResponse;
-import com.fiveOps.promptforge.paymentGateway.service.PaymentService;
+import com.fiveOps.promptforge.payments.dto.InitializePaymentRequest;
+import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
+import com.fiveOps.promptforge.payments.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payment")
