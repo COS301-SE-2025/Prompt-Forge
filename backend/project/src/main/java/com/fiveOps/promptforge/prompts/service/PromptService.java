@@ -12,24 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
-
-import com.fiveOps.promptforge.prompts.model.PromptWithAuthorDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
-
-
 
 @Service
 public class PromptService {
   private final PromptRepository promptRepository;
   private final TagService tagService;
-  private final UniversalTaggingService taggingService;
 
-  public PromptService(
-    PromptRepository promptRepository, TagService tagService, 
-    UniversalTaggingService taggingService) {
+  public PromptService(PromptRepository promptRepository, TagService tagService) {
     this.promptRepository = promptRepository;
     this.tagService = tagService;
-    this.taggingService = taggingService;
   }
 
   public List<Prompt> getAllPrompts() {
@@ -56,23 +48,9 @@ public class PromptService {
       prompt.setPrice(0.0);
     }
 
-    prompt.resolveAndSetTags(tagService,taggingService);
+    prompt.resolveAndSetTags(tagService);
     return promptRepository.save(prompt);
   }
-
-
-public String getPromptContent(UUID promptId) {
-        return promptRepository.findById(promptId)
-            .map(Prompt::getContent)
-            .orElseThrow(() -> new RuntimeException("Prompt not found"));
-    }
-
-public Map<String, Object> generateTagsForPrompt(UUID promptId) {
-        Prompt prompt = promptRepository.findById(promptId)
-            .orElseThrow(() -> new RuntimeException("Prompt not found"));
-        
-        return taggingService.predictTags(prompt.getContent());
-    }
 
   public List<Prompt> getPromptsByTagName(String tagName) {
     // Delegate tag lookup to TagService

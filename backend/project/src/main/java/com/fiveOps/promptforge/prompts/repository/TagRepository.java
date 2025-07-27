@@ -37,5 +37,4 @@ public interface TagRepository extends JpaRepository<Tag, UUID> {
 
   // Check if tag exists by name
   boolean existsByName(String name);
-  boolean existsBySlug(String slug);
 }
