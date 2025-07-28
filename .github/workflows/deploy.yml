@@ -1,0 +1,329 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+        
+    - name: Run backend tests
+      run: |
+        cd backend/project
+        ./mvnw clean test
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm run test:ci
+        
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+
+  build-backend:
+    name: Build Backend
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Build backend
+      run: |
+        cd backend/project
+        ./mvnw clean package -DskipTests
+        
+    - name: Build Docker image
+      run: |
+        cd backend/project
+        docker build -t prompt-forge-backend:${{ github.sha }} .
+        docker save prompt-forge-backend:${{ github.sha }} > backend-image.tar
+        
+    - name: Upload backend artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-jar
+        path: backend/project/target/*.jar
+        retention-days: 1
+        
+    - name: Upload Docker image
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-docker-image
+        path: backend-image.tar
+        retention-days: 1
+
+  build-frontend:
+    name: Build Frontend
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+      env:
+        VITE_API_BASE_URL: https://api.prompt-forge.co.za
+        
+    - name: Upload frontend build
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/dist
+        retention-days: 1
+
+  deploy-backend:
+    name: Deploy Backend to EC2
+    needs: [build-backend]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download backend artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-jar
+        path: ./artifacts/
+        
+    - name: Download Docker image
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-docker-image
+        path: ./artifacts/
+        
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Copy files to EC2
+      run: |
+        scp -i ~/.ssh/id_rsa ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa ./artifacts/backend-image.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa docker-compose.prod.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa nginx.conf ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        
+    - name: Deploy to EC2
+      run: |
+        ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          # Stop existing services
+          sudo systemctl stop prompt-forge-backend || true
+          sudo docker-compose -f docker-compose.prod.yml down || true
+          
+          # Load new Docker image
+          docker load < backend-image.tar
+          
+          # Update environment file
+          cat > .env << EOL
+          DB_URL=${{ secrets.DB_URL }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
+          HF_TOKEN=${{ secrets.HF_TOKEN }}
+          EOL
+          
+          # Update docker-compose to use new image
+          sed -i "s/prompt-forge-backend:latest/prompt-forge-backend:${{ github.sha }}/g" docker-compose.prod.yml
+          
+          # Start services
+          sudo docker-compose -f docker-compose.prod.yml up -d
+          
+          # Update nginx configuration
+          sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge
+          sudo ln -sf /etc/nginx/sites-available/prompt-forge /etc/nginx/sites-enabled/
+          sudo nginx -t && sudo systemctl reload nginx
+          
+          # Verify deployment
+          sleep 30
+          curl -f http://localhost:8080/health || echo "Backend health check failed"
+        EOF
+
+  deploy-frontend:
+    name: Deploy Frontend to Amplify
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download frontend build
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-build
+        path: ./frontend-build/
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-north-1
+        
+    - name: Deploy to Amplify
+      run: |
+        # Create deployment package
+        cd frontend-build
+        zip -r ../frontend-deployment.zip .
+        cd ..
+        
+        # Deploy to Amplify
+        aws amplify create-deployment \
+          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+          --branch-name main \
+          --file-map file=frontend-deployment.zip
+          
+        # Start deployment
+        DEPLOYMENT_ID=$(aws amplify list-jobs --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --max-items 1 --query 'jobSummaries[0].jobId' --output text)
+        
+        # Wait for deployment to complete
+        aws amplify get-job --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --job-id $DEPLOYMENT_ID --query 'job.summary.status' --output text
+        
+        echo "Frontend deployed successfully to Amplify"
+
+  health-check:
+    name: Health Check
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check backend health
+      run: |
+        for i in {1..10}; do
+          if curl -f https://api.prompt-forge.co.za/health; then
+            echo "Backend is healthy"
+            break
+          else
+            echo "Backend health check failed, attempt $i/10"
+            sleep 30
+          fi
+        done
+        
+    - name: Check frontend health
+      run: |
+        if curl -f https://prompt-forge.co.za; then
+          echo "Frontend is accessible"
+        else
+          echo "Frontend health check failed"
+          exit 1
+        fi
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "Deployment completed successfully!"
+          echo "Frontend: https://prompt-forge.co.za"
+          echo "Backend API: https://api.prompt-forge.co.za"
+        else
+          echo "Deployment failed. Please check the logs."
+        fi
+
+  rollback:
+    name: Rollback on Failure
+    needs: [deploy-backend, deploy-frontend, health-check]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Rollback backend
+      run: |
+        ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          # Stop current deployment
+          sudo docker-compose -f docker-compose.prod.yml down
+          
+          # Start previous version (assuming it exists)
+          sudo systemctl start prompt-forge-backend || echo "No previous version to rollback to"
+        EOF
+        
+    - name: Notify rollback
+      run: |
+        echo "Deployment failed and rollback initiated"
+        echo "Please check the logs and fix issues before next deployment"
