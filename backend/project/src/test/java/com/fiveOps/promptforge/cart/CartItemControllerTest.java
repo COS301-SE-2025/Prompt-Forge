@@ -22,8 +22,6 @@ import org.springframework.security.core.Authentication;
 
 import com.fiveOps.promptforge.cart.controller.CartItemController;
 import com.fiveOps.promptforge.cart.dto.APIResponse;
-import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
-import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
 import com.fiveOps.promptforge.cart.service.CartItemService;
@@ -32,14 +30,10 @@ import com.fiveOps.promptforge.user_profile.service.UserService;
 @ExtendWith(MockitoExtension.class)
 class CartItemControllerTest {
 
-  @Mock
-  private CartItemService cartItemService;
-  @Mock
-  private UserService userService;
-  @Mock
-  private Authentication authentication;
-  @InjectMocks
-  private CartItemController controller;
+  @Mock private CartItemService cartItemService;
+  @Mock private UserService userService;
+  @Mock private Authentication authentication;
+  @InjectMocks private CartItemController controller;
 
   private UUID userId;
   private UUID promptId;
@@ -61,7 +55,8 @@ class CartItemControllerTest {
     Page<CartItemProjection> page = new PageImpl<>(List.of(cartItemProjection));
     when(cartItemService.getCartItemsForUser(userId, pageable)).thenReturn(page);
 
-    ResponseEntity<Page<CartItemProjection>> response = controller.getCartItems(pageable, authentication);
+    ResponseEntity<Page<CartItemProjection>> response =
+        controller.getCartItems(pageable, authentication);
 
     assertEquals(200, response.getStatusCodeValue());
     assertEquals(1, response.getBody().getContent().size());
@@ -72,7 +67,8 @@ class CartItemControllerTest {
     Page<CartItemProjection> page = new PageImpl<>(Collections.emptyList());
     when(cartItemService.getCartItemsForUser(userId, pageable)).thenReturn(page);
 
-    ResponseEntity<Page<CartItemProjection>> response = controller.getCartItems(pageable, authentication);
+    ResponseEntity<Page<CartItemProjection>> response =
+        controller.getCartItems(pageable, authentication);
 
     assertTrue(response.getBody().isEmpty());
   }
