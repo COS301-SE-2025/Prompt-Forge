@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.paymentGateway.service;
+package com.fiveOps.promptforge.payments.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
-import com.fiveOps.promptforge.paymentGateway.dto.TransactionInitializationResponse;
+import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
 import lombok.RequiredArgsConstructor;
