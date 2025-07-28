@@ -27,8 +27,8 @@ public class BankDetailsService {
 
   public PaymentDetailsProjectionWithPaystackSubaccountCode getBankDetails(UUID userId) {
     System.out.println("userId:" + userId);
-    PaymentDetailsProjectionWithPaystackSubaccountCode userDetails = bankDetailsRepository
-        .findByUserUserId(userId);
+    PaymentDetailsProjectionWithPaystackSubaccountCode userDetails =
+        bankDetailsRepository.findByUserUserId(userId);
     return userDetails;
   }
 }
