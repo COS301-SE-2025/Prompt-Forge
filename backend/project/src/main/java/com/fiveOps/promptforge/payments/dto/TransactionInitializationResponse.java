@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.paymentGateway.dto;
+package com.fiveOps.promptforge.payments.dto;
 
 public class TransactionInitializationResponse {
   private int amount;
