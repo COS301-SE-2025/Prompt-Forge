@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.cart.model;
+package com.fiveOps.promptforge.payments.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -113,7 +113,7 @@ public class BankAccount {
     return paystackSubaccountCode;
   }
 
-  public void setpaystackSubaccountCode(String paystackSubaccountCode) {
+  public void setPaystackSubaccountCode(String paystackSubaccountCode) {
     this.paystackSubaccountCode = paystackSubaccountCode;
   }
 
