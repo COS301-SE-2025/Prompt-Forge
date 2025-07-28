@@ -31,13 +31,13 @@ interface StandardPromptCardProps {
   category: string
   authorName: string
   isOwned: boolean
-  isPublished?: boolean // ✅ Add this
+  isPublished?: boolean
   source: string
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onCopy?: (content: string, id: string) => void
-  onPublish?: (id: string, isCurrentlyPublished: boolean) => void // ✅ Add this
+  onPublish?: (id: string, isCurrentlyPublished: boolean) => void
   copiedId: string | null
   content: string
 }
@@ -56,13 +56,13 @@ export function StandardPromptCard({
   category,
   authorName,
   isOwned = false,
-  isPublished = false, // ✅ Add this
+  isPublished = false,
   source,
   onEdit,
   onDelete,
   onToggleFavorite,
   onCopy,
-  onPublish, // ✅ Add this
+  onPublish,
   copiedId,
   content
 }: StandardPromptCardProps) {
