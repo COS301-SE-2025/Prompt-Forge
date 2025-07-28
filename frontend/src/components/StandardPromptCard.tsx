@@ -31,13 +31,13 @@ interface StandardPromptCardProps {
   category: string
   authorName: string
   isOwned: boolean
-  isPublished?: boolean // ✅ Add this
+  isPublished?: boolean
   source: string
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onCopy?: (content: string, id: string) => void
-  onPublish?: (id: string, isCurrentlyPublished: boolean) => void // ✅ Add this
+  onPublish?: (id: string, isCurrentlyPublished: boolean) => void
   copiedId: string | null
   content: string
 }
@@ -56,13 +56,13 @@ export function StandardPromptCard({
   category,
   authorName,
   isOwned = false,
-  isPublished = false, // ✅ Add this
+  isPublished = false,
   source,
   onEdit,
   onDelete,
   onToggleFavorite,
   onCopy,
-  onPublish, // ✅ Add this
+  onPublish,
   copiedId,
   content
 }: StandardPromptCardProps) {
@@ -177,13 +177,6 @@ export function StandardPromptCard({
                   <span className="text-xs ml-1 text-[#3ebb93]">@{authorName}</span>
                 </div>
               )}
-
-              {/* Private indicator - only for owned prompts */}
-              {/* {isBought === true && (
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
-                  Bought
-                </span>
-              )} */}
 
               {source === "authored" && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
 import com.fiveOps.promptforge.cart.service.CartItemService;
 import com.fiveOps.promptforge.user_profile.service.UserService;
@@ -37,12 +38,12 @@ public class CartItemController {
   }
 
   @GetMapping
-  public ResponseEntity<Page<CartItemDTO>> getCartItems(
+  public ResponseEntity<Page<CartItemProjection>> getCartItems(
       @PageableDefault(size = 10) Pageable pageable, Authentication authentication) {
     System.out.println("getname" + authentication.getName());
     String userEmail = authentication.getName();
     UUID userId = userService.getUserIdByEmail(userEmail);
-    Page<CartItemDTO> cartItems = cartItemService.getCartItemsForUser(userId, pageable);
+    Page<CartItemProjection> cartItems = cartItemService.getCartItemsForUser(userId, pageable);
     return ResponseEntity.ok(cartItems);
   }
 
@@ -53,6 +54,8 @@ public class CartItemController {
     try {
       String userEmail = authentication.getName();
       UUID userId = userService.getUserIdByEmail(userEmail);
+      System.out.println("\n\n\n===========userId:" + userId);
+      System.out.println("Prompt ID:" + request.getPromptId());
       cartItemService.addItemToCart(userId, request.getPromptId());
 
       return ResponseEntity.ok(new APIResponse("success", "Prompt added to cart."));
