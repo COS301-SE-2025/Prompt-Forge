@@ -1,0 +1,17 @@
+{
+  "id2label": {
+    "0": "coding",
+    "1": "science",
+    "2": "technology",
+    "3": "health",
+    "4": "business"
+  },
+  "label2id": {
+    "coding": 0,
+    "science": 1,
+    "technology": 2,
+    "health": 3,
+    "business": 4
+  },
+  "problem_type": "single_label_classification"
+}
