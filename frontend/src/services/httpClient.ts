@@ -1,5 +1,12 @@
+import { API_BASE_URL } from '../config/api';
+
 class HttpClient {
-  private baseURL = "http://localhost:8080/api";
+  private baseURL = API_BASE_URL;
+  
+  // Expose for services that need direct access
+  get apiUrl() {
+    return this.baseURL;
+  }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;

@@ -1,5 +1,6 @@
 "use client"
 
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/Button"
@@ -71,7 +72,7 @@ export default function UserProfilePage() {
 
       try {
         // Fetch user profile
-        const profileResponse = await fetch(`http://localhost:8080/api/users/${userId}`, {
+        const profileResponse = await fetch(`${API_BASE_URL}/users/${userId}`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -91,7 +92,7 @@ export default function UserProfilePage() {
         })
 
         // Fetch user's public prompts
-        const promptsResponse = await fetch(`http://localhost:8080/api/prompts/author/${userId}/public`, {
+        const promptsResponse = await fetch(`${API_BASE_URL}/prompts/author/${userId}/public`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -115,7 +116,7 @@ export default function UserProfilePage() {
     if (!userId) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${userId}/followers`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/followers`, {
         method: "GET",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -134,7 +135,7 @@ export default function UserProfilePage() {
     if (!userId) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${userId}/following`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/following`, {
         method: "GET",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -156,7 +157,7 @@ export default function UserProfilePage() {
 
     try {
       const endpoint = profile.isFollowing ? "unfollow" : "follow"
-      const response = await fetch(`http://localhost:8080/api/users/${userId}/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

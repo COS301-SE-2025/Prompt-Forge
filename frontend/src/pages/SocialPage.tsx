@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
@@ -36,7 +37,7 @@ export default function SocialPage() {
     const fetchUsers = async () => {
       setLoading(true)
       try {
-        const response = await fetch("http://localhost:8080/api/users/discover", {
+        const response = await fetch(`${API_BASE_URL}/users/discover`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -64,7 +65,7 @@ export default function SocialPage() {
       setFollowingLoading(true)
       try {
         const currentUserId = localStorage.getItem("userId")
-        const response = await fetch(`http://localhost:8080/api/users/${currentUserId}/following`, {
+        const response = await fetch(`${API_BASE_URL}/users/${currentUserId}/following`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -101,7 +102,7 @@ export default function SocialPage() {
   const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
     try {
       const endpoint = isCurrentlyFollowing ? "unfollow" : "follow"
-      const response = await fetch(`http://localhost:8080/api/users/${userId}/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

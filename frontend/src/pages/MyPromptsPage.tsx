@@ -350,10 +350,10 @@ export default function MyPromptsPage() {
       category: prompt.category,
       tags: prompt.tags,
       promptText: prompt.content,
-      instructions: "",
-      expectedOutput: "",
-      useCase: "",
-      isPrivate: prompt.isPrivate
+      expectedOutput: "", // Fill if available
+      isPrivate: prompt.isPrivate,
+      isPublished: prompt.isPublished, // <-- Add this
+      content: prompt.content // <-- Add this
     }
     sessionStorage.setItem("editPromptData", JSON.stringify(editData))
     navigate("/submit")
