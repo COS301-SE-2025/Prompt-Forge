@@ -11,9 +11,8 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.Map;
-
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,7 +79,7 @@ class PromptTest {
     List<String> predictedTagNames = Arrays.asList("tag1", "tag2");
     Map<String, Object> aiTagsResult = new HashMap<>();
     aiTagsResult.put("categories", predictedTagNames);
-    
+
     // Mock the UniversalTaggingService to return predicted tags
     when(taggingService.predictTags(prompt.getContent())).thenReturn(aiTagsResult);
 
@@ -113,7 +112,7 @@ class PromptTest {
     // Arrange
     Map<String, Object> emptyAiTagsResult = new HashMap<>();
     emptyAiTagsResult.put("categories", null); // or empty list
-    
+
     // Mock the UniversalTaggingService to return no predicted tags
     when(taggingService.predictTags(prompt.getContent())).thenReturn(emptyAiTagsResult);
 

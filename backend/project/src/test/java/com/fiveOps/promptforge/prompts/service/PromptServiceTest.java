@@ -27,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
-import com.fiveOps.promptforge.prompts.service.UniversalTaggingService;
 
 @ExtendWith(MockitoExtension.class)
 class PromptServiceTest {
@@ -35,7 +34,7 @@ class PromptServiceTest {
   @Mock private PromptRepository promptRepository;
 
   @Mock private TagService tagService;
-  
+
   @Mock private UniversalTaggingService universalTaggingService;
 
   @InjectMocks private PromptService promptService;
@@ -152,7 +151,7 @@ class PromptServiceTest {
     Map<String, Object> aiTags = new HashMap<>();
     aiTags.put("categories", Arrays.asList("tag1", "tag2"));
     when(universalTaggingService.predictTags("New Content")).thenReturn(aiTags);
-    
+
     when(tagService.findOrCreateTag("tag1")).thenReturn(tag1);
     when(tagService.findOrCreateTag("tag2")).thenReturn(tag2);
     when(promptRepository.save(any(Prompt.class)))

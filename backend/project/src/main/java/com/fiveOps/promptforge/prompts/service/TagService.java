@@ -19,29 +19,31 @@ public class TagService {
     this.tagRepository = tagRepository;
   }
 
-public Tag findOrCreateTag(String name) {
+  public Tag findOrCreateTag(String name) {
     String normalizedName = normalizeTagName(name);
     return tagRepository
         .findByName(normalizedName)
-        .orElseGet(() -> {
-            // Generate unique slug if needed
-            String slug = generateSlug(normalizedName);
-            int counter = 1;
-            
-            // Check if slug exists and make it unique
-            while (tagRepository.existsBySlug(slug)) {
+        .orElseGet(
+            () -> {
+              // Generate unique slug if needed
+              String slug = generateSlug(normalizedName);
+              int counter = 1;
+
+              // Check if slug exists and make it unique
+              while (tagRepository.existsBySlug(slug)) {
                 slug = generateSlug(normalizedName) + "-" + counter++;
-            }
-            
-            Tag newTag = Tag.builder()
-                .name(normalizedName)
-                .slug(slug)
-                .isAutoSuggest(true)  // Mark as AI-generated
-                .build();
-                
-            return tagRepository.save(newTag);
-        });
-}
+              }
+
+              Tag newTag =
+                  Tag.builder()
+                      .name(normalizedName)
+                      .slug(slug)
+                      .isAutoSuggest(true) // Mark as AI-generated
+                      .build();
+
+              return tagRepository.save(newTag);
+            });
+  }
 
   public List<Tag> findOrCreateTags(List<String> tagNames) {
     return tagNames.stream().map(this::findOrCreateTag).collect(Collectors.toList());
@@ -54,13 +56,12 @@ public Tag findOrCreateTag(String name) {
 
   public String normalizeTagName(String name) {
     if (name == null || name.trim().isEmpty()) {
-        return name;
+      return name;
     }
-    
+
     String trimmed = name.trim();
     // Capitalize first letter and lowercase the rest
-    return trimmed.substring(0, 1).toUpperCase() + 
-           trimmed.substring(1).toLowerCase();
+    return trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
   }
 
   public String generateSlug(String name) {
