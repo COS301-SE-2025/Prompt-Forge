@@ -23,7 +23,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.model.CartItem;
 import com.fiveOps.promptforge.cart.repository.CartItemRepository;
