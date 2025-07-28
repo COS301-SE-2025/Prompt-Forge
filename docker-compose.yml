@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: promptforge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend/project
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/promptforge
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - JWT_SECRET=Z29ldzJ0eE5xb0NqU1lhbVh5Mjd6MGlRRG5VblZKdFg=
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
