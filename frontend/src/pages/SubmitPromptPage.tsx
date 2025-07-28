@@ -258,6 +258,11 @@ export default function SubmitPromptPage() {
     "Data Analysis",
     "Content Creation",
     "Problem Solving",
+    "Health",
+    "Science",
+    "Coding",
+    "Technical",
+    "Gaming",
     "Other",
   ]
 

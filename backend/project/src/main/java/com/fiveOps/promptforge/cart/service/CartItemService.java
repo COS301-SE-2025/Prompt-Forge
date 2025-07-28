@@ -5,11 +5,11 @@ import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.model.CartItem;
 import com.fiveOps.promptforge.cart.repository.CartItemRepository;
 import com.fiveOps.promptforge.prompts.model.Prompt;
@@ -31,42 +31,29 @@ public class CartItemService {
   private final PromptStoreService promptStoreService;
   private final UserService userService;
 
-  public Page<CartItemDTO> getCartItemsForUser(UUID userId, Pageable pageable) {
-    Page<Object[]> results = cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable);
+  public Page<CartItemProjection> getCartItemsForUser(UUID userId, Pageable pageable) {
+    Page<CartItemProjection> results =
+        cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable);
 
-    List<CartItemDTO> dtos =
-        results.stream()
-            .map(
-                row -> {
-                  UUID cartItemId = (UUID) row[0];
-                  UUID fetchedUserId = (UUID) row[1];
-                  String authorName = (String) row[2];
-                  UUID promptId = (UUID) row[3];
-                  String promptTitle = (String) row[4];
-                  String[] promptTags = (String[]) row[5];
-                  Double promptPrice = (Double) row[6];
+    System.out.println("\nresults.content.size:");
+    System.out.println(results.getContent().size());
 
-                  return new CartItemDTO(
-                      cartItemId,
-                      fetchedUserId,
-                      authorName,
-                      promptId,
-                      promptTitle,
-                      promptTags,
-                      promptPrice);
-                })
-            .toList();
-
-    return new PageImpl<>(dtos, pageable, results.getTotalElements());
+    return results;
   }
 
   public CartItem addItemToCart(UUID userId, UUID promptId) {
+    System.out.println("\n\n\n======in service=====userId:" + userId);
+    System.out.println("Prompt ID:" + promptId);
+
     User user =
         userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
     Prompt prompt =
         promptRepository
             .findById(promptId)
             .orElseThrow(() -> new RuntimeException("Prompt not found"));
+
+    System.out.println("\n\n\n======in service=====userId:" + userId);
+    System.out.println("Prompt ID:" + promptId);
 
     CartItem cartItem = new CartItem();
     cartItem.setUser(user);
@@ -79,6 +66,8 @@ public class CartItemService {
     } catch (DataIntegrityViolationException ex) {
       throw new RuntimeException("Prompt has already been added to your cart.");
     } catch (Exception e) {
+      System.out.println(
+          "=============Exception======\nFailed to save cart item: " + e.getMessage());
       throw new RuntimeException("Failed to save cart item: " + e.getMessage(), e);
     }
   }
