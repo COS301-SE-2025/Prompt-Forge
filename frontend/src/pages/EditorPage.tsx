@@ -47,6 +47,39 @@ export default function EditorPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handlePageChange = (page: number) => {
+  // Save current response before switching
+  const promptKey = promptText.trim();
+  if (currentView === "test") {
+    localStorage.setItem(getStorageKey(promptKey, "test"), streamingEnabled ? typingEffect.displayText : aiResponse);
+  } else if (currentView === "rate") {
+    localStorage.setItem(getStorageKey(promptKey, "rate"), streamingEnabled ? typingEffect.displayText : ratingResponse);
+  } else if (currentView === "suggest") {
+    localStorage.setItem(getStorageKey(promptKey, "suggest"), streamingEnabled ? typingEffect.displayText : suggestionResponse);
+  }
+
+  setCurrentPage(page);
+  let newView: ViewType = "test";
+  if (page === 2) newView = "rate";
+  if (page === 3) newView = "suggest";
+  setCurrentView(newView);
+
+  typingEffect.clear();
+
+  // Restore the correct response for the selected view from localStorage
+  const saved = localStorage.getItem(getStorageKey(promptKey, newView));
+  if (newView === "test") {
+    setAiResponse(saved || "AI response to your prompt here...");
+    typingEffect.setText(saved || "AI response to your prompt here...");
+  } else if (newView === "rate") {
+    setRatingResponse(saved || "");
+    typingEffect.setText(saved || "");
+  } else if (newView === "suggest") {
+    setSuggestionResponse(saved || "");
+    typingEffect.setText(saved || "");
+  }
+};
+
   // NEW: Add streaming controls
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [typingSpeed, setTypingSpeed] = useState(75);
@@ -108,32 +141,28 @@ useEffect(() => {
   const promptKey = promptText.trim();
   if (!promptKey) return;
 
-  const savedAI = localStorage.getItem(`aiResponse:${promptKey}`);
-  const savedRating = localStorage.getItem(`ratingResponse:${promptKey}`);
-  const savedSuggest = localStorage.getItem(`suggestionResponse:${promptKey}`);
-
-  if (savedAI) setAiResponse(savedAI);
-  if (savedRating) setRatingResponse(savedRating);
-  if (savedSuggest) setSuggestionResponse(savedSuggest);
+  setAiResponse(localStorage.getItem(getStorageKey(promptKey, "test")) || "AI response to your prompt here...");
+  setRatingResponse(localStorage.getItem(getStorageKey(promptKey, "rate")) || "");
+  setSuggestionResponse(localStorage.getItem(getStorageKey(promptKey, "suggest")) || "");
 }, [promptText]);
 
 // Save responses to localStorage after generation
 useEffect(() => {
   const promptKey = promptText.trim();
   if (!promptKey) return;
-  localStorage.setItem(`aiResponse:${promptKey}`, aiResponse);
+  localStorage.setItem(getStorageKey(promptKey, "test"), aiResponse);
 }, [aiResponse, promptText]);
 
 useEffect(() => {
   const promptKey = promptText.trim();
   if (!promptKey) return;
-  localStorage.setItem(`ratingResponse:${promptKey}`, ratingResponse);
+  localStorage.setItem(getStorageKey(promptKey, "rate"), ratingResponse);
 }, [ratingResponse, promptText]);
 
 useEffect(() => {
   const promptKey = promptText.trim();
   if (!promptKey) return;
-  localStorage.setItem(`suggestionResponse:${promptKey}`, suggestionResponse);
+  localStorage.setItem(getStorageKey(promptKey, "suggest"), suggestionResponse);
 }, [suggestionResponse, promptText]);
 
   // When promptText changes, clear responses if prompt is different
@@ -1181,40 +1210,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        // Save current response to localStorage before switching
-                        const promptKey = promptText.trim();
-                        if (currentView === "test") {
-                          localStorage.setItem(getStorageKey(promptKey, "test"), streamingEnabled ? typingEffect.displayText : aiResponse);
-                        } else if (currentView === "rate") {
-                          localStorage.setItem(getStorageKey(promptKey, "rate"), streamingEnabled ? typingEffect.displayText : ratingResponse);
-                        } else if (currentView === "suggest") {
-                          localStorage.setItem(getStorageKey(promptKey, "suggest"), streamingEnabled ? typingEffect.displayText : suggestionResponse);
-                        }
-
-                        // Set the new page and view
-                        setCurrentPage(page);
-                        let newView: ViewType = "test";
-                        if (page === 2) newView = "rate";
-                        if (page === 3) newView = "suggest";
-                        setCurrentView(newView);
-
-                        // Clear typing effect before switching views
-                        typingEffect.clear();
-
-                        // Restore the correct response for the selected view from localStorage
-                        const saved = localStorage.getItem(getStorageKey(promptKey, newView));
-                        if (newView === "test") {
-                          setAiResponse(saved || "AI response to your prompt here...");
-                          typingEffect.setText(saved || "AI response to your prompt here...");
-                        } else if (newView === "rate") {
-                          setRatingResponse(saved || "");
-                          typingEffect.setText(saved || "");
-                        } else if (newView === "suggest") {
-                          setSuggestionResponse(saved || "");
-                          typingEffect.setText(saved || "");
-                        }
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -1293,12 +1289,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 3) setCurrentView("suggest");
-                        else setCurrentView("rate");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -1377,12 +1368,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 2) setCurrentView("rate");
-                        else if (page === 3) setCurrentView("suggest");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
