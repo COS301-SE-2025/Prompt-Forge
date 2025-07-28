@@ -2,8 +2,10 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom" // Add this import
+import { useEffect, useState } from "react"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
+import promptSubmissionService, { PromptSubmissionData } from '../services/promptSubmissionService'
+import { PromptService } from "@/services/promptService"
 import {
   Save,
   Eye,
@@ -26,7 +28,6 @@ import {
   Copy,
   Play,
 } from "lucide-react"
-import promptSubmissionService, { PromptSubmissionData } from '../services/promptSubmissionService'
 
 // Mock components - replace with your actual UI components
 // Update the ButtonProps interface to include title
@@ -110,6 +111,9 @@ interface PromptSubmission {
 
 interface EditPromptData extends PromptSubmission {
   id: string
+  isPublished?: boolean
+  content?: string
+  tags?: string[]
 }
 
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
@@ -117,28 +121,119 @@ type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 export default function SubmitPromptPage() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>() // Get prompt id from URL if present
 
-  // Get pre-filled data if it exists
+  // Get pre-filled data if it exists (from navigation or sessionStorage)
   const prefilledData = location.state?.prefilled
 
-  // Update your state initialization to use pre-filled data:
+  const [isPublicEdit, setIsPublicEdit] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
+
+  // Use a single source for edit data (prefilledData or sessionStorage)
   const [formData, setFormData] = useState<PromptSubmission>({
-    title: prefilledData?.title || "",
-    description: prefilledData?.description || "",
-    category: prefilledData?.category || "",
-    promptText: prefilledData?.content || "",
-    expectedOutput: prefilledData?.expectedOutput || "",
-    isPrivate: prefilledData?.visibility === "private",
-    tags: prefilledData?.tags || [], // Add tags support
-  })
+    title: "",
+    description: "",
+    category: "",
+    promptText: "",
+    expectedOutput: "",
+    isPrivate: false,
+    tags: [],
+  });
+
+  // Fix: Track if we've loaded edit data to prevent overwriting on refresh
+  const [editLoaded, setEditLoaded] = useState(false);
+
+  useEffect(() => {
+    let editData: EditPromptData | null = null;
+
+    // Prefer sessionStorage for edit, fallback to navigation state
+    const sessionEdit = sessionStorage.getItem("editPromptData");
+    if (sessionEdit) {
+      try {
+        editData = JSON.parse(sessionEdit);
+        sessionStorage.removeItem("editPromptData");
+      } catch (e) {
+        editData = null;
+      }
+    } else if (location.state?.prefilled) {
+      editData = location.state.prefilled;
+    }
+
+    // If we have an edit id (from session or navigation), fetch full prompt info from backend
+    if (((editData && editData.id) || id) && !editLoaded) {
+      const promptId = (editData?.id || id) ?? "";
+      setLoadingPrompt(true);
+      const promptService = new PromptService();
+      promptService.getPromptById(promptId)
+        .then((promptData) => {
+          setFormData({
+            title: promptData.title || "",
+            description: promptData.description || "",
+            category: promptData.tags?.[0]?.name ?? "",
+            promptText: promptData.content || "",
+            expectedOutput: (promptData as any).expectedOutput ?? "",
+            isPrivate: promptData.visibility === "private",
+            tags: promptData.tags?.map(tag => tag.name) || [],
+          });
+          setIsEditMode(true);
+          setEditingPromptId(promptId);
+          setIsPublicEdit(!!promptData.publishedAt);
+          setEditLoaded(true); // Prevent reloading on refresh
+        })
+        .catch((err) => {
+          // fallback to editData if fetch fails
+          if (editData) {
+            setFormData({
+              title: editData.title || "",
+              description: editData.description || "",
+              category: editData.category || "",
+              promptText: editData.promptText || editData.content || "",
+              expectedOutput: editData.expectedOutput || "",
+              isPrivate: editData.isPrivate ?? false,
+              tags: editData.tags || [],
+            });
+            setIsEditMode(true);
+            setEditingPromptId(editData.id);
+            setIsPublicEdit(editData.isPublished === true);
+            setEditLoaded(true);
+          }
+        })
+        .finally(() => setLoadingPrompt(false));
+    } else if (editData && !editLoaded) {
+      setFormData({
+        title: editData.title || "",
+        description: editData.description || "",
+        category: editData.category || "",
+        promptText: editData.promptText || editData.content || "",
+        expectedOutput: editData.expectedOutput || "",
+        isPrivate: editData.isPrivate ?? false,
+        tags: editData.tags || [],
+      });
+      setIsEditMode(true);
+      setEditingPromptId(editData.id);
+      setIsPublicEdit(editData.isPublished === true);
+      setEditLoaded(true);
+    } else if (!isEditMode && prefilledData && !editLoaded) {
+      setFormData({
+        title: prefilledData.title || "",
+        description: prefilledData.description || "",
+        category: prefilledData.category || "",
+        promptText: prefilledData.promptText || prefilledData.content || "",
+        expectedOutput: prefilledData.expectedOutput || "",
+        isPrivate: prefilledData.visibility === "private",
+        tags: prefilledData.tags || [],
+      });
+      setEditLoaded(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, id, isEditMode, editLoaded]);
 
   // Remove currentTag state since we're removing tags
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showSuccess, setShowSuccess] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
 
   // Payment-related state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank")
@@ -163,35 +258,13 @@ export default function SubmitPromptPage() {
     "Data Analysis",
     "Content Creation",
     "Problem Solving",
+    "Health",
+    "Science",
+    "Coding",
+    "Technical",
+    "Gaming",
     "Other",
   ]
-
-  // Load edit data on component mount
-  useEffect(() => {
-    // In a real app, you might get this from URL params or props
-    // For now, we'll simulate loading from memory/state
-    const editData = sessionStorage.getItem("editPromptData")
-    if (editData) {
-      try {
-        const parsedData: EditPromptData = JSON.parse(editData)
-        setFormData({
-          title: parsedData.title,
-          description: parsedData.description,
-          category: parsedData.category,
-          promptText: parsedData.promptText,
-          expectedOutput: parsedData.expectedOutput,
-          isPrivate: parsedData.isPrivate,
-        })
-        setIsEditMode(true)
-        setEditingPromptId(parsedData.id)
-
-        // Clear the storage after loading
-        sessionStorage.removeItem("editPromptData")
-      } catch (error) {
-        console.error("Error parsing edit data:", error)
-      }
-    }
-  }, [])
 
   const handleInputChange = (field: keyof PromptSubmission, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -584,6 +657,21 @@ export default function SubmitPromptPage() {
     }
   }
 
+  // Add a loading state for fetching prompt info
+  const [loadingPrompt, setLoadingPrompt] = useState(false)
+
+  // Optionally show a loading spinner while fetching prompt info
+  if (loadingPrompt) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading prompt information...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -701,6 +789,23 @@ export default function SubmitPromptPage() {
                 Basic Information
               </h2>
 
+              {/* Show explanation if editing a public prompt */}
+              {isEditMode && isPublicEdit && (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-amber-800 dark:text-amber-200 font-medium mb-1">
+                        Marketplace Restriction
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                        This prompt is public and listed on the marketplace. <b>You cannot edit the Title or Prompt Text.</b> These fields are locked to preserve marketplace integrity. You may update other details such as description, category, expected output, or visibility.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {/* Title */}
                 <div>
@@ -711,11 +816,12 @@ export default function SubmitPromptPage() {
                     type="text"
                     className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
                       errors.title ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    } ${isEditMode && isPublicEdit ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed" : ""}`}
                     placeholder="Enter a descriptive title for your prompt"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     maxLength={100}
+                    disabled={isEditMode && isPublicEdit} // LOCK if public edit
                   />
                   {errors.title && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -785,12 +891,13 @@ export default function SubmitPromptPage() {
                   <textarea
                     className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none overflow-y-auto custom-scrollbar ${
                       errors.promptText ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    } ${isEditMode && isPublicEdit ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed" : ""}`}
                     rows={8}
                     style={{ maxHeight: '200px', minHeight: '120px' }}
                     placeholder="Enter your prompt text here..."
                     value={formData.promptText}
                     onChange={(e) => handleInputChange("promptText", e.target.value)}
+                    disabled={isEditMode && isPublicEdit} // LOCK if public edit
                   />
                   {errors.promptText && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -975,7 +1082,7 @@ export default function SubmitPromptPage() {
                             <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                               <User className="h-3 w-3" />
                             </div>
-                            <span className="text-xs ml-2 text-muted-foreground font-medium">@you</span>
+                            <span className="text-xs ml-2 text-muted-foreground font-medium">@{localStorage.getItem("username") || "Unknown User"}</span>
                           </div>
 
                           {/* Private indicator */}
@@ -1076,7 +1183,10 @@ export default function SubmitPromptPage() {
               </h3>
               <div className="text-sm text-muted-foreground">
                 <p className="mb-2">
-                  Submitting as: <span className="text-foreground font-medium">Anonymous User</span>
+                  Submitting as:{" "}
+                  <span className="text-foreground font-medium">
+                    {localStorage.getItem("username") || "Unknown User"}
+                  </span>
                 </p>
                 <p className="text-xs">
                   <Link to="/login" className="text-[#3ebb9e] hover:underline">

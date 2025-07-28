@@ -25,8 +25,22 @@ public class TagService {
         .findByName(normalizedName)
         .orElseGet(
             () -> {
+              // Generate unique slug if needed
+              String slug = generateSlug(normalizedName);
+              int counter = 1;
+
+              // Check if slug exists and make it unique
+              while (tagRepository.existsBySlug(slug)) {
+                slug = generateSlug(normalizedName) + "-" + counter++;
+              }
+
               Tag newTag =
-                  Tag.builder().name(normalizedName).slug(generateSlug(normalizedName)).build();
+                  Tag.builder()
+                      .name(normalizedName)
+                      .slug(slug)
+                      .isAutoSuggest(true) // Mark as AI-generated
+                      .build();
+
               return tagRepository.save(newTag);
             });
   }
@@ -41,7 +55,13 @@ public class TagService {
   }
 
   public String normalizeTagName(String name) {
-    return name.trim();
+    if (name == null || name.trim().isEmpty()) {
+      return name;
+    }
+
+    String trimmed = name.trim();
+    // Capitalize first letter and lowercase the rest
+    return trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
   }
 
   public String generateSlug(String name) {
@@ -49,8 +69,9 @@ public class TagService {
   }
 
   public UUID getTagIdByName(String tagName) {
+    String normalizedName = normalizeTagName(tagName);
     return tagRepository
-        .findByName(tagName)
+        .findByName(normalizedName)
         .orElseThrow(() -> new RuntimeException("Tag not found: " + tagName))
         .getId();
   }

@@ -2,6 +2,7 @@ package com.fiveOps.promptforge.prompts.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -18,10 +19,15 @@ import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 public class PromptService {
   private final PromptRepository promptRepository;
   private final TagService tagService;
+  private final UniversalTaggingService taggingService;
 
-  public PromptService(PromptRepository promptRepository, TagService tagService) {
+  public PromptService(
+      PromptRepository promptRepository,
+      TagService tagService,
+      UniversalTaggingService taggingService) {
     this.promptRepository = promptRepository;
     this.tagService = tagService;
+    this.taggingService = taggingService;
   }
 
   public List<Prompt> getAllPrompts() {
@@ -48,8 +54,17 @@ public class PromptService {
       prompt.setPrice(0.0);
     }
 
-    prompt.resolveAndSetTags(tagService);
+    prompt.resolveAndSetTags(tagService, taggingService);
     return promptRepository.save(prompt);
+  }
+
+  public Map<String, Object> generateTagsForPrompt(UUID promptId) {
+    Prompt prompt =
+        promptRepository
+            .findById(promptId)
+            .orElseThrow(() -> new RuntimeException("Prompt not found"));
+
+    return taggingService.predictTags(prompt.getContent());
   }
 
   public List<Prompt> getPromptsByTagName(String tagName) {
@@ -69,7 +84,7 @@ public class PromptService {
               prompt.setContent(promptDetails.getContent());
               prompt.setDescription(promptDetails.getDescription());
               prompt.setPrice(promptDetails.getPrice());
-              prompt.setTagIds(promptDetails.getTagIds());
+              prompt.resolveAndSetTags(tagService, taggingService);
               // visibility can only be updated through publish/unpublish
               return promptRepository.save(prompt);
             })

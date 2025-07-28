@@ -1,4 +1,4 @@
-import HttpClient from "./httpClient"
+import { API_BASE_URL } from '../config/api';
 
 
 export class Editor {
@@ -17,7 +17,7 @@ export class Editor {
         };
       }
       
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +97,7 @@ export class Editor {
       // Ensure streaming is enabled
       requestBody.stream = true;
       
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat/stream", {
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
