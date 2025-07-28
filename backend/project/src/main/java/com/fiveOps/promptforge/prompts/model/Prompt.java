@@ -2,7 +2,18 @@ package com.fiveOps.promptforge.prompts.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fiveOps.promptforge.prompts.service.TagService;
+import com.fiveOps.promptforge.prompts.service.UniversalTaggingService;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,13 +25,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-import com.fiveOps.promptforge.prompts.service.TagService;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,6 +49,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Prompt {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Prompt.class);
+
   @Id
   @Column(name = "prompt_id", columnDefinition = "UUID")
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -87,14 +93,31 @@ public class Prompt {
 
   @Transient private List<String> tagNames;
 
-  public void resolveAndSetTags(TagService tagService) {
-    if (this.tagNames != null && !this.tagNames.isEmpty()) {
-      List<Tag> tags = tagService.findOrCreateTags(this.tagNames);
-      this.tagIds = tags.stream().map(Tag::getId).toList();
-
-      // Update usage counts
-      tags.forEach(tag -> tagService.incrementUsageCount(tag.getId()));
-    }
+  public void resolveAndSetTags(TagService tagService, UniversalTaggingService taggingService) {
+      try {
+          Map<String, Object> aiTags = taggingService.predictTags(this.content);
+          Object categoriesObj = aiTags.get("categories");
+          
+          if (categoriesObj instanceof List) {
+              @SuppressWarnings("unchecked")
+              List<String> aiTagNames = (List<String>) categoriesObj;
+              
+              if (!aiTagNames.isEmpty()) {
+                  List<Tag> tags = aiTagNames.stream()
+                      .map(tagService::findOrCreateTag)
+                      .collect(Collectors.toList());
+                      
+                  this.tagIds = tags.stream()
+                      .map(Tag::getId)
+                      .collect(Collectors.toList());
+                      
+                  tags.forEach(tag -> tagService.incrementUsageCount(tag.getId()));
+              }
+          }
+      } catch (Exception e) {
+          // Log error but don't fail the entire operation
+          LOGGER.error("Failed to generate AI tags: " + e.getMessage());
+      }
   }
 
   @PrePersist
