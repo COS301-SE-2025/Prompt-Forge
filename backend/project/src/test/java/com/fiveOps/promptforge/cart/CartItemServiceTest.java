@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.model.CartItem;
 import com.fiveOps.promptforge.cart.repository.CartItemRepository;
 import com.fiveOps.promptforge.cart.service.CartItemService;
@@ -60,11 +61,9 @@ class CartItemServiceTest {
 
   @Test
   void getCartItemsForUser_ShouldReturnPage() {
-    Page<Object[]> page = mock(Page.class);
+    Page<CartItemProjection> page = mock(Page.class);
     when(cartItemRepository.findCartItemsWithTagsByUserId(userId, pageable)).thenReturn(page);
-    when(page.stream()).thenReturn(Collections.<Object[]>emptyList().stream());
-    when(page.getTotalElements()).thenReturn(0L);
-    Page<CartItemDTO> result = service.getCartItemsForUser(userId, pageable);
+    Page<CartItemProjection> result = service.getCartItemsForUser(userId, pageable);
     assertNotNull(result);
   }
 

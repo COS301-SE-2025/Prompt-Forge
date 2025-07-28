@@ -13,5 +13,6 @@ import com.fiveOps.promptforge.payments.projection.PaymentDetailsProjectionWithP
 @Repository
 public interface BankDetailsRepository extends JpaRepository<BankAccount, UUID> {
 
-  PaymentDetailsProjectionWithPaystackSubaccountCode findByUserUserId(@Param("user_id") UUID userId);
+  PaymentDetailsProjectionWithPaystackSubaccountCode findByUserUserId(
+      @Param("user_id") UUID userId);
 }

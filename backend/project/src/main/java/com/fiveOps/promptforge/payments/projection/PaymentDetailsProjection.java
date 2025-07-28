@@ -4,19 +4,19 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface PaymentDetailsProjection {
-    UUID getBankAccountId();
+  UUID getBankAccountId();
 
-    String getBankName();
+  String getBankName();
 
-    String getBankCode();
+  String getBankCode();
 
-    String getAccountNumber();
+  String getAccountNumber();
 
-    String getAccountHolder();
+  String getAccountHolder();
 
-    boolean getIsVerified();
+  boolean getIsVerified();
 
-    LocalDateTime getCreatedAt();
+  LocalDateTime getCreatedAt();
 
-    LocalDateTime getUpdatedAt();
+  LocalDateTime getUpdatedAt();
 }
