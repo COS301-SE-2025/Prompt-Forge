@@ -40,6 +40,13 @@ jobs:
         restore-keys: ${{ runner.os }}-node-
         
     - name: Run backend tests
+      env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
       run: |
         cd backend/project
         chmod +x ./mvnw
