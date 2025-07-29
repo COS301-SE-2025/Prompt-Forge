@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: CD [Deploy to Production]
 
 on:
   push:
@@ -42,6 +42,7 @@ jobs:
     - name: Run backend tests
       run: |
         cd backend/project
+        chmod +x ./mvnw
         ./mvnw clean test
         
     - name: Install frontend dependencies
@@ -84,6 +85,7 @@ jobs:
     - name: Build backend
       run: |
         cd backend/project
+        chmod +x ./mvnw
         ./mvnw clean package -DskipTests
         
     - name: Build Docker image
@@ -170,20 +172,24 @@ jobs:
     - name: Setup SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
         
+    - name: Test SSH connection
+      run: |
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 ubuntu@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'"
+        
     - name: Copy files to EC2
       run: |
-        scp -i ~/.ssh/id_rsa ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-        scp -i ~/.ssh/id_rsa ./artifacts/backend-image.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-        scp -i ~/.ssh/id_rsa docker-compose.prod.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-        scp -i ~/.ssh/id_rsa nginx.conf ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/backend-image.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no docker-compose.prod.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no nginx.conf ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         
     - name: Deploy to EC2
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           # Stop existing services
           sudo systemctl stop prompt-forge-backend || true
           sudo docker-compose -f docker-compose.prod.yml down || true
@@ -309,13 +315,13 @@ jobs:
     - name: Setup SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
         
     - name: Rollback backend
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           # Stop current deployment
           sudo docker-compose -f docker-compose.prod.yml down
           
