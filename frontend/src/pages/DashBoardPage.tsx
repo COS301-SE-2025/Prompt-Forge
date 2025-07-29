@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
@@ -181,7 +182,7 @@ export default function DashboardPage() {
           return
         }
 
-        const response = await fetch(`http://localhost:8080/api/prompts/author/${userId}?page=0&size=12`, {
+        const response = await fetch(`${API_BASE_URL}/prompts/author/${userId}?page=0&size=12`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -237,7 +238,7 @@ export default function DashboardPage() {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch("http://localhost:8080/api/dashboard", {
+        const response = await fetch(`${API_BASE_URL}/dashboard`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -271,7 +272,7 @@ export default function DashboardPage() {
       await Promise.all(
         myPrompts.map(async (prompt) => {
           try {
-            const response = await fetch(`http://localhost:8080/api/store/prompts/${prompt.id}/reviews`, {
+            const response = await fetch(`${API_BASE_URL}/store/prompts/${prompt.id}/reviews`, {
               method: "GET",
               credentials: "include",
               headers: { "Content-Type": "application/json" },
@@ -335,7 +336,7 @@ export default function DashboardPage() {
   // Handlers for StandardPromptCard
   const handleDeletePrompt = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/prompts/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/prompts/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -348,7 +349,7 @@ export default function DashboardPage() {
 
   const handleToggleFavorite = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/prompts/${id}/favorite`, {
+      const response = await fetch(`${API_BASE_URL}/prompts/${id}/favorite`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

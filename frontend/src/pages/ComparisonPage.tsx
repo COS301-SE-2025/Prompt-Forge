@@ -1,5 +1,6 @@
 "use client"
 
+import { API_BASE_URL } from '../config/api';
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown, Settings } from "lucide-react"
@@ -274,7 +275,7 @@ Please provide:
 
       console.log("🚀 Comparison rating request:", requestBody);
       
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -304,7 +305,7 @@ Please provide:
               }]
             };
             
-            const fallbackResponse = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+            const fallbackResponse = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
