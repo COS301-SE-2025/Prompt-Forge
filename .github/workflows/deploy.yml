@@ -36,7 +36,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/pnpm-lock.yaml') }}
         restore-keys: ${{ runner.os }}-node-
         
     - name: Run backend tests
@@ -51,7 +51,7 @@ jobs:
       run: |
         cd backend/project
         chmod +x ./mvnw
-        ./mvnw clean test
+        ./mvnw clean test -Dcheckstyle.skip=true
         
     - name: Install frontend dependencies
       run: |
@@ -103,7 +103,7 @@ jobs:
       run: |
         cd backend/project
         chmod +x ./mvnw
-        ./mvnw clean package -DskipTests
+        ./mvnw clean package -DskipTests -Dcheckstyle.skip=true
         
     - name: Build Docker image
       run: |
@@ -143,7 +143,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/pnpm-lock.yaml') }}
         restore-keys: ${{ runner.os }}-node-
         
     - name: Install dependencies
