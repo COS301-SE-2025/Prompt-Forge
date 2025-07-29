@@ -65,7 +65,7 @@ jobs:
           typescript-eslint@latest \
           @typescript-eslint/eslint-plugin@latest \
           @typescript-eslint/parser@latest
-        npm ci
+        npm install
         
     - name: Run frontend tests
       run: |
@@ -149,7 +149,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd frontend
-        npm ci
+        npm install
         
     - name: Build frontend
       run: |
@@ -223,6 +223,7 @@ jobs:
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
           HF_TOKEN=${{ secrets.HF_TOKEN }}
+          PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
           EOL
           
           # Update docker-compose to use new image
