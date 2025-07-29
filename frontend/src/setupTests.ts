@@ -13,16 +13,16 @@ declare global {
 
 // Polyfill TextEncoder/TextDecoder
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+global.TextDecoder = TextDecoder as any;
 
 // Mock ReadableStream
 if (typeof window.ReadableStream === 'undefined') {
-  global.ReadableStream = WebReadableStream;
+  global.ReadableStream = WebReadableStream as any;
 }
 
 // Mock fetch if not already mocked
 if (!global.fetch) {
-  global.fetch = fetchMock;
+  global.fetch = fetchMock as any;
 }
 
 // Mock window.matchMedia

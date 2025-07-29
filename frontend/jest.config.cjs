@@ -4,6 +4,11 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^../config/api$': '<rootDir>/src/config/api.jest.ts',
+    '^../../config/api$': '<rootDir>/src/config/api.jest.ts',
+    '^../../../config/api$': '<rootDir>/src/config/api.jest.ts',
+    '^@/config/api$': '<rootDir>/src/config/api.jest.ts',
+    '^src/config/api$': '<rootDir>/src/config/api.jest.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/__mocks__/fileMock.ts'
   },
@@ -22,10 +27,14 @@ module.exports = {
     '!src/cypress/**/*'
   ],
   testMatch: ['<rootDir>/tests/**/*.[jt]s?(x)'],
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons']
+  },
   globals: {
     'ts-jest': {
       isolatedModules: true
     }
   },
+  setupFiles: ['<rootDir>/jest.setup.js'],
   silent: true
 };
