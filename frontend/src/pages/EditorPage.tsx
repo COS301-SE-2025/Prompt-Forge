@@ -47,16 +47,81 @@ export default function EditorPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handlePageChange = (page: number) => {
+  // Save current response before switching
+  const promptKey = promptText.trim();
+  if (currentView === "test") {
+    localStorage.setItem(getStorageKey(promptKey, "test"), streamingEnabled ? typingEffect.displayText : aiResponse);
+  } else if (currentView === "rate") {
+    localStorage.setItem(getStorageKey(promptKey, "rate"), streamingEnabled ? typingEffect.displayText : ratingResponse);
+  } else if (currentView === "suggest") {
+    localStorage.setItem(getStorageKey(promptKey, "suggest"), streamingEnabled ? typingEffect.displayText : suggestionResponse);
+  }
+
+  setCurrentPage(page);
+  let newView: ViewType = "test";
+  if (page === 2) newView = "rate";
+  if (page === 3) newView = "suggest";
+  setCurrentView(newView);
+
+  typingEffect.clear();
+
+  // Restore the correct response for the selected view from localStorage
+  const saved = localStorage.getItem(getStorageKey(promptKey, newView));
+  if (newView === "test") {
+    setAiResponse(saved || "AI response to your prompt here...");
+    typingEffect.setText(saved || "AI response to your prompt here...");
+  } else if (newView === "rate") {
+    setRatingResponse(saved || "");
+    typingEffect.setText(saved || "");
+  } else if (newView === "suggest") {
+    setSuggestionResponse(saved || "");
+    typingEffect.setText(saved || "");
+  }
+};
+
   // NEW: Add streaming controls
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [typingSpeed, setTypingSpeed] = useState(75);
   const [showStreamingControls, setShowStreamingControls] = useState(false);
+
+  const showNotification = (type: "success" | "error", title: string, message: string) => {
+    const color = type === "success" ? "green" : "red"
+    const bg = type === "success" ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+                                  : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const icon = type === "success"
+      ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
+      : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
+    const notification = document.createElement('div')
+    notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in`
+    notification.innerHTML = `
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mt-0.5">${icon}</div>
+        <div class="ml-3 flex-1">
+          <h3 class="text-sm font-medium">${title}</h3>
+          <div class="mt-1 text-xs">${message}</div>
+        </div>
+      </div>
+    `
+    document.body.appendChild(notification)
+    setTimeout(() => {
+      notification.classList.add('animate-fade-out')
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 500)
+    }, 4000)
+  }
 
   // NEW: Initialize typing effect
   const typingEffect = useTypingEffect({ 
     speed: typingSpeed, 
     batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
   });
+
+  const getStorageKey = (prompt: string, view: ViewType) =>
+  `promptforge:${prompt.trim()}:${view}`;
 
   // Auto-fill prompt if coming from a card
   useEffect(() => {
@@ -70,6 +135,45 @@ export default function EditorPage() {
     typingEffect.setSpeed(typingSpeed);
     typingEffect.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
   }, [typingSpeed, typingEffect]);
+
+  // Add effect to load responses from localStorage when promptText changes
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+
+  setAiResponse(localStorage.getItem(getStorageKey(promptKey, "test")) || "AI response to your prompt here...");
+  setRatingResponse(localStorage.getItem(getStorageKey(promptKey, "rate")) || "");
+  setSuggestionResponse(localStorage.getItem(getStorageKey(promptKey, "suggest")) || "");
+}, [promptText]);
+
+// Save responses to localStorage after generation
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "test"), aiResponse);
+}, [aiResponse, promptText]);
+
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "rate"), ratingResponse);
+}, [ratingResponse, promptText]);
+
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "suggest"), suggestionResponse);
+}, [suggestionResponse, promptText]);
+
+  // When promptText changes, clear responses if prompt is different
+  useEffect(() => {
+    if (promptText !== lastTestedPrompt) {
+      setAiResponse("AI response to your prompt here...");
+      setRatingResponse("");
+      setSuggestionResponse("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptText]);
 
   // Define available models with their capabilities
   const aiModels = [
@@ -135,9 +239,6 @@ export default function EditorPage() {
     },
   ]
 
-  // Function to handle image upload
-  // Add this improved function to your EditorPage component
-
 // Function to handle image upload with validation
 const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -149,7 +250,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Check file size (max 5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`Image too large (max ${maxSize/1024/1024}MB)`);
+      showNotification("error", "Image Upload Failed", `Image too large (max ${maxSize/1024/1024}MB)`);
       setUploadedImage(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -158,7 +259,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Check file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      alert('Invalid image format (must be JPEG, PNG, GIF, or WEBP)');
+      showNotification("error", "Image Upload Failed", "Invalid image format (must be JPEG, PNG, GIF, or WEBP)");
       setUploadedImage(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -180,13 +281,13 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         console.log("Image uploaded and validated successfully");
       } else {
         setUploadedImage(null);
-        alert("The image could not be processed. Please try a different image.");
+        showNotification("error", "Image Upload Failed", "The image could not be processed. Please try a different image.");
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     };
     
     reader.onerror = () => {
-      alert("Failed to read image file");
+      showNotification("error", "Image Upload Failed", "Failed to read image file");
       setUploadedImage(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -212,7 +313,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (uploadedImage && !aiModels[index].supportsImages) {
       handleRemoveImage();
       // Show notification to user
-      alert("Image has been removed as the selected model doesn't support images.");
+      showNotification("error", "Image Removed", "The uploaded image has been removed because the selected model does not support images.");
     }
     
     setAiResponse(`Testing with ${aiModels[index].name}...`);
@@ -747,13 +848,13 @@ const fallbackToWorkingModel = async () => {
     // Check if user is authenticated
     const username = localStorage.getItem('username')
     if (!username || username === 'Guest') {
-      alert("Please log in to save prompts")
+      showNotification("error", "Login Required", "Please log in to save prompts");
       return
     }
 
     // Validate prompt content
     if (!promptText.trim() || promptText.trim() === defaultPrompt.trim()) {
-      alert("Please write a valid prompt before saving")
+      showNotification("error", "Invalid Prompt", "Please write a valid prompt before saving.")
       return
     }
 
@@ -946,8 +1047,10 @@ const fallbackToWorkingModel = async () => {
               </Button>
               <Button
                 size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
+                className={`bg-amber-500 hover:bg-amber-600 text-white text-xs h-8 ${isLoadingRating ? "opacity-70 cursor-not-allowed" : ""}`}
                 onClick={() => {
+                  if (isLoadingRating) return;
+                  setIsLoadingRating(true);
                   // If previous attempt failed, ensure loading state is reset
                   setIsLoadingRating(false);
                   
@@ -972,14 +1075,17 @@ const fallbackToWorkingModel = async () => {
                     setRatingResponse("Please test your prompt first before rating.");
                   }
                 }}
+                disabled={isLoadingRating}
               >
                 <Star className="h-3 w-3 mr-1" />
-                Rate
+                {isLoadingRating ? "Rating..." : "Rate"}
               </Button>
               <Button
                 size="sm"
-                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
+                className={`bg-violet-500 hover:bg-violet-600 text-white text-xs h-8 ${isLoadingSuggestion ? "opacity-70 cursor-not-allowed" : ""}`}
                 onClick={() => {
+                  if (isLoadingSuggestion) return;
+                  setIsLoadingSuggestion(true);
                   // Clear previous response if switching views
                   if (currentView !== "suggest") {
                     typingEffect.clear();
@@ -1000,9 +1106,10 @@ const fallbackToWorkingModel = async () => {
                     setSuggestionResponse("Please test your prompt first before requesting suggestions.");
                   }
                 }}
+                disabled={isLoadingSuggestion}
               >
                 <HelpCircle className="h-3 w-3 mr-1" />
-                Suggest
+                {isLoadingSuggestion ? "Suggesting..." : "Suggest"}
               </Button>
             </div>
           </div>
@@ -1103,46 +1210,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        // Save current content based on current view before switching
-                        const currentDisplayText = typingEffect.displayText;
-                        if (currentDisplayText) {
-                          if (currentView === "test") {
-                            setAiResponse(currentDisplayText);
-                          } else if (currentView === "rate") {
-                            setRatingResponse(currentDisplayText);
-                          } else if (currentView === "suggest") {
-                            setSuggestionResponse(currentDisplayText);
-                          }
-                        }
-                        
-                        // Update page state
-                        setCurrentPage(page);
-                        
-                        // Clear typing effect before switching views
-                        typingEffect.clear();
-                        
-                        // Set the new view and restore content based on the page number
-                        if (page === 1) {
-                          setCurrentView("test");
-                          // Restore test content if available
-                          if (aiResponse && aiResponse !== "AI response to your prompt here...") {
-                            typingEffect.setText(aiResponse);
-                          }
-                        } else if (page === 2) {
-                          setCurrentView("rate");
-                          // Restore rating content if available
-                          if (ratingResponse) {
-                            typingEffect.setText(ratingResponse);
-                          }
-                        } else if (page === 3) {
-                          setCurrentView("suggest");
-                          // Restore suggestion content if available
-                          if (suggestionResponse) {
-                            typingEffect.setText(suggestionResponse);
-                          }
-                        }
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -1157,7 +1225,7 @@ const fallbackToWorkingModel = async () => {
             ) : currentView === "rate" ? (
               <>
                 {/* Rating Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1221,12 +1289,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 3) setCurrentView("suggest");
-                        else setCurrentView("rate");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -1241,7 +1304,7 @@ const fallbackToWorkingModel = async () => {
             ) : (
               <>
                 {/* Suggestion Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1305,12 +1368,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 2) setCurrentView("rate");
-                        else if (page === 3) setCurrentView("suggest");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"

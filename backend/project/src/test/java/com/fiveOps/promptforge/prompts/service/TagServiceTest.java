@@ -31,28 +31,28 @@ class TagServiceTest {
   void setUp() {
     testTag = new Tag();
     testTag.setId(UUID.randomUUID());
-    testTag.setName("test-tag");
+    testTag.setName("Test-tag");
     testTag.setSlug("test-tag");
   }
 
   @Test
   void findOrCreateTag_ShouldReturnExistingTag() {
     // Arrange
-    when(tagRepository.findByName("test-tag")).thenReturn(Optional.of(testTag));
+    when(tagRepository.findByName("Test-tag")).thenReturn(Optional.of(testTag));
 
     // Act
     Tag result = tagService.findOrCreateTag("test-tag");
 
     // Assert
     assertEquals(testTag, result);
-    verify(tagRepository).findByName("test-tag");
+    verify(tagRepository).findByName("Test-tag");
     verify(tagRepository, never()).save(any());
   }
 
   @Test
   void findOrCreateTag_ShouldCreateNewTagWhenNotExists() {
     // Arrange
-    when(tagRepository.findByName("new-tag")).thenReturn(Optional.empty());
+    when(tagRepository.findByName("New-tag")).thenReturn(Optional.empty());
     when(tagRepository.save(any(Tag.class)))
         .thenAnswer(
             invocation -> {
@@ -66,8 +66,8 @@ class TagServiceTest {
 
     // Assert
     assertNotNull(result);
-    assertEquals("new-tag", result.getName());
-    verify(tagRepository).findByName("new-tag");
+    assertEquals("New-tag", result.getName());
+    verify(tagRepository).findByName("New-tag");
     verify(tagRepository).save(any(Tag.class));
   }
 
@@ -78,14 +78,14 @@ class TagServiceTest {
 
     Tag tag1 = new Tag();
     tag1.setId(UUID.randomUUID());
-    tag1.setName("tag1");
+    tag1.setName("Tag1");
 
     Tag tag2 = new Tag();
     tag2.setId(UUID.randomUUID());
-    tag2.setName("tag2");
+    tag2.setName("Tag2");
 
-    when(tagRepository.findByName("tag1")).thenReturn(Optional.of(tag1));
-    when(tagRepository.findByName("tag2")).thenReturn(Optional.of(tag2));
+    when(tagRepository.findByName("Tag1")).thenReturn(Optional.of(tag1));
+    when(tagRepository.findByName("Tag2")).thenReturn(Optional.of(tag2));
 
     // Act
     List<Tag> result = tagService.findOrCreateTags(tagNames);
@@ -125,7 +125,7 @@ class TagServiceTest {
   @Test
   void getTagIdByName_ShouldReturnTagId() {
     // Arrange
-    when(tagRepository.findByName("test-tag")).thenReturn(Optional.of(testTag));
+    when(tagRepository.findByName("Test-tag")).thenReturn(Optional.of(testTag));
 
     // Act
     UUID result = tagService.getTagIdByName("test-tag");
@@ -146,10 +146,10 @@ class TagServiceTest {
   @Test
   void normalizeTagName_ShouldTrimWhitespace() {
     // Act
-    String result = tagService.normalizeTagName("  test  ");
+    String result = tagService.normalizeTagName("  Test  ");
 
     // Assert
-    assertEquals("test", result);
+    assertEquals("Test", result);
   }
 
   @Test

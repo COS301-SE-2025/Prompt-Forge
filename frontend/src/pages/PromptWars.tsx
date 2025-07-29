@@ -1,8 +1,9 @@
 "use client"
 
-import { Button } from "../components/ui/button"
-import { Card } from "../components/ui/card"
-import { Input } from "../components/ui/input"
+import { API_BASE_URL } from '../config/api';
+import { Button } from "../components/ui/Button"
+import { Card } from "../components/ui/Card"
+import { Input } from "../components/ui/Input"
 import {
   Swords,
   Send,
@@ -57,7 +58,7 @@ export default function PromptWarsPage() {
 
   // Timer effect
   useEffect(() => {
-    let interval: number
+    let interval: ReturnType<typeof setInterval> // <-- Fix type here
     if (gameState === "writing" && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
@@ -105,7 +106,7 @@ export default function PromptWarsPage() {
         ],
       }
 
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ export default function PromptWarsPage() {
 
       if (data.choices && data.choices[0] && data.choices[0].message) {
         const scenarioText = data.choices[0].message.content
-          .replace(/\\u[\dA-F]{4}/gi, (match) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
+          .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
           .replace(/\\n/g, "\n")
           .replace(/\\/g, "")
           .replace(/\*\*/g, "")
@@ -210,7 +211,7 @@ Explanation: [Your detailed analysis]
         ],
       }
 
-      const response = await fetch("http://localhost:8080/api/test/openrouter/chat", {
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -221,7 +222,7 @@ Explanation: [Your detailed analysis]
       const data = await response.json()
       if (data.choices && data.choices[0] && data.choices[0].message) {
         const result = data.choices[0].message.content
-          .replace(/\\u[\dA-F]{4}/gi, (match) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
+          .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
           .replace(/\\n/g, "\n")
           .replace(/\\/g, "")
 
