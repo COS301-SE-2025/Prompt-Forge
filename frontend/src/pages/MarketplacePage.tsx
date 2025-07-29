@@ -383,7 +383,13 @@ export default function MarketplacePage() {
                     placeholder="        Search for prompts..."
                     className="bg-muted border-muted pl-10"
                     value={searchQuery}
-                    onChange={(e)=> setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      if (e.target.value === "") {
+                        setCurrentPage(1)
+                        fetchData("all", "all", "", 1) // Refetch all prompts when search is cleared
+                      }
+                    }}
                     onKeyDown={handleSearch}
                   
                   />

@@ -18,9 +18,10 @@ export default function MyPromptsPage() {
   const promptService = new PromptService();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
-  // const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
+  const [allUserPrompts, setAllUserPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const [pendingSearch, setPendingSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
@@ -174,8 +175,7 @@ export default function MyPromptsPage() {
     }
   }, [isAuthenticated, navigate, userProfile, currentPage])
 
-  // Fetch avgRating for each prompt using the reviews endpoint
-  //TODO: change the function to not send a request to the backend for each prompt
+
   useEffect(() => {
     const fetchRatings = async () => {
       if (!myPrompts.length) return
@@ -205,8 +205,6 @@ export default function MyPromptsPage() {
     fetchRatings()
   }, [myPrompts])
 
-  // Filtering logic
-  useEffect(() => {
     //TODO: create a global fetchMyPrompts function for reuse (the one below is literally the same as the other)
     const fetchMyPrompts = async () => {
       if (!isAuthenticated) {
@@ -296,9 +294,6 @@ export default function MyPromptsPage() {
       }
     }
 
-    fetchMyPrompts()
-  }, [searchQuery, selectedCategory, selectedFilter])
-
   const filters = [
     { value: "all", label: "All" },
     { value: "favorites", label: "Favorites" },
@@ -384,6 +379,99 @@ export default function MyPromptsPage() {
       console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }
 
+  }
+
+  // 1. State to hold all prompts and search input
+  // const [allUserPrompts, setAllUserPrompts] = useState<MyPrompt[]>([])
+  // const [pendingSearch, setPendingSearch] = useState("")
+
+  // 2. Fetch ALL prompts for the user once (no search param)
+  useEffect(() => {
+    const fetchAllPrompts = async () => {
+      if (!isAuthenticated) return
+      let authorId: string | null = userProfile?.userId || localStorage.getItem('userId')
+      if (!authorId) {
+        setAllUserPrompts([])
+        return
+      }
+      const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, "all", "all", 0, 1000)
+      let prompts = userPromptsPage.content
+      if (!Array.isArray(prompts)) prompts = []
+      const mappedPrompts: MyPrompt[] = await Promise.all(
+        prompts.map(async (p: any) => {
+          const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+          return {
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            content: p.content || "",
+            category: "General",
+            tags: p.tagNames || [],
+            createdAt: p.createdAt,
+            updatedAt: p.publishedAt || p.createdAt,
+            rating: averageRating || 0,
+            uses: p.usageCount,
+            featured: p.featured || false,
+            price: p.price || 0,
+            isPrivate: p.visibility === "private",
+            isFavorite: false,
+            authorName: p.authorName || userProfile?.username || "You",
+            source: p.source,
+            isPublished: p.visibility === "public" || p.publishedAt !== null,
+            publishedAt: p.publishedAt
+          }
+        })
+      )
+      setAllUserPrompts(mappedPrompts)
+    }
+    if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
+      fetchAllPrompts()
+    }
+  }, [isAuthenticated, userProfile])
+
+  // 3. Filter/search/paginate on the frontend
+  useEffect(() => {
+    let filtered = allUserPrompts
+
+    // Category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(p =>
+        (p.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
+        (p.tags || []).map(t => (typeof t === "string" ? t.toLowerCase() : "")).includes(selectedCategory.toLowerCase())
+      )
+    }
+
+    // Filter type
+    if (selectedFilter === "favorites") filtered = filtered.filter(p => p.isFavorite)
+    if (selectedFilter === "private") filtered = filtered.filter(p => p.isPrivate)
+    if (selectedFilter === "public") filtered = filtered.filter(p => !p.isPrivate)
+
+    // Search: if searchQuery is empty, show all prompts
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.trim().toLowerCase()
+      filtered = filtered.filter(
+        p =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.content.toLowerCase().includes(q) ||
+          (p.tags || []).some(tag => typeof tag === "string" && tag.toLowerCase().includes(q))
+      )
+    }
+
+    // Pagination
+    const start = (currentPage - 1) * PROMPTS_PER_PAGE
+    const end = start + PROMPTS_PER_PAGE
+    setMyPrompts(filtered.slice(start, end))
+    setPromptCount(filtered.length)
+    setTotalPages(Math.max(1, Math.ceil(filtered.length / PROMPTS_PER_PAGE)))
+  }, [allUserPrompts, searchQuery, selectedCategory, selectedFilter, currentPage])
+
+  // 4. Search bar: only search when Enter is pressed
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      setSearchQuery(pendingSearch)
+      setCurrentPage(1)
+    }
   }
 
   if (loading) {
@@ -512,10 +600,19 @@ export default function MyPromptsPage() {
                 <Input
                   placeholder="        Search for prompts..."
                   className="bg-muted border-muted pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={pendingSearch}
+                  onChange={(e) => {
+                    setPendingSearch(e.target.value)
+                    if (e.target.value === "") {
+                      setSearchQuery("")
+                      setCurrentPage(1)
+                      fetchMyPrompts() // Fetch all prompts when search bar is cleared
+                    }
+                  }}
+                  onKeyDown={handleSearch}
                 />
-                {!searchQuery && (
+                {/* Hide the search icon when typing */}
+                {pendingSearch === "" && (
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     <Search className="h-4 w-4 text-muted-foreground" />
                   </div>
