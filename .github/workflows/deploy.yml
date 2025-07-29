@@ -223,6 +223,7 @@ jobs:
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
           HF_TOKEN=${{ secrets.HF_TOKEN }}
+          PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
           EOL
           
           # Update docker-compose to use new image
