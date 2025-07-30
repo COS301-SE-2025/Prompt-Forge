@@ -48,6 +48,10 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
           PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-north-1
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
       run: |
         cd backend/project
         chmod +x ./mvnw
@@ -163,9 +167,10 @@ jobs:
     - name: Build frontend
       run: |
         cd frontend
-        npm run build
+        npm run build:prod
       env:
         VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
+        NODE_OPTIONS: "--max-old-space-size=4096"
         
     - name: Upload frontend build
       uses: actions/upload-artifact@v4
