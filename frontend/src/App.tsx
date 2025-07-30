@@ -19,6 +19,7 @@ import WarPage from "./pages/PromptWars"
 import BuilderPage from "./pages/PromptBuilder"
 import ProfilePage from "./pages/ProfilePage"
 import SocialPage from "./pages/SocialPage"
+import OptimizerPage from "./pages/OptimizerPage"
 
 
 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/builder" element={<BuilderPage />} />
           <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/social" element={<SocialPage />} />
+          <Route path="/optimizer" element={<OptimizerPage />} />
         </Routes>
       </main>
     </div>
