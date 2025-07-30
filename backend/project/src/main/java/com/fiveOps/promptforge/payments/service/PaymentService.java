@@ -17,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+import com.fiveOps.promptforge.payments.dto.BankDTO;
+import com.fiveOps.promptforge.payments.dto.PaystackBankListResponseDTO;
 import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
@@ -56,8 +58,8 @@ public class PaymentService {
 
     // Make the POST request
     try {
-      ResponseEntity<String> response =
-          restTemplate.postForEntity(gatewayURL + "transaction/initialize", request, String.class);
+      ResponseEntity<String> response = restTemplate.postForEntity(gatewayURL + "transaction/initialize", request,
+          String.class);
 
       // Output response
       System.out.println("\n\nStatus Code: " + response.getStatusCode());
@@ -134,7 +136,8 @@ public class PaymentService {
 
     Integer roundedTotalInCents = (int) Math.round(total * 100);
     Map<UUID, Integer> authorShares = new HashMap<>();
-    if (roundedTotalInCents <= 0) throw new Exception("amount must be greater than zero");
+    if (roundedTotalInCents <= 0)
+      throw new Exception("amount must be greater than zero");
 
     try {
       for (int i = 0; i < prompts.size(); i++) {
@@ -152,7 +155,6 @@ public class PaymentService {
       if (authorShares.size() == 1) {
         Map.Entry<UUID, Integer> authorShareEntry = authorShares.entrySet().iterator().next();
         UUID authorId = authorShareEntry.getKey();
-        // Integer authorShare = authorShareEntry.getValue();
         String subaccountCode = bankDetailsService.getSubaccountIDByUserID(authorId);
         return inititalizeSingleAuthorPayment(
             customerEmail, subaccountCode, authorId, roundedTotalInCents);
@@ -178,6 +180,33 @@ public class PaymentService {
       System.out.println("error purchasing:");
       System.out.println(e);
       throw e;
+    }
+  }
+
+  public List<BankDTO> getBankList() {
+
+    String secretKey = "Bearer " + paystackSecretKey;
+
+    // headers
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", secretKey);
+
+    // Make the GET request
+    try {
+      ResponseEntity<PaystackBankListResponseDTO> responseEntity = restTemplate
+          .getForEntity(gatewayURL + "bank?country=south africa", PaystackBankListResponseDTO.class);
+      PaystackBankListResponseDTO response = responseEntity.getBody();
+
+      if (response.getStatus()) {
+        return response.getData();
+      }
+
+      throw new RuntimeException();
+    } catch (Exception e) {
+      // TODO: handle exception
+      e.printStackTrace();
+      throw new RuntimeException();
     }
   }
 }
