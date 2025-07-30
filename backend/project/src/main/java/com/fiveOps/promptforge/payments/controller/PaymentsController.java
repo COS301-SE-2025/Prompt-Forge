@@ -39,8 +39,8 @@ public class PaymentsController {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
 
-      TransactionInitializationResponse transactionAccessCodeAndReference =
-          paymentService.initializePayment(userEmail, prompts, request.getTotal());
+      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService.initializePayment(userEmail,
+          prompts, request.getTotal());
 
       return ResponseEntity.ok(
           new APIResponse(
@@ -73,5 +73,26 @@ public class PaymentsController {
               new APIResponse(
                   "error", "Failed to fetch payment details failed: " + e.getMessage()));
     }
+  }
+
+  @GetMapping("/bank-list")
+  public ResponseEntity<APIResponse> bankList(Authentication authentication) {
+    try {
+      // String userEmail = authentication.getName();
+      // UUID userId = userService.getUserIdByEmail(userEmail);
+      Object details = paymentService.getBankList();
+      if (details == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new APIResponse("error", "bank list not found", null));
+      }
+      return ResponseEntity.ok(new APIResponse("success", "bank list found", details));
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.badRequest()
+          .body(
+              new APIResponse(
+                  "error", "Failed to fetch bank list: " + e.getMessage()));
+    }
+    
   }
 }
