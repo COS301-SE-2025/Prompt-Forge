@@ -195,7 +195,7 @@ export class PromptService {
         return response.json();
       } 
       
-      console.log("last lappppp");
+      //console.log("last lappppp");
       const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&filterName=${filterName}&page=${page}&size=${size}`);
       return response.json();
       
