@@ -150,15 +150,15 @@ jobs:
       run: |
         cd frontend
         npm install --save-dev \
-            eslint@latest \
-            @eslint/js@latest \
-            globals@latest \
-            eslint-plugin-react-hooks@latest \
-            eslint-plugin-react-refresh@latest \
-            typescript-eslint@latest \
-            @typescript-eslint/eslint-plugin@latest \
-            @typescript-eslint/parser@latest
-          npm install
+          eslint@latest \
+          @eslint/js@latest \
+          globals@latest \
+          eslint-plugin-react-hooks@latest \
+          eslint-plugin-react-refresh@latest \
+          typescript-eslint@latest \
+          @typescript-eslint/eslint-plugin@latest \
+          @typescript-eslint/parser@latest
+        npm install
         
     - name: Build frontend
       run: |
