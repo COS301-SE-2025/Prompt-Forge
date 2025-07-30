@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/Button"
 import { Textarea } from "@/components/ui/Textarea"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
-import { URLSearchParams } from "url"
 
-// ...existing code...
 import {
   Sparkles,
   Wand2,
@@ -72,7 +70,7 @@ const mockSuggestions = [
 export default function OptimizerPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+   const searchParams = new window.URLSearchParams(location.search);
 
   const [originalPrompt, setOriginalPrompt] = useState("")
   const [suggestions, setSuggestions] = useState<typeof mockSuggestions>([])
@@ -365,7 +363,7 @@ export default function OptimizerPage() {
                               e.stopPropagation()
                               handleApplySuggestion(suggestion)
                             }}
-                            className="flex-1 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-background font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="flex-1 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                           >
                             <ArrowRight className="h-4 w-4 mr-2" />
                             Apply to Editor
