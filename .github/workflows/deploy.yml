@@ -274,26 +274,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-north-1
         
-    - name: Deploy to Amplify
+    - name: Notify Amplify Deployment
       run: |
-        # Create deployment package
-        cd frontend-build
-        zip -r ../frontend-deployment.zip .
-        cd ..
-        
-        # Deploy to Amplify
-        aws amplify create-deployment \
-          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-          --branch-name main \
-          --file-map file=frontend-deployment.zip
-          
-        # Start deployment
-        DEPLOYMENT_ID=$(aws amplify list-jobs --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --max-items 1 --query 'jobSummaries[0].jobId' --output text)
-        
-        # Wait for deployment to complete
-        aws amplify get-job --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --job-id $DEPLOYMENT_ID --query 'job.summary.status' --output text
-        
-        echo "Frontend deployed successfully to Amplify"
+        echo "Frontend build completed successfully!"
+        echo "Amplify will automatically deploy from the repository"
+        echo "Frontend will be available at: https://prompt-forge.co.za"
 
   health-check:
     name: Health Check
