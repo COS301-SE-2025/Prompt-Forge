@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/models/*": ["./src/Models/*"]
+      "@/models/*": ["./src/Models/*"],
+      "@/Models/*": ["./src/Models/*"]
     },
     // Add both Cypress and Jest types
     "types": ["cypress", "jest", "@testing-library/jest-dom"]
