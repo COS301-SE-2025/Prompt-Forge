@@ -1,5 +1,5 @@
 import HttpClient from "./httpClient";
-import { EnrichedPrompt } from "@/models/CartPrompt";
+import { EnrichedPrompt } from "@/Models/CartPrompt";
 
 
 export interface PaymentAccessCodeAndReference{
