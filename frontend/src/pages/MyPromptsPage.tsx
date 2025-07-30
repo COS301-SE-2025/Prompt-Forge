@@ -8,8 +8,8 @@ import { Star, Search, Filter, Plus, ChevronLeft, ChevronRight } from "lucide-re
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
-import { MyPrompt } from "@/models/MyPrompt"
-import { UserProfile } from "@/models/User"
+import { MyPrompt } from "@/Models/MyPrompt"
+import { UserProfile } from "@/Models/User"
 import { PromptService } from "@/services/promptService"
 
 const PROMPTS_PER_PAGE = 12

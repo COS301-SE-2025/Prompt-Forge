@@ -2,7 +2,7 @@ import { Star, User, ShoppingCart, Eye } from "lucide-react"
 import { Card } from "./ui/Card"
 import { Button } from "./ui/Button"
 import { Link } from "react-router-dom"
-import { Category, CategoryColors } from "@/models/Prompt"
+import { Category, CategoryColors } from "@/Models/Prompt"
 
 interface PromptCardProps {
   id: string
