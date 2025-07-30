@@ -4,7 +4,7 @@ import { ShoppingCartIcon } from 'lucide-react';
 import { CartItem } from '@/components/CartItem';
 import { Link } from 'react-router-dom';
 import { CartService } from '@/services/cartServices';
-import { CartPrompt, EnrichedPrompt } from '@/models/CartPrompt';
+import { CartPrompt, EnrichedPrompt } from '@/Models/CartPrompt';
 import { PromptService } from '@/services/promptService';
 
 export default function CartPage() {
