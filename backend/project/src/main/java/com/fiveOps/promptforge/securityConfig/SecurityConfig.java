@@ -64,14 +64,16 @@ public class SecurityConfig {
 
     CorsConfiguration defaultConfig = new CorsConfiguration();
     defaultConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
-    defaultConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    defaultConfig.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     defaultConfig.setAllowedHeaders(Arrays.asList("*"));
     defaultConfig.setAllowCredentials(true);
     defaultConfig.setMaxAge(3600L);
 
     CorsConfiguration noCredentialsConfig = new CorsConfiguration();
     noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
-    noCredentialsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    noCredentialsConfig.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
     noCredentialsConfig.setAllowCredentials(false);
     noCredentialsConfig.setMaxAge(3600L);
