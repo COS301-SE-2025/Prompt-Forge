@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { Trash2Icon, StarIcon } from 'lucide-react';
-import { EnrichedPrompt } from '@/models/CartPrompt';
-import { Category, CategoryColors } from '@/models/Prompt';
+import { EnrichedPrompt } from '@/Models/CartPrompt';
+import { Category, CategoryColors } from '@/Models/Prompt';
 import { CartService } from '@/services/cartServices';
 interface CartItemProps extends EnrichedPrompt {
   fetchData: () => Promise<void>;
