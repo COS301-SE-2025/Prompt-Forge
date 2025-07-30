@@ -38,7 +38,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@/models": path.resolve(__dirname, "./src/Models"),
       "@/Models": path.resolve(__dirname, "./src/Models"),
     },
   },
