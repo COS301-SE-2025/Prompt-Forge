@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
-import { MyPrompt } from '@/Models/MyPrompt';
+import { MyPrompt } from '@/models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
 
 
