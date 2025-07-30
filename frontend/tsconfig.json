@@ -24,12 +24,14 @@
     "types": ["cypress", "jest", "@testing-library/jest-dom"]
   },
   "include": [
-    "src"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "cypress"
+    "cypress/**/*",
+    "**/*.cy.ts",
+    "**/*.cy.tsx"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
