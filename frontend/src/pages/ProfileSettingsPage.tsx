@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucide-react"
 import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
-import { PaymentCard } from "@/Models/Payments"
+import { BankIdentifier, PaymentCard } from "@/Models/Payments"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -29,13 +29,20 @@ export default function ProfileSettingsPage() {
   const [loading, setLoading] = useState<boolean>(true)
 
   const [paymentCard, setPaymentCard] = useState<PaymentCard | null>(null)
+  const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
 
   // Load profile data on mount
   useEffect(() => {
     async function fetchProfile() {
       try {
         setLoading(true)
-        const profile = await profileService.getCurrentProfile()
+        const [profile, bankList] = await Promise.all([
+          profileService.getCurrentProfile(),
+          profileService.getBankList()
+        ]);
+
+        setBankList(bankList);
+
         setUsername(profile.username || "")
         setEmail(profile.email || "")
         setBio(profile.bio || "")
@@ -424,24 +431,23 @@ export default function ProfileSettingsPage() {
                           <div className="flex items-center">
                             <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div>
                             <div>
-                              <p className="font-medium  text-muted-foreground">{paymentCard.bank.bankName}</p>
+                              <p className="font-medium  text-muted-foreground">{paymentCard.bank.name}</p>
                               <p className="font-medium  text-muted-foreground">{paymentCard.cardHolderName}</p>
                               <p className="text-xs font-medium">{paymentCard.accountNumber}</p>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
-                              Edit
-                            </Button>
+                            <PaymentOverlay process="edit" bankList={bankList} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
+
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
                               <Trash2 className="h-5 w-5" />
                             </Button>
                           </div>
                         </div>
                       </div>
-                    : 
+                      :
                       <div className="mt-4">
-                        <PaymentOverlay bankList={[{ bankCode: "001", bankName: "Standard Bank" }, { bankCode: "002", bankName: "Capitec Bank" }]} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
+                        <PaymentOverlay process="add" bankList={bankList} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
                       </div>
                   }
 

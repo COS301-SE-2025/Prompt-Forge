@@ -1,7 +1,15 @@
+import { BankIdentifier } from "@/Models/Payments";
 import HttpClient from "./httpClient";
+import { APIResponse } from "@/Models/APIResponse";
+
+interface APIResponseWithBankList extends APIResponse {
+  data: Array<BankIdentifier>
+}
+
 
 class ProfileService {
   private baseUrl = "/user";
+  private httpClient = HttpClient;
 
   async getCurrentProfile(): Promise<any> {
     const response = await fetch(`${HttpClient.apiUrl}${this.baseUrl}/me`, {
@@ -89,6 +97,22 @@ class ProfileService {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to delete picture");
+    }
+  }
+
+  async getBankList():Promise<Array<BankIdentifier>> {
+    try {
+      const bankListResponse = await this.httpClient.get(`/payment/bank-list`);
+      const response: APIResponseWithBankList = await bankListResponse.json()
+
+      if (response.status === "success"){
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
   }
 }
