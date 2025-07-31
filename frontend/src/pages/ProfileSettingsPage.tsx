@@ -7,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
 import { Switch } from "../components/ui/Switch"
 import { Textarea } from "../components/ui/Textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select"
-import { Camera, Check, Save, Trash, Upload, X, Plus } from "lucide-react"
+import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucide-react"
 import { profileService } from "../services/profileServices"
+import PaymentOverlay from "@/components/PaymentOverlay"
+import { PaymentCard } from "@/Models/Payments"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -25,6 +27,8 @@ export default function ProfileSettingsPage() {
   const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null)
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
   const [loading, setLoading] = useState<boolean>(true)
+
+  const [paymentCard, setPaymentCard] = useState<PaymentCard | null>(null)
 
   // Load profile data on mount
   useEffect(() => {
@@ -84,9 +88,9 @@ export default function ProfileSettingsPage() {
   const handleSave = async () => {
     try {
       setSaveStatus("saving");
-  
+
       let imageUrl = pendingProfileImage;
-  
+
       if (pendingProfileImageFile) {
         // If there's a new file, upload it and get the URL
         imageUrl = await profileService.uploadProfilePicture(pendingProfileImageFile);
@@ -98,21 +102,21 @@ export default function ProfileSettingsPage() {
         await profileService.deleteProfilePicture();
         imageUrl = ""; // empty to trigger backend deletion logic
       }
-  
+
       await profileService.updateCurrentProfile({
         username: pendingUsername,
         bio: pendingBio,
         email: pendingEmail,
         profilePicture: imageUrl,
       });
-  
+
       // Update saved state only if successful
       setUsername(pendingUsername);
       setEmail(pendingEmail);
       setBio(pendingBio);
       setProfileImage(imageUrl);
       setPendingProfileImageFile(null);
-  
+
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 2000);
     } catch (error) {
@@ -125,7 +129,8 @@ export default function ProfileSettingsPage() {
         <div className="flex-1 flex items-center justify-center h-full">
           <p>Loading profile...</p>
         </div>
-      )}
+      )
+    }
   };
   //Show loading state while fetching profile
   return (
@@ -238,7 +243,7 @@ export default function ProfileSettingsPage() {
                   <div className="border-t border-border pt-4">
                     <div className="flex justify-between items-center">
                       <div>
-                      {saveStatus === "success" && (
+                        {saveStatus === "success" && (
                           <span className="text-sm text-green-500 flex items-center">
                             <Check className="h-4 w-4 mr-1" />
                             Changes saved successfully
@@ -410,34 +415,36 @@ export default function ProfileSettingsPage() {
             <TabsContent value="billing">
               <div className="grid gap-6">
                 <Card className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Payment Methods</h2>
+                  <h2 className="text-lg font-medium mb-4 w-fit"><CreditCard className="inline mr-2" /> Payment Methods</h2>
 
-                  <div className="space-y-4">
-                    <div className="bg-muted p-4 rounded-md flex justify-between items-center">
-                      <div className="flex items-center">
-                        <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div>
-                        <div>
-                          <p className="font-medium">•••• •••• •••• 4242</p>
-                          <p className="text-xs text-muted-foreground">Expires 12/25</p>
+                  {
+                    paymentCard !== null ?
+                      <div className="space-y-4">
+                        <div className="bg-muted p-4 rounded-md flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div>
+                            <div>
+                              <p className="font-medium  text-muted-foreground">{paymentCard.bank.bankName}</p>
+                              <p className="font-medium  text-muted-foreground">{paymentCard.cardHolderName}</p>
+                              <p className="text-xs font-medium">{paymentCard.accountNumber}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">
-                          Edit
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                          Remove
-                        </Button>
+                    : 
+                      <div className="mt-4">
+                        <PaymentOverlay bankList={[{ bankCode: "001", bankName: "Standard Bank" }, { bankCode: "002", bankName: "Capitec Bank" }]} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
                       </div>
-                    </div>
-                  </div>
+                  }
 
-                  <div className="mt-4">
-                    <Button variant="outline">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Payment Method
-                    </Button>
-                  </div>
                 </Card>
 
                 <Card className="p-6">
