@@ -5,7 +5,7 @@ export interface PaymentCard {
     isDefault: boolean
 }
 
-export interface BankIdentifier{
-    bankCode:string
-    bankName:string
+export interface BankIdentifier {
+    code: string
+    name: string
 }
