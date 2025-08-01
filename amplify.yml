@@ -5,8 +5,12 @@ applications:
       phases:
         preBuild:
           commands:
-            - npm install
+            - npm install 
+            - npm install --include=dev --legacy-peer-deps
+            - npm install -g vite
+            - npm install vite --save-dev
             - npm install --save-dev eslint@latest @eslint/js@latest globals@latest eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest typescript-eslint@latest @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest
+            - npm ls vite
         build:
           commands:
             - npm run build:prod
