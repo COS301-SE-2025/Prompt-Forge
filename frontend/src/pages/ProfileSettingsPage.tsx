@@ -29,7 +29,7 @@ export default function ProfileSettingsPage() {
   const [loading, setLoading] = useState<boolean>(true)
 
   //bank details
-  const [paymentCard, setPaymentCard] = useState<PayoutCard | null>(null)
+  const [payoutDetails, setPayoutDetails] = useState<PayoutCard | null>(null)
   const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
 
   // Load profile data on mount
@@ -37,13 +37,14 @@ export default function ProfileSettingsPage() {
     async function fetchProfile() {
       try {
         setLoading(true)
-        const [profile, bankList] = await Promise.all([
+        const [profile, bankList, payoutDetails] = await Promise.all([
           profileService.getCurrentProfile(),
-          profileService.getBankList()
+          profileService.getBankList(),
+          profileService.getPayoutDetails()
         ]);
 
         setBankList(bankList);
-
+        setPayoutDetails(payoutDetails);
         setUsername(profile.username || "")
         setEmail(profile.email || "")
         setBio(profile.bio || "")
@@ -426,19 +427,19 @@ export default function ProfileSettingsPage() {
                   <h2 className="text-lg font-medium mb-4 w-fit"><CreditCard className="inline mr-2" /> Payment Methods</h2>
 
                   {
-                    paymentCard !== null ?
+                    payoutDetails !== null ?
                       <div className="space-y-4">
                         <div className="bg-muted p-4 rounded-md flex justify-between items-center">
                           <div className="flex items-center">
                             <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div>
                             <div>
-                              <p className="font-medium  text-muted-foreground">{paymentCard.bank.name}</p>
-                              <p className="font-medium  text-muted-foreground">{paymentCard.cardHolderName}</p>
-                              <p className="text-xs font-medium">{paymentCard.accountNumber}</p>
+                              <p className="font-medium  text-muted-foreground">{payoutDetails.bank.name}</p>
+                              <p className="font-medium  text-muted-foreground">{payoutDetails.accountHolder}</p>
+                              <p className="text-xs font-medium">{payoutDetails.accountNumber}</p>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={paymentCard} setPaymentCard={setPaymentCard} />
+                            <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
 
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
                               <Trash2 className="h-5 w-5" />
@@ -448,7 +449,7 @@ export default function ProfileSettingsPage() {
                       </div>
                       :
                       <div className="mt-4">
-                        <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={paymentCard} setPaymentCard={setPaymentCard} />
+                        <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
                       </div>
                   }
 

@@ -36,37 +36,37 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
             name: "Choose a bank..."
         },
         accountNumber: "",
-        cardHolderName: "",
+        accountHolder: "",
     })
 
     const handleSubmit = () => {
         try {
             if (!newCard || newCard.bank.name === "Choose a bank..." ||
-                newCard.accountNumber === "" || newCard.cardHolderName === "") {
+                newCard.accountNumber === "" || newCard.accountHolder === "") {
                 setError("All fields are required");
                 return;
             }
             setError("")
             if (process === "add") {
                 //make POST request
-                
+
 
                 profileService.addPayoutCard(newCard)
-                .then(()=>{
-                    setPaymentCard(newCard);
-                    setIsAddDialogOpen(false)
-                })
-                .catch((error:Error)=>{
-                    setError(error.message);
-                })
+                    .then(() => {
+                        setPaymentCard(newCard);
+                        setIsAddDialogOpen(false)
+                    })
+                    .catch((error: Error) => {
+                        setError(error.message);
+                    })
             }
             else {
                 if (newCard.accountNumber === currentPayoutCard?.accountNumber
-                    && newCard.cardHolderName === currentPayoutCard?.cardHolderName
+                    && newCard.accountHolder === currentPayoutCard?.accountHolder
                     && newCard.bank.code === currentPayoutCard?.bank.code
                     && newCard.bank.name === currentPayoutCard?.bank.name) {
-                        setError("No changes were made")
-                        return
+                    setError("No changes were made")
+                    return
                 }
                 //make PUT request
                 profileService.updatePayoutCard(newCard)
@@ -138,8 +138,8 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                             <Input
                                 id="name"
                                 placeholder="John Doe"
-                                value={newCard.cardHolderName}
-                                onChange={(e) => setNewCard({ ...newCard, cardHolderName: e.target.value })}
+                                value={newCard.accountHolder}
+                                onChange={(e) => setNewCard({ ...newCard, accountHolder: e.target.value })}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -156,7 +156,7 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                         <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSubmit} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">{process == "add"?"Add Card":"Edit Card"}</Button>
+                        <Button onClick={handleSubmit} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">{process == "add" ? "Add Card" : "Edit Card"}</Button>
 
                     </DialogFooter>
                     {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
