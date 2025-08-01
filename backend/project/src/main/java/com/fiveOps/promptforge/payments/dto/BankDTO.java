@@ -1,28 +1,28 @@
 package com.fiveOps.promptforge.payments.dto;
 
 public class BankDTO {
-  private String name;
-  private String code;
+  private String bankName;
+  private String bankCode;
 
-  public BankDTO(String name, String code) {
-    this.name = name;
-    this.code = code;
+  public BankDTO(String bankName, String bankCode) {
+    this.bankName = bankName;
+    this.bankCode = bankCode;
   }
 
   public String getCode() {
-    return code;
+    return bankCode;
   }
 
   public String getName() {
-    return name;
+    return bankName;
   }
 
-  public void setCode(String code) {
-    this.code = code;
+  public void setCode(String bankCode) {
+    this.bankCode = bankCode;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setName(String bankName) {
+    this.bankName = bankName;
   }
   // Getters and setters...
 }
