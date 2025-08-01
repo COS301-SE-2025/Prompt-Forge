@@ -1,4 +1,4 @@
-import { EnrichedPrompt } from "@/Models/CartPrompt"
+import { EnrichedPrompt } from "@/models/CartPrompt"
 import { CartService, PaymentAccessCodeAndReference } from "@/services/cartServices"
 import { Button } from "./ui/Button"
 import PaystackPop from '@paystack/inline-js'
