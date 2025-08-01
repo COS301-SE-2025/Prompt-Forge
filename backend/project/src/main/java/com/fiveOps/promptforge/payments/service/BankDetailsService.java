@@ -28,7 +28,7 @@ public class BankDetailsService {
     if (bankDetails == null) {
       throw new RuntimeException("Author payment details not found");
     }
-    return bankDetails.getAccountNumber();
+    return bankDetails.getPaystackSubaccountCode();
   }
 
   public PayoutCardWithSubaccountCodeDTO getBankDetails(UUID userId) {
