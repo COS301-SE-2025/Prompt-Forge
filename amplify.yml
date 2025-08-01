@@ -13,8 +13,8 @@ applications:
             - rm -rf node_modules package-lock.json
             - npm install --legacy-peer-deps
             
-            # Install Vite and React plugin with exact versions
-            - npm install --save-dev vite@5.4.8 @vitejs/plugin-react@4.0.3
+            # Install Vite and React plugin with compatible versions
+            - npm install --save-dev vite@latest @vitejs/plugin-react@latest --legacy-peer-deps
             
             # Install other dev dependencies
             - npm install --save-dev eslint@latest @eslint/js@latest globals@latest eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest typescript-eslint@latest @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest
