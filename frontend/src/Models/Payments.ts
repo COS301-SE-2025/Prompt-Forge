@@ -1,7 +1,7 @@
 export interface PayoutCard {
     bank: BankIdentifier
     accountNumber: string
-    cardHolderName: string
+    accountHolder: string
 }
 
 export interface BankIdentifier {
