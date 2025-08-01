@@ -68,8 +68,8 @@ public class PaymentService {
 
     // Make the POST request
     try {
-      ResponseEntity<String> response = restTemplate.postForEntity(gatewayURL + "transaction/initialize", request,
-          String.class);
+      ResponseEntity<String> response =
+          restTemplate.postForEntity(gatewayURL + "transaction/initialize", request, String.class);
 
       // Output response
       System.out.println("\n\nStatus Code: " + response.getStatusCode());
@@ -146,8 +146,7 @@ public class PaymentService {
 
     Integer roundedTotalInCents = (int) Math.round(total * 100);
     Map<UUID, Integer> authorShares = new HashMap<>();
-    if (roundedTotalInCents <= 0)
-      throw new Exception("amount must be greater than zero");
+    if (roundedTotalInCents <= 0) throw new Exception("amount must be greater than zero");
 
     try {
       for (int i = 0; i < prompts.size(); i++) {
@@ -204,8 +203,9 @@ public class PaymentService {
 
     // Make the GET request
     try {
-      ResponseEntity<PaystackBankListResponseDTO> responseEntity = restTemplate
-          .getForEntity(gatewayURL + "bank?country=south africa", PaystackBankListResponseDTO.class);
+      ResponseEntity<PaystackBankListResponseDTO> responseEntity =
+          restTemplate.getForEntity(
+              gatewayURL + "bank?country=south africa", PaystackBankListResponseDTO.class);
       PaystackBankListResponseDTO response = responseEntity.getBody();
 
       if (response.getStatus()) {
@@ -220,7 +220,8 @@ public class PaymentService {
     }
   }
 
-  public PaystackAddSubaccountResponseDTO addSubaccount(String username, PayoutCardDTO payoutCard) throws Exception {
+  public PaystackAddSubaccountResponseDTO addSubaccount(String username, PayoutCardDTO payoutCard)
+      throws Exception {
     String secretKey = "Bearer " + paystackSecretKey;
 
     // headers
@@ -239,12 +240,13 @@ public class PaymentService {
 
     // Make the POST request
     try {
-      ResponseEntity<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>> responseEntity = restTemplate.exchange(
-          gatewayURL + "subaccount",
-          HttpMethod.POST,
-          request, // request body + headers
-          new ParameterizedTypeReference<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>>() {
-          });
+      ResponseEntity<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>> responseEntity =
+          restTemplate.exchange(
+              gatewayURL + "subaccount",
+              HttpMethod.POST,
+              request, // request body + headers
+              new ParameterizedTypeReference<
+                  PaystackResponseDTO<PaystackAddSubaccountResponseDTO>>() {});
 
       // Output response
       System.out.println("\n\nStatus Code: " + responseEntity.getStatusCode());
@@ -261,7 +263,7 @@ public class PaymentService {
           System.out.println("get status is trueeeeeee");
           PaystackAddSubaccountResponseDTO data = response.getData();
 
-          System.out.println("subaccoutCode:" + data.getSubaccount_code());
+          System.out.println("subaccoutCode:" + data.getSubaccountCode());
           System.out.println("isVerified:" + data.getVerification());
           return data;
         }
@@ -276,8 +278,8 @@ public class PaymentService {
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().value() == 400) {
         try {
-          PaystackErrorResponseDTO errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
-              PaystackErrorResponseDTO.class);
+          PaystackErrorResponseDTO errorResponse =
+              objectMapper.readValue(e.getResponseBodyAsString(), PaystackErrorResponseDTO.class);
           System.err.println("Validation failed: " + errorResponse.getMessage());
           throw new RuntimeException(errorResponse.getMessage());
         } catch (JsonMappingException runEx) {
@@ -295,8 +297,8 @@ public class PaymentService {
     }
   }
 
-  
-  public void updateSubaccount(String subaccountCode, String username, PayoutCardDTO payoutCard) throws Exception {
+  public void updateSubaccount(String subaccountCode, String username, PayoutCardDTO payoutCard)
+      throws Exception {
     String secretKey = "Bearer " + paystackSecretKey;
 
     // headers
@@ -315,12 +317,13 @@ public class PaymentService {
 
     // Make the PUT request
     try {
-      ResponseEntity<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>> responseEntity = restTemplate.exchange(
-          gatewayURL + "subaccount/"+subaccountCode,
-          HttpMethod.PUT, 
-          request,
-          new ParameterizedTypeReference<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>>() {
-          });
+      ResponseEntity<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>> responseEntity =
+          restTemplate.exchange(
+              gatewayURL + "subaccount/" + subaccountCode,
+              HttpMethod.PUT,
+              request,
+              new ParameterizedTypeReference<
+                  PaystackResponseDTO<PaystackAddSubaccountResponseDTO>>() {});
 
       // Output response
       System.out.println("\n\nStatus Code: " + responseEntity.getStatusCode());
@@ -337,7 +340,7 @@ public class PaymentService {
           System.out.println("get status is trueeeeeee");
           PaystackAddSubaccountResponseDTO data = response.getData();
 
-          System.out.println("subaccoutCode:" + data.getSubaccount_code());
+          System.out.println("subaccoutCode:" + data.getSubaccountCode());
           System.out.println("isVerified:" + data.getVerification());
           return;
         }
@@ -352,9 +355,9 @@ public class PaymentService {
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().value() == 400) {
         try {
-          PaystackErrorResponseDTO errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
-              PaystackErrorResponseDTO.class);
-              
+          PaystackErrorResponseDTO errorResponse =
+              objectMapper.readValue(e.getResponseBodyAsString(), PaystackErrorResponseDTO.class);
+
           System.err.println("Validation failed: " + errorResponse.getMessage());
           throw new RuntimeException(errorResponse.getMessage());
 
@@ -372,5 +375,4 @@ public class PaymentService {
       throw e;
     }
   }
-
 }

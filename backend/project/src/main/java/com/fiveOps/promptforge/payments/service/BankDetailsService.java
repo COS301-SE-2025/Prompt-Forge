@@ -1,7 +1,8 @@
 package com.fiveOps.promptforge.payments.service;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
+
+import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,6 @@ import com.fiveOps.promptforge.payments.projection.PaymentDetailsProjectionWithP
 import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
 import com.fiveOps.promptforge.user_profile.model.User;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,8 +37,11 @@ public class BankDetailsService {
         bankDetailsRepository.findByUserUserId(userId);
     return userDetails;
   }
-  
-  public void addPayoutDetails(UUID userID, PayoutCardDTO payoutCard, PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification) {
+
+  public void addPayoutDetails(
+      UUID userID,
+      PayoutCardDTO payoutCard,
+      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification) {
     BankAccount bankAccount = new BankAccount();
 
     bankAccount.setUser(new User());
@@ -48,13 +51,13 @@ public class BankDetailsService {
     bankAccount.setAccountNumber(payoutCard.getAccountNumber());
     bankAccount.setAccountHolder(payoutCard.getCardHolderName());
     bankAccount.setVerified(subaccountCodeAndAccountVerification.getVerification());
-    bankAccount.setPaystackSubaccountCode(subaccountCodeAndAccountVerification.getSubaccount_code());
+    bankAccount.setPaystackSubaccountCode(subaccountCodeAndAccountVerification.getSubaccountCode());
     bankDetailsRepository.save(bankAccount);
-    return ;
+    return;
   }
 
   @Transactional
-  public void updatePayoutDetails(UUID userID, PayoutCardDTO payoutCard,String subaccountCode) {
+  public void updatePayoutDetails(UUID userID, PayoutCardDTO payoutCard, String subaccountCode) {
     BankAccount bankAccount = new BankAccount();
 
     bankAccount.setUser(new User());
@@ -67,7 +70,6 @@ public class BankDetailsService {
 
     bankDetailsRepository.deleteByUserUserId(userID);
     bankDetailsRepository.save(bankAccount);
-    return ;
+    return;
   }
-
 }
