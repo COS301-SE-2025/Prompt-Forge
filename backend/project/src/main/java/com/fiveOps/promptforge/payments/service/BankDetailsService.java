@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.payments.service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import com.fiveOps.promptforge.payments.projection.PaymentDetailsProjectionWithP
 import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
 import com.fiveOps.promptforge.user_profile.model.User;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,6 +49,23 @@ public class BankDetailsService {
     bankAccount.setAccountHolder(payoutCard.getCardHolderName());
     bankAccount.setVerified(subaccountCodeAndAccountVerification.getVerification());
     bankAccount.setPaystackSubaccountCode(subaccountCodeAndAccountVerification.getSubaccount_code());
+    bankDetailsRepository.save(bankAccount);
+    return ;
+  }
+
+  @Transactional
+  public void updatePayoutDetails(UUID userID, PayoutCardDTO payoutCard,String subaccountCode) {
+    BankAccount bankAccount = new BankAccount();
+
+    bankAccount.setUser(new User());
+    bankAccount.getUser().setUserId(userID);
+    bankAccount.setBankName(payoutCard.getBankName());
+    bankAccount.setBankCode(payoutCard.getBankCode());
+    bankAccount.setAccountNumber(payoutCard.getAccountNumber());
+    bankAccount.setAccountHolder(payoutCard.getCardHolderName());
+    bankAccount.setPaystackSubaccountCode(subaccountCode);
+
+    bankDetailsRepository.deleteByUserUserId(userID);
     bankDetailsRepository.save(bankAccount);
     return ;
   }
