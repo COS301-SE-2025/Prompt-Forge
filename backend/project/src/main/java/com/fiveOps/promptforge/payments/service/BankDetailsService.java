@@ -55,7 +55,7 @@ public class BankDetailsService {
     bankDetailsRepository.save(bankAccount);
     return;
   }
-  
+
   public Integer countPayoutDetailsByUserId(UUID userID) {
     return bankDetailsRepository.countByUserUserId(userID);
   }

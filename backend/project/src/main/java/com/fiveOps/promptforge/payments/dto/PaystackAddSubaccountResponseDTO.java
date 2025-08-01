@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PaystackAddSubaccountResponseDTO {
   @JsonProperty("is_verified")
   private Boolean isVerified;
-  
+
   @JsonProperty("subaccount_code")
   private String subaccountCode;
 
