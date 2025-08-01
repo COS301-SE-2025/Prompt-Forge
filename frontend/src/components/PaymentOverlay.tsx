@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
-import { BankIdentifier, PayoutCard } from "@/Models/Payments"
+import { BankIdentifier, PayoutCard } from "@/Models/Payout"
 import { profileService } from "@/services/profileServices"
 
 interface PaymentOverlayProps {

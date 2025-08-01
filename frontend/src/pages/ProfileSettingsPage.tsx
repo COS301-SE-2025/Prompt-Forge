@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucide-react"
 import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
-import { BankIdentifier, PayoutCard } from "@/Models/Payments"
+import { BankIdentifier, PayoutCard } from "@/Models/Payout"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)

@@ -1,4 +1,4 @@
-import { BankIdentifier, PayoutCard } from "@/Models/Payments";
+import { BankIdentifier, PayoutCard } from "@/Models/Payout";
 import HttpClient from "./httpClient";
 import { APIResponse } from "@/Models/APIResponse";
 
@@ -125,49 +125,49 @@ class ProfileService {
       const bankListResponse = await this.httpClient.get(`/payment/user-payout-details`);
       const apiResponse: APIResponseForPayoutDetails = await bankListResponse.json()
       let details: PayoutCard = apiResponse.data
-      
+
       if (apiResponse.status === "success") {
         return details;
       }
 
       throw new Error(apiResponse.message)
     } catch (error) {
-      console.log("error",error);
-      
+      console.log("error", error);
+
       throw error
     }
   }
 
   async addPayoutCard(newCard: PayoutCard): Promise<void> {
     try {
-      const bankListResponse = await this.httpClient.post(`/payment/add-payout-card`,newCard);
+      const bankListResponse = await this.httpClient.post(`/payment/add-payout-card`, newCard);
       const response: APIResponse = await bankListResponse.json()
-      
+
       if (response.status === "success") {
         return;
       }
 
       throw new Error(response.message)
     } catch (error) {
-      console.log("error",error);
-      
+      console.log("error", error);
+
       throw error
     }
   }
 
   async updatePayoutCard(newCard: PayoutCard): Promise<void> {
     try {
-      const bankListResponse = await this.httpClient.put(`/payment/update-payout-card`,newCard);
+      const bankListResponse = await this.httpClient.put(`/payment/update-payout-card`, newCard);
       const response: APIResponse = await bankListResponse.json()
-      
+
       if (response.status === "success") {
         return;
       }
 
       throw new Error(response.message)
     } catch (error) {
-      console.log("error",error);
-      
+      console.log("error", error);
+
       throw error
     }
   }
