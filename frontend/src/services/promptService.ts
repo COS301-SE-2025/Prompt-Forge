@@ -1,7 +1,7 @@
-import { Query } from "@/Models/Query";
+import { Query } from "@/models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag } from "@/Models/Prompt";
-import { Review, ReviewsApiResponse } from '@/Models/Reviews';
+import { Prompt, Tag } from "@/models/Prompt";
+import { Review, ReviewsApiResponse } from '@/models/Reviews';
 
 export class PromptService {
   private httpClient = HttpClient;
