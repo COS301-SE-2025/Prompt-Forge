@@ -16,27 +16,27 @@ import {
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
-import { BankIdentifier, PaymentCard } from "@/Models/Payments"
+import { BankIdentifier, PayoutCard } from "@/Models/Payments"
+import { profileService } from "@/services/profileServices"
 
 interface PaymentOverlayProps {
-    process:"add"|"edit"
-    currentPaymentCard: PaymentCard | null,
+    process: "add" | "edit"
+    currentPaymentCard: PayoutCard | null,
     bankList: Array<BankIdentifier>,
-    setPaymentCard: (method: PaymentCard) => void
+    setPaymentCard: (method: PayoutCard) => void
 }
 
 
-export default function PaymentOverlay({process="add",currentPaymentCard,bankList,setPaymentCard}: PaymentOverlayProps) {
+export default function PaymentOverlay({ process = "add", currentPaymentCard, bankList, setPaymentCard }: PaymentOverlayProps) {
     const [error, setError] = useState("");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-    const [newCard, setNewCard] = useState<PaymentCard>(currentPaymentCard !== null ? currentPaymentCard : {
+    const [newCard, setNewCard] = useState<PayoutCard>(currentPaymentCard !== null ? currentPaymentCard : {
         bank: {
             code: "---",
             name: "Choose a bank..."
         },
         accountNumber: "",
         cardHolderName: "",
-        isDefault: true
     })
 
     const handleAddCard = () => {
@@ -47,12 +47,18 @@ export default function PaymentOverlay({process="add",currentPaymentCard,bankLis
                 return;
             }
             setError("")
-            setPaymentCard(newCard);
-            if(process==="add"){
+            if (process === "add") {
                 //make POST request
-                
+                profileService.addPayoutCard(newCard)
+                .then(()=>{
+                    setPaymentCard(newCard);
+                    setIsAddDialogOpen(false)
+                })
+                .catch((error:Error)=>{
+                    setError(error.message);
+                })
             }
-            else{
+            else {
                 //make PATCH request
 
             }
@@ -60,7 +66,6 @@ export default function PaymentOverlay({process="add",currentPaymentCard,bankLis
         catch (e) {
             //TODO:handle exception
         }
-        setIsAddDialogOpen(false)
     }
 
 
@@ -68,7 +73,7 @@ export default function PaymentOverlay({process="add",currentPaymentCard,bankLis
         <div className="w-full max-w-sm">
 
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                {process==="add"?
+                {process === "add" ?
                     <DialogTrigger className="p-2 rounded-md border border-border bg-[#3ebb9e] hover:bg-[#00674f] text-white" >
                         <Plus className="h-4 w-4 mr-2 inline" />
                         Add Payment Method

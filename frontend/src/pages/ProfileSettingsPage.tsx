@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucide-react"
 import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
-import { BankIdentifier, PaymentCard } from "@/Models/Payments"
+import { BankIdentifier, PayoutCard } from "@/Models/Payments"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -28,7 +28,8 @@ export default function ProfileSettingsPage() {
   const [saveStatus, setSaveStatus] = useState<null | "saving" | "success" | "error">(null)
   const [loading, setLoading] = useState<boolean>(true)
 
-  const [paymentCard, setPaymentCard] = useState<PaymentCard | null>(null)
+  //bank details
+  const [paymentCard, setPaymentCard] = useState<PayoutCard | null>(null)
   const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
 
   // Load profile data on mount

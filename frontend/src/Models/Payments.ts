@@ -1,8 +1,7 @@
-export interface PaymentCard {
+export interface PayoutCard {
     bank: BankIdentifier
     accountNumber: string
     cardHolderName: string
-    isDefault: boolean
 }
 
 export interface BankIdentifier {
