@@ -232,7 +232,7 @@ public class PaymentService {
     // Body
     Map<String, Object> body = new HashMap<>();
     body.put("business_name", username);
-    body.put("bank_code", payoutCard.getBankCode());
+    body.put("bank_code", payoutCard.getBank().getCode());
     body.put("account_number", payoutCard.getAccountNumber());
     body.put("percentage_charge", 0);
 
@@ -309,7 +309,7 @@ public class PaymentService {
     // Body
     Map<String, Object> body = new HashMap<>();
     body.put("business_name", username);
-    body.put("bank_code", payoutCard.getBankCode());
+    body.put("bank_code", payoutCard.getBank().getCode());
     body.put("account_number", payoutCard.getAccountNumber());
     body.put("percentage_charge", 0);
 
