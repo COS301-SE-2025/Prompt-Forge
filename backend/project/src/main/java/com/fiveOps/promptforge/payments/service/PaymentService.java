@@ -315,11 +315,11 @@ public class PaymentService {
 
     // Make the PUT request
     try {
-      ResponseEntity<PaystackResponseDTO<String>> responseEntity = restTemplate.exchange(
+      ResponseEntity<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>> responseEntity = restTemplate.exchange(
           gatewayURL + "subaccount/"+subaccountCode,
           HttpMethod.PUT, 
           request,
-          new ParameterizedTypeReference<PaystackResponseDTO<String>>() {
+          new ParameterizedTypeReference<PaystackResponseDTO<PaystackAddSubaccountResponseDTO>>() {
           });
 
       // Output response
@@ -327,7 +327,7 @@ public class PaymentService {
       System.out.println("Response Body:\n" + responseEntity.getBody() + "");
 
       System.out.println("before response");
-      PaystackResponseDTO<String> response = responseEntity.getBody();
+      PaystackResponseDTO<PaystackAddSubaccountResponseDTO> response = responseEntity.getBody();
       System.out.println("after response");
 
       System.out.println("dataaaa:" + response.getData());
@@ -335,6 +335,10 @@ public class PaymentService {
       if (responseEntity.getStatusCode() == HttpStatusCode.valueOf(200)) {
         if (response.getStatus()) {
           System.out.println("get status is trueeeeeee");
+          PaystackAddSubaccountResponseDTO data = response.getData();
+
+          System.out.println("subaccoutCode:" + data.getSubaccount_code());
+          System.out.println("isVerified:" + data.getVerification());
           return;
         }
       } else {
@@ -350,8 +354,10 @@ public class PaymentService {
         try {
           PaystackErrorResponseDTO errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
               PaystackErrorResponseDTO.class);
+              
           System.err.println("Validation failed: " + errorResponse.getMessage());
           throw new RuntimeException(errorResponse.getMessage());
+
         } catch (JsonMappingException runEx) {
           throw new RuntimeException("Internal server error");
         } catch (Exception runEx) {
