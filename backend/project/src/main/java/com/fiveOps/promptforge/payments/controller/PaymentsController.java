@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -105,22 +106,20 @@ public class PaymentsController {
     try {
       String userEmail = authentication.getName();
       UserDto user = userService.getUserByEmail(userEmail);
-      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
-        paymentService.addSubaccount(user.getUsername(),request);
+      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification = paymentService
+          .addSubaccount(user.getUsername(), request);
 
       bankDetailsService.addPayoutDetails(user.getUserId(), request,
-       subaccountCodeAndAccountVerification);
-      
-       return ResponseEntity.ok(
-        new APIResponse("success","Payout card added successfully"));
-    } 
-    catch (DataAccessResourceFailureException e) {
+          subaccountCodeAndAccountVerification);
+
+      return ResponseEntity.ok(
+          new APIResponse("success", "Payout details added successfully"));
+    } catch (DataAccessResourceFailureException e) {
       e.printStackTrace();
       return ResponseEntity.badRequest().body(
-        new APIResponse("error", 
-        "Internal server error, please try again later"));
-    }
-    catch (Exception e) {
+          new APIResponse("error",
+              "Internal server error, please try again later"));
+    } catch (Exception e) {
 
       System.err.println(e.getMessage());
       e.printStackTrace();
@@ -129,5 +128,31 @@ public class PaymentsController {
     }
   }
 
+  @PutMapping("/update-payout-card")
+  public ResponseEntity<APIResponse> editPayoutCard(
+      @RequestBody PayoutCardDTO request, Authentication authentication) {
+    try {
 
+      String userEmail = authentication.getName();
+      UserDto user = userService.getUserByEmail(userEmail);
+
+      String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(user.getUserId());
+      paymentService.updateSubaccount(subaccountCode, user.getUsername(), request);
+      bankDetailsService.updatePayoutDetails(user.getUserId(), request,
+          subaccountCode);
+      return ResponseEntity.ok(new APIResponse(
+          "success",
+          "Payout details updated successfully"));
+    } catch (DataAccessResourceFailureException e) {
+      e.printStackTrace();
+      return ResponseEntity.badRequest()
+          .body(new APIResponse("error", "Internal server error, please try again later"));
+    } catch (Exception e) {
+
+      System.err.println(e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.badRequest()
+          .body(new APIResponse("error", e.getMessage()));
+    }
+  }
 }
