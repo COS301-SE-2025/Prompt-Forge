@@ -104,13 +104,18 @@ public class PaymentsController {
     try {
       String userEmail = authentication.getName();
       UserDto user = userService.getUserByEmail(userEmail);
-      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
-          paymentService.addSubaccount(user.getUsername(), request);
 
-      bankDetailsService.addPayoutDetails(
-          user.getUserId(), request, subaccountCodeAndAccountVerification);
-
-      return ResponseEntity.ok(new APIResponse("success", "Payout details added successfully"));
+      Integer detailsCount = bankDetailsService.countPayoutDetailsByUserId(user.getUserId());
+      if (detailsCount < 1) {
+        PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
+            paymentService.addSubaccount(user.getUsername(), request);
+  
+        bankDetailsService.addPayoutDetails(
+            user.getUserId(), request, subaccountCodeAndAccountVerification);
+  
+        return ResponseEntity.ok(new APIResponse("success", "Payout details added successfully"));
+      }
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new APIResponse("error", "Payout details already exist for user"));
     } catch (DataAccessResourceFailureException e) {
       e.printStackTrace();
       return ResponseEntity.badRequest()
