@@ -5,32 +5,33 @@ applications:
       phases:
         preBuild:
           commands:
-            # Set Node.js to v22.12.0 first
-            - nvm install 22.12.0
-            - nvm use 22.12.0
+            # Set Node.js 
+            - nvm install 20.13.1
+            - nvm use 20.13.1
             
-            # Completely clean the environment
-            - rm -rf node_modules package-lock.json .npmrc
+            # Complete clean slate
+            - rm -rf node_modules package-lock.json .npmrc .vite
             
-            # Create fresh package-lock with force install
-            - npm install --package-lock-only --legacy-peer-deps
+            # Create fresh package-lock
+            - npm install --package-lock-only
+            
+            # Install Vite and React plugin first with exact versions
+            - npm install vite@5.1.4 @vitejs/plugin-react@4.2.1 --save-dev --legacy-peer-deps --force
+            
+            # Install TypeScript and path 
+            - npm install typescript@latest @types/node@latest --save-dev --legacy-peer-deps
+            
+            # Install remaining dependencies
             - npm install --legacy-peer-deps --force
-            
-            # Install Vite and React plugin with exact versions
-            - npm install --save-dev vite@5.2.8 @vitejs/plugin-react@4.2.1 --legacy-peer-deps --force
-            
-            # Install TypeScript and other dev dependencies
-            - npm install --save-dev typescript@latest --legacy-peer-deps --force
-            - npm install --save-dev eslint@latest @eslint/js@latest globals@latest eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest typescript-eslint@latest @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest --legacy-peer-deps
             
             # Verify installations
             - npm ls vite
-            - npm ls @vitejs/plugin-react
+            - ./node_modules/.bin/vite --version
             - ls -la node_modules/.bin/vite
             
         build:
           commands:
-            # Use full path to Vite binary
+            # Use direct path to Vite binary
             - ./node_modules/.bin/vite build --mode production
           env:
             VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
