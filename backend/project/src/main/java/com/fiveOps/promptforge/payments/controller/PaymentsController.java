@@ -3,6 +3,7 @@ package com.fiveOps.promptforge.payments.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,11 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
-import com.fiveOps.promptforge.payments.dto.InitializePaymentRequest;
+import com.fiveOps.promptforge.payments.dto.InitializePaymentRequestDTO;
+import com.fiveOps.promptforge.payments.dto.PayoutCardDTO;
+import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
 import com.fiveOps.promptforge.payments.projection.PaymentDetailsProjection;
 import com.fiveOps.promptforge.payments.service.BankDetailsService;
 import com.fiveOps.promptforge.payments.service.PaymentService;
+import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +38,7 @@ public class PaymentsController {
 
   @PostMapping("/initialize")
   public ResponseEntity<APIResponse> checkoutCart(
-      @RequestBody InitializePaymentRequest request, Authentication authentication) {
+      @RequestBody InitializePaymentRequestDTO request, Authentication authentication) {
     try {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
@@ -93,6 +97,37 @@ public class PaymentsController {
               new APIResponse(
                   "error", "Failed to fetch bank list: " + e.getMessage()));
     }
-    
   }
+
+  @PostMapping("/add-payout-card")
+  public ResponseEntity<APIResponse> addPayoutCard(
+      @RequestBody PayoutCardDTO request, Authentication authentication) {
+    try {
+      String userEmail = authentication.getName();
+      UserDto user = userService.getUserByEmail(userEmail);
+      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
+        paymentService.addSubaccount(user.getUsername(),request);
+
+      bankDetailsService.addPayoutDetails(user.getUserId(), request,
+       subaccountCodeAndAccountVerification);
+      
+       return ResponseEntity.ok(
+        new APIResponse("success","Payout card added successfully"));
+    } 
+    catch (DataAccessResourceFailureException e) {
+      e.printStackTrace();
+      return ResponseEntity.badRequest().body(
+        new APIResponse("error", 
+        "Internal server error, please try again later"));
+    }
+    catch (Exception e) {
+
+      System.err.println(e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.badRequest()
+          .body(new APIResponse("error", e.getMessage()));
+    }
+  }
+
+
 }
