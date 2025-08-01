@@ -1,10 +1,10 @@
 package com.fiveOps.promptforge.payments.dto;
 
-public class PaystackErrorResponse<T> extends PaystackResponseDTO<T> {
+public class PaystackErrorResponseDTO<T> extends PaystackResponseDTO<T> {
     private String type;
     private String code;
 
-    public PaystackErrorResponse(Boolean status, String message, T data, String type, String code) {
+    public PaystackErrorResponseDTO(Boolean status, String message, T data, String type, String code) {
         super(status, message, data);
         this.type = type;
         this.code = code;

@@ -26,7 +26,7 @@ import com.fiveOps.promptforge.payments.dto.BankDTO;
 import com.fiveOps.promptforge.payments.dto.PayoutCardDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackBankListResponseDTO;
-import com.fiveOps.promptforge.payments.dto.PaystackErrorResponse;
+import com.fiveOps.promptforge.payments.dto.PaystackErrorResponseDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackResponseDTO;
 import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
 import com.fiveOps.promptforge.user_profile.service.UserService;
@@ -276,8 +276,80 @@ public class PaymentService {
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().value() == 400) {
         try {
-          PaystackErrorResponse errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
-              PaystackErrorResponse.class);
+          PaystackErrorResponseDTO errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
+              PaystackErrorResponseDTO.class);
+          System.err.println("Validation failed: " + errorResponse.getMessage());
+          throw new RuntimeException(errorResponse.getMessage());
+        } catch (JsonMappingException runEx) {
+          throw new RuntimeException("Internal server error");
+        } catch (Exception runEx) {
+          throw runEx;
+        }
+      } else {
+        System.err.println("Unhandled error: " + e.getMessage());
+        throw new RuntimeException(e.getMessage());
+      }
+    } catch (Exception e) {
+      System.out.println("last exception:" + e.getMessage());
+      throw e;
+    }
+  }
+
+  
+  public void updateSubaccount(String subaccountCode, String username, PayoutCardDTO payoutCard) throws Exception {
+    String secretKey = "Bearer " + paystackSecretKey;
+
+    // headers
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", secretKey);
+
+    // Body
+    Map<String, Object> body = new HashMap<>();
+    body.put("business_name", username);
+    body.put("bank_code", payoutCard.getBankCode());
+    body.put("account_number", payoutCard.getAccountNumber());
+    body.put("percentage_charge", 0);
+
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+    // Make the PUT request
+    try {
+      ResponseEntity<PaystackResponseDTO<String>> responseEntity = restTemplate.exchange(
+          gatewayURL + "subaccount/"+subaccountCode,
+          HttpMethod.PUT, 
+          request,
+          new ParameterizedTypeReference<PaystackResponseDTO<String>>() {
+          });
+
+      // Output response
+      System.out.println("\n\nStatus Code: " + responseEntity.getStatusCode());
+      System.out.println("Response Body:\n" + responseEntity.getBody() + "");
+
+      System.out.println("before response");
+      PaystackResponseDTO<String> response = responseEntity.getBody();
+      System.out.println("after response");
+
+      System.out.println("dataaaa:" + response.getData());
+
+      if (responseEntity.getStatusCode() == HttpStatusCode.valueOf(200)) {
+        if (response.getStatus()) {
+          System.out.println("get status is trueeeeeee");
+          return;
+        }
+      } else {
+        if (responseEntity.getStatusCode() == HttpStatusCode.valueOf(400)) {
+          System.out.println("\n\n hereeeeeeeeeee throwing response.getmessage");
+          throw new RuntimeException(response.getMessage());
+        }
+      }
+      System.out.println("status:" + response.getMessage());
+      throw new RuntimeException("Unable to update payout details");
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().value() == 400) {
+        try {
+          PaystackErrorResponseDTO errorResponse = objectMapper.readValue(e.getResponseBodyAsString(),
+              PaystackErrorResponseDTO.class);
           System.err.println("Validation failed: " + errorResponse.getMessage());
           throw new RuntimeException(errorResponse.getMessage());
         } catch (JsonMappingException runEx) {
