@@ -5,12 +5,9 @@ applications:
       phases:
         preBuild:
           commands:
-
-            - npm install 
-            - npm install --include=dev --legacy-peer-deps
-            - npm install -g vite
-            - npm install vite --save-dev
-            - npm install --save-dev eslint@latest @eslint/js@latest globals@latest eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest typescript-eslint@latest @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest
+            - rm -rf node_modules package-lock.json
+            - npm install --legacy-peer-deps
+            - npm install --save-dev vite@latest eslint@latest @eslint/js@latest globals@latest eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest typescript-eslint@latest @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest
             - npm ls vite
         build:
           commands:
@@ -24,6 +21,8 @@ applications:
       cache:
         paths:
           - node_modules/**/*
+          - .vite/**/*
+          - dist/**/*
       customHeaders:
         - pattern: '**/*'
           headers:
