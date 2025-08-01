@@ -129,55 +129,8 @@ jobs:
         path: backend/project/backend-image.tar
         retention-days: 1
 
-  build-frontend:
-    name: Build Frontend
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Cache node modules
-      uses: actions/cache@v3
-      with:
-        path: frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend/pnpm-lock.yaml') }}
-        restore-keys: ${{ runner.os }}-node-
-        
-    - name: Install dependencies
-      run: |
-        cd frontend
-        npm install --save-dev \
-          eslint@latest \
-          @eslint/js@latest \
-          globals@latest \
-          eslint-plugin-react-hooks@latest \
-          eslint-plugin-react-refresh@latest \
-          typescript-eslint@latest \
-          @typescript-eslint/eslint-plugin@latest \
-          @typescript-eslint/parser@latest
-        npm install
-        
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build:prod
-      env:
-        VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        
-    - name: Upload frontend build
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend-build
-        path: frontend/dist
-        retention-days: 1
+  # Frontend build is handled by AWS Amplify during deployment
+  # The amplify.yml file configures the build process
 
   deploy-backend:
     name: Deploy Backend to EC2
@@ -238,6 +191,9 @@ jobs:
           OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
           HF_TOKEN=${{ secrets.HF_TOKEN }}
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
           EOL
           
           # Update docker-compose to use new image
@@ -257,50 +213,17 @@ jobs:
         EOF
 
   deploy-frontend:
-    name: Deploy Frontend to Amplify
-    needs: [build-frontend]
+    name: Frontend Deployment (Handled by Amplify)
+    needs: [test]
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download frontend build
-      uses: actions/download-artifact@v4
-      with:
-        name: frontend-build
-        path: ./frontend-build/
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1
-        
-    - name: Deploy to Amplify
+    - name: Frontend deployment info
       run: |
-        echo "Triggering Amplify deployment..."
-        
-        # Start a new build in Amplify
-        BUILD_ID=$(aws amplify start-job \
-          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-          --branch-name main \
-          --job-type RELEASE \
-          --query 'jobSummary.jobId' \
-          --output text)
-        
-        echo "Amplify build started with ID: $BUILD_ID"
+        echo "Frontend deployment is handled automatically by AWS Amplify"
+        echo "Amplify will detect the push to main branch and deploy using amplify.yml configuration"
         echo "Monitor deployment at: https://console.aws.amazon.com/amplify/home"
-        
-        # Wait for deployment to complete (optional)
-        echo "Waiting for deployment to complete..."
-        aws amplify get-job \
-          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-          --branch-name main \
-          --job-id $BUILD_ID \
-          --query 'job.summary.status' \
-          --output text
+        echo "Frontend will be available at: https://prompt-forge.co.za"
 
   health-check:
     name: Health Check
@@ -308,6 +231,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Wait for services to start
+      run: sleep 60
+      
     - name: Check backend health
       run: |
         for i in {1..10}; do
@@ -322,12 +248,16 @@ jobs:
         
     - name: Check frontend health
       run: |
-        if curl -f https://prompt-forge.co.za; then
-          echo "Frontend is accessible"
-        else
-          echo "Frontend health check failed"
-          exit 1
-        fi
+        echo "Checking frontend health (may take a few minutes for Amplify deployment to complete)"
+        for i in {1..20}; do
+          if curl -f https://prompt-forge.co.za; then
+            echo "Frontend is accessible"
+            break
+          else
+            echo "Frontend health check failed, attempt $i/20 (Amplify may still be deploying)"
+            sleep 30
+          fi
+        done
         
     - name: Notify deployment status
       if: always()

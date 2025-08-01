@@ -13,7 +13,7 @@ import {
   //Lock
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
-import { Category, CategoryColors } from "@/Models/Prompt"
+import { Category, CategoryColors } from "@/models/Prompt"
 import { PromptService } from "@/services/promptService"
 
 // Update the interface to make onEdit optional

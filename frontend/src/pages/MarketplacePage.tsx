@@ -4,7 +4,7 @@ import { Input } from "../components/ui/Input"
 import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Tag, MarketplacePrompt } from "@/Models/Prompt"
+import { Tag, MarketplacePrompt } from "@/models/Prompt"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 const PROMPTS_PER_PAGE = 12
