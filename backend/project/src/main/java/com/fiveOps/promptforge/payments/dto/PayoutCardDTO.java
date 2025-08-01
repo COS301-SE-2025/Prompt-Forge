@@ -5,20 +5,10 @@ public class PayoutCardDTO {
   protected String accountNumber;
   protected String accountHolder;
 
-
-
   public PayoutCardDTO(String bankCode, String bankName, String accountNumber, String accountHolder) {
     bank = new BankDTO(bankName, bankCode);
     this.accountNumber = accountNumber;
     this.accountHolder = accountHolder;
-  }
-
-  public String getBankCode() {
-    return bank.getCode();
-  }
-
-  public String getBankName() {
-    return bank.getName();
   }
 
   public String getAccountNumber() {
@@ -27,6 +17,10 @@ public class PayoutCardDTO {
 
   public String getAccountHolder() {
     return accountHolder;
+  }
+
+  public BankDTO getBank() {
+    return this.bank;
   }
 
   public void setBank(BankDTO bank) {

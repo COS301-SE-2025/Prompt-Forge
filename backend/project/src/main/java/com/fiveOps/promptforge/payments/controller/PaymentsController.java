@@ -44,8 +44,8 @@ public class PaymentsController {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
 
-      TransactionInitializationResponse transactionAccessCodeAndReference =
-          paymentService.initializePayment(userEmail, prompts, request.getTotal());
+      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService.initializePayment(userEmail,
+          prompts, request.getTotal());
 
       return ResponseEntity.ok(
           new APIResponse(
@@ -60,20 +60,20 @@ public class PaymentsController {
     }
   }
 
-  @GetMapping("/user-payment-details")
+  @GetMapping("/user-payout-details")
   public ResponseEntity<APIResponse> bankDetails(Authentication authentication) {
     try {
       String userEmail = authentication.getName();
       UUID userId = userService.getUserIdByEmail(userEmail);
       PayoutCardWithSubaccountCodeDTO detailsWithSubaccountCode = bankDetailsService.getBankDetails(userId);
-      
+
       if (detailsWithSubaccountCode == null) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new APIResponse("error", "payment details not found", null));
       }
 
-      PayoutCardDTO details = new PayoutCardDTO(detailsWithSubaccountCode.getBankCode(),
-          detailsWithSubaccountCode.getBankName(), detailsWithSubaccountCode.getAccountNumber(),
+      PayoutCardDTO details = new PayoutCardDTO(detailsWithSubaccountCode.getBank().getCode(),
+          detailsWithSubaccountCode.getBank().getName(), detailsWithSubaccountCode.getAccountNumber(),
           detailsWithSubaccountCode.getAccountHolder());
 
       return ResponseEntity.ok(new APIResponse("success", "Payment details found", details));
@@ -113,8 +113,8 @@ public class PaymentsController {
 
       Integer detailsCount = bankDetailsService.countPayoutDetailsByUserId(user.getUserId());
       if (detailsCount < 1) {
-        PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
-            paymentService.addSubaccount(user.getUsername(), request);
+        PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification = paymentService
+            .addSubaccount(user.getUsername(), request);
 
         bankDetailsService.addPayoutDetails(
             user.getUserId(), request, subaccountCodeAndAccountVerification);

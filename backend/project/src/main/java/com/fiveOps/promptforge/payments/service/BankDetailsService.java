@@ -45,8 +45,8 @@ public class BankDetailsService {
 
     bankAccount.setUser(new User());
     bankAccount.getUser().setUserId(userID);
-    bankAccount.setBankName(payoutCard.getBankName());
-    bankAccount.setBankCode(payoutCard.getBankCode());
+    bankAccount.setBankName(payoutCard.getBank().getName());
+    bankAccount.setBankCode(payoutCard.getBank().getCode());
     bankAccount.setAccountNumber(payoutCard.getAccountNumber());
     bankAccount.setAccountHolder(payoutCard.getAccountHolder());
     bankAccount.setVerified(subaccountCodeAndAccountVerification.getVerification());
@@ -65,8 +65,8 @@ public class BankDetailsService {
 
     bankAccount.setUser(new User());
     bankAccount.getUser().setUserId(userID);
-    bankAccount.setBankName(payoutCard.getBankName());
-    bankAccount.setBankCode(payoutCard.getBankCode());
+    bankAccount.setBankName(payoutCard.getBank().getName());
+    bankAccount.setBankCode(payoutCard.getBank().getCode());
     bankAccount.setAccountNumber(payoutCard.getAccountNumber());
     bankAccount.setAccountHolder(payoutCard.getAccountHolder());
     bankAccount.setPaystackSubaccountCode(subaccountCode);
