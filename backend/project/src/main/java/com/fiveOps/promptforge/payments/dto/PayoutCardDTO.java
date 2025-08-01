@@ -1,9 +1,17 @@
 package com.fiveOps.promptforge.payments.dto;
 
 public class PayoutCardDTO {
-  private BankDTO bank;
-  private String accountNumber;
-  private String cardHolderName;
+  protected BankDTO bank;
+  protected String accountNumber;
+  protected String accountHolder;
+
+
+
+  public PayoutCardDTO(String bankCode, String bankName, String accountNumber, String accountHolder) {
+    bank = new BankDTO(bankName, bankCode);
+    this.accountNumber = accountNumber;
+    this.accountHolder = accountHolder;
+  }
 
   public String getBankCode() {
     return bank.getCode();
@@ -17,8 +25,8 @@ public class PayoutCardDTO {
     return accountNumber;
   }
 
-  public String getCardHolderName() {
-    return cardHolderName;
+  public String getAccountHolder() {
+    return accountHolder;
   }
 
   public void setBank(BankDTO bank) {
@@ -29,7 +37,7 @@ public class PayoutCardDTO {
     this.accountNumber = accountNumber;
   }
 
-  public void setCardHolderName(String cardHolderName) {
-    this.cardHolderName = cardHolderName;
+  public void setAccountHolderName(String accountHolder) {
+    this.accountHolder = accountHolder;
   }
 }

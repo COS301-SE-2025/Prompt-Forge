@@ -18,9 +18,9 @@ import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.payments.dto.InitializePaymentRequestDTO;
 import com.fiveOps.promptforge.payments.dto.PayoutCardDTO;
+import com.fiveOps.promptforge.payments.dto.PayoutCardWithSubaccountCodeDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.dto.TransactionInitializationResponse;
-import com.fiveOps.promptforge.payments.projection.PaymentDetailsProjection;
 import com.fiveOps.promptforge.payments.service.BankDetailsService;
 import com.fiveOps.promptforge.payments.service.PaymentService;
 import com.fiveOps.promptforge.user_profile.dto.UserDto;
@@ -65,11 +65,17 @@ public class PaymentsController {
     try {
       String userEmail = authentication.getName();
       UUID userId = userService.getUserIdByEmail(userEmail);
-      PaymentDetailsProjection details = bankDetailsService.getBankDetails(userId);
-      if (details == null) {
+      PayoutCardWithSubaccountCodeDTO detailsWithSubaccountCode = bankDetailsService.getBankDetails(userId);
+      
+      if (detailsWithSubaccountCode == null) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new APIResponse("error", "payment details not found", null));
       }
+
+      PayoutCardDTO details = new PayoutCardDTO(detailsWithSubaccountCode.getBankCode(),
+          detailsWithSubaccountCode.getBankName(), detailsWithSubaccountCode.getAccountNumber(),
+          detailsWithSubaccountCode.getAccountHolder());
+
       return ResponseEntity.ok(new APIResponse("success", "Payment details found", details));
     } catch (Exception e) {
       e.printStackTrace();
