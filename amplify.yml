@@ -5,6 +5,7 @@ applications:
       phases:
         preBuild:
           commands:
+
             - npm install 
             - npm install --include=dev --legacy-peer-deps
             - npm install -g vite
