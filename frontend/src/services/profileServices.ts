@@ -1,4 +1,4 @@
-import { BankIdentifier } from "@/Models/Payments";
+import { BankIdentifier, PayoutCard } from "@/Models/Payments";
 import HttpClient from "./httpClient";
 import { APIResponse } from "@/Models/APIResponse";
 
@@ -100,12 +100,12 @@ class ProfileService {
     }
   }
 
-  async getBankList():Promise<Array<BankIdentifier>> {
+  async getBankList(): Promise<Array<BankIdentifier>> {
     try {
       const bankListResponse = await this.httpClient.get(`/payment/bank-list`);
       const response: APIResponseWithBankList = await bankListResponse.json()
 
-      if (response.status === "success"){
+      if (response.status === "success") {
         return response.data;
       }
 
@@ -113,6 +113,23 @@ class ProfileService {
     } catch (error) {
       console.error(error);
       return [];
+    }
+  }
+
+  async addPayoutCard(newCard: PayoutCard): Promise<void> {
+    try {
+      const bankListResponse = await this.httpClient.post(`/payment/add-payout-card`,newCard);
+      const response: APIResponse = await bankListResponse.json()
+      
+      if (response.status === "success") {
+        return;
+      }
+
+      throw new Error(response.message)
+    } catch (error) {
+      console.log("error",error);
+      
+      throw error
     }
   }
 }
