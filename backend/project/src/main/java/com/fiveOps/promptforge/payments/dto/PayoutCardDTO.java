@@ -8,7 +8,7 @@ public class PayoutCardDTO {
   public String getBankCode() {
     return bank.getCode();
   }
-  
+
   public String getBankName() {
     return bank.getName();
   }
@@ -32,5 +32,4 @@ public class PayoutCardDTO {
   public void setCardHolderName(String cardHolderName) {
     this.cardHolderName = cardHolderName;
   }
-
 }

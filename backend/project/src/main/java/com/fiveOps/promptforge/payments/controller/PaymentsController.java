@@ -44,8 +44,8 @@ public class PaymentsController {
       String userEmail = authentication.getName();
       List<CartItemDTO> prompts = request.getPrompts();
 
-      TransactionInitializationResponse transactionAccessCodeAndReference = paymentService.initializePayment(userEmail,
-          prompts, request.getTotal());
+      TransactionInitializationResponse transactionAccessCodeAndReference =
+          paymentService.initializePayment(userEmail, prompts, request.getTotal());
 
       return ResponseEntity.ok(
           new APIResponse(
@@ -94,9 +94,7 @@ public class PaymentsController {
     } catch (Exception e) {
       e.printStackTrace();
       return ResponseEntity.badRequest()
-          .body(
-              new APIResponse(
-                  "error", "Failed to fetch bank list: " + e.getMessage()));
+          .body(new APIResponse("error", "Failed to fetch bank list: " + e.getMessage()));
     }
   }
 
@@ -106,25 +104,22 @@ public class PaymentsController {
     try {
       String userEmail = authentication.getName();
       UserDto user = userService.getUserByEmail(userEmail);
-      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification = paymentService
-          .addSubaccount(user.getUsername(), request);
+      PaystackAddSubaccountResponseDTO subaccountCodeAndAccountVerification =
+          paymentService.addSubaccount(user.getUsername(), request);
 
-      bankDetailsService.addPayoutDetails(user.getUserId(), request,
-          subaccountCodeAndAccountVerification);
+      bankDetailsService.addPayoutDetails(
+          user.getUserId(), request, subaccountCodeAndAccountVerification);
 
-      return ResponseEntity.ok(
-          new APIResponse("success", "Payout details added successfully"));
+      return ResponseEntity.ok(new APIResponse("success", "Payout details added successfully"));
     } catch (DataAccessResourceFailureException e) {
       e.printStackTrace();
-      return ResponseEntity.badRequest().body(
-          new APIResponse("error",
-              "Internal server error, please try again later"));
+      return ResponseEntity.badRequest()
+          .body(new APIResponse("error", "Internal server error, please try again later"));
     } catch (Exception e) {
 
       System.err.println(e.getMessage());
       e.printStackTrace();
-      return ResponseEntity.badRequest()
-          .body(new APIResponse("error", e.getMessage()));
+      return ResponseEntity.badRequest().body(new APIResponse("error", e.getMessage()));
     }
   }
 
@@ -138,11 +133,8 @@ public class PaymentsController {
 
       String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(user.getUserId());
       paymentService.updateSubaccount(subaccountCode, user.getUsername(), request);
-      bankDetailsService.updatePayoutDetails(user.getUserId(), request,
-          subaccountCode);
-      return ResponseEntity.ok(new APIResponse(
-          "success",
-          "Payout details updated successfully"));
+      bankDetailsService.updatePayoutDetails(user.getUserId(), request, subaccountCode);
+      return ResponseEntity.ok(new APIResponse("success", "Payout details updated successfully"));
     } catch (DataAccessResourceFailureException e) {
       e.printStackTrace();
       return ResponseEntity.badRequest()
@@ -151,8 +143,7 @@ public class PaymentsController {
 
       System.err.println(e.getMessage());
       e.printStackTrace();
-      return ResponseEntity.badRequest()
-          .body(new APIResponse("error", e.getMessage()));
+      return ResponseEntity.badRequest().body(new APIResponse("error", e.getMessage()));
     }
   }
 }

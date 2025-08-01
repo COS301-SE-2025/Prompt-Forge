@@ -13,16 +13,15 @@ public class PaystackAddSubaccountResponseDTO {
     return is_verified;
   }
 
-  public void setIs_Verified(Boolean is_verified) {
+  public void setIsVerified(Boolean is_verified) {
     this.is_verified = is_verified;
   }
 
-  public String getSubaccount_code() {
+  public String getSubaccountCode() {
     return subaccount_code;
   }
 
-  public void setSubaccount_code(String subaccount_code) {
+  public void setSubaccountCode(String subaccount_code) {
     this.subaccount_code = subaccount_code;
   }
-
 }
