@@ -21,16 +21,16 @@ import { profileService } from "@/services/profileServices"
 
 interface PaymentOverlayProps {
     process: "add" | "edit"
-    currentPaymentCard: PayoutCard | null,
+    currentPayoutCard: PayoutCard | null,
     bankList: Array<BankIdentifier>,
     setPaymentCard: (method: PayoutCard) => void
 }
 
 
-export default function PaymentOverlay({ process = "add", currentPaymentCard, bankList, setPaymentCard }: PaymentOverlayProps) {
+export default function PaymentOverlay({ process = "add", currentPayoutCard, bankList, setPaymentCard }: PaymentOverlayProps) {
     const [error, setError] = useState("");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-    const [newCard, setNewCard] = useState<PayoutCard>(currentPaymentCard !== null ? currentPaymentCard : {
+    const [newCard, setNewCard] = useState<PayoutCard>(currentPayoutCard !== null ? currentPayoutCard : {
         bank: {
             code: "---",
             name: "Choose a bank..."
@@ -39,7 +39,7 @@ export default function PaymentOverlay({ process = "add", currentPaymentCard, ba
         cardHolderName: "",
     })
 
-    const handleAddCard = () => {
+    const handleSubmit = () => {
         try {
             if (!newCard || newCard.bank.name === "Choose a bank..." ||
                 newCard.accountNumber === "" || newCard.cardHolderName === "") {
@@ -49,6 +49,8 @@ export default function PaymentOverlay({ process = "add", currentPaymentCard, ba
             setError("")
             if (process === "add") {
                 //make POST request
+                
+
                 profileService.addPayoutCard(newCard)
                 .then(()=>{
                     setPaymentCard(newCard);
@@ -59,8 +61,22 @@ export default function PaymentOverlay({ process = "add", currentPaymentCard, ba
                 })
             }
             else {
-                //make PATCH request
-
+                if (newCard.accountNumber === currentPayoutCard?.accountNumber
+                    && newCard.cardHolderName === currentPayoutCard?.cardHolderName
+                    && newCard.bank.code === currentPayoutCard?.bank.code
+                    && newCard.bank.name === currentPayoutCard?.bank.name) {
+                        setError("No changes were made")
+                        return
+                }
+                //make PUT request
+                profileService.updatePayoutCard(newCard)
+                    .then(() => {
+                        setPaymentCard(newCard);
+                        setIsAddDialogOpen(false)
+                    })
+                    .catch((error: Error) => {
+                        setError(error.message);
+                    })
             }
         }
         catch (e) {
@@ -140,7 +156,7 @@ export default function PaymentOverlay({ process = "add", currentPaymentCard, ba
                         <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleAddCard} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Add Card</Button>
+                        <Button onClick={handleSubmit} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">{process == "add"?"Add Card":"Edit Card"}</Button>
 
                     </DialogFooter>
                     {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
