@@ -132,6 +132,22 @@ class ProfileService {
       throw error
     }
   }
+  async updatePayoutCard(newCard: PayoutCard): Promise<void> {
+    try {
+      const bankListResponse = await this.httpClient.put(`/payment/update-payout-card`,newCard);
+      const response: APIResponse = await bankListResponse.json()
+      
+      if (response.status === "success") {
+        return;
+      }
+
+      throw new Error(response.message)
+    } catch (error) {
+      console.log("error",error);
+      
+      throw error
+    }
+  }
 }
 
 export const profileService = new ProfileService();
