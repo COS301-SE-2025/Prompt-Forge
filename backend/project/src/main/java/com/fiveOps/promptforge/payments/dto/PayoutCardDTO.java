@@ -5,7 +5,8 @@ public class PayoutCardDTO {
   protected String accountNumber;
   protected String accountHolder;
 
-  public PayoutCardDTO(String bankCode, String bankName, String accountNumber, String accountHolder) {
+  public PayoutCardDTO(
+      String bankCode, String bankName, String accountNumber, String accountHolder) {
     bank = new BankDTO(bankName, bankCode);
     this.accountNumber = accountNumber;
     this.accountHolder = accountHolder;

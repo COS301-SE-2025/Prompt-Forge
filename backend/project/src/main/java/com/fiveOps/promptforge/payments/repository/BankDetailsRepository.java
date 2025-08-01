@@ -13,8 +13,7 @@ import com.fiveOps.promptforge.payments.model.BankAccount;
 @Repository
 public interface BankDetailsRepository extends JpaRepository<BankAccount, UUID> {
 
-  PayoutCardWithSubaccountCodeDTO findByUserUserId(
-      @Param("user_id") UUID userId);
+  PayoutCardWithSubaccountCodeDTO findByUserUserId(@Param("user_id") UUID userId);
 
   Integer countByUserUserId(@Param("user_id") UUID userId);
 
