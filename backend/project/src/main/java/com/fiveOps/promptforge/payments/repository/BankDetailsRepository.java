@@ -15,4 +15,6 @@ public interface BankDetailsRepository extends JpaRepository<BankAccount, UUID> 
 
   PaymentDetailsProjectionWithPaystackSubaccountCode findByUserUserId(
       @Param("user_id") UUID userId);
+  
+  Integer deleteByUserUserId(@Param("user_id") UUID userId);
 }
