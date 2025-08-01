@@ -438,7 +438,7 @@ export default function ProfileSettingsPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <PaymentOverlay process="edit" bankList={bankList} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
+                            <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={paymentCard} setPaymentCard={setPaymentCard} />
 
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
                               <Trash2 className="h-5 w-5" />
@@ -448,7 +448,7 @@ export default function ProfileSettingsPage() {
                       </div>
                       :
                       <div className="mt-4">
-                        <PaymentOverlay process="add" bankList={bankList} currentPaymentCard={paymentCard} setPaymentCard={setPaymentCard} />
+                        <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={paymentCard} setPaymentCard={setPaymentCard} />
                       </div>
                   }
 
