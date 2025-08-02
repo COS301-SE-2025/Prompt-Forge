@@ -1,4 +1,3 @@
-import { APIResponse } from "@/Models/APIResponse";
 import HttpClient from "./httpClient";
 import { EnrichedPrompt } from "@/models/CartPrompt";
 
@@ -8,8 +7,9 @@ export interface PaymentAccessCodeAndReference{
   customerEmail:string
   reference:string
 }
-
-interface APIResponseWithPaymentAccessCodeAndReference extends APIResponse {
+interface APIResponse{
+  status:"success"|"error"
+  message:string
   data: PaymentAccessCodeAndReference
 }
 
@@ -106,7 +106,7 @@ export class CartService {
       
       if (total > 0) {
         const Response = await this.httpClient.post(`/payment/initialize`, {total: total, "prompts": mappedPrompts });
-        const rsp: APIResponseWithPaymentAccessCodeAndReference = await Response.json();
+        const rsp:APIResponse = await Response.json();
         if(rsp.status == "success"){
           return rsp.data
         }
