@@ -2,7 +2,7 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings, Sparkles } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
@@ -933,6 +933,16 @@ const fallbackToWorkingModel = async () => {
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
+              {/* Optimizer button styled to match the OptimizerPage main button */}
+              <Link to="/optimizer">
+                <Button
+                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
+                  title="Optimize Prompt"
+                  size="icon"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button 
                 variant="ghost" 
                 size="icon" 

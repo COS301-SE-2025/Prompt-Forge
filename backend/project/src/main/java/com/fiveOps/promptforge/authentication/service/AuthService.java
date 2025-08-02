@@ -63,6 +63,16 @@ public class AuthService {
     return jwtUtil.generateToken(user.getEmail());
   }
 
+  public void forgotPassword(String email) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+    // Logic to handle forgot password (e.g., send reset link)
+    // This is a placeholder for actual implementation
+  }
+
   public User getUserByEmail(String email) {
     return userRepository
         .findByEmail(email)
