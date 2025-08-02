@@ -95,15 +95,15 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                         Add Payment Method
                     </DialogTrigger>
                     :
-                    <DialogTrigger className="p-2" >
+                    <DialogTrigger className="p-2 rounded-md  font-bold dark:text-[#3ebb9e] hover:bg-muted" >
                         Edit
                     </DialogTrigger>
 
                 }
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle><CreditCardIcon className="inline mr-2" />Add Payment Card</DialogTitle>
-                        <DialogDescription>Enter your payment information to add a new card.</DialogDescription>
+                        <DialogTitle><CreditCardIcon className="inline mr-2" />Add Payout Card</DialogTitle>
+                        <DialogDescription>Enter your payout information to add a new card.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
