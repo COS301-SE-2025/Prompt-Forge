@@ -15,11 +15,13 @@ import BankCard from "@/components/BankCard"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
   // Saved state
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
-  const [username, setUsername] = useState<string>("")
+  const [username, setUsername] = useState<string>("") // Fixed: uncommented username
   const [email, setEmail] = useState<string>("")
   const [bio, setBio] = useState<string>("")
+  
   // Pending (unsaved) state
   const [pendingProfileImage, setPendingProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
   const [pendingUsername, setPendingUsername] = useState<string>("")
@@ -50,6 +52,7 @@ export default function ProfileSettingsPage() {
         setEmail(profile.email || "")
         setBio(profile.bio || "")
         setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+        
         // Set pending state to match loaded profile
         setPendingUsername(profile.username || "")
         setPendingEmail(profile.email || "")
@@ -57,12 +60,22 @@ export default function ProfileSettingsPage() {
         setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
       } catch (error) {
         console.error("Failed to load profile", error)
+        // You might want to show an error message to the user here
       } finally {
         setLoading(false)
       }
     }
     fetchProfile()
   }, [])
+
+  // Show loading state while fetching profile
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full">
+        <p>Loading profile...</p>
+      </div>
+    )
+  }
 
   // Only update pending image, not saved
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +134,7 @@ export default function ProfileSettingsPage() {
       });
 
       // Update saved state only if successful
-      setUsername(pendingUsername);
+      setUsername(pendingUsername); // Fixed: uncommented
       setEmail(pendingEmail);
       setBio(pendingBio);
       setProfileImage(imageUrl);
@@ -134,15 +147,8 @@ export default function ProfileSettingsPage() {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus(null), 2000);
     }
-    if (loading) {
-      return (
-        <div className="flex-1 flex items-center justify-center h-full">
-          <p>Loading profile...</p>
-        </div>
-      )
-    }
   };
-  //Show loading state while fetching profile
+
   return (
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex-1 p-6">
@@ -226,14 +232,12 @@ export default function ProfileSettingsPage() {
 
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-
                         <Input
                           id="email"
                           type="email"
                           value={pendingEmail}
                           onChange={handleEmailChange}
                           className="bg-muted"
-
                         />
                       </div>
 
@@ -253,6 +257,11 @@ export default function ProfileSettingsPage() {
                   <div className="border-t border-border pt-4">
                     <div className="flex justify-between items-center">
                       <div>
+                        {saveStatus === "saving" && (
+                          <span className="text-sm text-blue-500 flex items-center">
+                            Saving changes...
+                          </span>
+                        )}
                         {saveStatus === "success" && (
                           <span className="text-sm text-green-500 flex items-center">
                             <Check className="h-4 w-4 mr-1" />
@@ -266,9 +275,13 @@ export default function ProfileSettingsPage() {
                           </span>
                         )}
                       </div>
-                      <Button onClick={handleSave} className="bg-[#3ebb9e] hover:bg-[#00674f]">
+                      <Button 
+                        onClick={handleSave} 
+                        className="bg-[#3ebb9e] hover:bg-[#00674f]"
+                        disabled={saveStatus === "saving"}
+                      >
                         <Save className="h-4 w-4 mr-2" />
-                        Save Changes
+                        {saveStatus === "saving" ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>
                   </div>
@@ -481,7 +494,7 @@ export default function ProfileSettingsPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-b border-border">
+                    <div className="flex justify-between items-components py-3 border-b border-border">
                       <div>
                         <p className="font-medium">Pro Plan - Monthly</p>
                         <p className="text-xs text-muted-foreground">March 15, 2025</p>
@@ -560,7 +573,3 @@ export default function ProfileSettingsPage() {
     </div>
   )
 }
-function setEmail(arg0: any) {
-  throw new Error("Function not implemented.")
-}
-

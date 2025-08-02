@@ -1,7 +1,6 @@
 package com.fiveOps.promptforge.user_profile.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fiveOps.promptforge.S3Bucket.service.S3Service;
 import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
 import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.model.User;
@@ -23,6 +23,8 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 @Service
 public class UserService {
+
+  @Autowired private S3Service s3Service;
 
   @Autowired private UserRepository userRepository;
 
@@ -151,23 +153,18 @@ public class UserService {
     User user =
         userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-    // 🔒 Validate the file first
-    validateImageFile(file);
+    // Optional: delete old picture first
+    if (user.getProfilePictureUrl() != null) {
+      s3Service.deleteFile(user.getProfilePictureUrl());
+    }
 
     try {
-      Files.createDirectories(uploadDir); // safe if exists
-      String filename =
-          user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-      Path filePath = uploadDir.resolve(filename);
-      Files.write(filePath, file.getBytes());
-
-      user.setProfilePictureUrl("/uploads/profile-pictures/" + filename);
-      user.setUpdatedAt(LocalDateTime.now());
+      String imageUrl = s3Service.uploadFile(file);
+      user.setProfilePictureUrl(imageUrl);
       userRepository.save(user);
-
-      return user.getProfilePictureUrl();
+      return imageUrl;
     } catch (IOException e) {
-      throw new RuntimeException("Failed to save profile picture", e);
+      throw new RuntimeException("Failed to upload image", e);
     }
   }
 
@@ -175,23 +172,10 @@ public class UserService {
     User user =
         userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-    String pictureUrl = user.getProfilePictureUrl();
-    if (pictureUrl == null || pictureUrl.isBlank()) {
-      throw new RuntimeException("No profile picture to delete");
-    }
-
-    try {
-      // Assuming pictureUrl is something like "/uploads/profile-pictures/filename.jpg"
-      String filename = Paths.get(pictureUrl).getFileName().toString();
-      Path filePath = uploadDir.resolve(filename);
-
-      Files.deleteIfExists(filePath);
-
+    if (user.getProfilePictureUrl() != null) {
+      s3Service.deleteFile(user.getProfilePictureUrl());
       user.setProfilePictureUrl(null);
-      user.setUpdatedAt(LocalDateTime.now());
       userRepository.save(user);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to delete profile picture", e);
     }
   }
 

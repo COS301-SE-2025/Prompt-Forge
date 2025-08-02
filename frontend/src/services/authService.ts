@@ -1,5 +1,5 @@
 import HttpClient from "./httpClient";
-import { User } from "../models/User";
+import { User } from "@/models/User";
 
 export class AuthService {
   private httpClient = HttpClient;

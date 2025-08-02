@@ -1,0 +1,52 @@
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            # Set Node.js 
+            - nvm install 20.13.1
+            - nvm use 20.13.1
+            
+            # Complete clean slate
+            - rm -rf node_modules package-lock.json .npmrc .vite
+            
+            # Create fresh package-lock
+            - npm install --package-lock-only
+            
+            # Install Vite and React plugin first with exact versions
+            - npm install vite@5.1.4 @vitejs/plugin-react@4.2.1 --save-dev --legacy-peer-deps --force
+            
+            # Install TypeScript and path 
+            - npm install typescript@latest @types/node@latest --save-dev --legacy-peer-deps
+            
+            # Install remaining dependencies
+            - npm install --legacy-peer-deps --force
+            
+            # Verify installations
+            - npm ls vite
+            - ./node_modules/.bin/vite --version
+            - ls -la node_modules/.bin/vite
+            
+        build:
+          commands:
+            # Use direct path to Vite binary
+            - ./node_modules/.bin/vite build --mode production
+          env:
+            VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - .vite/**/*
+      customHeaders:
+        - pattern: '**/*'
+          headers:
+            - key: 'Strict-Transport-Security'
+              value: 'max-age=31536000; includeSubDomains'
+            - key: 'X-Frame-Options'
+              value: 'DENY'
