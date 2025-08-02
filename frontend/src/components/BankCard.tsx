@@ -3,11 +3,14 @@ import { Wifi } from "lucide-react"
 
 const cardColor = {
   "absa": "red",
+  "african bank": "green",
   "bidvest": "red",
   "capitec": "red",
+  "discovery": "purple",
   "fnb": "green",
   "nedbank": "green",
   "standard bank": "blue",
+  "tymebank": "yellow",
 } as const;
 
 type BankKey = keyof typeof cardColor;
@@ -15,8 +18,8 @@ type BankKey = keyof typeof cardColor;
 function getCardColorStartsWith(input: string): string {
   const normalizedInput = input.trim().toLowerCase();
   
-  for (const bank of Object.keys(cardColor)) {    
-    if (normalizedInput.startsWith(bank)) {
+  for (const bank of Object.keys(cardColor)) {        
+    if (normalizedInput.startsWith(bank)) {      
       return cardColor[bank as BankKey];
     }
   }
