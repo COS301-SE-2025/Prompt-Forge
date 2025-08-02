@@ -11,6 +11,7 @@ import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucid
 import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
 import { BankIdentifier, PayoutCard } from "@/Models/Payout"
+import BankCard from "@/components/BankCard"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -423,26 +424,23 @@ export default function ProfileSettingsPage() {
 
             <TabsContent value="billing">
               <div className="grid gap-6">
-                <Card className="p-6">
-                  <h2 className="text-lg font-medium mb-4 w-fit"><CreditCard className="inline mr-2" /> Payment Methods</h2>
-
+                <Card className="p-6 bg-transparent p-0">
+                  <div className="bg-muted p-4 flex justify-between items-center">
+                  <h2 className="text-lg font-medium mb-4 w-fit mb-0"><CreditCard className="inline mr-2" /> Payment Methods</h2>
+                  </div>
                   {
                     payoutDetails !== null ?
-                      <div className="space-y-4">
-                        <div className="bg-muted p-4 rounded-md flex justify-between items-center">
+                      <div className="space-y-4 ">
+                        <div className=" p-4 rounded-md flex justify-between items-center">
                           <div className="flex items-center">
-                            <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div>
-                            <div>
-                              <p className="font-medium  text-muted-foreground">{payoutDetails.bank.name}</p>
-                              <p className="font-medium  text-muted-foreground">{payoutDetails.accountHolder}</p>
-                              <p className="text-xs font-medium">{payoutDetails.accountNumber}</p>
-                            </div>
+                            {/* <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div> */}
+                            <BankCard {...payoutDetails}/>
                           </div>
                           <div className="flex gap-2">
                             <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
 
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                              <Trash2 className="h-5 w-5" />
+                              <Trash2 className="h-9 w-5" />
                             </Button>
                           </div>
                         </div>
