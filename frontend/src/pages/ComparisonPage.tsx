@@ -415,64 +415,65 @@ Please provide:
     <div className="flex-1 flex flex-col w-full h-[calc(100vh-64px)] bg-background">
       <div className="flex-1 flex min-h-0">
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col transition-all duration-300 ${showRatingPanel || showModelPanel ? "mr-96" : ""}`}>
-          {/* Adjust the height of the grid container to account for the bottom bar */}
+        <div className={`flex-1 flex flex-col transition-all duration-300 ${
+          showRatingPanel || showModelPanel ? "mr-0 sm:mr-96" : ""
+        }`}>
+          {/* Grid container - stack on mobile, side-by-side on large screens */}
           <div className="h-[calc(100%-48px)] grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
+            
             {/* Left Panel - Prompt A */}
-            <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-3 lg:mb-4">
-                <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
+            <div className="bg-background border-r border-border p-2 sm:p-3 lg:p-4 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
+                <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground">Prompt A</h2>
                 <div className="flex items-center space-x-1">
-                  {/*Add Save button for Prompt A */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
                     onClick={() => handleSavePrompt("A")}
                     title="Save Prompt A"
                   >
-                    <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <Save className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
-                    <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" onClick={handleReset}>
+                    <RotateCcw className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
                     onClick={swapPrompts}
                     title="Swap prompts"
                   >
-                    <ArrowLeftRight className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <ArrowLeftRight className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/*Add Help button */}
                   <Link to="/help">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
-                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                     </Button>
                   </Link>
                 </div>
               </div>
 
               {/* Prompt A Editor Section */}
-              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorACollapsed ? "flex-none h-auto" : "flex-none h-64"}`}>
+              <div className={`min-h-0 flex flex-col transition-all duration-300 ${
+                editorACollapsed ? "flex-none h-auto" : "flex-none h-48 sm:h-56 lg:h-64"
+              }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt A</h3>
-                  <div className="flex items-center space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => setEditorACollapsed(!editorACollapsed)}
-                    >
-                      {editorACollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-                    </Button>
-                  </div>
+                  <h3 className="text-xs sm:text-xs lg:text-sm font-medium text-muted-foreground">Prompt A</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
+                    onClick={() => setEditorACollapsed(!editorACollapsed)}
+                  >
+                    {editorACollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                  </Button>
                 </div>
                 {!editorACollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
                       placeholder="Write your first prompt here..."
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
@@ -484,12 +485,12 @@ Please provide:
               {/* Response A */}
               <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${responseACollapsed ? "flex-none h-auto" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Response A</h3>
+                  <h3 className="text-xs sm:text-xs lg:text-sm font-medium text-muted-foreground">Response A</h3>
                   <div className="flex items-center space-x-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       onClick={() => setResponseACollapsed(!responseACollapsed)}
                     >
                       {responseACollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
@@ -497,7 +498,7 @@ Please provide:
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       onClick={() => copyToClipboard(aiResponseA)}
                     >
                       <Copy className="h-3 w-3" />
@@ -505,71 +506,70 @@ Please provide:
                   </div>
                 </div>
                 {!responseACollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
                       <StreamingDisplay
                         content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
                         isLoading={isLoadingA}
                         streamingEnabled={streamingEnabled}
                         placeholder="AI response to prompt A will appear here..."
-                        className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                        className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
                       />
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center justify-between mt-2 sm:mt-3">
                 <div className="text-xs text-muted-foreground">{promptTextA.length} chars</div>
               </div>
             </div>
 
-            {/* Right Panel - Prompt B */}
-            <div className="bg-background p-3 lg:p-4 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-3 lg:mb-4">
-                <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
+            {/* Right Panel - Prompt B - Apply similar responsive classes */}
+            <div className="bg-background p-2 sm:p-3 lg:p-4 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
+                <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground">Prompt B</h2>
                 <div className="flex items-center space-x-1">
-                  {/*Add Save button for Prompt B */}
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-7 w-7 lg:h-8 lg:w-8"
+                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
                     onClick={() => handleSavePrompt("B")}
                     title="Save Prompt B"
                   >
-                    <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <Save className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" onClick={handleReset}>
-                    <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" onClick={handleReset}>
+                    <RotateCcw className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
                   {/*Replace the existing HelpCircle with linked Help button */}
                   <Link to="/help">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8" title="Help">
-                      <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" title="Help">
+                      <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                     </Button>
                   </Link>
                 </div>
               </div>
 
               {/* Prompt B Editor Section */}
-              <div className={`min-h-0 flex flex-col transition-all duration-300 ${editorBCollapsed ? "flex-none h-auto" : "flex-none h-64"}`}>
+              <div className={`min-h-0 flex flex-col transition-all duration-300 ${
+                editorBCollapsed ? "flex-none h-auto" : "flex-none h-48 sm:h-56 lg:h-64"
+              }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Prompt B</h3>
-                  <div className="flex items-center space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => setEditorBCollapsed(!editorBCollapsed)}
-                    >
-                      {editorBCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-                    </Button>
-                  </div>
+                  <h3 className="text-xs sm:text-xs lg:text-sm font-medium text-muted-foreground">Prompt B</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
+                    onClick={() => setEditorBCollapsed(!editorBCollapsed)}
+                  >
+                    {editorBCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                  </Button>
                 </div>
                 {!editorBCollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
                       placeholder="Write your second prompt here..."
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
@@ -581,12 +581,12 @@ Please provide:
               {/* Response B */}
               <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${responseBCollapsed ? "flex-none h-auto" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Response B</h3>
+                  <h3 className="text-xs sm:text-xs lg:text-sm font-medium text-muted-foreground">Response B</h3>
                   <div className="flex items-center space-x-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       onClick={() => setResponseBCollapsed(!responseBCollapsed)}
                     >
                       {responseBCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
@@ -594,7 +594,7 @@ Please provide:
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       onClick={() => copyToClipboard(aiResponseB)}
                     >
                       <Copy className="h-3 w-3" />
@@ -602,7 +602,7 @@ Please provide:
                   </div>
                 </div>
                 {!responseBCollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
                       {isLoadingB ? (
                         <div className="flex items-center space-x-2">
@@ -610,7 +610,7 @@ Please provide:
                           <span>Generating response...</span>
                         </div>
                       ) : (
-                        <pre className="text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
+                        <pre className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
                           {aiResponseB}
                         </pre>
                       )}
@@ -619,30 +619,29 @@ Please provide:
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center justify-between mt-2 sm:mt-3">
                 <div className="text-xs text-muted-foreground">{promptTextB.length} chars</div>
               </div>
             </div>
           </div>
 
-          {/*Update the bottom action bar to include save options */}
-          <div className="h-12 border-t border-border px-3 bg-background flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          {/* Bottom action bar - make it wrap on mobile */}
+          <div className="h-auto min-h-[48px] border-t border-border px-2 sm:px-3 bg-background flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-muted-foreground text-xs h-8" 
+                className="text-muted-foreground text-xs h-7 sm:h-8" 
                 onClick={handleReset}
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Reset
               </Button>
               
-              {/*Add quick save buttons in bottom bar */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground text-xs h-8"
+                className="text-muted-foreground text-xs h-7 sm:h-8"
                 onClick={() => handleSavePrompt("A")}
                 title="Save Prompt A"
               >
@@ -653,7 +652,7 @@ Please provide:
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground text-xs h-8"
+                className="text-muted-foreground text-xs h-7 sm:h-8"
                 onClick={() => handleSavePrompt("B")}
                 title="Save Prompt B"
               >
@@ -662,10 +661,10 @@ Please provide:
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Button
                 size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-7 sm:h-8"
                 onClick={testBothPrompts}
                 disabled={isLoadingA || isLoadingB}
               >
@@ -674,7 +673,7 @@ Please provide:
               </Button>
               <Button
                 size="sm"
-                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
+                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-7 sm:h-8"
                 onClick={() => setShowModelPanel(true)}
               >
                 <HelpCircle className="h-3 w-3 mr-1" />
@@ -682,7 +681,7 @@ Please provide:
               </Button>
               <Button
                 size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
+                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 sm:h-8"
                 onClick={() => {
                   setShowRatingPanel(true)
                   getRating()
@@ -695,22 +694,22 @@ Please provide:
           </div>
         </div>
 
-        {/* Rating Side Panel */}
+        {/* Rating Side Panel - Full screen on mobile */}
         {showRatingPanel && (
-          <div className="fixed right-0 top-0 h-full w-96 bg-background border-l border-border shadow-2xl z-50 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Comparison Rating</h3>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowRatingPanel(false)}>
+          <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l border-border shadow-2xl z-50 flex flex-col">
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Comparison Rating</h3>
+              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => setShowRatingPanel(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="flex-1 p-4 overflow-hidden"> {/* Changed from overflow-y-auto */}
-              <div className="bg-gray-100 dark:bg-muted rounded-lg p-4 h-full overflow-y-auto custom-scrollbar"> {/* Added h-full and overflow-y-auto */}
+            <div className="flex-1 p-3 sm:p-4 overflow-hidden">
+              <div className="bg-gray-100 dark:bg-muted rounded-lg p-3 sm:p-4 h-full overflow-y-auto custom-scrollbar">
                 {isLoadingRating ? (
                   <div className="flex items-center space-x-2">
                     <RotateCcw className="h-4 w-4 animate-spin" />
-                    <span>Analyzing responses...</span>
+                    <span className="text-sm">Analyzing responses...</span>
                   </div>
                 ) : (
                   <StreamingDisplay
@@ -724,14 +723,14 @@ Please provide:
               </div>
             </div>
 
-            <div className="p-4 border-t border-border">
+            <div className="p-3 sm:p-4 border-t border-border">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span>Model A: {aiModels[selectedModelA].shortName}</span>
                 <span>Model B: {aiModels[selectedModelB].shortName}</span>
               </div>
               <Button
                 size="sm"
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 sm:h-8"
                 onClick={getRating}
                 disabled={isLoadingRating}
               >
@@ -742,49 +741,49 @@ Please provide:
           </div>
         )}
 
-        {/* Model Selection Side Panel */}
+        {/* Model Selection Side Panel - Full screen on mobile */}
         {showModelPanel && (
-          <div className="fixed right-0 top-0 h-full w-96 bg-background border-l border-border shadow-2xl z-50 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Select Models</h3>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowModelPanel(false)}>
+          <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l border-border shadow-2xl z-50 flex flex-col">
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Select Models</h3>
+              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => setShowModelPanel(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="flex-1 p-3 space-y-4 overflow-y-auto custom-scrollbar"> {/* Reduced padding and spacing */}
+            <div className="flex-1 p-2 sm:p-3 space-y-3 sm:space-y-4 overflow-y-auto custom-scrollbar">
               {/* Model A Selection */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-2"> {/* Reduced margin */}
+                <h4 className="text-sm font-medium text-foreground mb-2">
                   Model for Prompt A
                 </h4>
-                <div className="space-y-1.5"> {/* Reduced spacing between cards */}
+                <div className="space-y-1.5">
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
+                      className={`p-2 sm:p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
                         selectedModelA === index 
                           ? `${model.selectedBg} ${model.selectedGlow}`
                           : `${model.cardBg} ${model.glowColor}`
                       }`}
                       onClick={() => setSelectedModelA(index)}
                     >
-                      <div className="flex items-center space-x-2"> {/* Reduced spacing */}
+                      <div className="flex items-center space-x-2">
                         <div
-                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`} /* Smaller icon container */
+                          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                         >
                           {model.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`text-xs font-semibold ${model.textColor} mb-0.5`}> {/* Smaller text and margin */}
+                          <h4 className={`text-xs font-semibold ${model.textColor} mb-0.5`}>
                             {model.name}
                           </h4>
-                          <p className="text-[10px] text-muted-foreground leading-tight"> {/* Smaller description text */}
+                          <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">
                             {model.description}
                           </p>
                         </div>
                         {selectedModelA === index && (
-                          <div className="w-3 h-3 rounded-full bg-[#3ebb9e] flex items-center justify-center"> {/* Smaller radio button */}
+                          <div className="w-3 h-3 rounded-full bg-[#3ebb9e] flex items-center justify-center">
                             <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                           </div>
                         )}
@@ -794,7 +793,7 @@ Please provide:
                 </div>
               </div>
 
-              {/* Model B Selection - Apply the same changes */}
+              {/* Model B Selection - Similar responsive updates */}
               <div>
                 <h4 className="text-sm font-medium text-foreground mb-2">
                   Model for Prompt B
@@ -803,7 +802,7 @@ Please provide:
                   {aiModels.map((model, index) => (
                     <Card
                       key={index}
-                      className={`p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
+                      className={`p-2 sm:p-2 transition-all duration-300 cursor-pointer group hover:scale-[1.02] ${
                         selectedModelB === index 
                           ? `${model.selectedBg} ${model.selectedGlow}`
                           : `${model.cardBg} ${model.glowColor}`
@@ -812,7 +811,7 @@ Please provide:
                     >
                       <div className="flex items-center space-x-2">
                         <div
-                          className={`w-6 h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
+                          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
                         >
                           {model.icon}
                         </div>
@@ -820,7 +819,7 @@ Please provide:
                           <h4 className={`text-xs font-semibold ${model.textColor} mb-0.5`}>
                             {model.name}
                           </h4>
-                          <p className="text-[10px] text-muted-foreground leading-tight">
+                          <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">
                             {model.description}
                           </p>
                         </div>
@@ -836,14 +835,14 @@ Please provide:
               </div>
             </div>
 
-            <div className="p-4 border-t border-border">
+            <div className="p-3 sm:p-4 border-t border-border">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span>A: {aiModels[selectedModelA].shortName}</span>
                 <span>B: {aiModels[selectedModelB].shortName}</span>
               </div>
               <Button
                 size="sm"
-                className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8"
+                className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-7 sm:h-8"
                 onClick={() => setShowModelPanel(false)}
               >
                 Apply Selection
@@ -852,7 +851,7 @@ Please provide:
           </div>
         )}
 
-        {/* Add Streaming Controls Panel */}
+        {/* Streaming Controls Panel - already responsive */}
         {showStreamingControls && (
           <StreamingControls
             streamingEnabled={streamingEnabled}
