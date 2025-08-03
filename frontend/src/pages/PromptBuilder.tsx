@@ -676,9 +676,9 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           </div>
 
           {/* Desktop Layout */}
-          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left Column - Persona Selection */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-1 space-y-4">
               <Card className="p-4 h-full">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-foreground flex items-center">
@@ -723,13 +723,12 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                         onClick={() => setSelectedPersona(persona)}
                       >
                         <div className="flex items-start">
-                          <div className="text-lg mr-3 flex-shrink-0">{persona.icon}</div>
+                          <div className="text-lg mr-2 flex-shrink-0">{persona.icon}</div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-medium text-sm text-foreground mb-1 truncate">{persona.name}</h3>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{persona.description}</p>
-                            <p className="text-xs text-muted-foreground mt-1 italic line-clamp-1">{persona.useCase}</p>
+                            <h3 className="font-medium text-xs text-foreground mb-1 truncate">{persona.name}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{persona.description}</p>
                             {selectedPersona?.id === persona.id && (
-                              <Check className="h-4 w-4 text-[#3ebb9e] float-right mt-2" />
+                              <Check className="h-3 w-3 text-[#3ebb9e] float-right" />
                             )}
                           </div>
                         </div>
@@ -741,11 +740,11 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                 {profilesCollapsed && selectedPersona && (
                   <div className="mt-2">
                     <Card className="p-3 bg-[#3ebb9e]/10 border-[#3ebb9e]/40">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-lg">{selectedPersona.icon}</span>
-                        <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base">{selectedPersona.icon}</span>
+                        <div>
                           <h3 className="text-sm font-medium">{selectedPersona.name}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{selectedPersona.description}</p>
+                          <p className="text-xs text-muted-foreground truncate">{selectedPersona.description}</p>
                         </div>
                       </div>
                     </Card>
@@ -881,7 +880,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
               </Card>
             </div>
 
-            {/* Right Column - Prompt Idea Input (wider) */}
+            {/* Right Column - Prompt Idea Input */}
             <div className="lg:col-span-1 space-y-4">
               <Card className="p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
@@ -896,7 +895,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     <textarea
                       id="prompt-idea"
                       className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
-                      rows={10}
+                      rows={6}
                       placeholder="e.g., 'Help me write better product descriptions for my online store' or 'Create a prompt that helps debug Python code'"
                       value={promptIdea}
                       onChange={(e) => setPromptIdea(e.target.value)}
@@ -1124,7 +1123,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
       )}
 
       {/* Streaming Controls */}
-      <div className="absolute bottom-2 right-2 flex items-center space-x-2 text-xs text-muted-foreground">
+      <div className="fixed bottom-4 right-4 z-30 flex items-center space-x-2 text-xs text-muted-foreground bg-card/90 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
         <span>Streaming:</span>
         <button 
           onClick={() => setStreamingEnabled(!streamingEnabled)}
