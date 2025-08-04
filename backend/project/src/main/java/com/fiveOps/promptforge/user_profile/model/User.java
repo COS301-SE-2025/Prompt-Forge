@@ -118,7 +118,7 @@ public class User {
   }
 
   public UUID[] getFollowing() {
-    return followers;
+    return following; // Fixed: was returning followers instead of following
   }
 
   public String getAvatarUrl() {
