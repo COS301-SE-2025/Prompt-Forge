@@ -22,6 +22,9 @@ import {
   RotateCcw,
   Download,
   BookOpen,
+  ChevronUp,
+  ChevronDown,
+  Filter,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
@@ -272,6 +275,8 @@ export default function PromptBuilderPage() {
   const [selectedModel, setSelectedModel] = useState(aiModels[0])
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [typingSpeed, setTypingSpeed] = useState(75);
+  const [showProfiles, setShowProfiles] = useState(false); // For mobile profile panel
+  const [profilesCollapsed, setProfilesCollapsed] = useState(false); // For collapsible profiles
   const streamingService = new StreamingService();
   const navigate = useNavigate();
   
@@ -284,12 +289,10 @@ export default function PromptBuilderPage() {
     if (!promptIdea.trim() || !selectedPersona) return
 
     setIsGenerating(true)
-    setGeneratedPrompt("") // Clear previous content
-    
-    // Clear typing effect properly
+    setGeneratedPrompt("")
     typingEffect.clear()
     
-    let accumulatedContent = "" // Track accumulated content
+    let accumulatedContent = ""
 
     try {
       const personaContext = `You are helping a ${selectedPersona.name} (${selectedPersona.description}) who ${selectedPersona.useCase.toLowerCase()}.`
@@ -330,7 +333,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
         streamingEnabled,
         {
           onContent: (content: string) => {
-            accumulatedContent += content // Always accumulate
+            accumulatedContent += content
             
             if (streamingEnabled) {
               typingEffect.addText(content)
@@ -342,7 +345,6 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           },
           onComplete: () => {
             setIsGenerating(false)
-            // Always set the final accumulated content
             setGeneratedPrompt(accumulatedContent)
             console.log("✅ Prompt generation completed")
           },
@@ -421,7 +423,6 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
   }
 
   const handleTemplateClick = (template: Template) => {
-    // Directly implement the template logic here instead of calling useTemplate
     setSelectedTemplate(template)
     setGeneratedPrompt(template.template)
     setPromptIdea(`Using template: ${template.name}`)
@@ -435,9 +436,247 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
 
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background">
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Mobile Layout */}
+          <div className="block lg:hidden space-y-4">
+            {/* Mobile Header */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg sm:text-xl font-bold">Prompt Builder</h1>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTemplates(true)}
+                  className="flex items-center"
+                >
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Templates</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowProfiles(!showProfiles)}
+                  className="flex items-center"
+                >
+                  <Filter className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Profiles</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Selected Profile Display */}
+            {selectedPersona && (
+              <Card className="p-3 bg-[#3ebb9e]/10 border-[#3ebb9e]/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{selectedPersona.icon}</span>
+                    <div>
+                      <h3 className="text-sm font-medium">{selectedPersona.name}</h3>
+                      <p className="text-xs text-muted-foreground">{selectedPersona.description}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProfiles(true)}
+                    className="text-[#3ebb9e]"
+                  >
+                    Change
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Mobile Prompt Input */}
+            <Card className="p-3 sm:p-4">
+              <h2 className="text-base font-semibold text-foreground mb-3 flex items-center">
+                <Lightbulb className="h-4 w-4 mr-2 text-[#3ebb9e]" />
+                Your Idea
+              </h2>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="prompt-idea-mobile" className="text-sm font-medium text-foreground">
+                    Describe what you want your prompt to do
+                  </Label>
+                  <textarea
+                    id="prompt-idea-mobile"
+                    className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
+                    rows={4}
+                    placeholder="e.g., 'Help me write better product descriptions for my online store'"
+                    value={promptIdea}
+                    onChange={(e) => setPromptIdea(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={generatePrompt}
+                  disabled={!promptIdea.trim() || !selectedPersona || isGenerating}
+                  className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Generate Prompt
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Mobile Generated Prompt */}
+            <Card className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-foreground flex items-center">
+                  <Zap className="h-4 w-4 mr-2 text-[#3ebb9e]" />
+                  Generated Prompt
+                </h2>
+                <div className="flex items-center space-x-1">
+                  {selectedPersona && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowModelRecommendations(true)}
+                      className="px-2"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(generatedPrompt)}
+                    disabled={!generatedPrompt}
+                    className="px-2"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const doc = new jsPDF();
+                      const pageWidth = doc.internal.pageSize.getWidth();
+                      const margin = 20;
+                      const lineHeight = 7;
+
+                      doc.setFontSize(16);
+                      doc.text('Prompt Forge - Generated Prompt', margin, margin);
+
+                      doc.setFontSize(10);
+                      doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, margin + lineHeight);
+                      doc.text(`Persona: ${selectedPersona?.name || "None"}`, margin, margin + (lineHeight * 2));
+                      doc.text(`Model: ${selectedModel.name}`, margin, margin + (lineHeight * 3));
+
+                      doc.setFontSize(12);
+                      doc.text('Prompt Idea:', margin, margin + (lineHeight * 5));
+                      doc.setFontSize(10);
+                      const promptIdeasLines = doc.splitTextToSize(promptIdea, pageWidth - (margin * 2));
+                      doc.text(promptIdeasLines, margin, margin + (lineHeight * 6));
+
+                      const responseStartY = margin + (lineHeight * (7 + promptIdeasLines.length));
+                      doc.setFontSize(12);
+                      doc.text('Generated Prompt:', margin, responseStartY);
+                      doc.setFontSize(10);
+                      const generatedPromptLines = doc.splitTextToSize(generatedPrompt, pageWidth - (margin * 2));
+                      doc.text(generatedPromptLines, margin, responseStartY + lineHeight);
+
+                      doc.save(`prompt-builder-${new Date().toISOString().slice(0,10)}.pdf`);
+                    }}
+                    disabled={!generatedPrompt}
+                    className="px-2"
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-muted rounded-lg p-3 min-h-[200px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                {isGenerating || generatedPrompt ? (
+                  <StreamingDisplay
+                    content={streamingEnabled ? typingEffect.displayText : generatedPrompt}
+                    isLoading={isGenerating}
+                    streamingEnabled={streamingEnabled}
+                    placeholder="Generating your prompt..."
+                    className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <div className="text-center">
+                      <Wand2 className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">Your optimized prompt will appear here</p>
+                      <p className="text-xs mt-1">Select a profile and describe your idea to get started</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {generatedPrompt && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="prompt-name-mobile" className="text-sm font-medium text-foreground">
+                        Save as:
+                      </Label>
+                      <Input
+                        id="prompt-name-mobile"
+                        placeholder="Enter prompt name"
+                        value={promptName}
+                        onChange={(e) => setPromptName(e.target.value)}
+                        className="mt-1 bg-muted"
+                      />
+                    </div>
+                    <Button
+                      onClick={savePrompt}
+                      disabled={!promptName.trim() || isSaving}
+                      className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                    >
+                      {isSaving ? (
+                        <>
+                          <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Prompt
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
+
+            {/* Mobile Tips */}
+            <Card className="p-3 bg-blue-500/5 border-blue-500/20">
+              <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center">
+                <Star className="h-3 w-3 mr-2 text-blue-500" />
+                Pro Tips
+              </h3>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="flex items-start space-x-2">
+                  <div className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <p>Be specific about your desired output format</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <p>Include examples in your idea</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <p>Test and iterate based on results</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left Column - Persona Selection */}
             <div className="lg:col-span-1 space-y-4">
               <Card className="p-4 h-full">
@@ -446,40 +685,71 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     <User className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                     Choose Profile
                   </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTemplates(true)}
-                    className="flex items-center"
-                  >
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    <span className="text-xs">Templates</span>
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar pr-1">
-                  {personas.map((persona) => (
-                    <Card
-                      key={persona.id}
-                      className={`p-3 cursor-pointer transition-all duration-200 hover:scale-[1.003] ${
-                        selectedPersona?.id === persona.id
-                          ? "bg-[#3ebb9e]/10 border-[#3ebb9e]/40 shadow-[0_0_15px_rgba(62,187,158,0.3)]"
-                          : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => setSelectedPersona(persona)}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowTemplates(true)}
+                      className="flex items-center"
                     >
-                      <div className="flex items-start">
-                        <div className="text-lg mr-2 flex-shrink-0">{persona.icon}</div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-xs text-foreground mb-1 truncate">{persona.name}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{persona.description}</p>
-                          {selectedPersona?.id === persona.id && (
-                            <Check className="h-3 w-3 text-[#3ebb9e] float-right" />
-                          )}
+                      <BookOpen className="h-3 w-3 mr-1" />
+                      <span className="text-xs">Templates</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setProfilesCollapsed(!profilesCollapsed)}
+                      className="h-7 w-7"
+                    >
+                      {profilesCollapsed ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {!profilesCollapsed && (
+                  <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar pr-1">
+                    {personas.map((persona) => (
+                      <Card
+                        key={persona.id}
+                        className={`p-3 cursor-pointer transition-all duration-200 hover:scale-[1.003] ${
+                          selectedPersona?.id === persona.id
+                            ? "bg-[#3ebb9e]/10 border-[#3ebb9e]/40 shadow-[0_0_15px_rgba(62,187,158,0.3)]"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => setSelectedPersona(persona)}
+                      >
+                        <div className="flex items-start">
+                          <div className="text-lg mr-2 flex-shrink-0">{persona.icon}</div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-xs text-foreground mb-1 truncate">{persona.name}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{persona.description}</p>
+                            {selectedPersona?.id === persona.id && (
+                              <Check className="h-3 w-3 text-[#3ebb9e] float-right" />
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                
+                {profilesCollapsed && selectedPersona && (
+                  <div className="mt-2">
+                    <Card className="p-3 bg-[#3ebb9e]/10 border-[#3ebb9e]/40">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base">{selectedPersona.icon}</span>
+                        <div>
+                          <h3 className="text-sm font-medium">{selectedPersona.name}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{selectedPersona.description}</p>
                         </div>
                       </div>
                     </Card>
-                  ))}
-                </div>
+                  </div>
+                )}
               </Card>
             </div>
 
@@ -516,30 +786,25 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        // Create PDF using jsPDF
                         const doc = new jsPDF();
                         const pageWidth = doc.internal.pageSize.getWidth();
                         const margin = 20;
                         const lineHeight = 7;
 
-                        // Add title and metadata
                         doc.setFontSize(16);
                         doc.text('Prompt Forge - Generated Prompt', margin, margin);
 
-                        // Add timestamp and persona info
                         doc.setFontSize(10);
                         doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, margin + lineHeight);
                         doc.text(`Persona: ${selectedPersona?.name || "None"}`, margin, margin + (lineHeight * 2));
                         doc.text(`Model: ${selectedModel.name}`, margin, margin + (lineHeight * 3));
 
-                        // Add prompt idea section
                         doc.setFontSize(12);
                         doc.text('Prompt Idea:', margin, margin + (lineHeight * 5));
                         doc.setFontSize(10);
                         const promptIdeasLines = doc.splitTextToSize(promptIdea, pageWidth - (margin * 2));
                         doc.text(promptIdeasLines, margin, margin + (lineHeight * 6));
 
-                        // Add generated prompt section
                         const responseStartY = margin + (lineHeight * (7 + promptIdeasLines.length));
                         doc.setFontSize(12);
                         doc.text('Generated Prompt:', margin, responseStartY);
@@ -547,7 +812,6 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                         const generatedPromptLines = doc.splitTextToSize(generatedPrompt, pageWidth - (margin * 2));
                         doc.text(generatedPromptLines, margin, responseStartY + lineHeight);
 
-                        // Save the PDF
                         doc.save(`prompt-builder-${new Date().toISOString().slice(0,10)}.pdf`);
                       }}
                       disabled={!generatedPrompt}
@@ -683,13 +947,67 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
         </div>
       </div>
 
+      {/* Mobile Profiles Overlay */}
+      {showProfiles && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setShowProfiles(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-full sm:w-96 bg-card border-r border-border z-50 lg:hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold flex items-center">
+                <User className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                Choose Profile
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowProfiles(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {personas.map((persona) => (
+                <Card
+                  key={persona.id}
+                  className={`p-3 cursor-pointer transition-all duration-200 ${
+                    selectedPersona?.id === persona.id
+                      ? "bg-[#3ebb9e]/10 border-[#3ebb9e]/40 shadow-[0_0_15px_rgba(62,187,158,0.3)]"
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => {
+                    setSelectedPersona(persona)
+                    setShowProfiles(false)
+                  }}
+                >
+                  <div className="flex items-start">
+                    <div className="text-lg mr-3 flex-shrink-0">{persona.icon}</div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-sm text-foreground mb-1">{persona.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{persona.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1 italic">{persona.useCase}</p>
+                      {selectedPersona?.id === persona.id && (
+                        <Check className="h-4 w-4 text-[#3ebb9e] float-right mt-2" />
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Templates Modal */}
       {showTemplates && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
-              <h2 className="text-xl font-semibold text-foreground flex items-center">
-                <BookOpen className="h-6 w-6 mr-2 text-[#3ebb9e]" />
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-[#3ebb9e]" />
                 Prompt Templates
               </h2>
               <Button variant="ghost" size="icon" onClick={() => setShowTemplates(false)}>
@@ -698,24 +1016,24 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
             </div>
 
             <div className="flex-1 overflow-hidden">
-              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 sm:p-6 h-full overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {templates.map((template) => (
                     <Card
                       key={template.id}
-                      className="p-4 hover:shadow-md hover:shadow-[#3ebb9e]/20 dark:hover:shadow-[#3ebb9e]/10 transition-all duration-200 hover:scale-[1.02] cursor-pointer border-2 hover:border-[#3ebb9e]/30"
+                      className="p-3 sm:p-4 hover:shadow-md hover:shadow-[#3ebb9e]/20 dark:hover:shadow-[#3ebb9e]/10 transition-all duration-200 hover:scale-[1.02] cursor-pointer border-2 hover:border-[#3ebb9e]/30"
                       onClick={() => handleTemplateClick(template)}
                     >
                       <div className="flex flex-col h-full">
                         <div className="mb-3">
-                          <h3 className="font-medium text-foreground mb-2">{template.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
-                          <span className="inline-block px-3 py-1.5 bg-[#3ebb9e]/10 dark:bg-[#3ebb9e]/20 text-[#3ebb9e] dark:text-[#3ebb9e] border border-[#3ebb9e]/30 dark:border-[#3ebb9e]/50 text-xs rounded-full font-medium">
+                          <h3 className="font-medium text-sm sm:text-base text-foreground mb-2">{template.name}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3">{template.description}</p>
+                          <span className="inline-block px-2 sm:px-3 py-1 sm:py-1.5 bg-[#3ebb9e]/10 dark:bg-[#3ebb9e]/20 text-[#3ebb9e] dark:text-[#3ebb9e] border border-[#3ebb9e]/30 dark:border-[#3ebb9e]/50 text-xs rounded-full font-medium">
                             {template.category}
                           </span>
                         </div>
-                        <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex-1">
-                          <p className="text-xs text-gray-700 dark:text-gray-300 font-mono leading-relaxed">
+                        <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-2 sm:p-3 flex-1">
+                          <p className="text-xs text-gray-700 dark:text-gray-300 font-mono leading-relaxed line-clamp-4">
                             {template.template}
                           </p>
                         </div>
@@ -733,9 +1051,9 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
       {showModelRecommendations && selectedPersona && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground flex items-center">
-                <Sparkles className="h-6 w-6 mr-2 text-[#3ebb9e]" />
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-[#3ebb9e]" />
                 Select AI Model
               </h2>
               <Button variant="ghost" size="icon" onClick={() => setShowModelRecommendations(false)}>
@@ -743,40 +1061,40 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
               </Button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-sm text-muted-foreground mb-4">
                 Based on your profile as a <strong>{selectedPersona.name}</strong>, here are the best AI models for your
                 use case. Click to select a model for prompt generation:
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {getRecommendedModels().map((model, index) => (
                   <Card
                     key={model.id}
-                    className={`p-4 ${model.cardBg} ${
+                    className={`p-3 sm:p-4 ${model.cardBg} ${
                       selectedModel.id === model.id ? model.selectedGlow : model.glowColor
                     } transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
                     onClick={() => setSelectedModel(model)}
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-lg ${model.iconBg} flex items-center justify-center text-xl`}>
+                    <div className="flex items-center space-x-3 sm:space-x-4">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${model.iconBg} flex items-center justify-center text-lg sm:text-xl`}>
                         {model.icon}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-1">
-                          <h3 className={`font-semibold ${model.textColor}`}>{model.name}</h3>
+                          <h3 className={`font-semibold text-sm sm:text-base ${model.textColor} truncate`}>{model.name}</h3>
                           {index === 0 && (
-                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-600 text-xs rounded-full">
+                            <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-yellow-500/20 text-yellow-600 text-xs rounded-full shrink-0">
                               Best Match
                             </span>
                           )}
                           {selectedModel.id === model.id && (
-                            <Check className={`h-4 w-4 ${model.textColor} ml-auto`} />
+                            <Check className={`h-3 w-3 sm:h-4 sm:w-4 ${model.textColor} ml-auto`} />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">{model.description}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{model.description}</p>
                         {model.supportsImages && (
-                          <span className="inline-block mt-2 px-2 py-1 bg-green-500/20 text-green-600 text-xs rounded-full">
+                          <span className="inline-block mt-1 sm:mt-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-600 text-xs rounded-full">
                             Supports Images
                           </span>
                         )}
@@ -786,14 +1104,14 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-between">
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex-1">
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <div className="p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex-1">
                   <p className="text-sm text-blue-600">
                     💡 <strong>Selected:</strong> {selectedModel.name}
                   </p>
                 </div>
                 <Button
-                  className="ml-4 bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white sm:w-auto"
                   onClick={() => setShowModelRecommendations(false)}
                 >
                   Confirm Selection
@@ -804,8 +1122,8 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
         </div>
       )}
 
-      {/* Streaming Controls - Add this section for streaming toggle */}
-      <div className="absolute bottom-2 right-2 flex items-center space-x-2 text-xs text-muted-foreground">
+      {/* Streaming Controls */}
+      <div className="fixed bottom-4 right-4 z-30 flex items-center space-x-2 text-xs text-muted-foreground bg-card/90 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
         <span>Streaming:</span>
         <button 
           onClick={() => setStreamingEnabled(!streamingEnabled)}
