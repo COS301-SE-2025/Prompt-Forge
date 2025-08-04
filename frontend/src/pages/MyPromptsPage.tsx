@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
-import { Star, Search, Filter, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Star, Search, Filter, Plus, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
@@ -504,13 +504,29 @@ export default function MyPromptsPage() {
   return (
     <div className="flex-1 flex flex-col w-full h-full min-h-screen">
       <div className="flex h-full min-h-screen">
-        {/* Sidebar */}
+        {/* Sidebar - Hide on mobile, overlay when shown */}
         <div
-          className={`transition-all duration-300 ${sidebarCollapsed ? "w-12" : "w-48"
-            } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative`}
+          className={`transition-all duration-300 ${
+            sidebarCollapsed ? "w-0 -ml-48 lg:ml-0 lg:w-12" : "w-48"
+          } ${
+            showFilters && !sidebarCollapsed 
+              ? "fixed inset-y-0 left-0 z-50 bg-muted border-r border-border lg:relative lg:inset-auto lg:z-auto" 
+              : "hidden lg:block"
+          } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative`}
         >
+          {/* Close button for mobile */}
+          {showFilters && (
+            <button
+              className="absolute top-3 right-3 lg:hidden bg-background rounded-full p-1 shadow hover:bg-muted transition z-20"
+              onClick={() => setShowFilters(false)}
+              aria-label="Close filters"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
+          
           <button
-            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition"
+            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition hidden lg:block"
             onClick={() => setSidebarCollapsed((c) => !c)}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -520,8 +536,9 @@ export default function MyPromptsPage() {
               <ChevronLeft className="h-5 w-5 text-muted-foreground" />
             )}
           </button>
+          
           {!sidebarCollapsed && (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col pt-8 lg:pt-0">
               <div className="flex-1">
                 <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
                 <div className="space-y-1">
@@ -529,9 +546,13 @@ export default function MyPromptsPage() {
                     <Button
                       key={filter.value}
                       variant="ghost"
-                      className={`w-full justify-start text-sm h-8 px-2 ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                        }`}
-                      onClick={() => setSelectedFilter(filter.value)}
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedFilter(filter.value)
+                        setShowFilters(false) // Close on mobile after selection
+                      }}
                     >
                       {filter.label}
                     </Button>
@@ -543,15 +564,16 @@ export default function MyPromptsPage() {
                     <Button
                       key={category}
                       variant="ghost"
-                      className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                        }`}
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      }`}
                       onClick={() => {
                         setSelectedCategory(category)
                         setCurrentPage(1)
+                        setShowFilters(false) // Close on mobile after selection
                       }}
                     >
                       {category === "all" ? "All" : category}
-                      {/* {category === "all"?"yesss":"nooo"} */}
                     </Button>
                   ))}
                 </div>
@@ -569,98 +591,75 @@ export default function MyPromptsPage() {
           )}
         </div>
 
+        {/* Overlay for mobile sidebar */}
+        {showFilters && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+            onClick={() => setShowFilters(false)}
+          />
+        )}
+
         {/* Main Content */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold mb-2">My Prompts</h1>
-                <p className="text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
+              <div className="mb-3 sm:mb-0">
+                <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">My Prompts</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {userProfile ? `Manage and organize your AI prompts, ${userProfile.username}` : "Manage and organize your AI prompts"}
                 </p>
               </div>
-              <div className="flex items-center space-x-2 mt-4 md:mt-0">
-                <Button variant="outline" className="md:hidden" onClick={() => setShowFilters(!showFilters)}>
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="lg:hidden" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Filters</span>
                 </Button>
                 <Link to="/submit">
-                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Prompt
+                  <Button 
+                    size="sm"
+                    className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">New Prompt</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
                 </Link>
               </div>
             </div>
 
             {/* Search Bar */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <div className="relative">
                 <Input
                   placeholder="        Search for prompts..."
-                  className="bg-muted border-muted pl-10"
+                  className="bg-muted border-muted pl-8 sm:pl-10 text-sm sm:text-base h-9 sm:h-10"
                   value={pendingSearch}
                   onChange={(e) => {
                     setPendingSearch(e.target.value)
                     if (e.target.value === "") {
                       setSearchQuery("")
                       setCurrentPage(1)
-                      fetchMyPrompts() // Fetch all prompts when search bar is cleared
                     }
                   }}
                   onKeyDown={handleSearch}
                 />
-                {/* Hide the search icon when typing */}
                 {pendingSearch === "" && (
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
+                  <div className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Favorite Prompts */}
-            {/* {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && favoritePrompts.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                  <h2 className="text-lg font-medium">Favorite Prompts</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {favoritePrompts.map((prompt) => (
-                    <StandardPromptCard
-                      key={prompt.id}
-                      id={prompt.id}
-                      title={prompt.title}
-                      description={prompt.description}
-                      rating={avgRatingMap[prompt.id] ?? 0}
-                      uses={prompt.uses}
-                      price={prompt.price}
-                      featured={prompt.featured}
-                      isPrivate={prompt.isPrivate}
-                      isFavorite={prompt.isFavorite}
-                      tags={prompt.tags}
-                      category={prompt.category}
-                      authorName={prompt.authorName || userProfile?.username || "You"}
-                      source={prompt.source}
-                      isOwned={true}
-                      onEdit={handleEditPrompt}
-                      onDelete={handleDeletePrompt}
-                      onToggleFavorite={handleToggleFavorite}
-                      onCopy={handleCopyPrompt}
-                      copiedId={copiedId}
-                      content={prompt.content}
-                      onPublish={handlePublishPrompt}
-                    />
-                  ))}
-                </div>
-              </div>
-            )} */}
-
-            {/* Results */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium">
+            {/* Results Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+              <h2 className="text-base sm:text-lg font-medium">
                 {searchQuery
                   ? `Search Results for "${searchQuery}"`
                   : selectedCategory !== "all"
@@ -669,13 +668,13 @@ export default function MyPromptsPage() {
                       ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
                       : "All Prompts"}
               </h2>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
               </div>
             </div>
 
-            {/* Prompts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {/* Prompts Grid - 2 columns on mobile, 2 on small screens, 3 on large */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
               {myPrompts.map((prompt) => (
                 <StandardPromptCard
                   key={prompt.id}
@@ -691,7 +690,7 @@ export default function MyPromptsPage() {
                   tags={prompt.tags || []}
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
-                  isOwned={true} // Since this is MyPromptsPage
+                  isOwned={true}
                   isPublished={prompt.isPublished || false}
                   source={prompt.source}
                   onEdit={handleEditPrompt}
@@ -707,13 +706,13 @@ export default function MyPromptsPage() {
 
             {/* Empty State */}
             {promptCount === 0 && !loading && (
-              <div className="text-center py-12">
+              <div className="text-center py-8 sm:py-12">
                 <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">
+                  <Search className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                  <h3 className="text-base sm:text-lg font-medium mb-2">
                     {myPrompts.length === 0 ? "No prompts yet" : "No prompts found"}
                   </h3>
-                  <p>
+                  <p className="text-sm sm:text-base px-4">
                     {myPrompts.length === 0
                       ? "Create your first prompt to get started"
                       : "Try adjusting your search terms or filters"}
@@ -733,7 +732,7 @@ export default function MyPromptsPage() {
                       setSearchQuery("")
                       setSelectedCategory("all")
                       setSelectedFilter("all")
-                      setCurrentPage(1);
+                      setCurrentPage(1)
                     }}
                   >
                     Clear Filters
@@ -742,28 +741,33 @@ export default function MyPromptsPage() {
               </div>
             )}
 
-            {/* Pagination */}
+            {/* Pagination - Responsive */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
+              <div className="flex justify-center items-center space-x-1 sm:space-x-2 mt-6 sm:mt-8">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
+                  <span className="sm:hidden">Prev</span>
                 </Button>
 
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                {/* Show fewer page numbers on mobile */}
+                {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 3 : 5) }).map((_, i) => {
                   let pageNumber
-                  if (totalPages <= 5) {
+                  const maxPages = window.innerWidth < 640 ? 3 : 5
+                  
+                  if (totalPages <= maxPages) {
                     pageNumber = i + 1
-                  } else if (currentPage <= 3) {
+                  } else if (currentPage <= Math.ceil(maxPages / 2)) {
                     pageNumber = i + 1
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNumber = totalPages - 4 + i
+                  } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                    pageNumber = totalPages - maxPages + 1 + i
                   } else {
-                    pageNumber = currentPage - 2 + i
+                    pageNumber = currentPage - Math.floor(maxPages / 2) + i
                   }
 
                   return (
@@ -771,8 +775,10 @@ export default function MyPromptsPage() {
                       key={pageNumber}
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
+                      className={`min-w-[2rem] h-8 sm:min-w-[2.5rem] sm:h-9 text-xs sm:text-sm ${
+                        currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNumber)}
-                      className={`min-w-[2.5rem] ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}`}
                     >
                       {pageNumber}
                     </Button>
@@ -782,10 +788,12 @@ export default function MyPromptsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">Next</span>
                 </Button>
               </div>
             )}
