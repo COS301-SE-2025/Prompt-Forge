@@ -40,24 +40,32 @@ export default function ProfileSettingsPage() {
     async function fetchProfile() {
       try {
         setLoading(true)
-        const [profile, bankList, payoutDetails] = await Promise.all([
+        const [profile, bankList] = await Promise.all([
           profileService.getCurrentProfile(),
-          profileService.getBankList(),
-          profileService.getPayoutDetails()
+          profileService.getBankList()
         ]);
 
         setBankList(bankList);
-        setPayoutDetails(payoutDetails);
+        
+        // Fetch payout details separately with error handling
+        try {
+          const payoutDetails = await profileService.getPayoutDetails();
+          setPayoutDetails(payoutDetails);
+        } catch (error) {
+          console.log("No payout details found or error fetching:", error);
+          setPayoutDetails(null);
+        }
+
         setUsername(profile.username || "")
         setEmail(profile.email || "")
         setBio(profile.bio || "")
-        setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+        setProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
         
         // Set pending state to match loaded profile
         setPendingUsername(profile.username || "")
         setPendingEmail(profile.email || "")
         setPendingBio(profile.bio || "")
-        setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
+        setPendingProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
       } catch (error) {
         console.error("Failed to load profile", error)
         // You might want to show an error message to the user here
@@ -437,21 +445,19 @@ export default function ProfileSettingsPage() {
 
             <TabsContent value="billing">
               <div className="grid gap-6">
-                <Card className="p-6 bg-transparent p-0">
+                <Card className="p-0 bg-muted">
                   <div className="bg-muted p-4 flex justify-between items-center">
-                  <h2 className="text-lg font-medium mb-4 w-fit mb-0"><CreditCard className="inline mr-2" /> Payment Methods</h2>
+                    <h2 className="text-lg font-medium mb-4 w-fit mb-0"><CreditCard className="inline mr-2" /> Payment Methods</h2>
                   </div>
                   {
                     payoutDetails !== null ?
-                      <div className="space-y-4 ">
-                        <div className=" p-4 rounded-md flex justify-between items-center">
+                      <div className="space-y-4 bg-muted">
+                        <div className="p-4 rounded-md flex justify-between items-center bg-muted">
                           <div className="flex items-center">
-                            {/* <div className="w-10 h-6 bg-blue-500 rounded mr-3"></div> */}
                             <BankCard {...payoutDetails}/>
                           </div>
                           <div className="flex gap-2">
                             <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
-
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
                               <Trash2 className="h-9 w-5" />
                             </Button>
@@ -459,18 +465,17 @@ export default function ProfileSettingsPage() {
                         </div>
                       </div>
                       :
-                      <div className="mt-4">
+                      <div className="mt-4 bg-muted p-4">
                         <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
                       </div>
                   }
-
                 </Card>
 
-                <Card className="p-6">
+                <Card className="p-6 bg-muted">
                   <h2 className="text-lg font-medium mb-4">Billing History</h2>
 
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-3 border-b border-border">
+                  <div className="space-y-4 bg-muted">
+                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
                       <div>
                         <p className="font-medium">Pro Plan - Monthly</p>
                         <p className="text-xs text-muted-foreground">May 15, 2025</p>
@@ -482,7 +487,7 @@ export default function ProfileSettingsPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-b border-border">
+                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
                       <div>
                         <p className="font-medium">Pro Plan - Monthly</p>
                         <p className="text-xs text-muted-foreground">April 15, 2025</p>
@@ -494,7 +499,7 @@ export default function ProfileSettingsPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex justify-between items-components py-3 border-b border-border">
+                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
                       <div>
                         <p className="font-medium">Pro Plan - Monthly</p>
                         <p className="text-xs text-muted-foreground">March 15, 2025</p>
@@ -508,7 +513,7 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex justify-center">
+                  <div className="mt-4 flex justify-center bg-muted">
                     <Button variant="link">View All Invoices</Button>
                   </div>
                 </Card>

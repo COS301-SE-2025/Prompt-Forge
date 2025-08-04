@@ -84,6 +84,17 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
         }
     }
 
+    const handleBankChange = (value: string) => {
+        const selectedBank: BankIdentifier | undefined = bankList.find((bank) => bank.code === value);
+        setNewCard({
+            ...newCard,
+            bank: {
+                code: selectedBank ? selectedBank.code : "",
+                name: selectedBank ? selectedBank.name : ""
+            }
+        })
+    }
+
 
     return (
         <div className="w-full max-w-sm">
@@ -95,71 +106,61 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                         Add Payment Method
                     </DialogTrigger>
                     :
-                    <DialogTrigger className="p-2 rounded-md  font-bold dark:text-[#3ebb9e] hover:bg-muted" >
+                    <DialogTrigger className="p-2 rounded-md font-bold dark:text-[#3ebb9e] hover:bg-muted bg-muted" >
                         Edit
                     </DialogTrigger>
 
                 }
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md bg-muted">
                     <DialogHeader>
                         <DialogTitle><CreditCardIcon className="inline mr-2" />Add Payout Card</DialogTitle>
                         <DialogDescription>Enter your payout information to add a new card.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
+                    <div className="grid gap-4 py-4 bg-muted">
+                        <div className="grid gap-2 bg-muted">
                             <Label htmlFor="name">Bank Name</Label>
-                            <Select onValueChange={(value) => {
-                                const selectedBank: BankIdentifier | undefined = bankList.find((bank) => bank.code === value);
-                                setNewCard({
-                                    ...newCard,
-                                    bank: {
-                                        code: selectedBank ? selectedBank.code : "",
-                                        name: selectedBank ? selectedBank.name : ""
-                                    }
-                                })
-                            }}
-                            >
-
-                                <SelectTrigger className="bg-muted">
-                                    <SelectValue placeholder={newCard.bank.name || "Select a bank"} />
+                            <Select onValueChange={handleBankChange} value={newCard.bank.code}>
+                                <SelectTrigger className="w-full bg-muted">
+                                    <SelectValue placeholder="Choose Bank" />
                                 </SelectTrigger>
-                                <SelectContent className="max-h-60 overflow-y-auto">
+                                <SelectContent className="custom-scrollbar max-h-[200px] overflow-y-auto bg-muted">
                                     {bankList.map((bank) => (
-                                        <SelectItem key={bank.code} value={bank.code}>
+                                        <SelectItem key={bank.code} value={bank.code} className="bg-muted hover:bg-muted/80">
                                             {bank.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                                {/* </Select> */}
                             </Select>
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid gap-2 bg-muted">
                             <Label htmlFor="name">Cardholder Name</Label>
                             <Input
                                 id="name"
                                 placeholder="John Doe"
                                 value={newCard.accountHolder}
                                 onChange={(e) => setNewCard({ ...newCard, accountHolder: e.target.value })}
+                                className="bg-muted"
                             />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid gap-2 bg-muted">
                             <Label htmlFor="number">Account Number</Label>
                             <Input
                                 id="number"
                                 placeholder="1234 5678 9012 3456"
                                 value={newCard.accountNumber}
                                 onChange={(e) => setNewCard({ ...newCard, accountNumber: e.target.value })}
+                                className="bg-muted"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <DialogFooter className="bg-muted">
+                        <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="bg-muted hover:bg-muted/80">
                             Cancel
                         </Button>
                         <Button onClick={handleSubmit} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">{process == "add" ? "Add Card" : "Edit Card"}</Button>
 
                     </DialogFooter>
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {error && <p className="text-red-500 text-sm mt-2 bg-muted">{error}</p>}
                 </DialogContent>
             </Dialog>
 
