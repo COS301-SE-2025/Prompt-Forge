@@ -7,7 +7,7 @@ const cardColor = {
   "bidvest": "red",
   "capitec": "red",
   "discovery": "purple",
-  "fnb": "green",
+  "first national bank": "green",
   "nedbank": "green",
   "standard bank": "blue",
   "tymebank": "yellow",
