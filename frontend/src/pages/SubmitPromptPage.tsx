@@ -676,56 +676,79 @@ export default function SubmitPromptPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                   {isEditMode ? "Edit Prompt" : "Publish Prompt"}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   {isEditMode ? "Update your existing prompt" : "Share or Save your prompt"}
                 </p>
               </div>
             </div>
+            
             <div className="flex flex-wrap items-center gap-2">
+              {/* Back to My Prompts button - moved to the right */}
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/my-prompts")}
+                className="flex items-center px-2 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 order-last sm:order-first"
+                title="Back to My Prompts"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
               {isEditMode && (
                 <Button
                   variant="outline"
                   onClick={clearForm}
-                  className="flex items-center px-4 py-2 text-sm font-medium"
+                  className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel Edit
+                  <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Cancel Edit</span>
+                  <span className="sm:hidden">Cancel</span>
                 </Button>
               )}
-              <Button variant="outline" onClick={loadDraft} className="flex items-center px-4 py-2 text-sm font-medium">
-                <FileText className="h-4 w-4 mr-2" />
-                Load Draft
+              
+              <Button 
+                variant="outline" 
+                onClick={loadDraft} 
+                className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+              >
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Load Draft</span>
+                <span className="sm:hidden">Load</span>
               </Button>
+              
               <Button
                 variant="outline"
                 onClick={saveDraft}
                 id="save-draft-btn"
-                className="flex items-center px-4 py-2 text-sm font-medium"
+                className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save Draft
+                <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Save Draft</span>
+                <span className="sm:hidden">Save</span>
               </Button>
+              
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 text-sm font-medium flex items-center justify-center min-w-[120px]"
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-4 sm:px-6 py-2 text-xs sm:text-sm font-medium flex items-center justify-center min-w-[100px] sm:min-w-[120px]"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isEditMode ? "Updating..." : "Submitting..."}
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
+                    <span className="hidden sm:inline">{isEditMode ? "Updating..." : "Submitting..."}</span>
+                    <span className="sm:hidden">{isEditMode ? "Updating" : "Submitting"}</span>
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
-                    {isEditMode ? "Update Prompt" : "Submit Prompt"}
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">{isEditMode ? "Update Prompt" : "Submit Prompt"}</span>
+                    <span className="sm:hidden">{isEditMode ? "Update" : "Submit"}</span>
                   </>
                 )}
               </Button>
@@ -734,17 +757,17 @@ export default function SubmitPromptPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Success Message */}
         {showSuccess && (
-          <Card className="p-4 mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
             <div className="flex items-center space-x-2 text-green-700 dark:text-green-400">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">
                 {isEditMode ? "Prompt updated successfully!" : "Prompt submitted successfully!"}
               </span>
             </div>
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+            <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-1">
               {isEditMode
                 ? "Your prompt changes have been saved."
                 : "Your prompt is now under review and will be published soon."}
@@ -754,12 +777,12 @@ export default function SubmitPromptPage() {
 
         {/* Submission Error Message */}
         {errors.submit && (
-          <Card className="p-4 mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
             <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
-              <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Submission Failed</span>
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">Submission Failed</span>
             </div>
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 mt-1">
               {errors.submit}
             </p>
           </Card>
@@ -767,31 +790,31 @@ export default function SubmitPromptPage() {
 
         {/* Edit Mode Indicator */}
         {isEditMode && (
-          <Card className="p-4 mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-400">
-              <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Editing Mode</span>
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">Editing Mode</span>
             </div>
-            <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mt-1">
               You are currently editing an existing prompt. Make your changes and click "Update Prompt" to save.
             </p>
           </Card>
         )}
 
-        {/* Main Layout: Form on left, Sidebar on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Basic Information Form (2/3 width) */}
-          <div className="lg:col-span-2">
+        {/* Main Layout: Responsive stack on mobile, grid on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Left Column - Basic Information Form */}
+          <div className="lg:col-span-2 order-1 lg:order-1">
             {/* Basic Information */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#3ebb9e]" />
                 Basic Information
               </h2>
 
               {/* Show explanation if editing a public prompt */}
               {isEditMode && isPublicEdit && (
-                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="mb-3 sm:mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
@@ -806,7 +829,7 @@ export default function SubmitPromptPage() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
@@ -821,7 +844,7 @@ export default function SubmitPromptPage() {
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     maxLength={100}
-                    disabled={isEditMode && isPublicEdit} // LOCK if public edit
+                    disabled={isEditMode && isPublicEdit}
                   />
                   {errors.title && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -892,12 +915,12 @@ export default function SubmitPromptPage() {
                     className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none overflow-y-auto custom-scrollbar ${
                       errors.promptText ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     } ${isEditMode && isPublicEdit ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed" : ""}`}
-                    rows={8}
+                    rows={6}
                     style={{ maxHeight: '200px', minHeight: '120px' }}
                     placeholder="Enter your prompt text here..."
                     value={formData.promptText}
                     onChange={(e) => handleInputChange("promptText", e.target.value)}
-                    disabled={isEditMode && isPublicEdit} // LOCK if public edit
+                    disabled={isEditMode && isPublicEdit}
                   />
                   {errors.promptText && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -926,26 +949,26 @@ export default function SubmitPromptPage() {
                   <label htmlFor="isPrivate" className="text-sm font-medium text-gray-900 dark:text-white">
                     Visibility
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <span className={`text-sm ${!formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <span className={`text-xs sm:text-sm ${!formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Public
                     </span>
                     <button
                       type="button"
                       onClick={() => handleInputChange("isPrivate", !formData.isPrivate)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
+                      className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
                       style={{
                         backgroundColor: formData.isPrivate ? '#ef4444' : '#3ebb9e'
                       }}
                     >
                       <span
-                        className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        className="pointer-events-none inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                         style={{
-                          transform: formData.isPrivate ? 'translateX(1.25rem)' : 'translateX(0)'
+                          transform: formData.isPrivate ? 'translateX(1rem)' : 'translateX(0)'
                         }}
                       />
                     </button>
-                    <span className={`text-sm ${formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <span className={`text-xs sm:text-sm ${formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Private
                     </span>
                   </div>
@@ -973,9 +996,9 @@ export default function SubmitPromptPage() {
               </div>
             </Card>
 
-            {/* Terms of Service */}
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">
+            {/* Terms of Service - Mobile: show at bottom, Desktop: show after form */}
+            <div className="text-center py-3 sm:py-4 block lg:block">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 By submitting, you agree to our{" "}
                 <a href="#" className="text-[#3ebb9e] hover:text-[#00674f] underline">
                   community guidelines
@@ -989,17 +1012,17 @@ export default function SubmitPromptPage() {
             </div>
           </div>
 
-          {/* Right Column - All Sidebar Components (1/3 width) */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Right Column - Sidebar Components - show after form on mobile */}
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-2">
             {/* Preview */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center py-2 mb-4"
+                className="w-full flex items-center justify-center py-2 mb-3 sm:mb-4 text-sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -1007,12 +1030,12 @@ export default function SubmitPromptPage() {
               </Button>
 
               {showPreview && (
-                <div className="mt-4">
-                  {/* Preview container - adjusted for sidebar */}
+                <div className="mt-3 sm:mt-4">
+                  {/* Preview container - mobile optimized */}
                   <div className="w-full">
                     {/* Simulate StandardPromptCard appearance */}
-                    <div className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col border border-border rounded-lg bg-card min-h-[350px]">
-                      <div className="p-4 flex-1">
+                    <div className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col border border-border rounded-lg bg-card min-h-[300px] sm:min-h-[350px]">
+                      <div className="p-3 sm:p-4 flex-1">
                         {/* Header with category tag and rating */}
                         <div className="flex justify-between items-start mb-2">
                           {/* Category tag */}
@@ -1055,8 +1078,8 @@ export default function SubmitPromptPage() {
                         {formData.promptText && (
                           <div className="mb-3 p-2 bg-muted/50 rounded-lg border">
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                              {formData.promptText.length > 100
-                                ? `${formData.promptText.substring(0, 100)}...`
+                              {formData.promptText.length > 80
+                                ? `${formData.promptText.substring(0, 80)}...`
                                 : formData.promptText}
                             </p>
                           </div>
@@ -1069,8 +1092,8 @@ export default function SubmitPromptPage() {
                               Expected Output:
                             </p>
                             <p className="text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
-                              {formData.expectedOutput.length > 80
-                                ? `${formData.expectedOutput.substring(0, 80)}...`
+                              {formData.expectedOutput.length > 60
+                                ? `${formData.expectedOutput.substring(0, 60)}...`
                                 : formData.expectedOutput}
                             </p>
                           </div>
@@ -1082,7 +1105,7 @@ export default function SubmitPromptPage() {
                             <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                               <User className="h-3 w-3" />
                             </div>
-                            <span className="text-xs ml-2 text-muted-foreground font-medium">@{localStorage.getItem("username") || "Unknown User"}</span>
+                            <span className="text-xs ml-2 text-muted-foreground font-medium truncate">@{localStorage.getItem("username") || "Unknown User"}</span>
                           </div>
 
                           {/* Private indicator */}
@@ -1096,24 +1119,24 @@ export default function SubmitPromptPage() {
 
                       {/* Footer with action buttons */}
                       <div className="border-t border-border flex">
-                        <div className="flex-1 flex items-center justify-between p-3">
+                        <div className="flex-1 flex items-center justify-between p-2 sm:p-3">
                           <div className="flex items-center space-x-1">
                             {/* Copy button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-6 w-6 sm:h-7 sm:w-7"
                               disabled
                               title="Copy prompt content"
                             >
                               <Copy className="h-3 w-3" />
                             </Button>
 
-                            {/* Test button - green play button next to copy */}
+                            {/* Test button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
                               disabled
                               title="Test this prompt"
                             >
@@ -1121,25 +1144,20 @@ export default function SubmitPromptPage() {
                             </Button>
 
                             {/* Edit button */}
-                            <Button variant="ghost" size="icon" className="h-7 w-7" disabled title="Edit prompt">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7" disabled title="Edit prompt">
                               <Edit className="h-3 w-3" />
                             </Button>
 
-                            {/* Delete button - red bin icon */}
+                            {/* Delete button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-6 w-6 sm:h-7 sm:w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
                               disabled
                               title="Delete prompt"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
-                          </div>
-
-                          {/* Right side - now empty since test button moved */}
-                          <div className="flex items-center space-x-2">
-                            {/* Empty - test button moved to left side */}
                           </div>
                         </div>
                       </div>
@@ -1150,8 +1168,8 @@ export default function SubmitPromptPage() {
             </Card>
 
             {/* Guidelines */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <Lightbulb className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Submission Guidelines
               </h3>
@@ -1176,12 +1194,12 @@ export default function SubmitPromptPage() {
             </Card>
 
             {/* Author Info */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <User className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Author Information
               </h3>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 <p className="mb-2">
                   Submitting as:{" "}
                   <span className="text-foreground font-medium">
@@ -1197,10 +1215,10 @@ export default function SubmitPromptPage() {
               </div>
             </Card>
 
-            {/* Payment Details Card - existing code remains the same */}
+            {/* Payment Details Card - existing code with responsive updates */}
             {!isEditMode && (
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="text-sm font-semibold text-foreground flex items-center">
                     <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                     Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
@@ -1237,44 +1255,44 @@ export default function SubmitPromptPage() {
 
                 {showPaymentDetails && bankingInfoNeeded && (
                   <>
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="mb-3 sm:mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-xs text-blue-700 dark:text-blue-400">
                         <AlertCircle className="w-4 h-4 inline mr-1" />
                         This information is securely stored and used only for payment processing.
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("bank")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <Landmark className="w-4 h-4" />
+                        <Landmark className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Bank</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("paypal")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <WalletIcon className="w-4 h-4" />
+                        <WalletIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">PayPal</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("stripe")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <CreditCardIcon className="w-4 h-4" />
+                        <CreditCardIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Stripe</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("crypto")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <BitcoinIcon className="w-4 h-4" />
+                        <BitcoinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Crypto</span>
                       </button>
                     </div>
