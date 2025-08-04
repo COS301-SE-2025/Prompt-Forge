@@ -119,7 +119,7 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                     <div className="grid gap-4 py-4 bg-muted">
                         <div className="grid gap-2 bg-muted">
                             <Label htmlFor="name">Bank Name</Label>
-                            <Select onValueChange={handleBankChange} value={newCard.bank.code}>
+                            <Select onValueChange={handleBankChange} value={newCard.bank.name}>
                                 <SelectTrigger className="w-full bg-muted">
                                     <SelectValue placeholder="Choose Bank" />
                                 </SelectTrigger>
