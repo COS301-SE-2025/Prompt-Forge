@@ -259,7 +259,7 @@ export default function MarketplacePage() {
           )}
 
           <button
-            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition hidden lg:block"
+            className="absolute top-3 right-2 z-10 bg-muted p-1 transition hidden lg:block"
             onClick={() => setSidebarCollapsed((c) => !c)}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >

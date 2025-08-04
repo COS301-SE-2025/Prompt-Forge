@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { ReviewCard } from "./ReviewCard"
-import { BookOpen, MessageSquare, Info, Edit, Trash2 } from "lucide-react"
+import { BookOpen, MessageSquare, Info, Edit, Trash2, X } from "lucide-react"
 import { PurchaseButton } from "./PurchaseButton"
 import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
@@ -282,6 +282,19 @@ export const PromptDetails = () => {
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-6xl">
+      {/* Back button */}
+      <div className="mb-4 flex items-center justify-between">
+        <Button
+          onClick={() => window.history.back()}
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
+
       {/* Breadcrumb - More compact */}
       <div className="mb-4">
         <nav className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
