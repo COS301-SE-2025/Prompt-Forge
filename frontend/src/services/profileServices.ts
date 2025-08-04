@@ -6,7 +6,16 @@ class ProfileService {
   async getCurrentProfile(): Promise<any> {
     const response = await HttpClient.get(`${this.baseUrl}/me`);
     if (!response.ok) throw new Error("Failed to fetch profile");
-    return await response.json();
+    
+    const apiResponse = await response.json();
+    
+    // Check if the response follows the standard API format
+    if (apiResponse.status === "success" && apiResponse.data) {
+      return apiResponse.data;
+    }
+    
+    // Fallback: return the response directly if it doesn't follow standard format
+    return apiResponse;
   }
 
   async updateCurrentProfile(data: any): Promise<any> {
