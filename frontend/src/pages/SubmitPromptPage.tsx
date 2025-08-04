@@ -623,10 +623,6 @@ export default function SubmitPromptPage() {
     updateButton("save-draft-btn-bottom")
   }
 
-  const loadDraft = () => {
-    // In a real app, you'd load this from your backend
-    console.log("Load draft functionality would go here")
-  }
 
   const clearForm = () => {
     setFormData({
@@ -692,12 +688,13 @@ export default function SubmitPromptPage() {
             <div className="flex flex-wrap items-center gap-2">
               {/* Back to My Prompts button - moved to the right */}
               <Button
+                onClick={() => window.history.back()}
                 variant="ghost"
-                onClick={() => navigate("/my-prompts")}
-                className="flex items-center px-2 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 order-last sm:order-first"
-                title="Back to My Prompts"
+                size="sm"
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
+                Back
               </Button>
               
               {isEditMode && (
@@ -711,16 +708,6 @@ export default function SubmitPromptPage() {
                   <span className="sm:hidden">Cancel</span>
                 </Button>
               )}
-              
-              <Button 
-                variant="outline" 
-                onClick={loadDraft} 
-                className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
-              >
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Load Draft</span>
-                <span className="sm:hidden">Load</span>
-              </Button>
               
               <Button
                 variant="outline"
