@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/Card"
-import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, Tag, HelpCircle } from "lucide-react"
+import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, FileText, HelpCircle } from "lucide-react"
 import InteractiveBackground from "@/components/InteractiveBackground"
 import GradientText from "@/components/GradientText"
 
@@ -58,8 +58,8 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 lg:gap-3 h-fit order-2 lg:order-2">
               {/* Prompt Marketplace */}
               <Link to="/marketplace" className="col-span-1">
-                <Card className="bg-blue-500/20 border-blue-500/30 p-2 sm:p-3 lg:p-4 hover:bg-blue-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-blue-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                <Card className="bg-indigo-500/20 border-indigo-500/30 p-2 sm:p-3 lg:p-4 hover:bg-indigo-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-indigo-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
                     <ShoppingBag className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
@@ -74,8 +74,8 @@ export default function HomePage() {
 
               {/* Testing Ground */}
               <Link to="/editor" className="col-span-1">
-                <Card className="bg-purple-500/20 border-purple-500/30 p-2 sm:p-3 lg:p-4 hover:bg-purple-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-purple-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                <Card className="bg-violet-500/20 border-violet-500/30 p-2 sm:p-3 lg:p-4 hover:bg-violet-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-violet-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
                     <TestTube className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
@@ -88,26 +88,10 @@ export default function HomePage() {
                 </Card>
               </Link>
 
-              {/* Prompt Comparison */}
-              <Link to="/comparison" className="col-span-1">
-                <Card className="bg-green-500/20 border-green-500/30 p-2 sm:p-3 lg:p-4 hover:bg-green-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-green-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
-                    <Scale className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
-                  </div>
-                  <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
-                    <span className="sm:hidden">Compare</span>
-                    <span className="hidden sm:inline">Prompt Comparison</span>
-                  </h3>
-                  <p className="text-muted-foreground text-[10px] sm:text-xs lg:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
-                    Compare prompts side-by-side and determine which generates better responses.
-                  </p>
-                </Card>
-              </Link>
-
               {/* Analytics Engine */}
               <Link to="/dashboard" className="col-span-1">
-                <Card className="bg-orange-500/20 border-orange-500/30 p-2 sm:p-3 lg:p-4 hover:bg-orange-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-orange-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                <Card className="bg-amber-500/20 border-amber-500/30 p-2 sm:p-3 lg:p-4 hover:bg-amber-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-amber-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
                     <BarChart3 className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
@@ -120,26 +104,42 @@ export default function HomePage() {
                 </Card>
               </Link>
 
-              {/* Categorization */}
-              <Link to="/construction" className="col-span-1">
-                <Card className="bg-purple-600/20 border-purple-600/30 p-2 sm:p-3 lg:p-4 hover:bg-purple-600/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(147,51,234,0.6)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-purple-600 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
-                    <Tag className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
+              {/* My Prompts */}
+              <Link to="/my-prompts" className="col-span-1">
+                <Card className="bg-teal-500/20 border-teal-500/30 p-2 sm:p-3 lg:p-4 hover:bg-teal-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(20,184,166,0.6)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-teal-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                    <FileText className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
-                    <span className="sm:hidden">Categories</span>
-                    <span className="hidden sm:inline">Categorization</span>
+                    <span className="sm:hidden">My Prompts</span>
+                    <span className="hidden sm:inline">My Prompts</span>
                   </h3>
                   <p className="text-muted-foreground text-[10px] sm:text-xs lg:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
-                    Find prompts by industry, use case, and complexity to suit your needs.
+                    Manage and organize your created prompts in one convenient location.
+                  </p>
+                </Card>
+              </Link>
+
+              {/* Prompt Comparison */}
+              <Link to="/comparison" className="col-span-1">
+                <Card className="bg-lime-500/20 border-lime-500/30 p-2 sm:p-3 lg:p-4 hover:bg-lime-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(132,204,22,0.5)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-lime-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                    <Scale className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
+                  </div>
+                  <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
+                    <span className="sm:hidden">Compare</span>
+                    <span className="hidden sm:inline">Prompt Comparison</span>
+                  </h3>
+                  <p className="text-muted-foreground text-[10px] sm:text-xs lg:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
+                    Compare prompts side-by-side and determine which generates better responses.
                   </p>
                 </Card>
               </Link>
 
               {/* Community Rankings */}
               <Link to="/community" className="col-span-1">
-                <Card className="bg-red-500/20 border-red-500/30 p-2 sm:p-3 lg:p-4 hover:bg-red-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-105 backdrop-blur-sm">
-                  <div className="bg-red-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
+                <Card className="bg-rose-500/20 border-rose-500/30 p-2 sm:p-3 lg:p-4 hover:bg-rose-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(244,63,94,0.5)] hover:scale-105 backdrop-blur-sm">
+                  <div className="bg-rose-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
                     <Trophy className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
@@ -151,6 +151,7 @@ export default function HomePage() {
                   </p>
                 </Card>
               </Link>
+
             </div>
           </div>
         </div>
