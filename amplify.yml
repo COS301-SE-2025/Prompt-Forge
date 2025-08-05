@@ -9,10 +9,9 @@ applications:
             - npm install -g npm@latest
             - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
             - npm install --legacy-peer-deps
-            - npm install vite @vitejs/plugin-react typescript @types/react @types/react-dom --save-dev --legacy-peer-deps
         build:
           commands:
-            - npm run build
+            - npx vite build --mode production
           env:
             VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
       artifacts:
