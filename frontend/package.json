@@ -15,7 +15,7 @@
     "coverage:open": "start coverage/index.html",
     "dev": "vite",
     "build": "npx tsc && vite build",
-    "build:prod": "npx tsc && vite build --mode production",
+    "build:prod": "vite build --mode production",
     "build:fast": "npx tsc && vite build",
     "typecheck": "npx tsc --noEmit",
     "preview": "vite preview",
@@ -80,8 +80,9 @@
     "tailwindcss": "^3.3.3",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.2",
+    "typescript": "^5.0.0",
     "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "web-streams-polyfill": "^4.1.0",
     "whatwg-fetch": "^3.6.20"
   }
