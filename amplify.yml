@@ -9,6 +9,7 @@ applications:
             - npm install -g npm@latest
             - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
             - npm install --legacy-peer-deps
+            - npm install vite @vitejs/plugin-react typescript @types/react @types/react-dom --save-dev --legacy-peer-deps
         build:
           commands:
             - npm run build:prod
