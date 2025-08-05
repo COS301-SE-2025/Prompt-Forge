@@ -5,21 +5,11 @@ applications:
       phases:
         preBuild:
           commands:
-            - nvm install 22 && nvm use 22
-            - npm install -g npm@latest
-            - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
-            - npm install --legacy-peer-deps
-            - npm install vite@^5.4.0 @vitejs/plugin-react@^4.3.0 typescript@^5.4.0 --save-dev --legacy-peer-deps --force
-            - npm ls vite typescript || echo "Missing dependencies check"
+            - echo "Skipping build, using pre-built assets"
         build:
           commands:
-            - npx vite@5.4.0 build --mode production
-          env:
-            VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
+            - echo "Using pre-built assets from dist folder"
       artifacts:
         baseDirectory: dist
         files:
           - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
