@@ -9,7 +9,7 @@ applications:
             - npm install -g npm@latest
             - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
             - npm install --legacy-peer-deps
-            - npm install vite@^5.0.0 @vitejs/plugin-react@^4.0.0 --save-dev --legacy-peer-deps
+            - npm install vite@5.4.0 @vitejs/plugin-react@4.3.0 typescript@5.5.0 --save-dev --legacy-peer-deps --force
             - npm ls vite typescript || echo "Missing dependencies check"
         build:
           commands:
