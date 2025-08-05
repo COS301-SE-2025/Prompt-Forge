@@ -9,10 +9,11 @@ applications:
             - npm install -g npm@latest
             - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
             - npm install --legacy-peer-deps
+            - npm install vite@^5.0.0 @vitejs/plugin-react@^4.0.0 --save-dev --legacy-peer-deps
             - npm ls vite typescript || echo "Missing dependencies check"
         build:
           commands:
-            - npx vite build --mode production
+            - npm run build
           env:
             VITE_API_BASE_URL: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080
       artifacts:
