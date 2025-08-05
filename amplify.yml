@@ -5,8 +5,7 @@ applications:
       phases:
         preBuild:
           commands:
-            - nvm install 22 
-            - nvm use 22
+            - nvm install 22 && nvm use 22
             - npm install -g npm@latest
             - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite dist
             - npm install --legacy-peer-deps
