@@ -1,4 +1,4 @@
-import { EnrichedPrompt } from "@/models/CartPrompt"
+import { EnrichedPrompt } from "@/Models/CartPrompt"
 import { CartService, PaymentAccessCodeAndReference } from "@/services/cartServices"
 import { Button } from "./ui/Button"
 import PaystackPop from '@paystack/inline-js'
@@ -85,9 +85,9 @@ export const CartSummary = ({
               }
             },
             onClose: function () {}
-          });
+          } as any);
 
-          handler.openIframe();
+          (handler as any).openIframe();
         })
         .catch((error)=>{
           showNotification("error", "Checkout failed", error.message || "Unknown error")
