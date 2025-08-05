@@ -8,7 +8,7 @@ applications:
             - nvm install 22 && nvm use 22
             - npm install -g npm@latest
             - rm -rf node_modules pnpm-lock.yaml .npmrc .vite
-            - npm ci --legacy-peer-deps
+            - npm install --legacy-peer-deps
             - npm ls vite typescript || echo "Dependencies check"
             - npx tsc --version
         build:
