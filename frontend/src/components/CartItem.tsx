@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { Trash2Icon, StarIcon } from 'lucide-react';
-import { EnrichedPrompt } from '@/models/CartPrompt';
-import { Category, CategoryColors } from '@/models/Prompt';
+import { EnrichedPrompt } from '@/Models/CartPrompt';
+import { Category, CategoryColors } from '@/Models/Prompt';
 import { CartService } from '@/services/cartServices';
 interface CartItemProps extends EnrichedPrompt {
   fetchData: () => Promise<void>;
@@ -36,10 +36,10 @@ export const CartItem = ({
           (promptTags || []).map((category: Category) => {
             return <span key={category} className={`
                 px-3 py-1 text-sm rounded-md ${CategoryColors[category] ? CategoryColors[category] : CategoryColors["default"]}
-                ${category === 'Writing' ? 'bg-blue-900 text-blue-200' : ''}
+                ${category === 'Creative Writing' ? 'bg-blue-900 text-blue-200' : ''}
                 ${category === 'Marketing' ? 'bg-purple-900 text-purple-200' : ''}
                 ${category === 'Development' ? 'bg-green-900 text-green-200' : ''}
-                ${category === 'Design' ? 'bg-pink-900 text-pink-200' : ''}
+                ${category === 'Content Creation' ? 'bg-pink-900 text-pink-200' : ''}
           `}>
               {category}
             </span>

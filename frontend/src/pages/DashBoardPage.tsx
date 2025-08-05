@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
-import { MyPrompt } from '@/models/MyPrompt';
+import { MyPrompt } from '@/Models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
 
 
@@ -26,9 +26,25 @@ type UserProfile = {
   following: number
 }
 
-// Define allowed tags at the top of your file or near your imports
+// Update the allowedTags array to match the actual Category type
 const allowedTags = [
-  "Writing", "Marketing", "Development", "Design", "SEO", "Content", "default", "null"
+  "default",
+  "Business", 
+  "Development", 
+  "Coding", 
+  "Science", 
+  "Problem Solving", 
+  "Technical", 
+  "Health", 
+  "Creative Writing",  // Add this
+  "Research", 
+  "Education", 
+  "Marketing", 
+  "Data Analysis", 
+  "Content Creation",  // Add this
+  "Gaming", 
+  "Environment", 
+  "null"
 ] as const;
 
 export default function DashboardPage() {
@@ -410,6 +426,22 @@ export default function DashboardPage() {
       }
     }
   }, [])
+
+  // Create a mapping function to handle tag conversion
+  const mapTagToCategory = (tag: string): typeof allowedTags[number] => {
+    const tagMap: Record<string, typeof allowedTags[number]> = {
+      "Writing": "Creative Writing",
+      "Content": "Content Creation", 
+      "Design": "default",  // Map to default since "Design" isn't in Category type
+      "SEO": "Marketing",
+      // Add other mappings as needed
+    };
+    
+    const mappedTag = tagMap[tag] || tag;
+    return allowedTags.includes(mappedTag as typeof allowedTags[number]) 
+      ? (mappedTag as typeof allowedTags[number])
+      : "default";
+  };
 
   if (authLoading) {
     return (

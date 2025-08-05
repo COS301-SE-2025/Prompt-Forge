@@ -198,10 +198,42 @@ export default function UserProfilePage() {
     }
   }
 
-  // Define allowed tags
+  // Update the allowedTags array to match the actual Category type
   const allowedTags = [
-    "Writing", "Marketing", "Development", "Design", "SEO", "Content", "default", "null"
+    "default",
+    "Business", 
+    "Development", 
+    "Coding", 
+    "Science", 
+    "Problem Solving", 
+    "Technical", 
+    "Health", 
+    "Creative Writing",  // Changed from "Writing"
+    "Research", 
+    "Education", 
+    "Marketing", 
+    "Data Analysis", 
+    "Content Creation",  // Changed from "Content"
+    "Gaming", 
+    "Environment", 
+    "null"
   ] as const;
+
+  // Create a mapping function to handle tag conversion
+  const mapTagToCategory = (tag: string): typeof allowedTags[number] => {
+    const tagMap: Record<string, typeof allowedTags[number]> = {
+      "Writing": "Creative Writing",
+      "Content": "Content Creation", 
+      "Design": "default",  // Map to default since "Design" isn't in Category type
+      "SEO": "Marketing",
+      // Add other mappings as needed
+    };
+    
+    const mappedTag = tagMap[tag] || tag;
+    return allowedTags.includes(mappedTag as typeof allowedTags[number]) 
+      ? (mappedTag as typeof allowedTags[number])
+      : "default";
+  };
 
   if (loading) {
     return (
@@ -394,16 +426,13 @@ export default function UserProfilePage() {
                     uses={prompt.uses}
                     price={prompt.price}
                     featured={prompt.featured}
-                    tags={
-                      prompt.tags
-                        .map(tag => allowedTags.includes(tag as typeof allowedTags[number]) ? (tag as typeof allowedTags[number]) : "default")
-                    }
+                    isPrivate={false}
+                    isFavorite={false}
+                    tags={prompt.tags.map(mapTagToCategory)}
                     category={prompt.category}
                     authorName={profile.username}
                     isOwned={false}
-                    isBought={false}
-                    isPrivate={false}
-                    isFavorite={false}
+                    source="authored" // Use source instead of isBought
                     content=""
                     copiedId={null}
                   />
