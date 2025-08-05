@@ -5,12 +5,12 @@ applications:
       phases:
         preBuild:
           commands:
-            - nvm install 22 && nvm use 22
+            - nvm install 22 
+            - nvm use 22
             - npm install -g npm@latest
-            - rm -rf node_modules pnpm-lock.yaml .npmrc .vite
-            - npm ci --legacy-peer-deps
-            - npm ls vite typescript || echo "Dependencies check"
-            - npx tsc --version
+            - rm -rf node_modules package-lock.json pnpm-lock.yaml .npmrc .vite
+            - npm install --legacy-peer-deps
+            - npm install @types/jest@latest @types/testing-library__jest-dom@latest @types/cypress@latest --save-dev --legacy-peer-deps
         build:
           commands:
             - npm run build:prod
