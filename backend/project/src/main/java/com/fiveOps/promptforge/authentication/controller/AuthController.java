@@ -1,11 +1,15 @@
 package com.fiveOps.promptforge.authentication.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.fiveOps.promptforge.authentication.dto.LoginRequest;
+import com.fiveOps.promptforge.authentication.dto.SignupRequest;
+import com.fiveOps.promptforge.authentication.service.AuthService;
+import com.fiveOps.promptforge.user_profile.model.User;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,14 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fiveOps.promptforge.authentication.dto.LoginRequest;
-import com.fiveOps.promptforge.authentication.dto.SignupRequest;
-import com.fiveOps.promptforge.authentication.service.AuthService;
-import com.fiveOps.promptforge.user_profile.model.User;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+  private static final Logger logger = LoggerFactory.getLogger(
+    AuthController.class
+  );
 
   private final AuthService authService;
 
@@ -37,18 +40,27 @@ public class AuthController {
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     authService.signup(request);
-    return ResponseEntity.ok().headers(headers).body(Map.of("message", "Signup successful"));
+    return ResponseEntity
+      .ok()
+      .headers(headers)
+      .body(Map.of("message", "Signup successful"));
   }
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     try {
+      logger.info("Login attempt by user: {}", request.getEmail());
       System.out.println("Login attempt for email: " + request.getEmail());
 
       String token = authService.login(request);
       System.out.println(
-          "Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
-
+        "Generated token: " +
+        (token != null ? token.substring(0, 20) + "..." : "NULL")
+      );
+      logger.info(
+        "Generated token: " +
+        (token != null ? token.substring(0, 20) + "..." : "NULL")
+      );
       // Get user info for response
       User user = authService.getUserByEmail(request.getEmail());
 
@@ -58,24 +70,26 @@ public class AuthController {
       responseBody.put("username", user.getUsername());
       responseBody.put("email", user.getEmail());
 
-      ResponseCookie cookie =
-          ResponseCookie.from("token", token)
-              .httpOnly(true)
-              .secure(false)
-              .path("/")
-              .maxAge(7 * 24 * 60 * 60) // 7 days
-              .sameSite("Lax")
-              .build();
+      ResponseCookie cookie = ResponseCookie
+        .from("token", token)
+        .httpOnly(true)
+        .secure(false)
+        .path("/")
+        .maxAge(7 * 24 * 60 * 60) // 7 days
+        .sameSite("Lax")
+        .build();
 
       System.out.println("Setting cookie: " + cookie.toString());
 
-      return ResponseEntity.ok()
-          .header(HttpHeaders.SET_COOKIE, cookie.toString())
-          .body(responseBody);
-
+      return ResponseEntity
+        .ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(responseBody);
     } catch (RuntimeException e) {
       System.err.println("Login failed: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
+      return ResponseEntity
+        .status(HttpStatus.UNAUTHORIZED)
+        .body(Map.of("message", e.getMessage()));
     }
   }
 
