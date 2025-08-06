@@ -1,32 +1,50 @@
+import { BankIdentifier, PayoutCard } from "@/Models/Payout";
 import HttpClient from "./httpClient";
+import { APIResponse } from "@/Models/APIResponse";
+
+interface APIResponseWithBankList extends APIResponse {
+  data: Array<BankIdentifier>
+}
+
+interface APIResponseForPayoutDetails extends APIResponse {
+  data: PayoutCard
+}
+
 
 class ProfileService {
   private baseUrl = "/user";
+  private httpClient = HttpClient;
 
   async getCurrentProfile(): Promise<any> {
-    const response = await fetch(`${HttpClient.apiUrl}${this.baseUrl}/me`, {
-      credentials: "include",
-    });
+    const response = await HttpClient.get(`${this.baseUrl}/me`);
     if (!response.ok) throw new Error("Failed to fetch profile");
-    return await response.json();
+    
+    const apiResponse = await response.json();
+    
+    // Check if the response follows the standard API format
+    if (apiResponse.status === "success" && apiResponse.data) {
+      return apiResponse.data;
+    }
+    
+    // Fallback: return the response directly if it doesn't follow standard format
+    return apiResponse;
   }
 
   async updateCurrentProfile(data: any): Promise<any> {
-    // If user wants to remove profile picture
+    // Remove profile picture if user cleared it
     if (
       "profilePicture" in data &&
       (!data.profilePicture || data.profilePicture.trim() === "")
     ) {
       try {
         await this.deleteProfilePicture();
-        // Remove profilePicture from payload so backend doesn't overwrite it
         delete data.profilePicture;
       } catch (err) {
         console.error("Error deleting profile picture:", err);
       }
     }
 
-    // If user wants to upload a new profile picture (expects a File object)
+    // Upload new profile picture if present
     if (data.profilePicture instanceof File) {
       try {
         const url = await this.uploadProfilePicture(data.profilePicture);
@@ -37,21 +55,12 @@ class ProfileService {
       }
     }
 
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/me`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-        credentials: "include",
-      }
-    );
+    const response = await HttpClient.patch(`${this.baseUrl}/me`, data);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to update profile");
     }
+
     return await response.json();
   }
 
@@ -59,13 +68,9 @@ class ProfileService {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/upload-picture`,
-      {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      }
+    const response = await HttpClient.uploadForm(
+      `${this.baseUrl}/upload-picture`,
+      formData
     );
 
     if (!response.ok) {
@@ -74,21 +79,82 @@ class ProfileService {
     }
 
     const result = await response.json();
-    return result.url; // returns string URL
+    return result.url;
   }
 
   async deleteProfilePicture(): Promise<void> {
-    const response = await fetch(
-      `${HttpClient.apiUrl}${this.baseUrl}/delete-picture`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
-
+    const response = await HttpClient.delete(`${this.baseUrl}/delete-picture`);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to delete picture");
+    }
+  }
+
+  async getBankList(): Promise<Array<BankIdentifier>> {
+    try {
+      const bankListResponse = await this.httpClient.get(`/payment/bank-list`);
+      const response: APIResponseWithBankList = await bankListResponse.json()
+
+      if (response.status === "success") {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
+
+  async getPayoutDetails(): Promise<PayoutCard> {
+    try {
+      const bankListResponse = await this.httpClient.get(`/payment/user-payout-details`);
+      const apiResponse: APIResponseForPayoutDetails = await bankListResponse.json()
+      let details: PayoutCard = apiResponse.data
+
+      if (apiResponse.status === "success") {
+        return details;
+      }
+
+      throw new Error(apiResponse.message)
+    } catch (error) {
+      console.log("error", error);
+
+      throw error
+    }
+  }
+
+  async addPayoutCard(newCard: PayoutCard): Promise<void> {
+    try {
+      const bankListResponse = await this.httpClient.post(`/payment/add-payout-card`, newCard);
+      const response: APIResponse = await bankListResponse.json()
+
+      if (response.status === "success") {
+        return;
+      }
+
+      throw new Error(response.message)
+    } catch (error) {
+      console.log("error", error);
+
+      throw error
+    }
+  }
+
+  async updatePayoutCard(newCard: PayoutCard): Promise<void> {
+    try {
+      const bankListResponse = await this.httpClient.put(`/payment/update-payout-card`, newCard);
+      const response: APIResponse = await bankListResponse.json()
+
+      if (response.status === "success") {
+        return;
+      }
+
+      throw new Error(response.message)
+    } catch (error) {
+      console.log("error", error);
+
+      throw error
     }
   }
 }

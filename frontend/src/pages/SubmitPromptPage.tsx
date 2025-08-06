@@ -2,8 +2,10 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom" // Add this import
+import { useEffect, useState } from "react"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
+import promptSubmissionService, { PromptSubmissionData } from '../services/promptSubmissionService'
+import { PromptService } from "@/services/promptService"
 import {
   Save,
   Eye,
@@ -26,7 +28,6 @@ import {
   Copy,
   Play,
 } from "lucide-react"
-import promptSubmissionService, { PromptSubmissionData } from '../services/promptSubmissionService'
 
 // Mock components - replace with your actual UI components
 // Update the ButtonProps interface to include title
@@ -110,6 +111,9 @@ interface PromptSubmission {
 
 interface EditPromptData extends PromptSubmission {
   id: string
+  isPublished?: boolean
+  content?: string
+  tags?: string[]
 }
 
 type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
@@ -117,28 +121,119 @@ type PaymentMethod = "bank" | "paypal" | "stripe" | "crypto"
 export default function SubmitPromptPage() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>() // Get prompt id from URL if present
 
-  // Get pre-filled data if it exists
+  // Get pre-filled data if it exists (from navigation or sessionStorage)
   const prefilledData = location.state?.prefilled
 
-  // Update your state initialization to use pre-filled data:
+  const [isPublicEdit, setIsPublicEdit] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
+
+  // Use a single source for edit data (prefilledData or sessionStorage)
   const [formData, setFormData] = useState<PromptSubmission>({
-    title: prefilledData?.title || "",
-    description: prefilledData?.description || "",
-    category: prefilledData?.category || "",
-    promptText: prefilledData?.content || "",
-    expectedOutput: prefilledData?.expectedOutput || "",
-    isPrivate: prefilledData?.visibility === "private",
-    tags: prefilledData?.tags || [], // Add tags support
-  })
+    title: "",
+    description: "",
+    category: "",
+    promptText: "",
+    expectedOutput: "",
+    isPrivate: false,
+    tags: [],
+  });
+
+  // Fix: Track if we've loaded edit data to prevent overwriting on refresh
+  const [editLoaded, setEditLoaded] = useState(false);
+
+  useEffect(() => {
+    let editData: EditPromptData | null = null;
+
+    // Prefer sessionStorage for edit, fallback to navigation state
+    const sessionEdit = sessionStorage.getItem("editPromptData");
+    if (sessionEdit) {
+      try {
+        editData = JSON.parse(sessionEdit);
+        sessionStorage.removeItem("editPromptData");
+      } catch (e) {
+        editData = null;
+      }
+    } else if (location.state?.prefilled) {
+      editData = location.state.prefilled;
+    }
+
+    // If we have an edit id (from session or navigation), fetch full prompt info from backend
+    if (((editData && editData.id) || id) && !editLoaded) {
+      const promptId = (editData?.id || id) ?? "";
+      setLoadingPrompt(true);
+      const promptService = new PromptService();
+      promptService.getPromptById(promptId)
+        .then((promptData) => {
+          setFormData({
+            title: promptData.title || "",
+            description: promptData.description || "",
+            category: promptData.tags?.[0]?.name ?? "",
+            promptText: promptData.content || "",
+            expectedOutput: (promptData as any).expectedOutput ?? "",
+            isPrivate: promptData.visibility === "private",
+            tags: promptData.tags?.map(tag => tag.name) || [],
+          });
+          setIsEditMode(true);
+          setEditingPromptId(promptId);
+          setIsPublicEdit(!!promptData.publishedAt);
+          setEditLoaded(true); // Prevent reloading on refresh
+        })
+        .catch((err) => {
+          // fallback to editData if fetch fails
+          if (editData) {
+            setFormData({
+              title: editData.title || "",
+              description: editData.description || "",
+              category: editData.category || "",
+              promptText: editData.promptText || editData.content || "",
+              expectedOutput: editData.expectedOutput || "",
+              isPrivate: editData.isPrivate ?? false,
+              tags: editData.tags || [],
+            });
+            setIsEditMode(true);
+            setEditingPromptId(editData.id);
+            setIsPublicEdit(editData.isPublished === true);
+            setEditLoaded(true);
+          }
+        })
+        .finally(() => setLoadingPrompt(false));
+    } else if (editData && !editLoaded) {
+      setFormData({
+        title: editData.title || "",
+        description: editData.description || "",
+        category: editData.category || "",
+        promptText: editData.promptText || editData.content || "",
+        expectedOutput: editData.expectedOutput || "",
+        isPrivate: editData.isPrivate ?? false,
+        tags: editData.tags || [],
+      });
+      setIsEditMode(true);
+      setEditingPromptId(editData.id);
+      setIsPublicEdit(editData.isPublished === true);
+      setEditLoaded(true);
+    } else if (!isEditMode && prefilledData && !editLoaded) {
+      setFormData({
+        title: prefilledData.title || "",
+        description: prefilledData.description || "",
+        category: prefilledData.category || "",
+        promptText: prefilledData.promptText || prefilledData.content || "",
+        expectedOutput: prefilledData.expectedOutput || "",
+        isPrivate: prefilledData.visibility === "private",
+        tags: prefilledData.tags || [],
+      });
+      setEditLoaded(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, id, isEditMode, editLoaded]);
 
   // Remove currentTag state since we're removing tags
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showSuccess, setShowSuccess] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
 
   // Payment-related state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank")
@@ -163,35 +258,13 @@ export default function SubmitPromptPage() {
     "Data Analysis",
     "Content Creation",
     "Problem Solving",
+    "Health",
+    "Science",
+    "Coding",
+    "Technical",
+    "Gaming",
     "Other",
   ]
-
-  // Load edit data on component mount
-  useEffect(() => {
-    // In a real app, you might get this from URL params or props
-    // For now, we'll simulate loading from memory/state
-    const editData = sessionStorage.getItem("editPromptData")
-    if (editData) {
-      try {
-        const parsedData: EditPromptData = JSON.parse(editData)
-        setFormData({
-          title: parsedData.title,
-          description: parsedData.description,
-          category: parsedData.category,
-          promptText: parsedData.promptText,
-          expectedOutput: parsedData.expectedOutput,
-          isPrivate: parsedData.isPrivate,
-        })
-        setIsEditMode(true)
-        setEditingPromptId(parsedData.id)
-
-        // Clear the storage after loading
-        sessionStorage.removeItem("editPromptData")
-      } catch (error) {
-        console.error("Error parsing edit data:", error)
-      }
-    }
-  }, [])
 
   const handleInputChange = (field: keyof PromptSubmission, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -485,7 +558,7 @@ export default function SubmitPromptPage() {
 
       setTimeout(() => {
         if (!isEditMode) {
-          // Clear form for new submissions
+          // Clear form for new submissions only
           setFormData({
             title: "",
             description: "",
@@ -504,12 +577,16 @@ export default function SubmitPromptPage() {
           setStripeAccount("")
           setCryptoAddress("")
           setCryptoNetwork("")
+          
+          // Navigate to My Prompts page only for new submissions
+          navigate("/my-prompts")
+        } else {
+          // For edit mode, just reset the edit state but stay on the same page
+          setIsEditMode(false)
+          setEditingPromptId(null)
         }
 
         setShowSuccess(false)
-        
-        // Navigate to My Prompts page
-        navigate("/my-prompts")
       }, 2000)
 
     } catch (error: any) {
@@ -546,10 +623,6 @@ export default function SubmitPromptPage() {
     updateButton("save-draft-btn-bottom")
   }
 
-  const loadDraft = () => {
-    // In a real app, you'd load this from your backend
-    console.log("Load draft functionality would go here")
-  }
 
   const clearForm = () => {
     setFormData({
@@ -580,60 +653,89 @@ export default function SubmitPromptPage() {
     }
   }
 
+  // Add a loading state for fetching prompt info
+  const [loadingPrompt, setLoadingPrompt] = useState(false)
+
+  // Optionally show a loading spinner while fetching prompt info
+  if (loadingPrompt) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading prompt information...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                   {isEditMode ? "Edit Prompt" : "Publish Prompt"}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   {isEditMode ? "Update your existing prompt" : "Share or Save your prompt"}
                 </p>
               </div>
             </div>
+            
             <div className="flex flex-wrap items-center gap-2">
+              {/* Back to My Prompts button - moved to the right */}
+              <Button
+                onClick={() => window.history.back()}
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+                Back
+              </Button>
+              
               {isEditMode && (
                 <Button
                   variant="outline"
                   onClick={clearForm}
-                  className="flex items-center px-4 py-2 text-sm font-medium"
+                  className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel Edit
+                  <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Cancel Edit</span>
+                  <span className="sm:hidden">Cancel</span>
                 </Button>
               )}
-              <Button variant="outline" onClick={loadDraft} className="flex items-center px-4 py-2 text-sm font-medium">
-                <FileText className="h-4 w-4 mr-2" />
-                Load Draft
-              </Button>
+              
               <Button
                 variant="outline"
                 onClick={saveDraft}
                 id="save-draft-btn"
-                className="flex items-center px-4 py-2 text-sm font-medium"
+                className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save Draft
+                <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Save Draft</span>
+                <span className="sm:hidden">Save</span>
               </Button>
+              
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 text-sm font-medium flex items-center justify-center min-w-[120px]"
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-4 sm:px-6 py-2 text-xs sm:text-sm font-medium flex items-center justify-center min-w-[100px] sm:min-w-[120px]"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isEditMode ? "Updating..." : "Submitting..."}
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
+                    <span className="hidden sm:inline">{isEditMode ? "Updating..." : "Submitting..."}</span>
+                    <span className="sm:hidden">{isEditMode ? "Updating" : "Submitting"}</span>
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
-                    {isEditMode ? "Update Prompt" : "Submit Prompt"}
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">{isEditMode ? "Update Prompt" : "Submit Prompt"}</span>
+                    <span className="sm:hidden">{isEditMode ? "Update" : "Submit"}</span>
                   </>
                 )}
               </Button>
@@ -642,17 +744,17 @@ export default function SubmitPromptPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Success Message */}
         {showSuccess && (
-          <Card className="p-4 mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
             <div className="flex items-center space-x-2 text-green-700 dark:text-green-400">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">
                 {isEditMode ? "Prompt updated successfully!" : "Prompt submitted successfully!"}
               </span>
             </div>
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+            <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-1">
               {isEditMode
                 ? "Your prompt changes have been saved."
                 : "Your prompt is now under review and will be published soon."}
@@ -662,12 +764,12 @@ export default function SubmitPromptPage() {
 
         {/* Submission Error Message */}
         {errors.submit && (
-          <Card className="p-4 mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
             <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
-              <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Submission Failed</span>
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">Submission Failed</span>
             </div>
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 mt-1">
               {errors.submit}
             </p>
           </Card>
@@ -675,29 +777,46 @@ export default function SubmitPromptPage() {
 
         {/* Edit Mode Indicator */}
         {isEditMode && (
-          <Card className="p-4 mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+          <Card className="p-3 sm:p-4 mb-4 sm:mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-400">
-              <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Editing Mode</span>
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">Editing Mode</span>
             </div>
-            <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mt-1">
               You are currently editing an existing prompt. Make your changes and click "Update Prompt" to save.
             </p>
           </Card>
         )}
 
-        {/* Main Layout: Form on left, Sidebar on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Basic Information Form (2/3 width) */}
-          <div className="lg:col-span-2">
+        {/* Main Layout: Responsive stack on mobile, grid on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Left Column - Basic Information Form */}
+          <div className="lg:col-span-2 order-1 lg:order-1">
             {/* Basic Information */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#3ebb9e]" />
                 Basic Information
               </h2>
 
-              <div className="space-y-4">
+              {/* Show explanation if editing a public prompt */}
+              {isEditMode && isPublicEdit && (
+                <div className="mb-3 sm:mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-amber-800 dark:text-amber-200 font-medium mb-1">
+                        Marketplace Restriction
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                        This prompt is public and listed on the marketplace. <b>You cannot edit the Title or Prompt Text.</b> These fields are locked to preserve marketplace integrity. You may update other details such as description, category, expected output, or visibility.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3 sm:space-y-4">
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
@@ -707,11 +826,12 @@ export default function SubmitPromptPage() {
                     type="text"
                     className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
                       errors.title ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    } ${isEditMode && isPublicEdit ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed" : ""}`}
                     placeholder="Enter a descriptive title for your prompt"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     maxLength={100}
+                    disabled={isEditMode && isPublicEdit}
                   />
                   {errors.title && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -728,7 +848,7 @@ export default function SubmitPromptPage() {
                     Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar ${
                       errors.description ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     }`}
                     rows={3}
@@ -779,13 +899,15 @@ export default function SubmitPromptPage() {
                     Prompt Text <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none ${
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none overflow-y-auto custom-scrollbar ${
                       errors.promptText ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    } ${isEditMode && isPublicEdit ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed" : ""}`}
                     rows={6}
+                    style={{ maxHeight: '200px', minHeight: '120px' }}
                     placeholder="Enter your prompt text here..."
                     value={formData.promptText}
                     onChange={(e) => handleInputChange("promptText", e.target.value)}
+                    disabled={isEditMode && isPublicEdit}
                   />
                   {errors.promptText && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
@@ -797,7 +919,7 @@ export default function SubmitPromptPage() {
 
                 {/* Expected Output */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Expected Output
                   </label>
                   <textarea
@@ -814,34 +936,56 @@ export default function SubmitPromptPage() {
                   <label htmlFor="isPrivate" className="text-sm font-medium text-gray-900 dark:text-white">
                     Visibility
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <span className={`text-sm ${!formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <span className={`text-xs sm:text-sm ${!formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Public
                     </span>
                     <button
                       type="button"
                       onClick={() => handleInputChange("isPrivate", !formData.isPrivate)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2 ${
-                        formData.isPrivate ? 'bg-red-500' : 'bg-[#3ebb9e]'
-                      }`}
+                      className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
+                      style={{
+                        backgroundColor: formData.isPrivate ? '#ef4444' : '#3ebb9e'
+                      }}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          formData.isPrivate ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className="pointer-events-none inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        style={{
+                          transform: formData.isPrivate ? 'translateX(1rem)' : 'translateX(0)'
+                        }}
                       />
                     </button>
-                    <span className={`text-sm ${formData.isPrivate ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs sm:text-sm ${formData.isPrivate ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                       Private
                     </span>
+                  </div>
+                </div>
+
+                {/* Visibility Warning Note */}
+                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-amber-800 dark:text-amber-200 font-medium mb-1">
+                        Important: Public Visibility is Permanent
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                        Once you make a prompt public, it cannot be changed back to private. Public prompts become part of the community marketplace and remain accessible to all users.
+                      </p>
+                      {!formData.isPrivate && (
+                        <p className="text-amber-700 dark:text-amber-300 text-xs mt-2 font-medium">
+                          ⚠️ This prompt will be publicly visible after submission
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </Card>
 
-            {/* Terms of Service */}
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">
+            {/* Terms of Service - Mobile: show at bottom, Desktop: show after form */}
+            <div className="text-center py-3 sm:py-4 block lg:block">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 By submitting, you agree to our{" "}
                 <a href="#" className="text-[#3ebb9e] hover:text-[#00674f] underline">
                   community guidelines
@@ -855,17 +999,17 @@ export default function SubmitPromptPage() {
             </div>
           </div>
 
-          {/* Right Column - All Sidebar Components (1/3 width) */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Right Column - Sidebar Components - show after form on mobile */}
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-2">
             {/* Preview */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <Eye className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Preview
               </h3>
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center py-2 mb-4"
+                className="w-full flex items-center justify-center py-2 mb-3 sm:mb-4 text-sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -873,12 +1017,12 @@ export default function SubmitPromptPage() {
               </Button>
 
               {showPreview && (
-                <div className="mt-4">
-                  {/* Preview container - adjusted for sidebar */}
+                <div className="mt-3 sm:mt-4">
+                  {/* Preview container - mobile optimized */}
                   <div className="w-full">
                     {/* Simulate StandardPromptCard appearance */}
-                    <div className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col border border-border rounded-lg bg-card min-h-[350px]">
-                      <div className="p-4 flex-1">
+                    <div className="overflow-hidden hover:shadow-lg transition-shadow hover:scale-[1.01] h-full flex flex-col border border-border rounded-lg bg-card min-h-[300px] sm:min-h-[350px]">
+                      <div className="p-3 sm:p-4 flex-1">
                         {/* Header with category tag and rating */}
                         <div className="flex justify-between items-start mb-2">
                           {/* Category tag */}
@@ -921,8 +1065,8 @@ export default function SubmitPromptPage() {
                         {formData.promptText && (
                           <div className="mb-3 p-2 bg-muted/50 rounded-lg border">
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                              {formData.promptText.length > 100
-                                ? `${formData.promptText.substring(0, 100)}...`
+                              {formData.promptText.length > 80
+                                ? `${formData.promptText.substring(0, 80)}...`
                                 : formData.promptText}
                             </p>
                           </div>
@@ -935,8 +1079,8 @@ export default function SubmitPromptPage() {
                               Expected Output:
                             </p>
                             <p className="text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
-                              {formData.expectedOutput.length > 80
-                                ? `${formData.expectedOutput.substring(0, 80)}...`
+                              {formData.expectedOutput.length > 60
+                                ? `${formData.expectedOutput.substring(0, 60)}...`
                                 : formData.expectedOutput}
                             </p>
                           </div>
@@ -948,7 +1092,7 @@ export default function SubmitPromptPage() {
                             <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                               <User className="h-3 w-3" />
                             </div>
-                            <span className="text-xs ml-2 text-muted-foreground font-medium">@you</span>
+                            <span className="text-xs ml-2 text-muted-foreground font-medium truncate">@{localStorage.getItem("username") || "Unknown User"}</span>
                           </div>
 
                           {/* Private indicator */}
@@ -962,24 +1106,24 @@ export default function SubmitPromptPage() {
 
                       {/* Footer with action buttons */}
                       <div className="border-t border-border flex">
-                        <div className="flex-1 flex items-center justify-between p-3">
+                        <div className="flex-1 flex items-center justify-between p-2 sm:p-3">
                           <div className="flex items-center space-x-1">
                             {/* Copy button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-6 w-6 sm:h-7 sm:w-7"
                               disabled
                               title="Copy prompt content"
                             >
                               <Copy className="h-3 w-3" />
                             </Button>
 
-                            {/* Test button - green play button next to copy */}
+                            {/* Test button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
                               disabled
                               title="Test this prompt"
                             >
@@ -987,25 +1131,20 @@ export default function SubmitPromptPage() {
                             </Button>
 
                             {/* Edit button */}
-                            <Button variant="ghost" size="icon" className="h-7 w-7" disabled title="Edit prompt">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7" disabled title="Edit prompt">
                               <Edit className="h-3 w-3" />
                             </Button>
 
-                            {/* Delete button - red bin icon */}
+                            {/* Delete button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-6 w-6 sm:h-7 sm:w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
                               disabled
                               title="Delete prompt"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
-                          </div>
-
-                          {/* Right side - now empty since test button moved */}
-                          <div className="flex items-center space-x-2">
-                            {/* Empty - test button moved to left side */}
                           </div>
                         </div>
                       </div>
@@ -1016,8 +1155,8 @@ export default function SubmitPromptPage() {
             </Card>
 
             {/* Guidelines */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <Lightbulb className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Submission Guidelines
               </h3>
@@ -1042,14 +1181,17 @@ export default function SubmitPromptPage() {
             </Card>
 
             {/* Author Info */}
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <Card className="p-3 sm:p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center text-sm sm:text-base">
                 <User className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                 Author Information
               </h3>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 <p className="mb-2">
-                  Submitting as: <span className="text-foreground font-medium">Anonymous User</span>
+                  Submitting as:{" "}
+                  <span className="text-foreground font-medium">
+                    {localStorage.getItem("username") || "Unknown User"}
+                  </span>
                 </p>
                 <p className="text-xs">
                   <Link to="/login" className="text-[#3ebb9e] hover:underline">
@@ -1060,10 +1202,10 @@ export default function SubmitPromptPage() {
               </div>
             </Card>
 
-            {/* Payment Details Card - existing code remains the same */}
+            {/* Payment Details Card - existing code with responsive updates */}
             {!isEditMode && (
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="text-sm font-semibold text-foreground flex items-center">
                     <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                     Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
@@ -1100,44 +1242,44 @@ export default function SubmitPromptPage() {
 
                 {showPaymentDetails && bankingInfoNeeded && (
                   <>
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="mb-3 sm:mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-xs text-blue-700 dark:text-blue-400">
                         <AlertCircle className="w-4 h-4 inline mr-1" />
                         This information is securely stored and used only for payment processing.
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("bank")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "bank" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <Landmark className="w-4 h-4" />
+                        <Landmark className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Bank</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("paypal")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "paypal" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <WalletIcon className="w-4 h-4" />
+                        <WalletIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">PayPal</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("stripe")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <CreditCardIcon className="w-4 h-4" />
+                        <CreditCardIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Stripe</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("crypto")}
-                        className={`p-3 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
+                        className={`p-2 sm:p-3 rounded-lg border ${paymentMethod === "crypto" ? "border-blue-500 bg-blue-500/10" : "border-gray-600 hover:border-gray-500"} flex flex-col items-center space-y-1 transition-colors`}
                       >
-                        <BitcoinIcon className="w-4 h-4" />
+                        <BitcoinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="text-xs font-medium">Crypto</span>
                       </button>
                     </div>

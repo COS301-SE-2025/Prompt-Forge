@@ -4,7 +4,8 @@ import { Input } from "../components/ui/Input"
 import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Tag, MarketplacePrompt } from "@/models/Prompt"
+import { Tag, MarketplacePrompt } from "@/Models/Prompt"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 
 const PROMPTS_PER_PAGE = 12
 
@@ -56,6 +57,7 @@ export default function MarketplacePage() {
   const [error, setError] = useState<string | null>(null)
   const [ratingsLoading, setRatingsLoading] = useState(false)
   const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Pagination calculations
   const [totalPages, setTotalPages] = useState<number>(1)
@@ -235,181 +237,186 @@ export default function MarketplacePage() {
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex flex-col">
-          <div className="flex-1 overflow-y-auto">
-            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-            <div className="space-y-1 mb-6">
-              {filters.map((filter) => (
-                <Button
-                  key={filter.value}
-                  variant="ghost"
-                  className={`w-full justify-start text-sm h-8 px-2 ${
-                    selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                  }`}
-                  onClick={() => handleFilterChange(filter.value)}
-                >
-                  {filter.label}
-                </Button>
-              ))}
-            </div>
+        {/* Sidebar - Hidden on mobile, overlay when filters shown */}
+        <div
+          className={`transition-all duration-300 ${
+            sidebarCollapsed ? "w-0 -ml-48 lg:ml-0 lg:w-12" : "w-48"
+          } ${
+            showFilters && !sidebarCollapsed 
+              ? "fixed inset-y-0 left-0 z-50 bg-muted border-r border-border lg:relative lg:inset-auto lg:z-auto" 
+              : "hidden lg:block"
+          } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative`}
+        >
+          {/* Close button for mobile */}
+          {showFilters && (
+            <button
+              className="absolute top-3 right-3 lg:hidden bg-background rounded-full p-1 shadow hover:bg-muted transition z-20"
+              onClick={() => setShowFilters(false)}
+              aria-label="Close filters"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
 
-            <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
-            <div className="space-y-1">
-              {/*All Categories button */}
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm h-8 px-2 ${
-                  selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                }`}
-                onClick={() => handleCategoryChange("all")}
-              >
-                All Categories
-              </Button>
-              
-              {/*Render actual tags from database - simplified version */}
-              {availableCategories.map((tag) => (
+          <button
+            className="absolute top-3 right-2 z-10 bg-muted p-1 transition hidden lg:block"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+
+          {!sidebarCollapsed && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[calc(100vh-6rem)] pt-8 lg:pt-0">
+              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+              <div className="space-y-1 mb-6">
+                {filters.map((filter) => (
+                  <Button
+                    key={filter.value}
+                    variant="ghost"
+                    className={`w-full justify-start text-sm h-8 px-2 ${
+                      selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    }`}
+                    onClick={() => {
+                      handleFilterChange(filter.value)
+                      setShowFilters(false) // Close on mobile after selection
+                    }}
+                  >
+                    {filter.label}
+                  </Button>
+                ))}
+              </div>
+
+              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Categories</h3>
+              <div className="space-y-1">
                 <Button
-                  key={tag.id || tag.name}
                   variant="ghost"
                   className={`w-full justify-start text-sm h-8 px-2 ${
-                    selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                   }`}
-                  onClick={() => handleCategoryChange(tag.name)}
+                  onClick={() => {
+                    handleCategoryChange("all")
+                    setShowFilters(false) // Close on mobile after selection
+                  }}
                 >
-                  <span className="truncate">{tag.name}</span>
-                  {/*Removed promptCount display */}
+                  All Categories
                 </Button>
-              ))}
-              
-              {/* ✅ Show loading state for categories */}
-              {categoriesLoading && (
-                <div className="flex justify-center py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
-                </div>
-              )}
-              
-              {/*Show empty state if no categories */}
-              {!categoriesLoading && availableCategories.length === 0 && (
-                <div className="text-xs text-muted-foreground px-2 py-1">
-                  No categories found
-                </div>
-              )}
+                {availableCategories.map((tag) => (
+                  <Button
+                    key={tag.id || tag.name}
+                    variant="ghost"
+                    className={`w-full justify-start text-sm h-8 px-2 ${
+                      selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                    }`}
+                    onClick={() => {
+                      handleCategoryChange(tag.name)
+                      setShowFilters(false) // Close on mobile after selection
+                    }}
+                  >
+                    <span className="truncate">{tag.name}</span>
+                  </Button>
+                ))}
+                {categoriesLoading && (
+                  <div className="flex justify-center py-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
+                  </div>
+                )}
+                {!categoriesLoading && availableCategories.length === 0 && (
+                  <div className="text-xs text-muted-foreground px-2 py-1">
+                    No categories found
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
+
+        {/* Overlay for mobile sidebar */}
+        {showFilters && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+            onClick={() => setShowFilters(false)}
+          />
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 lg:p-6">
             <div className="max-w-6xl mx-auto">
               {/* Header and Mobile Filters */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold mb-4 md:mb-0">Prompt Marketplace</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
+                <div className="mb-3 sm:mb-0">
+                  <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Prompt Marketplace</h1>
+                  <p className="text-sm text-muted-foreground lg:hidden">
+                    Discover and purchase AI prompts
+                  </p>
+                </div>
                 <Button 
                   variant="outline" 
-                  className="md:hidden mb-4" 
+                  size="sm"
+                  className="lg:hidden" 
                   onClick={() => setShowFilters(!showFilters)}
                 >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
+                  <Filter className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Filters</span>
+                  <span className="sm:hidden">Filter</span>
                 </Button>
               </div>
 
-              {showFilters && (
-                <div className="md:hidden mb-6 p-4 bg-muted rounded-lg">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Filters</h4>
-                      {filters.map((filter) => (
-                        <Button
-                          key={filter.value}
-                          variant="ghost"
-                          size="sm"
-                          className={`w-full justify-start ${
-                            selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                          }`}
-                          onClick={() => handleFilterChange(filter.value)}
-                        >
-                          {filter.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Categories</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`w-full justify-start ${
-                          selectedCategory === "all" ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                        }`}
-                        onClick={() => handleCategoryChange("all")}
-                      >
-                        All Categories
-                      </Button>
-                      {availableCategories.slice(0, 4).map((tag) => (
-                        <Button
-                          key={tag.id || tag.name}
-                          variant="ghost"
-                          size="sm"
-                          className={`w-full justify-start ${
-                            selectedCategory === tag.name ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
-                          }`}
-                          onClick={() => handleCategoryChange(tag.name)}
-                        >
-                          <span className="truncate">{tag.name}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Search Bar */}
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <div className="relative">
                   <Input
                     placeholder="        Search for prompts..."
-                    className="bg-muted border-muted pl-10"
+                    className="bg-muted border-muted pl-8 sm:pl-10 text-sm sm:text-base h-9 sm:h-10"
                     value={searchQuery}
-                    onChange={(e)=> setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      if (e.target.value === "") {
+                        setCurrentPage(1)
+                        fetchData("all", "all", "", 1)
+                      }
+                    }}
                     onKeyDown={handleSearch}
-                  
                   />
                   {!searchQuery && (
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                      <Search className="h-4 w-4 text-muted-foreground" />
+                    <div className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2">
+                      <Search className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Featured Prompts - Always show when available */}
+              {/* Featured Prompts - 2 columns on mobile */}
               {featuredPrompts.length > 0 && (
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex items-center">
-                      <Sparkles className="h-5 w-5 mr-2 text-[#3ebb9e]" />
-                      <h2 className="text-lg font-medium">Featured Prompts</h2>
-                      <span className="ml-2 text-sm text-muted-foreground">({featuredPrompts.length})</span>
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#3ebb9e]" />
+                      <h2 className="text-base sm:text-lg font-medium">Featured</h2>
+                      <span className="ml-2 text-xs sm:text-sm text-muted-foreground">({featuredPrompts.length})</span>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowFeatured(!showFeatured)}
-                      className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                      className="flex items-center text-xs sm:text-sm text-muted-foreground hover:text-foreground h-7 sm:h-8"
                     >
-                      {showFeatured ? "Hide" : "Show"}
+                      <span className="hidden sm:inline">{showFeatured ? "Hide" : "Show"}</span>
                       {showFeatured ? (
-                        <ChevronUp className="h-4 w-4 ml-1" />
+                        <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4 sm:ml-1" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 ml-1" />
+                        <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 sm:ml-1" />
                       )}
                     </Button>
                   </div>
                   
                   {showFeatured && (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-all duration-300 ease-in-out">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8 transition-all duration-300 ease-in-out">
                       {featuredPrompts.map((prompt) => (
                         <PromptCard
                           key={`featured-${prompt.id}`}
@@ -424,10 +431,10 @@ export default function MarketplacePage() {
 
               {/* Loading State */}
               {loading && currentPrompts.length > 0 && (
-                <div className="flex justify-center items-center h-32">
+                <div className="flex justify-center items-center h-24 sm:h-32">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Updating results...</p>
+                    <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-[#3ebb9e] mx-auto mb-3 sm:mb-4"></div>
+                    <p className="text-muted-foreground text-sm">Updating results...</p>
                   </div>
                 </div>
               )}
@@ -435,26 +442,26 @@ export default function MarketplacePage() {
               {/* Results - only show when not loading initial data */}
               {!loading || currentPrompts.length > 0 ? (
                 <>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
                     <div className="flex items-center">
-                      <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                      <h2 className="text-lg font-medium">
+                      <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-yellow-400" />
+                      <h2 className="text-base sm:text-lg font-medium">
                         {searchQuery
-                          ? `Search Results for "${searchQuery}"`
+                          ? `Results for "${searchQuery}"`
                           : selectedCategory !== "all"
-                            ? `${selectedCategory} Prompts`
+                            ? `${selectedCategory}`
                             : selectedFilter !== "all"
-                              ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
+                              ? `${filters.find((f) => f.value === selectedFilter)?.label}`
                               : "All Prompts"}
                       </h2>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {promptsFound} prompt{promptsFound !== 1 ? "s" : ""} found
                     </div>
                   </div>
 
-                  {/* Prompts Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                  {/* Prompts Grid - 2 columns on mobile, 3 on large screens */}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
                     {currentPrompts.map((prompt) => (
                       <PromptCard 
                         key={`prompt-${prompt.id}`}
@@ -472,11 +479,11 @@ export default function MarketplacePage() {
 
                   {/* Empty State */}
                   {currentPrompts.length === 0 && !loading && (
-                    <div className="text-center py-12">
+                    <div className="text-center py-8 sm:py-12">
                       <div className="text-muted-foreground mb-4">
-                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <h3 className="text-lg font-medium mb-2">No prompts found</h3>
-                        <p>Try adjusting your search terms or filters</p>
+                        <Search className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                        <h3 className="text-base sm:text-lg font-medium mb-2">No prompts found</h3>
+                        <p className="text-sm sm:text-base px-4">Try adjusting your search terms or filters</p>
                       </div>
                       <Button
                         variant="outline"
@@ -492,28 +499,33 @@ export default function MarketplacePage() {
                     </div>
                   )}
 
-                  {/* Pagination */}
+                  {/* Pagination - Responsive */}
                   {totalPages > 1 && (
-                    <div className="flex justify-center items-center space-x-2 mt-8">
+                    <div className="flex justify-center items-center space-x-1 sm:space-x-2 mt-6 sm:mt-8">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-8 px-2 sm:h-9 sm:px-3"
                         onClick={() => changePage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                       >
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                       </Button>
 
-                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                      {/* Show fewer page numbers on mobile */}
+                      {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 3 : 5) }).map((_, i) => {
                         let pageNumber
-                        if (totalPages <= 5) {
+                        const maxPages = window.innerWidth < 640 ? 3 : 5
+                        
+                        if (totalPages <= maxPages) {
                           pageNumber = i + 1
-                        } else if (currentPage <= 3) {
+                        } else if (currentPage <= Math.ceil(maxPages / 2)) {
                           pageNumber = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNumber = totalPages - 4 + i
+                        } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                          pageNumber = totalPages - maxPages + 1 + i
                         } else {
-                          pageNumber = currentPage - 2 + i
+                          pageNumber = currentPage - Math.floor(maxPages / 2) + i
                         }
 
                         return (
@@ -521,8 +533,10 @@ export default function MarketplacePage() {
                             key={pageNumber}
                             variant={currentPage === pageNumber ? "default" : "outline"}
                             size="sm"
+                            className={`min-w-[2rem] h-8 sm:min-w-[2.5rem] sm:h-9 text-xs sm:text-sm ${
+                              currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                            }`}
                             onClick={() => changePage(pageNumber)}
-                            className={`min-w-[2.5rem] ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}`}
                           >
                             {pageNumber}
                           </Button>
@@ -532,10 +546,12 @@ export default function MarketplacePage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-8 px-2 sm:h-9 sm:px-3"
                         onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
+                        <span className="sm:hidden">Next</span>
                       </Button>
                     </div>
                   )}

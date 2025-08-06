@@ -2,7 +2,7 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings, Sparkles } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
@@ -47,16 +47,81 @@ export default function EditorPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handlePageChange = (page: number) => {
+  // Save current response before switching
+  const promptKey = promptText.trim();
+  if (currentView === "test") {
+    localStorage.setItem(getStorageKey(promptKey, "test"), streamingEnabled ? typingEffect.displayText : aiResponse);
+  } else if (currentView === "rate") {
+    localStorage.setItem(getStorageKey(promptKey, "rate"), streamingEnabled ? typingEffect.displayText : ratingResponse);
+  } else if (currentView === "suggest") {
+    localStorage.setItem(getStorageKey(promptKey, "suggest"), streamingEnabled ? typingEffect.displayText : suggestionResponse);
+  }
+
+  setCurrentPage(page);
+  let newView: ViewType = "test";
+  if (page === 2) newView = "rate";
+  if (page === 3) newView = "suggest";
+  setCurrentView(newView);
+
+  typingEffect.clear();
+
+  // Restore the correct response for the selected view from localStorage
+  const saved = localStorage.getItem(getStorageKey(promptKey, newView));
+  if (newView === "test") {
+    setAiResponse(saved || "AI response to your prompt here...");
+    typingEffect.setText(saved || "AI response to your prompt here...");
+  } else if (newView === "rate") {
+    setRatingResponse(saved || "");
+    typingEffect.setText(saved || "");
+  } else if (newView === "suggest") {
+    setSuggestionResponse(saved || "");
+    typingEffect.setText(saved || "");
+  }
+};
+
   // NEW: Add streaming controls
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [typingSpeed, setTypingSpeed] = useState(75);
   const [showStreamingControls, setShowStreamingControls] = useState(false);
+
+  const showNotification = (type: "success" | "error", title: string, message: string) => {
+    const color = type === "success" ? "green" : "red"
+    const bg = type === "success" ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+                                  : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const icon = type === "success"
+      ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
+      : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
+    const notification = document.createElement('div')
+    notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in`
+    notification.innerHTML = `
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mt-0.5">${icon}</div>
+        <div class="ml-3 flex-1">
+          <h3 class="text-sm font-medium">${title}</h3>
+          <div class="mt-1 text-xs">${message}</div>
+        </div>
+      </div>
+    `
+    document.body.appendChild(notification)
+    setTimeout(() => {
+      notification.classList.add('animate-fade-out')
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 500)
+    }, 4000)
+  }
 
   // NEW: Initialize typing effect
   const typingEffect = useTypingEffect({ 
     speed: typingSpeed, 
     batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
   });
+
+  const getStorageKey = (prompt: string, view: ViewType) =>
+  `promptforge:${prompt.trim()}:${view}`;
 
   // Auto-fill prompt if coming from a card
   useEffect(() => {
@@ -70,6 +135,45 @@ export default function EditorPage() {
     typingEffect.setSpeed(typingSpeed);
     typingEffect.setBatchSize(typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1);
   }, [typingSpeed, typingEffect]);
+
+  // Add effect to load responses from localStorage when promptText changes
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+
+  setAiResponse(localStorage.getItem(getStorageKey(promptKey, "test")) || "AI response to your prompt here...");
+  setRatingResponse(localStorage.getItem(getStorageKey(promptKey, "rate")) || "");
+  setSuggestionResponse(localStorage.getItem(getStorageKey(promptKey, "suggest")) || "");
+}, [promptText]);
+
+// Save responses to localStorage after generation
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "test"), aiResponse);
+}, [aiResponse, promptText]);
+
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "rate"), ratingResponse);
+}, [ratingResponse, promptText]);
+
+useEffect(() => {
+  const promptKey = promptText.trim();
+  if (!promptKey) return;
+  localStorage.setItem(getStorageKey(promptKey, "suggest"), suggestionResponse);
+}, [suggestionResponse, promptText]);
+
+  // When promptText changes, clear responses if prompt is different
+  useEffect(() => {
+    if (promptText !== lastTestedPrompt) {
+      setAiResponse("AI response to your prompt here...");
+      setRatingResponse("");
+      setSuggestionResponse("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptText]);
 
   // Define available models with their capabilities
   const aiModels = [
@@ -100,7 +204,7 @@ export default function EditorPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-scout:free",
+      model: "meta-llama/llama-4-scout",
       supportsImages: true,
     },
     {
@@ -115,7 +219,7 @@ export default function EditorPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:border-purple-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(168,85,247,0.4)] border-purple-500/60",
       available: true,
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "google/gemma-3-4b-it:free",
       supportsImages: true,
     },
     {
@@ -135,16 +239,60 @@ export default function EditorPage() {
     },
   ]
 
-  // Function to handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+// Function to handle image upload with validation
+const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUploadedImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    // Show loading state
+    setUploadedImage("loading");
+    
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showNotification("error", "Image Upload Failed", `Image too large (max ${maxSize/1024/1024}MB)`);
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showNotification("error", "Image Upload Failed", "Invalid image format (must be JPEG, PNG, GIF, or WEBP)");
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    
+    // Convert to data URL
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageDataUrl = event.target?.result as string;
+      
+      // Additional validation using StreamingService
+      const validatedImage = streamingService.validateAndOptimizeImage(
+        imageDataUrl, 
+        aiModels[selectedModel].model
+      );
+      
+      if (validatedImage) {
+        setUploadedImage(validatedImage);
+        console.log("Image uploaded and validated successfully");
+      } else {
+        setUploadedImage(null);
+        showNotification("error", "Image Upload Failed", "The image could not be processed. Please try a different image.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    
+    reader.onerror = () => {
+      showNotification("error", "Image Upload Failed", "Failed to read image file");
+      setUploadedImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   // Function to remove uploaded image
@@ -156,12 +304,20 @@ export default function EditorPage() {
   };
 
   const handleModelSelect = (index: number) => {
-    setSelectedModel(index)
+    setSelectedModel(index);
     if (streamingEnabled && typingEffect.isTyping) {
       typingEffect.complete(); // Complete any ongoing typing
     }
-    setAiResponse(`Testing with ${aiModels[index].name}...`)
-  }
+    
+    // Clear image if new model doesn't support images
+    if (uploadedImage && !aiModels[index].supportsImages) {
+      handleRemoveImage();
+      // Show notification to user
+      showNotification("error", "Image Removed", "The uploaded image has been removed because the selected model does not support images.");
+    }
+    
+    setAiResponse(`Testing with ${aiModels[index].name}...`);
+  };
 
   const decodeUnicode = (str: string) => {
     return str
@@ -354,11 +510,35 @@ const fallbackToWorkingModel = async () => {
   
   setAiResponse("The selected model is unavailable. Trying alternative models...");
   
+  // Create a status update element in the UI with improved styling
+  const statusElement = document.createElement('div');
+  statusElement.className = 'fixed bottom-4 left-4 bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 p-4 rounded-lg shadow-lg z-50 max-w-lg text-blue-800 dark:text-blue-200 animate-fade-in';
+  statusElement.innerHTML = `
+    <div class="flex items-center">
+      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="text-sm">Finding an available model...</span>
+    </div>
+  `;
+  document.body.appendChild(statusElement);
   for (let i = 0; i < aiModels.length; i++) {
     if (i === originalModel) continue; // Skip the one that failed
     
     try {
       console.log(`Trying model ${aiModels[i].name}...`);
+      
+      // Update status with improved styling
+      statusElement.innerHTML = `
+        <div class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm">Testing ${aiModels[i].name}...</span>
+        </div>
+      `;
       
       const testRequest = {
         model: aiModels[i].model,
@@ -368,13 +548,49 @@ const fallbackToWorkingModel = async () => {
         }]
       };
       
-      const response = await editorService.promptOpenRouter(testRequest);
+      // Add a timeout for the request
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout")), 5000)
+      );
       
-      if (response.choices && response.choices[0] && !response.error) {
+      // Race between the actual request and the timeout
+      const response = await Promise.race([
+        editorService.promptOpenRouter(testRequest),
+        timeoutPromise
+      ]);
+      
+      if (response && response.choices && response.choices[0] && !response.error) {
         // Found working model
         foundWorkingModel = true;
         setSelectedModel(i);
-        setAiResponse(`Switched to ${aiModels[i].name} because the original model was unavailable. Try your prompt again.`);
+        
+        // Update status to success with improved styling
+        statusElement.innerHTML = `
+          <div class="flex items-center">
+            <svg class="h-5 w-5 text-green-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-sm">Switched to ${aiModels[i].name}</span>
+          </div>
+        `;
+
+        // Keep success message visible longer (3 seconds)
+        setTimeout(() => {
+          statusElement.classList.add('animate-fade-out');
+          setTimeout(() => {
+            if (document.body.contains(statusElement)) {
+              document.body.removeChild(statusElement);
+            }
+          }, 500);
+        }, 3000); // Increased from 2000ms to 3000ms
+        
+        setAiResponse(`Switched to ${aiModels[i].name} because ${aiModels[originalModel].name} is currently unavailable. Try your prompt again.`);
+        
+        // If there was an uploaded image and the new model doesn't support images, warn the user
+        if (uploadedImage && !aiModels[i].supportsImages) {
+          setAiResponse(prev => prev + "\n\nNOTE: Your uploaded image has been ignored because the new model doesn't support images.");
+        }
+        
         break;
       }
     } catch (error) {
@@ -383,8 +599,30 @@ const fallbackToWorkingModel = async () => {
   }
   
   if (!foundWorkingModel) {
+    // Update status to failure
+    statusElement.innerHTML = `
+      <div class="flex items-center">
+        <svg class="h-4 w-4 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>All models unavailable</span>
+      </div>
+    `;
+    
+    setTimeout(() => {
+      statusElement.classList.add('animate-fade-out');
+      setTimeout(() => {
+        if (document.body.contains(statusElement)) {
+          document.body.removeChild(statusElement);
+        }
+      }, 300);
+    }, 3000);
+    
     setSelectedModel(originalModel); // Revert to original model
-    setAiResponse("All models are currently unavailable. Please try again later.");
+    setAiResponse(
+      "All models are currently unavailable. Please try again later or check your connection. " +
+      "This could be due to high demand or a temporary service disruption."
+    );
   }
   
   setIsLoading(false);
@@ -413,10 +651,12 @@ const fallbackToWorkingModel = async () => {
 
     try {
       // Create request body using streamingService
+      // In your testPrompt function:
       const requestBody = streamingService.createImageRequestBody(
         promptText,
         uploadedImage,
-        aiModels[selectedModel].model
+        aiModels[selectedModel].model,
+        aiModels[selectedModel].supportsImages // Pass this parameter
       );
 
       console.log("🚀 Test request with model:", aiModels[selectedModel].name);
@@ -444,11 +684,85 @@ const fallbackToWorkingModel = async () => {
           },
           onError: (error: string) => {
             setIsLoading(false);
-            setAiResponse(`Error: ${error}`);
             
-            // Try to find a working model on error
-            if (error.includes("unavailable") || error.includes("503")) {
+            // Create a popup alert for model unavailability
+            const showModelErrorAlert = (modelName: string, errorType: string) => {
+              const errorAlert = document.createElement('div');
+              // Make the popup wider (max-w-md -> max-w-lg), reduce transparency (bg-red-50 -> bg-red-100)
+              // and add more contrast to dark mode version
+              errorAlert.className = 'fixed bottom-4 right-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 p-4 rounded-lg shadow-lg z-50 max-w-lg text-red-800 dark:text-red-200 animate-fade-in';
+              errorAlert.innerHTML = `
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mt-0.5">
+                    <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm8-8a8 8 0 11-16 0 8 8 0 0116 0zM10 9a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <h3 class="text-sm font-medium">Model Unavailable</h3>
+                    <div class="mt-1 text-xs">
+                      <p>${aiModels[selectedModel].name} is currently unavailable (${errorType}).</p>
+                      <p class="mt-1">Switching to an available alternative model...</p>
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(errorAlert);
+              
+              // Increase display time from 5 seconds to 10 seconds
+              setTimeout(() => {
+                errorAlert.classList.add('animate-fade-out');
+                setTimeout(() => {
+                  if (document.body.contains(errorAlert)) {
+                    document.body.removeChild(errorAlert);
+                  }
+                }, 500); // Increased animation duration from 300ms to 500ms
+              }, 10000); // Increased from 5000ms to 10000ms (10 seconds)
+            };
+            
+            // Handle Llama-specific 404 errors
+            if (error.includes("404") && aiModels[selectedModel].model.includes("llama")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "404 Not Found");
+              
+              setAiResponse(
+                `Error: The Meta Llama 4 model is currently unavailable (404 error).\n\n` +
+                `Meta occasionally takes this model offline for maintenance or updates.\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
+              // Wait a moment before trying alternatives (for better UX)
+              setTimeout(() => fallbackToWorkingModel(), 1000);
+            } 
+            // Handle Gemini-specific rate limit errors
+            else if (error.includes("429") && aiModels[selectedModel].model.includes("gemini")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "429 Rate Limited");
+              
+              setAiResponse(
+                `Error: Google Gemini has reached its rate limit (429 error).\n\n` +
+                `This is usually due to:\n` +
+                `• High API usage\n` +
+                `• Image processing limits\n` +
+                `• Temporary service constraints\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
+              setTimeout(() => fallbackToWorkingModel(), 1000);
+            }
+            // Handle general unavailability
+            else if (error.includes("unavailable") || error.includes("503")) {
+              showModelErrorAlert(aiModels[selectedModel].name, "503 Unavailable");
+              
+              setAiResponse(
+                `Error: The selected model is unavailable.\n\n` +
+                `We'll try to find a working alternative model for you...`
+              );
+              
               fallbackToWorkingModel();
+            }
+            // For other errors, just display them
+            else {
+              setAiResponse(`Error: ${error}`);
             }
           }
         }
@@ -534,13 +848,13 @@ const fallbackToWorkingModel = async () => {
     // Check if user is authenticated
     const username = localStorage.getItem('username')
     if (!username || username === 'Guest') {
-      alert("Please log in to save prompts")
+      showNotification("error", "Login Required", "Please log in to save prompts");
       return
     }
 
     // Validate prompt content
     if (!promptText.trim() || promptText.trim() === defaultPrompt.trim()) {
-      alert("Please write a valid prompt before saving")
+      showNotification("error", "Invalid Prompt", "Please write a valid prompt before saving.")
       return
     }
 
@@ -619,6 +933,16 @@ const fallbackToWorkingModel = async () => {
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
+              {/* Optimizer button styled to match the OptimizerPage main button */}
+              <Link to="/optimizer">
+                <Button
+                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
+                  title="Optimize Prompt"
+                  size="icon"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -676,7 +1000,7 @@ const fallbackToWorkingModel = async () => {
           {aiModels[selectedModel].supportsImages && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Image Input</h3>
+                <h3 className="text-xs font-medium text-muted-foreground">Image Input</h3>
                 {uploadedImage && (
                   <Button 
                     variant="ghost" 
@@ -733,8 +1057,10 @@ const fallbackToWorkingModel = async () => {
               </Button>
               <Button
                 size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-8"
+                className={`bg-amber-500 hover:bg-amber-600 text-white text-xs h-8 ${isLoadingRating ? "opacity-70 cursor-not-allowed" : ""}`}
                 onClick={() => {
+                  if (isLoadingRating) return;
+                  setIsLoadingRating(true);
                   // If previous attempt failed, ensure loading state is reset
                   setIsLoadingRating(false);
                   
@@ -759,14 +1085,17 @@ const fallbackToWorkingModel = async () => {
                     setRatingResponse("Please test your prompt first before rating.");
                   }
                 }}
+                disabled={isLoadingRating}
               >
                 <Star className="h-3 w-3 mr-1" />
-                Rate
+                {isLoadingRating ? "Rating..." : "Rate"}
               </Button>
               <Button
                 size="sm"
-                className="bg-violet-500 hover:bg-violet-600 text-white text-xs h-8"
+                className={`bg-violet-500 hover:bg-violet-600 text-white text-xs h-8 ${isLoadingSuggestion ? "opacity-70 cursor-not-allowed" : ""}`}
                 onClick={() => {
+                  if (isLoadingSuggestion) return;
+                  setIsLoadingSuggestion(true);
                   // Clear previous response if switching views
                   if (currentView !== "suggest") {
                     typingEffect.clear();
@@ -787,9 +1116,10 @@ const fallbackToWorkingModel = async () => {
                     setSuggestionResponse("Please test your prompt first before requesting suggestions.");
                   }
                 }}
+                disabled={isLoadingSuggestion}
               >
                 <HelpCircle className="h-3 w-3 mr-1" />
-                Suggest
+                {isLoadingSuggestion ? "Suggesting..." : "Suggest"}
               </Button>
             </div>
           </div>
@@ -805,7 +1135,7 @@ const fallbackToWorkingModel = async () => {
             {currentView === "test" ? (
               <>
                 {/* AI Response */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
                     <div className="flex items-center space-x-1">
@@ -890,46 +1220,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        // Save current content based on current view before switching
-                        const currentDisplayText = typingEffect.displayText;
-                        if (currentDisplayText) {
-                          if (currentView === "test") {
-                            setAiResponse(currentDisplayText);
-                          } else if (currentView === "rate") {
-                            setRatingResponse(currentDisplayText);
-                          } else if (currentView === "suggest") {
-                            setSuggestionResponse(currentDisplayText);
-                          }
-                        }
-                        
-                        // Update page state
-                        setCurrentPage(page);
-                        
-                        // Clear typing effect before switching views
-                        typingEffect.clear();
-                        
-                        // Set the new view and restore content based on the page number
-                        if (page === 1) {
-                          setCurrentView("test");
-                          // Restore test content if available
-                          if (aiResponse && aiResponse !== "AI response to your prompt here...") {
-                            typingEffect.setText(aiResponse);
-                          }
-                        } else if (page === 2) {
-                          setCurrentView("rate");
-                          // Restore rating content if available
-                          if (ratingResponse) {
-                            typingEffect.setText(ratingResponse);
-                          }
-                        } else if (page === 3) {
-                          setCurrentView("suggest");
-                          // Restore suggestion content if available
-                          if (suggestionResponse) {
-                            typingEffect.setText(suggestionResponse);
-                          }
-                        }
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -944,7 +1235,7 @@ const fallbackToWorkingModel = async () => {
             ) : currentView === "rate" ? (
               <>
                 {/* Rating Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1008,12 +1299,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 3) setCurrentView("suggest");
-                        else setCurrentView("rate");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"
@@ -1028,7 +1314,7 @@ const fallbackToWorkingModel = async () => {
             ) : (
               <>
                 {/* Suggestion Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1092,12 +1378,7 @@ const fallbackToWorkingModel = async () => {
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        if (page === 1) setCurrentView("test");
-                        else if (page === 2) setCurrentView("rate");
-                        else if (page === 3) setCurrentView("suggest");
-                      }}
+                      onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                         currentPage === page
                           ? "bg-[#3ebb9e] text-white shadow-md"

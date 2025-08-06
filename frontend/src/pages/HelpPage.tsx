@@ -218,24 +218,46 @@ export default function HelpPage() {
               <ol className="list-decimal list-inside text-muted-foreground space-y-2">
                 <li>Navigate to the Testing Ground from the main menu</li>
                 <li>Select a prompt from your collection or enter a custom prompt</li>
-                <li>Choose DeepSeek as your AI model</li>
+                <li>Choose an your AI model</li>
                 <li>Enter your test input and click "Run Test"</li>
               </ol>
             </div>
 
             <div>
-              <h4 className="text-lg font-medium mb-2">Available Model</h4>
+              <h4 className="text-lg font-medium mb-2">Available Models</h4>
               <div className="border rounded-lg p-4">
+                
                 <h5 className="font-medium mb-2">DeepSeek AI</h5>
-                <ul className="text-sm text-muted-foreground space-y-1">
+                <ul className="text-sm text-muted-foreground space-y-1 p-2">
                   <li>• High-performance reasoning model</li>
                   <li>• Excellent for complex problem solving</li>
                   <li>• Cost-effective and efficient</li>
                   <li>• Strong performance across various tasks</li>
                 </ul>
+                <h5 className="font-medium mb-2">Meta Llama 4</h5>
+                <ul className="text-sm text-muted-foreground space-y-1 p-2">
+                  <li>• Advanced multilingual capabilities</li>
+                  <li>• Strong code and reasoning skills</li>
+                  <li>• Optimized for performance and scalability</li>
+                  <li>• Excels at both general and domain-specific tasks</li>
+                </ul>
+                <h5 className="font-medium mb-2">Google Gemini 2</h5>
+                <ul className="text-sm text-muted-foreground space-y-1 p-2">
+                  <li>• Natively multimodal with powerful vision and language integration</li>
+                  <li>• Exceptional benchmark results in reasoning and math</li>
+                  <li>• Strong integration with Google ecosystem</li>
+                  <li>• Fast and reliable performance</li>
+                </ul>
+                <h5 className="font-medium mb-2">Kimi Dev 72B</h5>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Chinese-focused large language model</li>
+                  <li>• High-quality generation and instruction following</li>
+                  <li>• Competitive with top-tier global models</li>
+                  <li>• Optimized for developer tools and applications</li>
+                </ul>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mt-4">
-                <p className="text-sm">💡 <strong>Note:</strong> We currently support DeepSeek AI. More models coming soon!</p>
+                <p className="text-sm">💡 <strong>Note:</strong> We currently support DeepSeek AI, Meta Llama 4, Google Gemini 2, and Kimi Dev 72B.</p>
               </div>
             </div>
 
@@ -406,7 +428,7 @@ export default function HelpPage() {
       category: "testing",
       question: "Which AI models can I test with?",
       answer:
-        "We currently support DeepSeek AI, a high-performance reasoning model that excels at complex problem solving and various AI tasks. DeepSeek offers excellent performance while being cost-effective. We're working on adding more models in the future!",
+        "We currently support DeepSeek AI, Meta Llama 4, Google Gemini 2, and Kimi Dev 72B.",
     },
     {
       category: "testing",

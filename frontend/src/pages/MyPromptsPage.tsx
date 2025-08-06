@@ -4,16 +4,13 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
-import { Star, Search, Filter, Plus } from "lucide-react"
+import { Star, Search, Filter, Plus, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Link } from "react-router-dom"
 import { StandardPromptCard } from "../components/StandardPromptCard"
 import httpClient from "../services/httpClient"
-import { MyPrompt } from "@/models/MyPrompt"
-import { UserProfile } from "@/models/User"
+import { MyPrompt } from "@/Models/MyPrompt"
+import { UserProfile } from "@/Models/User"
 import { PromptService } from "@/services/promptService"
-
-
-
 
 const PROMPTS_PER_PAGE = 12
 
@@ -21,9 +18,10 @@ export default function MyPromptsPage() {
   const promptService = new PromptService();
   const navigate = useNavigate()
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
-  const [filteredPrompts, setFilteredPrompts] = useState<MyPrompt[]>([])
+  const [allUserPrompts, setAllUserPrompts] = useState<MyPrompt[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const [pendingSearch, setPendingSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
@@ -33,6 +31,9 @@ export default function MyPromptsPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
+  const [totalPages, setTotalPages] = useState<number>(0)
+  const [promptCount, setPromptCount] = useState<number>(0)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Check authentication and get user profile
   useEffect(() => {
@@ -40,10 +41,7 @@ export default function MyPromptsPage() {
       try {
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-
-
           console.log("User not authenticated, redirecting to login")
-
 
           navigate('/login')
           return
@@ -93,89 +91,80 @@ export default function MyPromptsPage() {
       try {
         let authorId: string | null = null
 
-
         if (userProfile?.userId) {
           authorId = userProfile.userId
 
           console.log("Using authorId from profile:", authorId)
-        } 
-
-        //Fallback: get from localStorage if profile not loaded yet
-
-        else {
+        }
+        else { //Fallback: get from localStorage if profile not loaded yet
           authorId = localStorage.getItem('userId')
           console.log("Using authorId from localStorage:", authorId)
-
         }
-        if (!authorId) {
 
+        if (!authorId) {
           console.log("No authorId available, using empty prompts")
 
           setMyPrompts([])
-          setFilteredPrompts([])
+          // setFilteredPrompts([])
           setLoading(false)
           return
         }
 
-
-        console.log("Fetching prompts for authorId:", authorId)
-        
-
         //Fetch prompts using JWT authentication (cookies)
+        console.log("Fetching prompts for authorId:", authorId)
+        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
+        setTotalPages(userPromptsPage.totalPages);
+        setPromptCount(userPromptsPage.totalElements)
 
-        const response = await httpClient.get(`/prompts/author/${authorId}`)
-        const purchasedPrompts = await promptService.getPurchasedPrompts(currentPage - 1, 12);
-        console.log("purchasedPrompts");
-        console.log(purchasedPrompts);
-        
-        if (response.ok) {
-          let prompts = await response.json()
-          if (!Array.isArray(prompts)) prompts = []
 
-          prompts = [...prompts, ...purchasedPrompts.content]  
-          // Map backend fields to frontend MyPrompt interface
-          const mappedPrompts: MyPrompt[] = await Promise.all(
-            prompts.map(async (p: any) => {
-              const { averageRating } = await promptService.getPromptRatingSummary(p.id)
-              return {
-                id: p.id,
-                title: p.title,
-                description: p.description || "",
-                content: p.content || "",
-                category: "General", // Default, backend does not provide
-                tags: p.tagnames || [],
-                createdAt: p.createdAt,
-                updatedAt: p.publishedAt || p.createdAt,
-                rating: averageRating || 0, // Default, backend does not provide
-                uses: 0,   // Default, backend does not provide
-                featured: p.featured || false,
-                price: p.price || 0,
-                isPrivate: p.visibility !== "public",
-                isFavorite: false, // Default, backend does not provide
-                authorName: p.authorname || userProfile?.username || "You",
-                isBought: p.purchaseid ? true : false,
-                isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
-                publishedAt: p.publishedAt // Add this
-              }
-            })
-          )
-          setMyPrompts(mappedPrompts)
-          setFilteredPrompts(mappedPrompts)
-          const categories = ["all", ...new Set(mappedPrompts.map((p) => p.category))]
-          setAvailableCategories(categories)
-        } else if (response.status === 401) {
+        let prompts = userPromptsPage.content
+        console.log("prompts", prompts);
 
-          localStorage.removeItem('username')
-          localStorage.removeItem('userId')
-          navigate('/login')
-          return
+        if (!Array.isArray(prompts)) prompts = []
+        // Map backend fields to frontend MyPrompt interface
+        const mappedPrompts: MyPrompt[] = await Promise.all(
+          prompts.map(async (p: any) => {
+            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description || "",
+              content: p.content || "",
+              category: "General", // Default, backend does not provide
+              tags: p.tagNames || [],
+              createdAt: p.createdAt,
+              updatedAt: p.publishedAt || p.createdAt,
+              rating: averageRating || 0, // Default, backend does not provide
+              uses: p.usageCount,   // Default, backend does not provide
+              featured: p.featured || false,
+              price: p.price || 0,
+              isPrivate: p.visibility === "private",
+              isFavorite: false, // Default, backend does not provide
+              authorName: p.authorName || userProfile?.username || "You",
+              source: p.source,
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+              publishedAt: p.publishedAt // Add this
+            }
+          })
+        )
+        setMyPrompts(mappedPrompts)
+        // setFilteredPrompts(mappedPrompts)
+
+        const tagNamesString = localStorage.getItem("tagNames");
+        let tags = ["all"]
+        if (tagNamesString != null) {
+          tags = [...tags, ...JSON.parse(tagNamesString)];
         }
+        else {
+          //TODO: fetch tags from API
+        }
+        setAvailableCategories(tags)
+
       } catch (error) {
 
         console.error("Error fetching prompts:", error)
 
         setMyPrompts([])
-        setFilteredPrompts([])
       } finally {
         setLoading(false)
       }
@@ -184,9 +173,9 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate, userProfile])
+  }, [isAuthenticated, navigate, userProfile, currentPage])
 
-  // Fetch avgRating for each prompt using the reviews endpoint
+
   useEffect(() => {
     const fetchRatings = async () => {
       if (!myPrompts.length) return
@@ -216,44 +205,94 @@ export default function MyPromptsPage() {
     fetchRatings()
   }, [myPrompts])
 
+    //TODO: create a global fetchMyPrompts function for reuse (the one below is literally the same as the other)
+    const fetchMyPrompts = async () => {
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        let authorId: string | null = null
 
+        if (userProfile?.userId) {
+          authorId = userProfile.userId
 
-  // Filtering logic
-  useEffect(() => {
-    if (myPrompts.length === 0) return
-    const filtered = myPrompts.filter((prompt) => {
-      const matchesSearch = searchQuery
-        ? prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          prompt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          prompt.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        : true
-      const matchesCategory = selectedCategory === "all" ? true : prompt.category === selectedCategory
-      const oneWeekAgo = new Date()
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      const isRecent = new Date(prompt.updatedAt) > oneWeekAgo
-      const matchesFilter =
-        selectedFilter === "all" ||
-        (selectedFilter === "favorites" && prompt.isFavorite) ||
-        (selectedFilter === "private" && prompt.isPrivate) ||
-        (selectedFilter === "public" && !prompt.isPrivate) ||
-        (selectedFilter === "recent" && isRecent) ||
+          console.log("Using authorId from profile:", authorId)
+        }
+        else { //Fallback: get from localStorage if profile not loaded yet
+          authorId = localStorage.getItem('userId')
+          console.log("Using authorId from localStorage:", authorId)
+        }
 
-        (selectedFilter === "popular" && prompt.uses > 30) ||
-        (selectedFilter === "purchased" && prompt.isBought === true)
-        
+        if (!authorId) {
+          console.log("No authorId available, using empty prompts")
 
-      return matchesSearch && matchesCategory && matchesFilter
-    })
-    setFilteredPrompts(filtered)
-    setCurrentPage(1)
-  }, [searchQuery, selectedCategory, selectedFilter, myPrompts])
+          setMyPrompts([])
+          // setFilteredPrompts([])
+          setLoading(false)
+          return
+        }
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE)
-  const indexOfLastPrompt = currentPage * PROMPTS_PER_PAGE
-  const indexOfFirstPrompt = indexOfLastPrompt - PROMPTS_PER_PAGE
-  const currentPrompts = filteredPrompts.slice(indexOfFirstPrompt, indexOfLastPrompt)
-  const favoritePrompts = myPrompts.filter((prompt) => prompt.isFavorite).slice(0, 4)
+        //Fetch prompts using JWT authentication (cookies)
+        console.log("Fetching prompts for authorId:", authorId)
+
+        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
+        setTotalPages(userPromptsPage.totalPages);
+        setPromptCount(userPromptsPage.totalElements)
+
+        let prompts = userPromptsPage.content
+
+        if (!Array.isArray(prompts)) prompts = []
+
+        // Map backend fields to frontend MyPrompt interface
+        const mappedPrompts: MyPrompt[] = await Promise.all(
+          prompts.map(async (p: any) => {
+            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description || "",
+              content: p.content || "",
+              category: "General", // Default, backend does not provide
+              tags: p.tagNames || [],
+              createdAt: p.createdAt,
+              updatedAt: p.publishedAt || p.createdAt,
+              rating: averageRating || 0, // Default, backend does not provide
+              uses: p.usageCount,   // Default, backend does not provide
+              featured: p.featured || false,
+              price: p.price || 0,
+              isPrivate: p.visibility === "private",
+              isFavorite: false, // Default, backend does not provide
+              authorName: p.authorName || userProfile?.username || "You",
+              source: p.source,
+              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
+              publishedAt: p.publishedAt // Add this
+            }
+          })
+        )
+        setMyPrompts(mappedPrompts)
+        // setFilteredPrompts(mappedPrompts)
+
+        const tagNamesString = localStorage.getItem("tagNames");
+        let tags = ["all"]
+        if (tagNamesString != null) {
+          tags = [...tags, ...JSON.parse(tagNamesString)];
+        }
+        else {
+          //TODO: fetch tags from API
+        }
+        setAvailableCategories(tags)
+
+      } catch (error) {
+
+        console.error("Error fetching prompts:", error)
+
+        setMyPrompts([])
+      } finally {
+        setLoading(false)
+      }
+    }
 
   const filters = [
     { value: "all", label: "All" },
@@ -306,10 +345,10 @@ export default function MyPromptsPage() {
       category: prompt.category,
       tags: prompt.tags,
       promptText: prompt.content,
-      instructions: "",
-      expectedOutput: "",
-      useCase: "",
-      isPrivate: prompt.isPrivate
+      expectedOutput: "", // Fill if available
+      isPrivate: prompt.isPrivate,
+      isPublished: prompt.isPublished, // <-- Add this
+      content: prompt.content // <-- Add this
     }
     sessionStorage.setItem("editPromptData", JSON.stringify(editData))
     navigate("/submit")
@@ -334,12 +373,105 @@ export default function MyPromptsPage() {
           : p
       ))
 
-      
+
       console.log(`Prompt ${action}ed successfully`)
     } catch (error) {
       console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }
 
+  }
+
+  // 1. State to hold all prompts and search input
+  // const [allUserPrompts, setAllUserPrompts] = useState<MyPrompt[]>([])
+  // const [pendingSearch, setPendingSearch] = useState("")
+
+  // 2. Fetch ALL prompts for the user once (no search param)
+  useEffect(() => {
+    const fetchAllPrompts = async () => {
+      if (!isAuthenticated) return
+      let authorId: string | null = userProfile?.userId || localStorage.getItem('userId')
+      if (!authorId) {
+        setAllUserPrompts([])
+        return
+      }
+      const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, "all", "all", 0, 1000)
+      let prompts = userPromptsPage.content
+      if (!Array.isArray(prompts)) prompts = []
+      const mappedPrompts: MyPrompt[] = await Promise.all(
+        prompts.map(async (p: any) => {
+          const { averageRating } = await promptService.getPromptRatingSummary(p.id)
+          return {
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            content: p.content || "",
+            category: "General",
+            tags: p.tagNames || [],
+            createdAt: p.createdAt,
+            updatedAt: p.publishedAt || p.createdAt,
+            rating: averageRating || 0,
+            uses: p.usageCount,
+            featured: p.featured || false,
+            price: p.price || 0,
+            isPrivate: p.visibility === "private",
+            isFavorite: false,
+            authorName: p.authorName || userProfile?.username || "You",
+            source: p.source,
+            isPublished: p.visibility === "public" || p.publishedAt !== null,
+            publishedAt: p.publishedAt
+          }
+        })
+      )
+      setAllUserPrompts(mappedPrompts)
+    }
+    if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
+      fetchAllPrompts()
+    }
+  }, [isAuthenticated, userProfile])
+
+  // 3. Filter/search/paginate on the frontend
+  useEffect(() => {
+    let filtered = allUserPrompts
+
+    // Category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(p =>
+        (p.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
+        (p.tags || []).map(t => (typeof t === "string" ? t.toLowerCase() : "")).includes(selectedCategory.toLowerCase())
+      )
+    }
+
+    // Filter type
+    if (selectedFilter === "favorites") filtered = filtered.filter(p => p.isFavorite)
+    if (selectedFilter === "private") filtered = filtered.filter(p => p.isPrivate)
+    if (selectedFilter === "public") filtered = filtered.filter(p => !p.isPrivate)
+
+    // Search: if searchQuery is empty, show all prompts
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.trim().toLowerCase()
+      filtered = filtered.filter(
+        p =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.content.toLowerCase().includes(q) ||
+          (p.tags || []).some(tag => typeof tag === "string" && tag.toLowerCase().includes(q))
+      )
+    }
+
+    // Pagination
+    const start = (currentPage - 1) * PROMPTS_PER_PAGE
+    const end = start + PROMPTS_PER_PAGE
+    setMyPrompts(filtered.slice(start, end))
+    setPromptCount(filtered.length)
+    setTotalPages(Math.max(1, Math.ceil(filtered.length / PROMPTS_PER_PAGE)))
+  }, [allUserPrompts, searchQuery, selectedCategory, selectedFilter, currentPage])
+
+  // 4. Search bar: only search when Enter is pressed
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      setSearchQuery(pendingSearch)
+      setCurrentPage(1)
+    }
   }
 
   if (loading) {
@@ -372,134 +504,162 @@ export default function MyPromptsPage() {
   return (
     <div className="flex-1 flex flex-col w-full h-full min-h-screen">
       <div className="flex h-full min-h-screen">
-        {/* Sidebar */}
-        <div className="w-48 bg-muted border-r border-border p-4 hidden md:block flex-shrink-0 min-h-screen">
-          <div className="h-full flex flex-col">
-            <div className="flex-1">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
-              <div className="space-y-1">
-                {filters.map((filter) => (
-                  <Button
-                    key={filter.value}
-                    variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+        {/* Sidebar - Hide on mobile, overlay when shown */}
+        <div
+          className={`transition-all duration-300 ${
+            sidebarCollapsed ? "w-0 -ml-48 lg:ml-0 lg:w-12" : "w-48"
+          } ${
+            showFilters && !sidebarCollapsed 
+              ? "fixed inset-y-0 left-0 z-50 bg-muted border-r border-border lg:relative lg:inset-auto lg:z-auto" 
+              : "hidden lg:block"
+          } bg-muted border-r border-border p-4 flex-shrink-0 min-h-screen relative`}
+        >
+          {/* Close button for mobile */}
+          {showFilters && (
+            <button
+              className="absolute top-3 right-3 lg:hidden bg-background rounded-full p-1 shadow hover:bg-muted transition z-20"
+              onClick={() => setShowFilters(false)}
+              aria-label="Close filters"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
+          
+          <button
+            className="absolute top-3 right-2 z-10 bg-muted p-1 transition hidden lg:block"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+          
+          {!sidebarCollapsed && (
+            <div className="h-full flex flex-col pt-8 lg:pt-0">
+              <div className="flex-1">
+                <h3 className="text-xs font-medium uppercase text-muted-foreground mb-2">Filters</h3>
+                <div className="space-y-1">
+                  {filters.map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant="ghost"
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedFilter === filter.value ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                       }`}
-                    onClick={() => setSelectedFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </Button>
-                ))}
-              </div>
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
-              <div className="space-y-1">
-                {availableCategories.map((category) => (
-                  <Button
-                    key={category}
-                    variant="ghost"
-                    className={`w-full justify-start text-sm h-8 px-2 ${selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
+                      onClick={() => {
+                        setSelectedFilter(filter.value)
+                        setShowFilters(false) // Close on mobile after selection
+                      }}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
+                <h3 className="text-xs font-medium uppercase text-muted-foreground mt-6 mb-2">Categories</h3>
+                <div className="space-y-1">
+                  {availableCategories.map((category) => (
+                    <Button
+                      key={category}
+                      variant="ghost"
+                      className={`w-full justify-start text-sm h-8 px-2 ${
+                        selectedCategory === category ? "bg-[#3ebb9e]/10 text-[#3ebb9e]" : ""
                       }`}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category === "all" ? "All" : category}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {userProfile && (
-              <div className="border-t border-border pt-4 mt-4">
-                <div className="text-xs font-medium uppercase text-muted-foreground mb-2">User</div>
-                <div className="text-sm">
-                  <div className="font-medium">{userProfile.username}</div>
-                  <div className="text-muted-foreground text-xs">{myPrompts.length} prompts</div>
+                      onClick={() => {
+                        setSelectedCategory(category)
+                        setCurrentPage(1)
+                        setShowFilters(false) // Close on mobile after selection
+                      }}
+                    >
+                      {category === "all" ? "All" : category}
+                    </Button>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
+              {userProfile && (
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="text-xs font-medium uppercase text-muted-foreground mb-2">User</div>
+                  <div className="text-sm">
+                    <div className="font-medium">{userProfile.username}</div>
+                    <div className="text-muted-foreground text-xs">{myPrompts.length} prompts</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
+        {/* Overlay for mobile sidebar */}
+        {showFilters && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+            onClick={() => setShowFilters(false)}
+          />
+        )}
+
         {/* Main Content */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold mb-2">My Prompts</h1>
-                <p className="text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
+              <div className="mb-3 sm:mb-0">
+                <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">My Prompts</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {userProfile ? `Manage and organize your AI prompts, ${userProfile.username}` : "Manage and organize your AI prompts"}
                 </p>
               </div>
-              <div className="flex items-center space-x-2 mt-4 md:mt-0">
-                <Button variant="outline" className="md:hidden" onClick={() => setShowFilters(!showFilters)}>
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="lg:hidden" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Filters</span>
                 </Button>
                 <Link to="/submit">
-                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Prompt
+                  <Button 
+                    size="sm"
+                    className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">New Prompt</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
                 </Link>
               </div>
             </div>
 
             {/* Search Bar */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <div className="relative">
                 <Input
                   placeholder="        Search for prompts..."
-                  className="bg-muted border-muted pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-muted border-muted pl-8 sm:pl-10 text-sm sm:text-base h-9 sm:h-10"
+                  value={pendingSearch}
+                  onChange={(e) => {
+                    setPendingSearch(e.target.value)
+                    if (e.target.value === "") {
+                      setSearchQuery("")
+                      setCurrentPage(1)
+                    }
+                  }}
+                  onKeyDown={handleSearch}
                 />
-                {!searchQuery && (
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
+                {pendingSearch === "" && (
+                  <div className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Favorite Prompts */}
-            {selectedFilter === "all" && selectedCategory === "all" && !searchQuery && favoritePrompts.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                  <h2 className="text-lg font-medium">Favorite Prompts</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {favoritePrompts.map((prompt) => (
-                    <StandardPromptCard
-                      key={prompt.id}
-                      id={prompt.id}
-                      title={prompt.title}
-                      description={prompt.description}
-                      rating={avgRatingMap[prompt.id] ?? 0}
-                      uses={prompt.uses}
-                      price={prompt.price}
-                      featured={prompt.featured}
-                      isPrivate={prompt.isPrivate}
-                      isFavorite={prompt.isFavorite}
-                      tags={prompt.tags}
-                      category={prompt.category}
-                      authorName={prompt.authorName || userProfile?.username || "You"}
-                      isBought={prompt.isBought}
-                      isOwned={true}
-                      onEdit={handleEditPrompt}
-                      onDelete={handleDeletePrompt}
-                      onToggleFavorite={handleToggleFavorite}
-                      onCopy={handleCopyPrompt}
-                      copiedId={copiedId}
-                      content={prompt.content}
-                      onPublish={handlePublishPrompt}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Results */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium">
+            {/* Results Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+              <h2 className="text-base sm:text-lg font-medium">
                 {searchQuery
                   ? `Search Results for "${searchQuery}"`
                   : selectedCategory !== "all"
@@ -508,14 +668,14 @@ export default function MyPromptsPage() {
                       ? `${filters.find((f) => f.value === selectedFilter)?.label} Prompts`
                       : "All Prompts"}
               </h2>
-              <div className="text-sm text-muted-foreground">
-                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? "s" : ""} found
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
               </div>
             </div>
 
-            {/* Prompts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {currentPrompts.map((prompt) => (
+            {/* Prompts Grid - 2 columns on mobile, 2 on small screens, 3 on large */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
+              {myPrompts.map((prompt) => (
                 <StandardPromptCard
                   key={prompt.id}
                   id={prompt.id}
@@ -530,12 +690,9 @@ export default function MyPromptsPage() {
                   tags={prompt.tags || []}
                   category={prompt.category || ""}
                   authorName={prompt.authorName || ""}
-                  isOwned={true} // Since this is MyPromptsPage
-
+                  isOwned={true}
                   isPublished={prompt.isPublished || false}
-                  isBought={prompt.isBought}
-
-
+                  source={prompt.source}
                   onEdit={handleEditPrompt}
                   onDelete={handleDeletePrompt}
                   onToggleFavorite={handleToggleFavorite}
@@ -548,14 +705,14 @@ export default function MyPromptsPage() {
             </div>
 
             {/* Empty State */}
-            {filteredPrompts.length === 0 && !loading && (
-              <div className="text-center py-12">
+            {promptCount === 0 && !loading && (
+              <div className="text-center py-8 sm:py-12">
                 <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">
+                  <Search className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                  <h3 className="text-base sm:text-lg font-medium mb-2">
                     {myPrompts.length === 0 ? "No prompts yet" : "No prompts found"}
                   </h3>
-                  <p>
+                  <p className="text-sm sm:text-base px-4">
                     {myPrompts.length === 0
                       ? "Create your first prompt to get started"
                       : "Try adjusting your search terms or filters"}
@@ -575,6 +732,7 @@ export default function MyPromptsPage() {
                       setSearchQuery("")
                       setSelectedCategory("all")
                       setSelectedFilter("all")
+                      setCurrentPage(1)
                     }}
                   >
                     Clear Filters
@@ -583,28 +741,33 @@ export default function MyPromptsPage() {
               </div>
             )}
 
-            {/* Pagination */}
+            {/* Pagination - Responsive */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
+              <div className="flex justify-center items-center space-x-1 sm:space-x-2 mt-6 sm:mt-8">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
+                  <span className="sm:hidden">Prev</span>
                 </Button>
 
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                {/* Show fewer page numbers on mobile */}
+                {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 3 : 5) }).map((_, i) => {
                   let pageNumber
-                  if (totalPages <= 5) {
+                  const maxPages = window.innerWidth < 640 ? 3 : 5
+                  
+                  if (totalPages <= maxPages) {
                     pageNumber = i + 1
-                  } else if (currentPage <= 3) {
+                  } else if (currentPage <= Math.ceil(maxPages / 2)) {
                     pageNumber = i + 1
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNumber = totalPages - 4 + i
+                  } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                    pageNumber = totalPages - maxPages + 1 + i
                   } else {
-                    pageNumber = currentPage - 2 + i
+                    pageNumber = currentPage - Math.floor(maxPages / 2) + i
                   }
 
                   return (
@@ -612,8 +775,10 @@ export default function MyPromptsPage() {
                       key={pageNumber}
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
+                      className={`min-w-[2rem] h-8 sm:min-w-[2.5rem] sm:h-9 text-xs sm:text-sm ${
+                        currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNumber)}
-                      className={`min-w-[2.5rem] ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""}`}
                     >
                       {pageNumber}
                     </Button>
@@ -623,10 +788,12 @@ export default function MyPromptsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">Next</span>
                 </Button>
               </div>
             )}

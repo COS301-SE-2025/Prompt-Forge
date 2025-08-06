@@ -1,4 +1,4 @@
-import { Category } from "./Prompt"
+import { Category } from "../Models/Prompt";
 
 export interface MyPrompt {
   id: string
@@ -18,5 +18,5 @@ export interface MyPrompt {
   authorName: string
   isPublished: boolean // ✅ Add this property
   publishedAt?: string // ✅ Add this property
-  isBought:boolean
+  source:"purchased"|"authored"
 }

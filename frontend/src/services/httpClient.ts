@@ -1,19 +1,41 @@
+import { API_BASE_URL } from '../config/api';
+
 class HttpClient {
-  private baseURL = "http://localhost:8080/api";
+  private baseURL = API_BASE_URL;
+  
+  // Expose for services that need direct access
+  get apiUrl() {
+    return this.baseURL;
+  }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
     
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('jwtToken') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('token');
+    
+    // Only set default JSON content type if body is not FormData
+    const isFormData = options.body instanceof FormData;
+    const headers = new Headers(options.headers);
+    
+    if (!isFormData && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+    
+    // Add JWT token if available and not already set
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
     const config: RequestInit = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
       credentials: 'include',
       ...options,
     };
 
-    console.log(` ${options.method || 'GET'} ${url}`);
+    console.log(`🔍 ${options.method || 'GET'} ${url}`);
     
     return fetch(url, config);
   }
@@ -47,6 +69,20 @@ class HttpClient {
       ...options,
       method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async uploadForm(endpoint: string, formData: FormData, options?: RequestInit): Promise<Response> {
+    // Explicitly remove Content-Type header to let browser set it automatically
+    const { headers, ...restOptions } = options || {};
+    const newHeaders = new Headers(headers);
+    newHeaders.delete('Content-Type');
+
+    return this.request(endpoint, {
+      ...restOptions,
+      method: "POST",
+      body: formData,
+      headers: newHeaders,
     });
   }
 }

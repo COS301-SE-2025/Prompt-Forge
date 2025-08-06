@@ -4,7 +4,7 @@ import { ShoppingCartIcon } from 'lucide-react';
 import { CartItem } from '@/components/CartItem';
 import { Link } from 'react-router-dom';
 import { CartService } from '@/services/cartServices';
-import { CartPrompt, EnrichedPrompt } from '@/models/CartPrompt';
+import { CartPrompt, EnrichedPrompt } from '@/Models/CartPrompt';
 import { PromptService } from '@/services/promptService';
 
 export default function CartPage() {
@@ -67,26 +67,34 @@ export default function CartPage() {
 
     if (loading && (cartItems.length === 0 || removing)) {
         return (
-            <div className="flex justify-center items-center h-screen">
+            <div className="flex justify-center items-center h-screen px-4">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading Cart...</p>
+                    <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                    <p className="text-sm sm:text-base text-muted-foreground">Loading Cart...</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="w-full pt-10 px-16 mx-auto">
-            <div className="flex items-center mb-8">
-                <ShoppingCartIcon className="mr-3" size={24} />
-                <h1 className="text-2xl font-bold">Your Cart</h1>
-                <span className="ml-3 text-gray-400">({cartItems.length} items)</span>
+        <div className="w-full pt-4 sm:pt-6 lg:pt-10 px-3 sm:px-6 lg:px-16 mx-auto max-w-7xl">
+            {/* Header - Mobile Responsive */}
+            <div className="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6 lg:mb-8">
+                <div className="flex items-center mb-2 sm:mb-0">
+                    <ShoppingCartIcon className="mr-2 sm:mr-3" size={20} sm-size={24} />
+                    <h1 className="text-xl sm:text-2xl font-bold">Your Cart</h1>
+                </div>
+                <span className="text-sm sm:text-base text-gray-400 sm:ml-3">
+                    ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
+                </span>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className={cartItems.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+
+            {/* Main Content - Mobile Responsive Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                {/* Cart Items Section */}
+                <div className={`${cartItems.length > 0 ? "lg:col-span-2" : "lg:col-span-3"} order-1 lg:order-1`}>
                     {cartItems.length > 0 ? (
-                        <div>
+                        <div className="space-y-3 sm:space-y-4">
                             {cartItems.map((item: EnrichedPrompt) => (
                                 <CartItem 
                                     key={item.cartItemId} 
@@ -97,29 +105,38 @@ export default function CartPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <ShoppingCartIcon className="mx-auto mb-4 text-gray-500" size={48} />
-                            <h3 className="text-xl font-medium mb-2">Your cart is empty</h3>
-                            <p className="text-gray-400 mb-6">
+                        <div className="text-center py-8 sm:py-12 px-4">
+                            <ShoppingCartIcon className="mx-auto mb-4 text-gray-500" size={36} sm-size={48} />
+                            <h3 className="text-lg sm:text-xl font-medium mb-2">Your cart is empty</h3>
+                            <p className="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6 max-w-md mx-auto leading-relaxed">
                                 Browse the marketplace to find prompts you'll love
                             </p>
-                            <Link to="/marketplace" className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 rounded-md font-medium transition-colors">
+                            <Link 
+                                to="/marketplace" 
+                                className="inline-block bg-[#3ebb9e] hover:bg-[#00674f] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md font-medium transition-colors text-sm sm:text-base"
+                            >
                                 Explore Marketplace
                             </Link>
                         </div>
                     )}
                 </div>
-                <div>
+
+                {/* Cart Summary Section - Mobile: Show at bottom, Desktop: Show on right */}
+                <div className="order-2 lg:order-2">
                     {cartItems.length > 0 && (
-                        <CartSummary 
-                            subtotal={subtotal} 
-                            prompts={cartItems} 
-                            setCartItems={setCartItems}
-                            onCheckoutSuccess={handleCheckoutSuccess}
-                        />
+                        <div className="lg:sticky lg:top-6">
+                            <CartSummary 
+                                subtotal={subtotal} 
+                                prompts={cartItems} 
+                                onCheckoutSuccess={handleCheckoutSuccess}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
+
+            {/* Mobile Footer Spacing */}
+            <div className="h-4 sm:h-6 lg:h-8"></div>
         </div>
     )
 }

@@ -16,6 +16,10 @@ import { PromptPage } from "./pages/PromptPage"
 import ComparisonPage from "./pages/ComparisonPage"
 import HelpPage from "./pages/HelpPage"
 import WarPage from "./pages/PromptWars"
+import BuilderPage from "./pages/PromptBuilder"
+import ProfilePage from "./pages/ProfilePage"
+import SocialPage from "./pages/SocialPage"
+import OptimizerPage from "./pages/OptimizerPage"
 
 
 
@@ -44,6 +48,10 @@ function App() {
           <Route path="/comparison" element={<ComparisonPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/war" element={<WarPage />} />
+          <Route path="/builder" element={<BuilderPage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/social" element={<SocialPage />} />
+          <Route path="/optimizer" element={<OptimizerPage />} />
         </Routes>
       </main>
     </div>

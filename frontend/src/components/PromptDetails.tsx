@@ -1,15 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { ReviewCard } from "./ReviewCard"
-import { BookOpen, MessageSquare, Info, Edit, Trash2 } from "lucide-react"
+import { BookOpen, MessageSquare, Info, Edit, Trash2, X } from "lucide-react"
 import { PurchaseButton } from "./PurchaseButton"
 import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
-import type { PromptWithTags, Review } from "@/models/Prompt"
+import type { PromptWithTags, Review } from "@/Models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
 import httpClient from "../services/httpClient"
@@ -19,7 +19,7 @@ export const PromptDetails = () => {
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  //const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
@@ -31,6 +31,37 @@ export const PromptDetails = () => {
 
   const promptService = new PromptService()
   const cartService = new CartService()
+  const notificationRef = useRef<HTMLDivElement | null>(null)
+
+  // Notification helper (EditorPage style, bottom right)
+  const showNotification = (type: "success" | "error", title: string, message: string) => {
+    const bg = type === "success"
+      ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+      : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const icon = type === "success"
+      ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
+      : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
+    const notification = document.createElement('div')
+    notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in`
+    notification.innerHTML = `
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mt-0.5">${icon}</div>
+        <div class="ml-3 flex-1">
+          <h3 class="text-sm font-medium">${title}</h3>
+          <div class="mt-1 text-xs">${message}</div>
+        </div>
+      </div>
+    `
+    document.body.appendChild(notification)
+    setTimeout(() => {
+      notification.classList.add('animate-fade-out')
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 500)
+    }, 4000)
+  }
 
   useEffect(() => {
     const fetchPromptData = async () => {
@@ -110,42 +141,33 @@ export const PromptDetails = () => {
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
 
   const handlePurchase = async () => {
-    cartService.addToCart(id)
-    .then(res => {
-      alert(res.message);
-      setUserAddedToCart(true)
-    })
-    .catch(err=>{
-      alert(err.message);
-    })
-  }
-
-  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
-    try {
-      await promptService.postReview(id!, review)
-      
-      // Refresh reviews after successful submission
-      const reviewsData = await promptService.getPromptReviews(id!)
-      setReviews(reviewsData)
-    } catch (err) {
-      console.error("Review submission error:", err)
-      alert("Failed to submit review")
+    if (currentUserId === prompt?.authorId) {
+      showNotification("error", "Purchase not allowed", "You cannot purchase your own prompt.")
+      return
     }
+
+    cartService.addToCart(id)
+      .then(res => {
+        showNotification("success", "Added to cart", res.message)
+        setUserAddedToCart(true)
+      })
+      .catch(err => {
+        showNotification("error", "Add to cart failed", err.message)
+      })
   }
 
   const handleReviewUpdate = async (reviewId: string, updatedReview: { rating: number; comment: string }) => {
     try {
       setEditingReview(reviewId)
       await promptService.updateReview(id!, reviewId, updatedReview)
-      
-      // Refresh reviews after successful update
       const reviewsData = await promptService.getPromptReviews(id!)
       setReviews(reviewsData)
       setEditingReview(null)
-      setEditingReviewData(null) // Clear edit mode
+      setEditingReviewData(null)
+      showNotification("success", "Review updated", "Your review was updated successfully.")
     } catch (err) {
       console.error("Review update error:", err)
-      alert("Failed to update review")
+      showNotification("error", "Update failed", "Failed to update review")
       setEditingReview(null)
     }
   }
@@ -154,18 +176,16 @@ export const PromptDetails = () => {
     if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
       return
     }
-
     try {
-      setDeletingReview(reviewId) // Show loading state
+      setDeletingReview(reviewId)
       await promptService.deleteReview(id!, reviewId)
-      
-      // Refresh reviews after successful deletion
       const reviewsData = await promptService.getPromptReviews(id!)
       setReviews(reviewsData)
       setDeletingReview(null)
+      showNotification("success", "Review deleted", "Your review was deleted successfully.")
     } catch (err) {
       console.error("Review deletion error:", err)
-      alert("Failed to delete review")
+      showNotification("error", "Delete failed", "Failed to delete review")
       setDeletingReview(null)
     }
   }
@@ -262,6 +282,19 @@ export const PromptDetails = () => {
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-6xl">
+      {/* Back button */}
+      <div className="mb-4 flex items-center justify-between">
+        <Button
+          onClick={() => window.history.back()}
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
+
       {/* Breadcrumb - More compact */}
       <div className="mb-4">
         <nav className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
@@ -318,7 +351,7 @@ export const PromptDetails = () => {
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
               <div className="flex items-center gap-1">
-                <StarRating rating={averageRating} size="sm" />
+                <StarRating value={averageRating} size="sm" />
                 <span>({reviews.length})</span>
               </div>
               {isPaidPrompt && (
@@ -347,7 +380,7 @@ export const PromptDetails = () => {
                 <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
                 Prompt
               </h2>
-              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto custom-scrollbar">
                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-mono">
                   {prompt.content}
                 </p>
@@ -384,7 +417,7 @@ export const PromptDetails = () => {
                 Reviews
               </h2>
               <div className="flex items-center gap-2">
-                <StarRating rating={averageRating} size="sm" />
+                <StarRating value={averageRating} size="sm" />
                 <span className="text-xs text-gray-600 dark:text-gray-400">
                   {reviews.length} review{reviews.length !== 1 ? "s" : ""}
                 </span>
@@ -531,19 +564,20 @@ export const PromptDetails = () => {
                   </p>
                 </div>
 
-                {userOwnsPrompt ? (
+                {currentUserId === prompt.authorId ? (
+                  <div className="text-center py-3 px-4 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-lg">
+                    <span className="text-sm font-medium">📝 Your Prompt</span>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">You cannot purchase your own prompt</p>
+                  </div>
+                ) : userOwnsPrompt ? (
                   <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
                     <span className="text-sm font-medium">✓ Owned</span>
                   </div>
-                ) :
-                
-                userAddedToCart? (
-                    <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
-                      <span className="text-sm font-medium">✓ Added to cart</span>
-                    </div>
-                ):
-                
-                (
+                ) : userAddedToCart ? (
+                  <div className="text-center py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-lg">
+                    <span className="text-sm font-medium">✓ Added to cart</span>
+                  </div>
+                ) : (
                   <PurchaseButton
                     price={prompt.price}
                     onClick={handlePurchase}

@@ -1,0 +1,15 @@
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - echo "Skipping build, using pre-built assets"
+        build:
+          commands:
+            - echo "Using pre-built assets from dist folder"
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'

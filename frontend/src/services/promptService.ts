@@ -1,7 +1,7 @@
-import { Query } from "@/models/Query";
+import { Query } from "@/Models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag } from "@/models/Prompt";
-import { Review, ReviewsApiResponse } from '@/models/Reviews';
+import { Prompt, Tag } from "@/Models/Prompt";
+import { Review, ReviewsApiResponse } from '@/Models/Reviews';
 
 export class PromptService {
   private httpClient = HttpClient;
@@ -11,19 +11,30 @@ export class PromptService {
 
   async getPromptById(promptId: string) {
     try {
-      const [promptResponse, ownershipResponse, addedToCartResponse] = await Promise.all([this.httpClient.get(`/prompts/${promptId}`),
-      this.httpClient.get(`/store/prompts/ownership/${promptId}`),
-      this.httpClient.get(`/cart/added/${promptId}`)])
+      const [promptResponse, ownershipResponse, addedToCartResponse] = await Promise.all([
+        this.httpClient.get(`/prompts/${promptId}`),
+        this.httpClient.get(`/store/prompts/ownership/${promptId}`),
+        this.httpClient.get(`/cart/added/${promptId}`)
+      ]);
 
       const prompt: Prompt = await promptResponse.json();
 
       console.log("ownershipResponse");
-      const ownership = await ownershipResponse.json();
+      let ownership = false;
+      if (ownershipResponse.ok) {
+        const ownershipText = await ownershipResponse.text();
+        ownership = ownershipText ? JSON.parse(ownershipText) : false;
+      }
       console.log(ownership);
 
       console.log("addedToCartResponse");
-      const addedToCart = await addedToCartResponse.json();
-      console.log(addedToCart);
+      let addedToCart = false;
+      if (addedToCartResponse.ok) {
+        const cartText = await addedToCartResponse.text();
+        addedToCart = cartText ? JSON.parse(cartText) : false;
+      } else {
+        console.warn("Cart endpoint returned error:", addedToCartResponse.status);
+      }
 
       // Ensure tagIds exists and is an array
       const tagIds = prompt.tagIds || [];
@@ -164,6 +175,50 @@ export class PromptService {
       throw error;
     }
   }
+ 
+  async getPromptsByAuthor(authorId: string,page:number,size:number) {
+    try {
+      const response = await this.httpClient.get(`/prompts/author/${authorId}?page=${page}&size=${size}`);
+      return response.json();
+    }
+    catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  
+  async getAuthoredAndPurchasedPrompts(authorId: string, tagName: string | null, filterName: string | null, page:number,size:number) {
+    try {
+      if (tagName ==="all" && filterName === "all") {        
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?page=${page}&size=${size}`);
+        return response.json();
+      }
+
+      if (tagName !== "all" && filterName === "all") {
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&page=${page}&size=${size}`);
+        return response.json();
+      }
+
+      if (tagName === "all" && filterName !== "all"){
+        console.log("tagName === all && filterName !== all");
+        
+        const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?filterName=${filterName}&page=${page}&size=${size}`);
+        return response.json();
+      } 
+      
+      //console.log("last lappppp");
+      const response = await this.httpClient.get(`/prompts/myprompts/${authorId}?tagName=${tagName}&filterName=${filterName}&page=${page}&size=${size}`);
+      return response.json();
+      
+      /*TODO:
+        if (tagName !== "all" && filterName !== "all") 
+      */
+    }
+    catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 
   async getByCategory(category: string, page: number) {
     try {      
@@ -227,7 +282,13 @@ export class PromptService {
   async getAllTags(): Promise<Tag[]> {
     try {
       const response = await this.httpClient.get('/store/prompts/tags');
-      return response.json();
+      const tags = await response.json();
+      const tagNames = tags.map((tag:Tag)=>tag.name)
+      console.log("tagNames:", tagNames);
+      
+      localStorage.setItem("tagNames", JSON.stringify(tagNames))
+      console.log("local tags:", localStorage.getItem("tagNames"));      
+      return tags
     } catch (error) {
       console.error(error);
       throw error;

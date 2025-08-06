@@ -17,10 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
-import com.fiveOps.promptforge.cart.dto.CartItemResponse;
 import com.fiveOps.promptforge.cart.service.CartItemService;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
@@ -37,47 +38,49 @@ public class CartItemController {
   }
 
   @GetMapping
-  public ResponseEntity<Page<CartItemDTO>> getCartItems(
+  public ResponseEntity<Page<CartItemProjection>> getCartItems(
       @PageableDefault(size = 10) Pageable pageable, Authentication authentication) {
     System.out.println("getname" + authentication.getName());
     String userEmail = authentication.getName();
     UUID userId = userService.getUserIdByEmail(userEmail);
-    Page<CartItemDTO> cartItems = cartItemService.getCartItemsForUser(userId, pageable);
+    Page<CartItemProjection> cartItems = cartItemService.getCartItemsForUser(userId, pageable);
     return ResponseEntity.ok(cartItems);
   }
 
   @PostMapping("/add")
-  public ResponseEntity<CartItemResponse> addItemToCart(
+  public ResponseEntity<APIResponse> addItemToCart(
       @RequestBody CartItemRequest request, Authentication authentication) {
 
     try {
       String userEmail = authentication.getName();
       UUID userId = userService.getUserIdByEmail(userEmail);
+      System.out.println("\n\n\n===========userId:" + userId);
+      System.out.println("Prompt ID:" + request.getPromptId());
       cartItemService.addItemToCart(userId, request.getPromptId());
 
-      return ResponseEntity.ok(new CartItemResponse("Prompt added to cart."));
+      return ResponseEntity.ok(new APIResponse("success", "Prompt added to cart."));
     } catch (Exception e) {
       if (e.getMessage().contains("already been added")) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(new CartItemResponse("Prompt added to cart."));
+            .body(new APIResponse("success", "Prompt added to cart."));
       }
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(new CartItemResponse("Failed to add item to cart."));
+          .body(new APIResponse("success", "Failed to add item to cart."));
     }
   }
 
   @DeleteMapping("/remove/{promptId}")
-  public ResponseEntity<CartItemResponse> removeItemFromCart(
+  public ResponseEntity<APIResponse> removeItemFromCart(
       @PathVariable UUID promptId, Authentication authentication) {
 
     try {
       String userEmail = authentication.getName();
       UUID userId = userService.getUserIdByEmail(userEmail);
       cartItemService.removeItemFromCart(userId, promptId);
-      return ResponseEntity.ok(new CartItemResponse("Item removed from cart."));
+      return ResponseEntity.ok(new APIResponse("success", "item removed from cart."));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(new CartItemResponse("Failed to add item to cart."));
+          .body(new APIResponse("error", "Failed to add item to cart."));
     }
   }
 
@@ -90,20 +93,22 @@ public class CartItemController {
   }
 
   @PostMapping("/checkout")
-  public ResponseEntity<CartItemResponse> checkoutCart(
+  public ResponseEntity<APIResponse> checkoutCart(
       @RequestBody CartCheckoutRequest request, Authentication authentication) {
     try {
       String userEmail = authentication.getName();
-      UUID userId = userService.getUserIdByEmail(userEmail);
       List<CartItemDTO> prompts = request.getPrompts();
-      cartItemService.checkout(userId, prompts);
+
+      cartItemService.purchase(userEmail, prompts);
+
       String promptString = (prompts.size() > 1) ? "Prompts" : "Prompt";
-      return ResponseEntity.ok(new CartItemResponse(promptString + " purchased successfully."));
+      return ResponseEntity.ok(
+          new APIResponse("success", promptString + " purchased successfully."));
     } catch (Exception e) {
       System.err.println("Checkout error: " + e.getMessage());
       e.printStackTrace();
       return ResponseEntity.badRequest()
-          .body(new CartItemResponse("Checkout failed: " + e.getMessage()));
+          .body(new APIResponse("success", "Checkout failed: " + e.getMessage()));
     }
   }
 }

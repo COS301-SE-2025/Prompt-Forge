@@ -83,7 +83,6 @@ export default function LoginPage() {
     }
   };
 
-
   // Password validation function
   const validatePassword = (password: string) => {
     const validation = {
@@ -91,7 +90,7 @@ export default function LoginPage() {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
-      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
     };
     setPasswordValidation(validation);
     return Object.values(validation).every(Boolean);
@@ -202,43 +201,48 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Left Side - Brand Section */}
         <div
-          className="w-full md:w-1/2 p-8 flex flex-col justify-center items-center text-center animate-gradient"
+          className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center animate-gradient order-1 lg:order-1 min-h-[300px] lg:min-h-screen"
           style={{
             backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
             backgroundSize: "400% 400%",
           }}
         >
-          <div className="max-w-md mx-auto">
-            <div className="mb-6 flex justify-center">
-              <div className="bg-[#00876e]/10 p-4 rounded-full">
-                <BrainCircuit className="w-12 h-12 text-white dark:text-white" />
+          <div className="max-w-sm sm:max-w-md mx-auto">
+            <div className="mb-4 sm:mb-6 flex justify-center">
+              <div className="bg-[#00876e]/10 p-3 sm:p-4 rounded-full">
+                <BrainCircuit className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white dark:text-white" />
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-white">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-wider mb-2 text-white">
               Prompt Forge
             </h1>
-            <p className="text-sm text-white/70 uppercase tracking-widest mb-8">
+            <p className="text-xs sm:text-sm text-white/70 uppercase tracking-widest mb-6 sm:mb-8">
               Forge the future
             </p>
 
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              Discover, Test & Master <br /> AI Prompts
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-white leading-tight">
+              Discover, Test & Master <br className="hidden sm:block" /> 
+              <span className="sm:hidden">& </span>AI Prompts
             </h2>
 
-            <p className="text-sm text-white/80 mb-6">
-              The marketplace for high-quality, tested AI prompts. <br />
-              Buy, sell, test, and compare prompts to maximize <br />
-              your AI potential.
+            <p className="text-xs sm:text-sm lg:text-base text-white/80 mb-4 sm:mb-6 leading-relaxed px-2">
+              The marketplace for high-quality, tested AI prompts. 
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>Buy, sell, test, and compare prompts to maximize 
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>your AI potential.
             </p>
           </div>
         </div>
 
-        <div className="w-full md:w-1/2 bg-background p-8 flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <div className="p-6">
+        {/* Right Side - Form Section */}
+        <div className="w-full lg:w-1/2 bg-background p-4 sm:p-6 lg:p-8 flex items-center justify-center order-2 lg:order-2 min-h-[500px] lg:min-h-screen">
+          <Card className="w-full max-w-sm sm:max-w-md lg:max-w-lg shadow-lg">
+            <div className="p-4 sm:p-6 lg:p-8">
               {showForgotPassword ? (
                 <div className="space-y-4">
                   <button
@@ -246,46 +250,50 @@ export default function LoginPage() {
                       setShowForgotPassword(false);
                       setError("");
                     }}
-                    className="flex items-center text-sm text-muted-foreground hover:text-forge-green mb-4"
+                    className="flex items-center text-sm text-muted-foreground hover:text-[#3ebb9e] mb-4 transition-colors"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to login
                   </button>
 
-                  <h2 className="text-xl font-semibold mb-2">Reset Password</h2>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2">Reset Password</h2>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                     Enter your email address and we'll send you instructions to reset your password.
                   </p>
 
                   <div className="space-y-2">
-                    <label className="text-labelText px-1">Email</label>
+                    <label className="text-labelText px-1 text-sm">Email</label>
                     <Input
                       type="email"
                       placeholder="you@example.com"
-                      className="bg-muted border-muted h-11"
+                      className="bg-muted border-muted h-10 sm:h-11 text-sm"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                     />
                   </div>
 
-                  <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleForgotPassword}>
+                  <Button 
+                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f] h-10 sm:h-11 text-sm sm:text-base" 
+                    onClick={handleForgotPassword}
+                  >
                     Send Reset Instructions
                   </Button>
                 </div>
               ) : (
                 <>
-                  <div className="flex border-b border-border mb-6 justify-center">
+                  {/* Tab Navigation */}
+                  <div className="flex border-b border-border mb-4 sm:mb-6 justify-center">
                     <button
-                      className={`px-4 py-5 text-base font-medium w-1/2 ${
-                        activeTab === "login" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
+                      className={`px-3 sm:px-4 py-3 sm:py-4 lg:py-5 text-sm sm:text-base font-medium w-1/2 transition-colors ${
+                        activeTab === "login" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText hover:text-[#3ebb9e]"
                       }`}
                       onClick={() => setActiveTab("login")}
                     >
                       Login
                     </button>
                     <button
-                      className={`px-4 py-5 text-base font-medium w-1/2 ${
-                        activeTab === "signup" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText"
+                      className={`px-3 sm:px-4 py-3 sm:py-4 lg:py-5 text-sm sm:text-base font-medium w-1/2 transition-colors ${
+                        activeTab === "signup" ? "border-b-2 border-[#3ebb9e] text-[#3ebb9e]" : "text-labelText hover:text-[#3ebb9e]"
                       }`}
                       onClick={() => setActiveTab("signup")}
                     >
@@ -293,33 +301,34 @@ export default function LoginPage() {
                     </button>
                   </div>
 
+                  {/* Login Form */}
                   {activeTab === "login" && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-labelText px-1">Email</label>
+                        <label className="text-labelText px-1 text-sm">Email</label>
                         <Input
                           type="email"
                           placeholder="you@example.com"
-                          className="bg-muted border-muted h-11"
+                          className="bg-muted border-muted h-10 sm:h-11 text-sm"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-labelText px-1">Password</label>
+                        <label className="text-labelText px-1 text-sm">Password</label>
                         <div className="relative">
                           <Input
                             type={toggleLoginPassword ? "text" : "password"}
                             placeholder="Password"
-                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            className="bg-muted border-muted h-10 sm:h-11 pr-10 sm:pr-12 w-full text-sm"
                             value={loginPassword}
                             onChange={(e) => setLoginPassword(e.target.value)}
                           />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {toggleLoginPassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(false)} />
+                              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setToggleLoginPassword(false)} />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleLoginPassword(true)} />
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setToggleLoginPassword(true)} />
                             )}
                           </div>
                         </div>
@@ -331,13 +340,16 @@ export default function LoginPage() {
                             setShowForgotPassword(true);
                             setError("");
                           }}
-                          className="hover:text-forge-green-dark text-forge-green text-sm"
+                          className="hover:text-[#3ebb9e] text-[#3ebb9e] text-sm transition-colors underline"
                         >
                           Forgot password?
                         </button>
                       </div>
 
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleLogin}>
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f] h-10 sm:h-11 text-sm sm:text-base transition-all" 
+                        onClick={handleLogin}
+                      >
                         Login
                       </Button>
 
@@ -347,13 +359,14 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <Button variant="outline" className="w-full">
-                        <Chrome className="mr-2 h-4 w-4" />
+                      <Button variant="outline" className="w-full h-10 sm:h-11 text-sm sm:text-base transition-all hover:bg-muted">
+                        <Chrome className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Continue with Google
                       </Button>
                     </div>
                   )}
 
+                  {/* Sign Up Form */}
                   {activeTab === "signup" && (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -361,7 +374,7 @@ export default function LoginPage() {
                         <Input
                           type="text"
                           placeholder="Username"
-                          className="bg-muted border-muted h-11"
+                          className="bg-muted border-muted h-10 sm:h-11 text-sm"
                           value={signupUsername}
                           onChange={(e) => setSignupUsername(e.target.value)}
                         />
@@ -371,18 +384,18 @@ export default function LoginPage() {
                         <Input
                           type="email"
                           placeholder="you@example.com"
-                          className="bg-muted border-muted h-11"
+                          className="bg-muted border-muted h-10 sm:h-11 text-sm"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-labelText px-1">Password</label>
+                        <label className="text-labelText px-1 text-sm">Password</label>
                         <div className="relative">
                           <Input
                             type={togglePassword ? "text" : "password"}
                             placeholder="Password"
-                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            className="bg-muted border-muted h-10 sm:h-11 pr-10 sm:pr-12 w-full text-sm"
                             value={signupPassword}
                             onChange={(e) => {
                               setSignupPassword(e.target.value);
@@ -391,39 +404,39 @@ export default function LoginPage() {
                             }}
                             onFocus={() => setShowPasswordRequirements(true)}
                           />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {togglePassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(false)} />
+                              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setTogglePassword(false)} />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setTogglePassword(true)} />
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setTogglePassword(true)} />
                             )}
                           </div>
                         </div>
                         
-                        {/* Password Requirements */}
+                        {/* Password Requirements - Mobile Optimized */}
                         {showPasswordRequirements && signupPassword.length > 0 && !Object.values(passwordValidation).every(Boolean) && (
-                          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                          <div className="mt-2 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                             <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
                             <div className="space-y-1">
                               <div className={`flex items-center text-xs ${passwordValidation.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
-                                <span className="mr-2">{passwordValidation.hasMinLength ? '✓' : '○'}</span>
-                                At least 8 characters
+                                <span className="mr-2 w-3 text-center">{passwordValidation.hasMinLength ? '✓' : '○'}</span>
+                                <span className="text-xs">At least 8 characters</span>
                               </div>
                               <div className={`flex items-center text-xs ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
-                                <span className="mr-2">{passwordValidation.hasUppercase ? '✓' : '○'}</span>
-                                One uppercase letter
+                                <span className="mr-2 w-3 text-center">{passwordValidation.hasUppercase ? '✓' : '○'}</span>
+                                <span className="text-xs">One uppercase letter</span>
                               </div>
                               <div className={`flex items-center text-xs ${passwordValidation.hasLowercase ? 'text-green-600' : 'text-gray-500'}`}>
-                                <span className="mr-2">{passwordValidation.hasLowercase ? '✓' : '○'}</span>
-                                One lowercase letter
+                                <span className="mr-2 w-3 text-center">{passwordValidation.hasLowercase ? '✓' : '○'}</span>
+                                <span className="text-xs">One lowercase letter</span>
                               </div>
                               <div className={`flex items-center text-xs ${passwordValidation.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
-                                <span className="mr-2">{passwordValidation.hasNumber ? '✓' : '○'}</span>
-                                One number
+                                <span className="mr-2 w-3 text-center">{passwordValidation.hasNumber ? '✓' : '○'}</span>
+                                <span className="text-xs">One number</span>
                               </div>
                               <div className={`flex items-center text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
-                                <span className="mr-2">{passwordValidation.hasSpecialChar ? '✓' : '○'}</span>
-                                One special character (!@#$%^&*...)
+                                <span className="mr-2 w-3 text-center">{passwordValidation.hasSpecialChar ? '✓' : '○'}</span>
+                                <span className="text-xs">One special character</span>
                               </div>
                             </div>
                           </div>
@@ -440,31 +453,35 @@ export default function LoginPage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-labelText px-1">Confirm Password</label>
+                        <label className="text-labelText px-1 text-sm">Confirm Password</label>
                         <div className="relative">
                           <Input
                             type={toggleConfirmPassword ? "text" : "password"}
                             placeholder="Confirm Password"
-                            className="bg-muted border-muted h-11 pr-12 w-full"
+                            className="bg-muted border-muted h-10 sm:h-11 pr-10 sm:pr-12 w-full text-sm"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                           />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             {toggleConfirmPassword ? (
-                              <EyeOff className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(false)} />
+                              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setToggleConfirmPassword(false)} />
                             ) : (
-                              <Eye className="h-5 w-5 cursor-pointer" onClick={() => setToggleConfirmPassword(true)} />
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5 cursor-pointer hover:text-[#3ebb9e] transition-colors" onClick={() => setToggleConfirmPassword(true)} />
                             )}
                           </div>
                         </div>
                         {/* Password match indicator */}
                         {confirmPassword && (
-                          <div className={`text-xs mt-1 ${signupPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
-                            {signupPassword === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                          <div className={`text-xs mt-1 flex items-center ${signupPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
+                            <span className="mr-1">{signupPassword === confirmPassword ? '✓' : '✗'}</span>
+                            {signupPassword === confirmPassword ? 'Passwords match' : 'Passwords do not match'}
                           </div>
                         )}
                       </div>
-                      <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f]" onClick={handleSignUp}>
+                      <Button 
+                        className="w-full bg-[#3ebb9e] hover:bg-[#00674f] h-10 sm:h-11 text-sm sm:text-base transition-all" 
+                        onClick={handleSignUp}
+                      >
                         Sign Up
                       </Button>
 
@@ -474,8 +491,8 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <Button variant="outline" className="w-full">
-                        <Chrome className="mr-2 h-4 w-4" />
+                      <Button variant="outline" className="w-full h-10 sm:h-11 text-sm sm:text-base transition-all hover:bg-muted">
+                        <Chrome className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Continue with Google
                       </Button>
                     </div>
@@ -483,7 +500,12 @@ export default function LoginPage() {
                 </>
               )}
 
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {/* Error Message */}
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400 text-sm text-center">{error}</p>
+                </div>
+              )}
             </div>
           </Card>
         </div>

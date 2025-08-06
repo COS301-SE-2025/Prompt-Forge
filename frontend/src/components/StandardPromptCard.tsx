@@ -6,14 +6,15 @@ import {
   Copy,
   Edit,
   Trash2,
-  Heart,
+  //Heart,
   Play,
-  Check,
-  Globe,
-  Lock
+  Check
+  //Globe,
+  //Lock
 } from "lucide-react"
-import { Link } from "react-router-dom"
-import { Category, CategoryColors } from "@/models/Prompt"
+import { Link, useNavigate } from "react-router-dom"
+import { Category, CategoryColors } from "@/Models/Prompt"
+import { PromptService } from "@/services/promptService"
 
 // Update the interface to make onEdit optional
 interface StandardPromptCardProps {
@@ -30,13 +31,13 @@ interface StandardPromptCardProps {
   category: string
   authorName: string
   isOwned: boolean
-  isPublished?: boolean // ✅ Add this
-  isBought: boolean
+  isPublished?: boolean
+  source: string
   onEdit?: (prompt: any) => void
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onCopy?: (content: string, id: string) => void
-  onPublish?: (id: string, isCurrentlyPublished: boolean) => void // ✅ Add this
+  onPublish?: (id: string, isCurrentlyPublished: boolean) => void
   copiedId: string | null
   content: string
 }
@@ -55,16 +56,17 @@ export function StandardPromptCard({
   category,
   authorName,
   isOwned = false,
-  isPublished = false, // ✅ Add this
-  isBought,
+  isPublished = false,
+  source,
   onEdit,
   onDelete,
   onToggleFavorite,
   onCopy,
-  onPublish, // ✅ Add this
+  onPublish,
   copiedId,
   content
 }: StandardPromptCardProps) {
+  const navigate = useNavigate()
   const displayTags = tags || []
   const displayUsage = uses || 0
 
@@ -167,7 +169,7 @@ export function StandardPromptCard({
               )}
 
               {/* Author info - only for non-owned prompts */}
-              {isBought && authorName && (
+              {source==="purchased" && authorName && (
                 <div className="flex items-center">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 transition-colors duration-300">
                     <User className="h-3 w-3 text-[#3ebb9e] transition-colors duration-300" />
@@ -176,19 +178,12 @@ export function StandardPromptCard({
                 </div>
               )}
 
-              {/* Private indicator - only for owned prompts */}
-              {/* {isBought === true && (
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
-                  Bought
-                </span>
-              )} */}
-
-              {isBought === false && isOwned && isPrivate && (
+              {source === "authored" && isPrivate && (
                 <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800">
                   Private
                 </span>
               )}
-              {isBought === false && isOwned && !isPrivate && (
+              {source === "authored" && !isPrivate && (
                 <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-800">
                   Public
                 </span>
@@ -201,71 +196,81 @@ export function StandardPromptCard({
         <div className="border-t border-border flex bg-gradient-to-r from-transparent to-transparent group-hover:from-[#3ebb9e]/5 group-hover:to-[#3ebb9e]/10 transition-all duration-300" onClick={(e) => e.stopPropagation()}>
           <div className="flex-1 flex items-center justify-between p-3">
             <div className="flex items-center space-x-1">
-              {/* Copy button - always visible if content is available */}
-              {onCopy && content && (
+              {/* Copy button - visible for owned or bought prompts */}
+              {onCopy && (isOwned || source == "purchased") && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`${isOwned ? "h-8 w-8" : "h-6 w-6"} group-hover:shadow-sm group-hover:shadow-[#3ebb9e]/20 transition-all duration-300`}
-                  onClick={(e) => {
+                  className="h-8 w-8 group-hover:shadow-sm group-hover:shadow-[#3ebb9e]/20 transition-all duration-300"
+                  onClick={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    onCopy(content, id)
+                    if (!content) {
+                      // Fetch content if not available
+                      try {
+                        const promptService = new PromptService()
+                        const promptData = await promptService.getPromptById(id)
+                        onCopy(promptData.content, id)
+                      } catch (error) {
+                        console.error('Failed to fetch prompt content:', error)
+                        // Handle error appropriately
+                      }
+                    } else {
+                      onCopy(content, id)
+                    }
                   }}
                   title="Copy prompt content"
                 >
                   {copiedId === id ? (
-                    <Check className={`${isOwned ? "h-4 w-4" : "h-3 w-3"} text-green-500`} />
+                    <Check className="h-4 w-4 text-green-500" />
                   ) : (
-                    <Copy className={`${isOwned ? "h-4 w-4" : "h-3 w-3"} group-hover:scale-110 transition-transform duration-300`} />
+                    <Copy className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   )}
                 </Button>
               )}
 
-              {/* Test Prompt button - always visible if content is available */}
-              {content && (
-                <Link
-                  to="/editor"
-                  state={{ promptText: content }}
-                  title="Test this prompt"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`${isOwned ? "h-8 w-8" : "h-6 w-6"} text-green-600 hover:text-green-700 hover:bg-green-50 group-hover:shadow-sm group-hover:shadow-green-500/20 transition-all duration-300`}
-                  >
-                    <Play className={`${isOwned ? "h-4 w-4" : "h-3 w-3"} group-hover:scale-110 transition-transform duration-300`} />
-                  </Button>
-                </Link>
-              )}
 
-              {/* Publish/Unpublish button - only for owned prompts */}
-              {!isBought && isOwned && onPublish && (
+              {/* Test Prompt button - always visible for owned or bought prompts */}
+              {(isOwned || source == "purchased") && (
+
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 ${isPublished
-                      ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      : "text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                    } group-hover:shadow-sm group-hover:shadow-blue-500/20 transition-all duration-300`}
-                  onClick={(e) => {
+                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 group-hover:shadow-sm group-hover:shadow-green-500/20 transition-all duration-300"
+                  onClick={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    onPublish(id, isPublished)
+                    
+                    let promptContent = content
+                    
+                    // If content is not available, fetch it
+                    if (!content) {
+                      try {
+                        const promptService = new PromptService()
+                        const promptData = await promptService.getPromptById(id)
+                        promptContent = promptData.content
+                      } catch (error) {
+                        console.error('Failed to fetch prompt content:', error)
+                        alert('Failed to load prompt content')
+                        return
+                      }
+                    }
+                    
+                    // Navigate to editor with the content in state
+                    navigate('/editor', {
+                      state: {
+                        promptText: promptContent
+                      }
+                    })
                   }}
-                  title={isPublished ? "Unpublish from marketplace" : "Publish to marketplace"}
+                  title="Test this prompt"
                 >
-                  {isPublished ? (
-                    <Globe className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  ) : (
-                    <Lock className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  )}
+                  <Play className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                 </Button>
               )}
 
-              {/* Edit button - only for owned prompts */}
-              {isOwned && onEdit && (
+              {/* Edit button - only for owned prompts (not bought prompts) */}
+              {isOwned && source == "authored" && onEdit && (
                 <Link
                   to="/submit"
                   onClick={(e) => {
@@ -284,8 +289,8 @@ export function StandardPromptCard({
                 </Link>
               )}
 
-              {/* Delete button - only for owned prompts */}
-              {isOwned && onDelete && (
+              {/* Delete button - visible for owned prompts AND bought prompts */}
+              {(isOwned || source == "purchased") && onDelete && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -295,15 +300,15 @@ export function StandardPromptCard({
                     e.stopPropagation()
                     onDelete(id)
                   }}
-                  title="Delete prompt"
+                  title={source == "purchased" ? "Remove from library" : "Delete prompt"}
                 >
                   <Trash2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                 </Button>
               )}
             </div>
 
-            {/* Buy/Add to cart button - only for non-owned prompts */}
-            {!isOwned && price !== undefined && (
+            {/* Buy/Add to cart button - only for non-owned AND non-bought prompts */}
+            {!isOwned && source !== "purchased" && price !== undefined && (
               <div className="border-l border-border">
                 <Button
                   className="h-full rounded-none bg-[#3ebb9e] hover:bg-[#00674f] text-xs px-3 group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25 transition-all duration-300"
