@@ -4,12 +4,12 @@ import java.util.List;
 
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 
-public class InitializePaymentRequestDTO {
+public class InitializePaymentRequest {
   private List<CartItemDTO> prompts;
   private Double total;
 
   // Default constructor for JSON deserialization
-  public InitializePaymentRequestDTO() {}
+  public InitializePaymentRequest() {}
 
   public List<CartItemDTO> getPrompts() {
     return prompts;
