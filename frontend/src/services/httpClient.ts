@@ -16,6 +16,12 @@ class HttpClient {
                   localStorage.getItem('authToken') || 
                   localStorage.getItem('token');
     
+    console.log('🔐 Token check:', {
+      hasToken: !!token,
+      tokenLength: token?.length || 0,
+      tokenStart: token?.substring(0, 20) + '...' || 'none'
+    });
+    
     // Only set default JSON content type if body is not FormData
     const isFormData = options.body instanceof FormData;
     const headers = new Headers(options.headers);
@@ -27,6 +33,9 @@ class HttpClient {
     // Add JWT token if available and not already set
     if (token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${token}`);
+      console.log('JWT token added to request');
+    } else if (!token) {
+      console.log('No JWT token found');
     }
 
     const config: RequestInit = {
@@ -36,6 +45,7 @@ class HttpClient {
     };
 
     console.log(`🔍 ${options.method || 'GET'} ${url}`);
+    console.log('📋 Request headers:', Object.fromEntries(headers.entries()));
     
     return fetch(url, config);
   }
