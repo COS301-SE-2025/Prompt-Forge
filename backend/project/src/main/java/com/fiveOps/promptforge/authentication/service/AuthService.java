@@ -1,31 +1,29 @@
 package com.fiveOps.promptforge.authentication.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-import java.time.LocalDateTime;
-import java.util.UUID;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(
-    AuthService.class
-  );
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(AuthService.class);
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
 
   public AuthService(
-    UserRepository userRepository,
-    PasswordEncoder passwordEncoder,
-    JwtUtil jwtUtil
-  ) {
+      UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtUtil = jwtUtil;
@@ -56,15 +54,12 @@ public class AuthService {
   }
 
   public String login(LoginRequest request) {
-    User user = userRepository
-      .findByEmail(request.getEmail())
-      .orElseThrow(() ->
-        new IllegalArgumentException("Invalid email or password")
-      );
+    User user =
+        userRepository
+            .findByEmail(request.getEmail())
+            .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-    if (
-      !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())
-    ) {
+    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
       throw new IllegalArgumentException("Invalid email or password");
     }
 
@@ -73,20 +68,17 @@ public class AuthService {
   }
 
   public void forgotPassword(String email) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() ->
-        new IllegalArgumentException("User not found with email: " + email)
-      );
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     // Logic to handle forgot password (e.g., send reset link)
     // This is a placeholder for actual implementation
   }
 
   public User getUserByEmail(String email) {
     return userRepository
-      .findByEmail(email)
-      .orElseThrow(() ->
-        new RuntimeException("User not found with email: " + email)
-      );
+        .findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
   }
 }
