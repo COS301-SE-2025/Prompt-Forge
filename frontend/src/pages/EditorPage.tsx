@@ -31,7 +31,7 @@ export default function EditorPage() {
   const editorService = new Editor();
   const streamingService = new StreamingService();
 
-  const [promptText, setPromptText] = useState(defaultPrompt)
+  const [promptText, setPromptText] = useState("")
   const [aiResponse, setAiResponse] = useState("AI response to your prompt here...")
   const [selectedModel, setSelectedModel] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -929,7 +929,7 @@ const fallbackToWorkingModel = async () => {
     <div className="flex-1 flex flex-col w-full h-full bg-background">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
         {/* Left Panel - Prompt Editor */}
-        <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0">
+        <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
@@ -989,8 +989,18 @@ const fallbackToWorkingModel = async () => {
 
           <div className="flex-1 bg-gray-100 dark:bg-card rounded-lg p-3 mb-3 min-h-0">
             <textarea
-              className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground"
-              placeholder="Write your prompt here..."
+              className="w-full h-full bg-transparent resize-none focus:outline-none text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 "
+              placeholder="Write your prompt here...
+
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]"
+
+
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
             />
@@ -1135,7 +1145,7 @@ const fallbackToWorkingModel = async () => {
             {currentView === "test" ? (
               <>
                 {/* AI Response */}
-                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
+                <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">AI Response</h3>
                     <div className="flex items-center space-x-1">
@@ -1235,7 +1245,7 @@ const fallbackToWorkingModel = async () => {
             ) : currentView === "rate" ? (
               <>
                 {/* Rating Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
+                <div className="flex-1 min-h-0 flex flex-col  overflow-y-auto custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
@@ -1314,7 +1324,7 @@ const fallbackToWorkingModel = async () => {
             ) : (
               <>
                 {/* Suggestion Response Area - updated to use StreamingDisplay */}
-                <div className="flex-1 min-h-0 flex flex-col custom-scrollbar">
+                <div className="flex-1 min-h-0 flex flex-col  overflow-y-auto custom-scrollbar">
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-3 flex-1 min-h-0 relative" 
                     style={{ 
                       height: modelsCollapsed ? 'calc(100vh - 140px)' : 'calc(100vh - 220px)'
