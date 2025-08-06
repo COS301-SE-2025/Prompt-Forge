@@ -12,6 +12,7 @@ import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
 import { BankIdentifier, PayoutCard } from "@/Models/Payout"
 import BankCard from "@/components/BankCard"
+import { getCardColor } from "@/Models/BankCard"
 
 export default function ProfileSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -454,7 +455,7 @@ export default function ProfileSettingsPage() {
                       <div className="space-y-4 bg-muted">
                         <div className="p-4 rounded-md flex justify-between items-center bg-muted">
                           <div className="flex items-center">
-                            <BankCard {...payoutDetails}/>
+                            <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())} className=""/>
                           </div>
                           <div className="flex gap-2">
                             <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />

@@ -28,6 +28,12 @@ import {
   Copy,
   Play,
 } from "lucide-react"
+import { Label } from "@/components/ui/Label"
+import { BankIdentifier, PayoutCard } from "@/Models/Payout"
+import { profileService } from "@/services/profileServices"
+import PaymentOverlay from "@/components/PaymentOverlay"
+import BankCard from "@/components/BankCard"
+import { getCardColor } from "@/Models/BankCard"
 
 // Mock components - replace with your actual UI components
 // Update the ButtonProps interface to include title
@@ -103,6 +109,7 @@ interface PromptSubmission {
   title: string
   description: string
   category: string
+  price:number
   promptText: string
   expectedOutput: string
   isPrivate: boolean
@@ -135,6 +142,7 @@ export default function SubmitPromptPage() {
     title: "",
     description: "",
     category: "",
+    price: 0,
     promptText: "",
     expectedOutput: "",
     isPrivate: false,
@@ -144,8 +152,25 @@ export default function SubmitPromptPage() {
   // Fix: Track if we've loaded edit data to prevent overwriting on refresh
   const [editLoaded, setEditLoaded] = useState(false);
 
+  {/* payment details */}
+  const [payoutDetails, setPayoutDetails] = useState<PayoutCard | null>(null)
+  const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
+  
   useEffect(() => {
     let editData: EditPromptData | null = null;
+
+    profileService.getPayoutDetails()
+    .then((details)=>{
+      setPayoutDetails(details)
+    })
+    .catch((error)=> {
+      console.log("No payout details found or error fetching:", error);
+      setPayoutDetails(null)
+      profileService.getBankList()
+      .then(list=>{
+        setBankList(list);
+      })
+    })
 
     // Prefer sessionStorage for edit, fallback to navigation state
     const sessionEdit = sessionStorage.getItem("editPromptData");
@@ -171,6 +196,7 @@ export default function SubmitPromptPage() {
             title: promptData.title || "",
             description: promptData.description || "",
             category: promptData.tags?.[0]?.name ?? "",
+            price: promptData.price || 0,
             promptText: promptData.content || "",
             expectedOutput: (promptData as any).expectedOutput ?? "",
             isPrivate: promptData.visibility === "private",
@@ -188,6 +214,7 @@ export default function SubmitPromptPage() {
               title: editData.title || "",
               description: editData.description || "",
               category: editData.category || "",
+              price: editData.price || 0,
               promptText: editData.promptText || editData.content || "",
               expectedOutput: editData.expectedOutput || "",
               isPrivate: editData.isPrivate ?? false,
@@ -205,6 +232,7 @@ export default function SubmitPromptPage() {
         title: editData.title || "",
         description: editData.description || "",
         category: editData.category || "",
+        price: editData.price || 0,
         promptText: editData.promptText || editData.content || "",
         expectedOutput: editData.expectedOutput || "",
         isPrivate: editData.isPrivate ?? false,
@@ -219,6 +247,7 @@ export default function SubmitPromptPage() {
         title: prefilledData.title || "",
         description: prefilledData.description || "",
         category: prefilledData.category || "",
+        price: prefilledData.p || "",
         promptText: prefilledData.promptText || prefilledData.content || "",
         expectedOutput: prefilledData.expectedOutput || "",
         isPrivate: prefilledData.visibility === "private",
@@ -265,8 +294,8 @@ export default function SubmitPromptPage() {
     "Gaming",
     "Other",
   ]
-
-  const handleInputChange = (field: keyof PromptSubmission, value: string | boolean) => {
+errors.payoutDetails
+  const handleInputChange = (field: keyof PromptSubmission, value: string | boolean|number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
@@ -477,6 +506,7 @@ export default function SubmitPromptPage() {
     if (!formData.description.trim()) newErrors.description = "Description is required"
     if (!formData.category) newErrors.category = "Category is required"
     if (!formData.promptText.trim()) newErrors.promptText = "Prompt text is required"
+    if (!formData.isPrivate && payoutDetails === null && formData.price > 0) newErrors.payoutDetails = "Payment details are required"
     // Remove tags validation
     if (formData.title.length > 100) newErrors.title = "Title must be less than 100 characters"
     if (formData.description.length > 500) newErrors.description = "Description must be less than 500 characters"
@@ -526,7 +556,7 @@ export default function SubmitPromptPage() {
         description: formData.description,
         category: formData.category,
         content: formData.promptText, // Backend expects 'content'
-        price: 0, // Default price for now
+        price: formData.price, // Default price for now
         visibility: formData.isPrivate ? 'private' : 'private', // Start as private, publish later if needed
         tagNames: formData.category ? [formData.category] : [] // Use category as tag for now
       }
@@ -563,6 +593,7 @@ export default function SubmitPromptPage() {
             title: "",
             description: "",
             category: "",
+            price:0,
             promptText: "",
             expectedOutput: "",
             isPrivate: false,
@@ -633,6 +664,7 @@ export default function SubmitPromptPage() {
       title: "",
       description: "",
       category: "",
+      price:0,
       promptText: "",
       expectedOutput: "",
       isPrivate: false,
@@ -904,6 +936,28 @@ export default function SubmitPromptPage() {
                       {errors.category}
                     </p>
                   )}
+                </div>
+                
+                {/* Price */}
+                <div >
+                  <Label className="block text-sm font-medium text-gray-900 dark:text-white mb-2" htmlFor="price">
+                    Price <span className="text-red-500">*</span>
+                  </ Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">$</span>
+                    <input
+                      id="price"
+                      type="number"
+                      placeholder="0.00"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange("price",e.target.value)}
+                      className={`w-full px-3 pl-8 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm
+                        }`}
+                      min="0"
+                      step="0.25"
+                    />
+                  </div>
+                  
                 </div>
 
                 {/* Prompt Text */}
@@ -1217,41 +1271,48 @@ export default function SubmitPromptPage() {
 
             {/* Payment Details Card - existing code with responsive updates */}
             {!isEditMode && (
-              <Card className="p-3 sm:p-4">
+              <Card className={`p-3 sm:p-4 ${errors.payoutDetails ? " border-red-500" : "border-gray-300 dark:border-gray-600"}`}>
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="text-sm font-semibold text-foreground flex items-center">
                     <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                     Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
                   </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPaymentDetails(!showPaymentDetails)}
-                    className="flex items-center text-xs"
-                  >
-                    {showPaymentDetails ? (
-                      <>
-                        <X className="h-3 w-3 mr-1" />
-                        Hide
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Payment Info
-                      </>
-                    )}
-                  </Button>
+                  
                 </div>
-
-                {!showPaymentDetails && (
-                  <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg border border-dashed">
-                    <p className="mb-2">💡 Payment details are optional but recommended</p>
-                    <p>
-                      Add your payment information to receive earnings from prompt sales. You can always add this later
-                      in your account settings.
+                  {/* {errors.payoutDetails && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                    {errors.payoutDetails}
                     </p>
-                  </div>
-                )}
+                  )} */}
+
+                {/* {!showPaymentDetails && (
+                  
+                )} */}
+
+                
+                {
+                  payoutDetails===null?
+                  <>
+                    <div className={`text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg border border-dashed `}>
+                      <p className={`mb-2 ${errors.payoutDetails ? `text-red-500` : ``} flex `}>
+                          💡
+                        Payment details are required when the prompt is public and its price is greater than zero
+                      </p>
+                      <p>
+                        Add your payment information to receive earnings from prompt sales. You can always add this later
+                        in your account settings.
+                      </p>
+                    </div>
+                    <div className="flex justify-center mt-3">
+                      <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
+                    </div>
+                  </>
+                  :
+                    // <div className="flex justify-center mt-3">
+                    <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())} className="w-78 h-44" />
+                    // </div>
+                }
 
                 {showPaymentDetails && bankingInfoNeeded && (
                   <>
