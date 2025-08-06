@@ -188,7 +188,7 @@ export default function OptimizerPage() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Original Prompt Section */}
-          <div className="space-y-4 sm:space-y-6 order-1">
+          <div className="space-y-4 sm:space-y-6 order-1 custom-scrollbar">
             <Card className="p-4 sm:p-6 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border shadow-xl">
               <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="p-1.5 sm:p-2 bg-muted dark:bg-muted rounded-lg">
@@ -201,7 +201,7 @@ export default function OptimizerPage() {
                 value={originalPrompt}
                 onChange={(e) => setOriginalPrompt(e.target.value)}
                 placeholder="Enter your prompt here to get AI-powered optimization suggestions..."
-                className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-grey text-sm sm:text-base"
+                className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-white-400/50 text-sm sm:text-base"
                 />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 sm:mt-4 gap-2">

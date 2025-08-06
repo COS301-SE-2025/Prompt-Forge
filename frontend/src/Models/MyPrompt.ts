@@ -1,4 +1,4 @@
-import { Category } from "./Prompt"
+import { Category } from "../Models/Prompt";
 
 export interface MyPrompt {
   id: string

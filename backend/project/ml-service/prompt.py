@@ -6,6 +6,7 @@ from typing import List, Dict, Optional
 from sentence_transformers import SentenceTransformer, util
 import time
 import json
+import os
 
 # ----------------------------
 # Logging Configuration
@@ -28,7 +29,7 @@ app = FastAPI(title="Prompt Optimizer API")
 # ----------------------------
 class HuggingFaceModels:
     def __init__(self):
-        self.api_token = ""  # Replace with your token!
+        self.api_token = os.getenv("HF_TOKEN", "")  # Read from environment variable
         
         # Updated model endpoints - these are more likely to work
         self.model_endpoints = [
@@ -44,7 +45,8 @@ class HuggingFaceModels:
         self.token_validated = False
 
         if not self.api_token:
-            raise ValueError("Missing Hugging Face token.")
+            logger.warning("No Hugging Face token provided. Some features may be limited.")
+            logger.info("Set HF_TOKEN environment variable to enable full functionality.")
 
     def validate_token(self) -> bool:
         """Validate the Hugging Face API token"""

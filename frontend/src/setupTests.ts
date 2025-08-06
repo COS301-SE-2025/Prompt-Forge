@@ -6,11 +6,6 @@ import { TextEncoder, TextDecoder } from 'util';
 import { ReadableStream as WebReadableStream } from 'web-streams-polyfill';
 import fetchMock from 'jest-fetch-mock';
 
-// Add jest to globals
-declare global {
-  const jest: any;
-}
-
 // Polyfill TextEncoder/TextDecoder
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;

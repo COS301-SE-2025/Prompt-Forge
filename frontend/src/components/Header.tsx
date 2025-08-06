@@ -54,7 +54,7 @@ export default function Header() {
   // Close mobile menu when clicking outside
   useEffect(() => {
     function handleResize() {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 1536) { // 2xl breakpoint
         setMobileMenuOpen(false)
       }
     }
@@ -64,66 +64,44 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border">
-        <div className="container mx-auto flex h-16 sm:h-20 items-center px-3 sm:px-4 lg:px-6">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border w-full">
+        <div className="w-full flex h-16 sm:h-20 items-center px-3 sm:px-4 lg:px-6">
           {/* Logo */}
-          <div className="mr-4 sm:mr-6 flex">
+          <div className="mr-4 sm:mr-6 flex flex-shrink-0">
             <Link to="/home" className="flex items-center space-x-2 sm:space-x-3">
               <div className="bg-[#00876e]/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
                 <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8 text-[#3ebb9e]" />
               </div>
-              <span className="font-bold text-lg sm:text-xl lg:text-2xl hidden xs:block">
-                Prompt Forge
-              </span>
-              <span className="font-bold text-lg sm:text-xl lg:text-2xl xs:hidden">
+              <span className="font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap">
                 Prompt Forge
               </span>
             </Link>
           </div>
 
-          {/* Desktop nav - More selective about what to show */}
-          <nav className="hidden lg:flex flex-1 items-center justify-center space-x-4 xl:space-x-8 text-sm xl:text-base">
+          {/* Desktop nav - Only show on very large screens */}
+          <nav className="hidden 2xl:flex flex-1 items-center justify-center space-x-6 text-base min-w-0">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "transition-colors hover:text-foreground px-2 xl:px-3 py-2 rounded-lg hover:bg-muted whitespace-nowrap",
+                  "transition-colors hover:text-foreground px-3 py-2 rounded-lg hover:bg-muted whitespace-nowrap flex-shrink-0",
                   pathname === item.href 
                     ? "text-[#3ebb9e] font-semibold bg-[#3ebb9e]/10" 
                     : "text-muted-foreground",
                 )}
               >
-                <span className="xl:hidden">{item.shortName || item.name}</span>
-                <span className="hidden xl:inline">{item.name}</span>
+                {item.name}
               </Link>
             ))}
           </nav>
 
-          {/* Tablet nav - Show fewer items */}
-          <nav className="hidden md:flex lg:hidden flex-1 items-center justify-center space-x-3 text-sm">
-            {navItems.slice(0, 4).map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  "transition-colors hover:text-foreground px-2 py-2 rounded-lg hover:bg-muted whitespace-nowrap",
-                  pathname === item.href 
-                    ? "text-[#3ebb9e] font-semibold bg-[#3ebb9e]/10" 
-                    : "text-muted-foreground",
-                )}
-              >
-                {item.shortName || item.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Mobile hamburger */}
-          <div className="flex md:hidden flex-1 justify-end mr-2">
+          {/* Hamburger menu for everything except 2xl screens */}
+          <div className="flex 2xl:hidden flex-1 justify-end mr-2 min-w-0">
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full w-9 h-9 sm:w-10 sm:h-10"
+              className="rounded-full w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle navigation menu"
             >
@@ -136,12 +114,12 @@ export default function Header() {
           </div>
 
           {/* Theme/User controls */}
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full hover:rotate-180 transition-transform duration-500 w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+              className="rounded-full hover:rotate-180 transition-transform duration-500 w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex-shrink-0"
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
@@ -150,7 +128,7 @@ export default function Header() {
               )}
             </Button>
 
-            <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12">
+            <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex-shrink-0">
               <Link
                 to="/cart"
                 className="rounded-full flex items-center justify-center w-full h-full"
@@ -159,7 +137,7 @@ export default function Header() {
               </Link>
             </Button>
 
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative flex-shrink-0" ref={dropdownRef}>
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -206,17 +184,17 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile nav overlay */}
+      {/* Mobile nav overlay - Now shows for all screens except 2xl */}
       {mobileMenuOpen && (
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-40 2xl:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
           
           {/* Mobile menu */}
-          <nav className="fixed top-16 sm:top-20 left-0 right-0 bg-card/98 backdrop-blur supports-[backdrop-filter]:bg-card/95 border-b border-border z-50 md:hidden max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <nav className="fixed top-16 sm:top-20 left-0 right-0 bg-card/98 backdrop-blur supports-[backdrop-filter]:bg-card/95 border-b border-border z-50 2xl:hidden max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
             <div className="px-4 sm:px-6 py-4 space-y-1">
               {navItems.map((item) => (
                 <Link
