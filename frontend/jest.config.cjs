@@ -14,7 +14,8 @@ module.exports = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.jest.json'
+      tsconfig: 'tsconfig.jest.json',
+      isolatedModules: true
     }]
   },
   coverageDirectory: 'coverage',
@@ -29,11 +30,6 @@ module.exports = {
   testMatch: ['<rootDir>/tests/**/*.[jt]s?(x)'],
   testEnvironmentOptions: {
     customExportConditions: ['node', 'node-addons']
-  },
-  globals: {
-    'ts-jest': {
-      isolatedModules: true
-    }
   },
   setupFiles: ['<rootDir>/jest.setup.js'],
   silent: true

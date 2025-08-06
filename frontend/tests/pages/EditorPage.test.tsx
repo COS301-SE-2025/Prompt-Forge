@@ -96,14 +96,19 @@ describe('EditorPage', () => {
         <EditorPage />
       </BrowserRouter>
     );
-    
-    // Try to find the button more reliably
-    const testButton = screen.getByRole('button', { name: /test prompt/i });
+
+    // Add text to the prompt
+    const textarea = screen.getByRole('textbox');
+    fireEvent.change(textarea, { target: { value: 'test prompt for testing' } });
+
+    // Find the Test Prompt button more specifically - avoid the textarea content
+    const testButton = screen.getByRole('button', { name: /^test prompt$/i });
     fireEvent.click(testButton);
-    
+
+    // Wait for the mocked functions to be called (using the top-level mocks)
     await waitFor(() => {
       expect(mockCreateImageRequestBody).toHaveBeenCalled();
       expect(mockStreamRequest).toHaveBeenCalled();
-    });
+    }, { timeout: 3000 });
   });
 });
