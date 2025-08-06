@@ -23,8 +23,8 @@ explain how the response should be adapted to fit.]`
 
 export default function ComparisonsPage() {
   const navigate = useNavigate()
-  const [promptTextA, setPromptTextA] = useState(defaultPrompt)
-  const [promptTextB, setPromptTextB] = useState(defaultPrompt)
+  const [promptTextA, setPromptTextA] = useState("")
+  const [promptTextB, setPromptTextB] = useState("")
   const [aiResponseA, setAiResponseA] = useState("AI response to prompt A will appear here...")
   const [aiResponseB, setAiResponseB] = useState("AI response to prompt B will appear here...")
   const [selectedModelA, setSelectedModelA] = useState(0)
@@ -103,7 +103,7 @@ export default function ComparisonsPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-scout:free",
+      model: "meta-llama/llama-4-scout",
       supportsImages: true,
     },
     {
@@ -473,8 +473,16 @@ Please provide:
                 {!editorACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
-                      placeholder="Write your first prompt here..."
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                      placeholder="Write your first prompt here...
+
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]"
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
                     />
@@ -569,8 +577,16 @@ Please provide:
                 {!editorBCollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
-                      placeholder="Write your second prompt here..."
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                      placeholder="Write your second prompt here...
+
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]"
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
                     />
