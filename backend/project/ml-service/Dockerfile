@@ -1,5 +1,5 @@
 # Multi-stage build to reduce final image size
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -10,17 +10,18 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt && \
+    pip cache purge
 
 # Runtime stage
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install only curl for health checks
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Install only essential tools
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
 
 # Copy installed packages from builder stage
 COPY --from=builder /root/.local /root/.local
