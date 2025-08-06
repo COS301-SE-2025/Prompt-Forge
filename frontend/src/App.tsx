@@ -28,9 +28,9 @@ function App() {
   const hideHeaderRoutes = ['/','/login','/help', '/war']
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen w-full flex flex-col">
       {!hideHeaderRoutes.includes(location.pathname) && <Header />}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 w-full flex flex-col">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
