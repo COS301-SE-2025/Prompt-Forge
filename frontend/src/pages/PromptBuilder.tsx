@@ -501,7 +501,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                   </Label>
                   <textarea
                     id="prompt-idea-mobile"
-                    className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
+                    className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar"
                     rows={4}
                     placeholder="e.g., 'Help me write better product descriptions for my online store'"
                     value={promptIdea}
@@ -894,7 +894,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     </Label>
                     <textarea
                       id="prompt-idea"
-                      className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none"
+                      className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar"
                       rows={6}
                       placeholder="e.g., 'Help me write better product descriptions for my online store' or 'Create a prompt that helps debug Python code'"
                       value={promptIdea}
