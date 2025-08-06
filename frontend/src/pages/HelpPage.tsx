@@ -31,9 +31,10 @@ import {
   Bot,
   X,
 } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 export default function HelpPage() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedGuide, setSelectedGuide] = useState<string | null>(null)
@@ -568,9 +569,12 @@ export default function HelpPage() {
                 >
                   ← Back to Help
                 </Button>
-                <Link to="/home">
-                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Home</Button>
-                </Link>
+                <Button 
+                  onClick={() => navigate(-1)}
+                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                >
+                  ← Back
+                </Button>
               </div>
             </div>
           </div>
@@ -610,12 +614,12 @@ export default function HelpPage() {
               <span className="text-2xl font-bold">Prompt Forge</span>
             </Link>
             <div className="flex items-center space-x-4">
-              <Link to="/" className="text-md font-medium hover:text-[#3ebb9e] transition-colors">
-                Back to Home
-              </Link>
-              <Link to="/home">
-                <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Homepage</Button>
-              </Link>
+              <Button 
+                onClick={() => navigate(-1)}
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+              >
+                Back
+              </Button>
             </div>
           </div>
         </div>

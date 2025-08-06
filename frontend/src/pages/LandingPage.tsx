@@ -134,7 +134,7 @@ export default function LandingPage() {
                   className="w-full sm:w-auto bg-[#00674f] hover:bg-[#004d3a] text-white px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300"
                 >
                   Start Your Journey
-                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-bounce-horizontal" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
               <a
@@ -165,6 +165,29 @@ export default function LandingPage() {
                 Community Driven
               </div>
             </div>
+          </div>
+
+          {/* Bouncing Down Arrow - Mobile Responsive */}
+          <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <a
+              href="#features"
+              className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation"
+              aria-label="Scroll down to features"
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </a>
           </div>
         </div>
       </section>

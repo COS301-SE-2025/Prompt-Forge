@@ -1,7 +1,7 @@
-import { Query } from "@/models/Query";
+import { Query } from "@/Models/Query";
 import HttpClient from "./httpClient";
-import { Prompt, Tag } from "@/models/Prompt";
-import { Review, ReviewsApiResponse } from '@/models/Reviews';
+import { Prompt, Tag } from "@/Models/Prompt";
+import { Review, ReviewsApiResponse } from '@/Models/Reviews';
 
 export class PromptService {
   private httpClient = HttpClient;
@@ -11,19 +11,30 @@ export class PromptService {
 
   async getPromptById(promptId: string) {
     try {
-      const [promptResponse, ownershipResponse, addedToCartResponse] = await Promise.all([this.httpClient.get(`/prompts/${promptId}`),
-      this.httpClient.get(`/store/prompts/ownership/${promptId}`),
-      this.httpClient.get(`/cart/added/${promptId}`)])
+      const [promptResponse, ownershipResponse, addedToCartResponse] = await Promise.all([
+        this.httpClient.get(`/prompts/${promptId}`),
+        this.httpClient.get(`/store/prompts/ownership/${promptId}`),
+        this.httpClient.get(`/cart/added/${promptId}`)
+      ]);
 
       const prompt: Prompt = await promptResponse.json();
 
       console.log("ownershipResponse");
-      const ownership = await ownershipResponse.json();
+      let ownership = false;
+      if (ownershipResponse.ok) {
+        const ownershipText = await ownershipResponse.text();
+        ownership = ownershipText ? JSON.parse(ownershipText) : false;
+      }
       console.log(ownership);
 
       console.log("addedToCartResponse");
-      const addedToCart = await addedToCartResponse.json();
-      console.log(addedToCart);
+      let addedToCart = false;
+      if (addedToCartResponse.ok) {
+        const cartText = await addedToCartResponse.text();
+        addedToCart = cartText ? JSON.parse(cartText) : false;
+      } else {
+        console.warn("Cart endpoint returned error:", addedToCartResponse.status);
+      }
 
       // Ensure tagIds exists and is an array
       const tagIds = prompt.tagIds || [];

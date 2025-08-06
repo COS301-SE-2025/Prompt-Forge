@@ -21,7 +21,7 @@
       "@/models/*": ["./src/models/*"]
     },
     // Add both Cypress and Jest types
-    "types": ["cypress", "jest", "@testing-library/jest-dom"]
+    "types": ["vite/client", "jest", "@testing-library/jest-dom", "cypress"]
   },
   "include": [
     "src/**/*"

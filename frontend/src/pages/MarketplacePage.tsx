@@ -4,7 +4,7 @@ import { Input } from "../components/ui/Input"
 import { Sparkles, Star, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { PromptCard } from "@/components/PromptCard"
 import { PromptService } from "@/services/promptService"
-import { Tag, MarketplacePrompt } from "@/models/Prompt"
+import { Tag, MarketplacePrompt } from "@/Models/Prompt"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 
 const PROMPTS_PER_PAGE = 12
@@ -259,7 +259,7 @@ export default function MarketplacePage() {
           )}
 
           <button
-            className="absolute top-3 right-2 z-10 bg-muted rounded-full p-1 shadow hover:bg-background transition hidden lg:block"
+            className="absolute top-3 right-2 z-10 bg-muted p-1 transition hidden lg:block"
             onClick={() => setSidebarCollapsed((c) => !c)}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >

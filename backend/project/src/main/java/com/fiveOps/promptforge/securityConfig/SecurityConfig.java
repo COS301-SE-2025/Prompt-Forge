@@ -47,7 +47,8 @@ public class SecurityConfig {
                         "/api/dashboard",
                         "/api/analytics/**",
                         "/api/prompts/**",
-                        "/api/store/prompts/**")
+                        "/api/store/prompts/**",
+                        "/api/cart/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
@@ -63,7 +64,11 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration defaultConfig = new CorsConfiguration();
-    defaultConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
+    defaultConfig.setAllowedOriginPatterns(
+        Arrays.asList(
+            "http://localhost:5173",
+            "https://prompt-forge.co.za",
+            "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com"));
     defaultConfig.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     defaultConfig.setAllowedHeaders(Arrays.asList("*"));
@@ -71,7 +76,8 @@ public class SecurityConfig {
     defaultConfig.setMaxAge(3600L);
 
     CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-    noCredentialsConfig.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173"));
+    noCredentialsConfig.setAllowedOriginPatterns(
+        Arrays.asList("http://localhost:5173", "https://prompt-forge.co.za"));
     noCredentialsConfig.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
