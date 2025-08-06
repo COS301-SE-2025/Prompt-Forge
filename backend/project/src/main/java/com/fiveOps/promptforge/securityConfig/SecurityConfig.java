@@ -47,7 +47,8 @@ public class SecurityConfig {
                         "/api/dashboard",
                         "/api/analytics/**",
                         "/api/prompts/**",
-                        "/api/store/prompts/**")
+                        "/api/store/prompts/**",
+                        "/api/cart/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
