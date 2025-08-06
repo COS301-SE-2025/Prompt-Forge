@@ -129,12 +129,64 @@ jobs:
         path: backend/project/backend-image.tar
         retention-days: 1
 
+  build-python-services:
+    name: Build Python Services
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Test Python services
+      run: |
+        # Test AI Service
+        cd backend/project/src/main/ai/service
+        pip install -r requirements.txt
+        python -c "import ai_service; print('AI Service imports successfully')"
+        
+        # Test ML Service
+        cd ../../../../ml-service
+        pip install -r requirements.txt
+        python -c "import prompt; print('ML Service imports successfully')"
+        
+    - name: Build AI Service Docker image
+      run: |
+        cd backend/project/src/main/ai/service
+        docker build -t prompt-forge-ai-service:${{ github.sha }} .
+        docker save prompt-forge-ai-service:${{ github.sha }} > ai-service-image.tar
+        
+    - name: Build ML Service Docker image
+      run: |
+        cd backend/project/ml-service
+        docker build -t prompt-forge-ml-service:${{ github.sha }} .
+        docker save prompt-forge-ml-service:${{ github.sha }} > ml-service-image.tar
+        
+    - name: Upload AI Service Docker image
+      uses: actions/upload-artifact@v4
+      with:
+        name: ai-service-docker-image
+        path: backend/project/src/main/ai/service/ai-service-image.tar
+        retention-days: 1
+        
+    - name: Upload ML Service Docker image
+      uses: actions/upload-artifact@v4
+      with:
+        name: ml-service-docker-image
+        path: backend/project/ml-service/ml-service-image.tar
+        retention-days: 1
+
   # Frontend build is handled by AWS Amplify during deployment
   # The amplify.yml file configures the build process
 
   deploy-backend:
     name: Deploy Backend to EC2
-    needs: [build-backend]
+    needs: [build-backend, build-python-services]
     runs-on: ubuntu-latest
     
     steps:
@@ -147,10 +199,22 @@ jobs:
         name: backend-jar
         path: ./artifacts/
         
-    - name: Download Docker image
+    - name: Download Backend Docker image
       uses: actions/download-artifact@v4
       with:
         name: backend-docker-image
+        path: ./artifacts/
+        
+    - name: Download AI Service Docker image
+      uses: actions/download-artifact@v4
+      with:
+        name: ai-service-docker-image
+        path: ./artifacts/
+        
+    - name: Download ML Service Docker image
+      uses: actions/download-artifact@v4
+      with:
+        name: ml-service-docker-image
         path: ./artifacts/
         
     - name: Setup SSH key
@@ -166,8 +230,8 @@ jobs:
         
     - name: Copy files to EC2
       run: |
-        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/backend-image.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ || true
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no docker-compose.prod.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no nginx.conf ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         
@@ -178,8 +242,10 @@ jobs:
           sudo systemctl stop prompt-forge-backend || true
           sudo docker-compose -f docker-compose.prod.yml down || true
           
-          # Load new Docker image
+          # Load new Docker images
           docker load < backend-image.tar
+          docker load < ai-service-image.tar
+          docker load < ml-service-image.tar
           
           # Update environment file
           cat > .env << EOL
@@ -196,8 +262,10 @@ jobs:
           AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
           EOL
           
-          # Update docker-compose to use new image
+          # Update docker-compose to use new images
           sed -i "s/prompt-forge-backend:latest/prompt-forge-backend:${{ github.sha }}/g" docker-compose.prod.yml
+          sed -i "s/prompt-forge-ai-service:latest/prompt-forge-ai-service:${{ github.sha }}/g" docker-compose.prod.yml
+          sed -i "s/prompt-forge-ml-service:latest/prompt-forge-ml-service:${{ github.sha }}/g" docker-compose.prod.yml
           
           # Start services
           sudo docker-compose -f docker-compose.prod.yml up -d
@@ -210,6 +278,8 @@ jobs:
           # Verify deployment
           sleep 30
           curl -f http://localhost:8080/health || echo "Backend health check failed"
+          curl -f http://localhost:8000/health || echo "AI Service health check failed"
+          curl -f http://localhost:8001/health || echo "ML Service health check failed"
         EOF
 
   deploy-frontend:
@@ -246,6 +316,30 @@ jobs:
           fi
         done
         
+    - name: Check AI service health
+      run: |
+        for i in {1..10}; do
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000/health; then
+            echo "AI Service is healthy"
+            break
+          else
+            echo "AI Service health check failed, attempt $i/10"
+            sleep 30
+          fi
+        done
+        
+    - name: Check ML service health
+      run: |
+        for i in {1..10}; do
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001/health; then
+            echo "ML Service is healthy"
+            break
+          else
+            echo "ML Service health check failed, attempt $i/10"
+            sleep 30
+          fi
+        done
+        
     - name: Check frontend health
       run: |
         echo "Checking frontend health (may take a few minutes for Amplify deployment to complete)"
@@ -266,6 +360,8 @@ jobs:
           echo "Deployment completed successfully!"
           echo "Frontend: https://prompt-forge.co.za"
           echo "Backend API: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080"
+          echo "AI Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000"
+          echo "ML Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001"
         else
           echo "Deployment failed. Please check the logs."
         fi
@@ -284,17 +380,29 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
         
-    - name: Rollback backend
+    - name: Rollback backend and services
       run: |
         ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           # Stop current deployment
           sudo docker-compose -f docker-compose.prod.yml down
           
-          # Start previous version (assuming it exists)
-          sudo systemctl start prompt-forge-backend || echo "No previous version to rollback to"
+          # Try to start previous version (assuming it exists)
+          sudo systemctl start prompt-forge-backend || echo "No previous backend version to rollback to"
+          
+          # Check if we have previous Docker images to rollback to
+          if docker images | grep -q "prompt-forge-backend.*latest"; then
+            echo "Rolling back to previous Docker images..."
+            sudo docker-compose -f docker-compose.prod.yml up -d || echo "Rollback failed"
+          else
+            echo "No previous Docker images found for rollback"
+          fi
         EOF
         
     - name: Notify rollback
       run: |
         echo "Deployment failed and rollback initiated"
+        echo "Services affected:"
+        echo "- Backend API (Java Spring Boot)"
+        echo "- AI Service (Python FastAPI)"
+        echo "- ML Service (Python FastAPI)"
         echo "Please check the logs and fix issues before next deployment"
