@@ -144,6 +144,8 @@ jobs:
         python-version: '3.11'
         
     - name: Test Python services
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         # Test AI Service
         cd backend/project/src/main/ai/service
