@@ -25,6 +25,7 @@ import {
   ChevronUp,
   ChevronDown,
   Filter,
+  HelpCircle
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
@@ -277,6 +278,8 @@ export default function PromptBuilderPage() {
   const [typingSpeed, setTypingSpeed] = useState(75);
   const [showProfiles, setShowProfiles] = useState(false); // For mobile profile panel
   const [profilesCollapsed, setProfilesCollapsed] = useState(false); // For collapsible profiles
+  const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
+  const [showHelpModal, setShowHelpModal] = useState(false)
   const streamingService = new StreamingService();
   const navigate = useNavigate();
   
@@ -285,8 +288,45 @@ export default function PromptBuilderPage() {
     batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
   });
 
+  const showNotification = (type: "success" | "error", title: string, message: string) => {
+    const color = type === "success" ? "green" : "red"
+    const bg = type === "success" ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+                                  : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const icon = type === "success"
+      ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
+      : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
+    const notification = document.createElement('div')
+    notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in`
+    notification.innerHTML = `
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mt-0.5">${icon}</div>
+        <div class="ml-3 flex-1">
+          <h3 class="text-sm font-medium">${title}</h3>
+          <div class="mt-1 text-xs">${message}</div>
+        </div>
+      </div>
+    `
+    document.body.appendChild(notification)
+    setTimeout(() => {
+      notification.classList.add('animate-fade-out')
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 500)
+    }, 4000)
+  }
+
   const generatePrompt = async () => {
-    if (!promptIdea.trim() || !selectedPersona) return
+    if (!selectedPersona) {
+      showNotification("error", "Profile Required", "Please select a profile before generating a prompt.");
+      return;
+    }
+    
+    if (!promptIdea.trim()) {
+      showNotification("error", "Idea Required", "Please describe your prompt idea before generating.");
+      return;
+    }
 
     setIsGenerating(true)
     setGeneratedPrompt("")
@@ -346,11 +386,13 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           onComplete: () => {
             setIsGenerating(false)
             setGeneratedPrompt(accumulatedContent)
+            showNotification("success", "Prompt Generated", "Your optimized prompt has been generated successfully!");
             console.log("✅ Prompt generation completed")
           },
           onError: (error: string) => {
             setIsGenerating(false)
             setGeneratedPrompt(`Error: ${error}`)
+            showNotification("error", "Generation Failed", `Failed to generate prompt: ${error}`);
           }
         }
       );
@@ -358,6 +400,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
       console.error("Error generating prompt:", error)
       setGeneratedPrompt("Error generating prompt. Please try again.")
       setIsGenerating(false)
+      showNotification("error", "Generation Error", "An unexpected error occurred while generating your prompt.");
     }
   }
   
@@ -378,20 +421,40 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
     return aiModels.filter((model) => selectedPersona.recommendedModels.includes(model.id))
   }
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, buttonId = 'default') => {
+    if (!text) {
+      showNotification("error", "Copy Failed", "No content to copy.");
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(text)
+      
+      // Set copied state for this specific button
+      setCopiedStates(prev => ({ ...prev, [buttonId]: true }));
+      
+      // Show success notification
+      showNotification("success", "Copied Successfully", "Content copied to clipboard!");
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [buttonId]: false }));
+      }, 2000);
     } catch (err) {
-      console.error("Failed to copy text: ", err)
+      console.error('Failed to copy text: ', err)
+      showNotification("error", "Copy Failed", "Failed to copy to clipboard. Please try again.");
     }
   }
 
   const savePrompt = async () => {
-    if (!promptName.trim() || !generatedPrompt.trim() || !selectedPersona) return
+    if (!promptName.trim() || !generatedPrompt.trim() || !selectedPersona) {
+      showNotification("error", "Save Failed", "Please ensure you have a prompt name, generated content, and selected profile.");
+      return;
+    }
 
     const username = localStorage.getItem('username')
     if (!username || username === 'Guest') {
-      alert("Please log in to save prompts")
+      showNotification("error", "Login Required", "Please log in to save prompts");
       return
     }
 
@@ -414,9 +477,11 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           }
         }
       })
+      
+      showNotification("success", "Redirecting", "Taking you to the submit page to save your prompt...");
     } catch (error) {
       console.error("Error saving prompt:", error)
-      alert("Failed to save prompt. Please try again.")
+      showNotification("error", "Save Failed", "Failed to save prompt. Please try again.");
     } finally {
       setIsSaving(false)
     }
@@ -461,6 +526,16 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                 >
                   <Filter className="h-3 w-3 mr-1" />
                   <span className="text-xs">Profiles</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowHelpModal(true)}
+                  className="flex items-center"
+                  title="Help & Tips"
+                >
+                  <HelpCircle className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Help</span>
                 </Button>
               </div>
             </div>
@@ -549,11 +624,16 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(generatedPrompt)}
+                    onClick={() => copyToClipboard(generatedPrompt, 'mobile-copy')}
                     disabled={!generatedPrompt}
                     className="px-2"
                   >
-                    <Copy className="h-3 w-3" />
+                    {copiedStates['mobile-copy'] ? (
+                      <Check className="h-3 w-3 mr-1" />
+                    ) : (
+                      <Copy className="h-3 w-3 mr-1" />
+                    )}
+                    <span className="text-xs">{copiedStates['mobile-copy'] ? 'Copied' : 'Copy'}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -676,21 +756,21 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           </div>
 
           {/* Desktop Layout */}
-          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-8rem)]">
             {/* Left Column - Persona Selection */}
-            <div className="lg:col-span-1 space-y-4">
-              <Card className="p-4 h-full">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center">
-                    <User className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+            <div className="lg:col-span-1 flex flex-col min-h-0">
+              <Card className="p-4 flex flex-col flex-1 min-h-0">
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <h2 className="text-base font-semibold text-foreground flex items-center">
+                    <User className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                     Choose Profile
                   </h2>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowTemplates(true)}
-                      className="flex items-center"
+                      className="flex items-center px-2 h-7"
                     >
                       <BookOpen className="h-3 w-3 mr-1" />
                       <span className="text-xs">Templates</span>
@@ -711,39 +791,41 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                 </div>
                 
                 {!profilesCollapsed && (
-                  <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar pr-1">
-                    {personas.map((persona) => (
-                      <Card
-                        key={persona.id}
-                        className={`p-3 cursor-pointer transition-all duration-200 hover:scale-[1.003] ${
-                          selectedPersona?.id === persona.id
-                            ? "bg-[#3ebb9e]/10 border-[#3ebb9e]/40 shadow-[0_0_15px_rgba(62,187,158,0.3)]"
-                            : "hover:bg-muted/50"
-                        }`}
-                        onClick={() => setSelectedPersona(persona)}
-                      >
-                        <div className="flex items-start">
-                          <div className="text-lg mr-2 flex-shrink-0">{persona.icon}</div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-medium text-xs text-foreground mb-1 truncate">{persona.name}</h3>
-                            <p className="text-xs text-muted-foreground line-clamp-1">{persona.description}</p>
-                            {selectedPersona?.id === persona.id && (
-                              <Check className="h-3 w-3 text-[#3ebb9e] float-right" />
-                            )}
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
+                    <div className="space-y-2">
+                      {personas.map((persona) => (
+                        <Card
+                          key={persona.id}
+                          className={`p-2 cursor-pointer transition-all duration-200 hover:scale-[1.003] ${
+                            selectedPersona?.id === persona.id
+                              ? "bg-[#3ebb9e]/10 border-[#3ebb9e]/40 shadow-[0_0_15px_rgba(62,187,158,0.3)]"
+                              : "hover:bg-muted/50"
+                          }`}
+                          onClick={() => setSelectedPersona(persona)}
+                        >
+                          <div className="flex items-start">
+                            <div className="text-base mr-2 flex-shrink-0">{persona.icon}</div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-medium text-xs text-foreground mb-1 truncate">{persona.name}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2 leading-tight">{persona.description}</p>
+                              {selectedPersona?.id === persona.id && (
+                                <Check className="h-3 w-3 text-[#3ebb9e] float-right mt-1" />
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
                 {profilesCollapsed && selectedPersona && (
-                  <div className="mt-2">
+                  <div className="mt-2 flex-shrink-0">
                     <Card className="p-3 bg-[#3ebb9e]/10 border-[#3ebb9e]/40">
                       <div className="flex items-center space-x-2">
                         <span className="text-base">{selectedPersona.icon}</span>
-                        <div>
-                          <h3 className="text-sm font-medium">{selectedPersona.name}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium truncate">{selectedPersona.name}</h3>
                           <p className="text-xs text-muted-foreground truncate">{selectedPersona.description}</p>
                         </div>
                       </div>
@@ -754,20 +836,20 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
             </div>
 
             {/* Middle Column - Generated Prompt */}
-            <div className="lg:col-span-2 space-y-4">
-              <Card className="p-4 h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+            <div className="lg:col-span-2 flex flex-col min-h-0">
+              <Card className="p-4 flex flex-col flex-1 min-h-0">
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <h2 className="text-base font-semibold text-foreground flex items-center">
+                    <Zap className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                     Generated Prompt
                   </h2>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
                     {selectedPersona && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setShowModelRecommendations(true)}
-                        className="flex items-center space-x-1"
+                        className="flex items-center space-x-1 px-2 h-7"
                       >
                         <Sparkles className="h-3 w-3" />
                         <span className="text-xs">AI Models</span>
@@ -776,11 +858,16 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyToClipboard(generatedPrompt)}
+                      onClick={() => copyToClipboard(generatedPrompt, 'desktop-copy')}
                       disabled={!generatedPrompt}
+                      className="px-2 h-7"
                     >
-                      <Copy className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Copy</span>
+                      {copiedStates['desktop-copy'] ? (
+                        <Check className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Copy className="h-3 w-3 mr-1" />
+                      )}
+                      <span className="text-xs">{copiedStates['desktop-copy'] ? 'Copied' : 'Copy'}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -815,14 +902,25 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                         doc.save(`prompt-builder-${new Date().toISOString().slice(0,10)}.pdf`);
                       }}
                       disabled={!generatedPrompt}
+                      className="px-2 h-7"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       <span className="text-xs">Export</span>
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowHelpModal(true)}
+                      className="flex items-center"
+                      title="Help & Tips"
+                    >
+                      <HelpCircle className="h-3 w-3 mr-1" />
+                      <span className="text-xs">Help</span>
+                    </Button>
                   </div>
                 </div>
 
-                <div className="bg-muted rounded-lg p-4 flex-1 min-h-0 max-h-[calc(100vh-16rem)] overflow-y-auto custom-scrollbar">
+                <div className="bg-muted rounded-lg p-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                   {isGenerating || generatedPrompt ? (
                     <StreamingDisplay
                       content={streamingEnabled ? typingEffect.displayText : generatedPrompt}
@@ -834,19 +932,19 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
                       <div className="text-center">
-                        <Wand2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Your optimized prompt will appear here</p>
-                        <p className="text-sm mt-2">Select a profile and describe your idea to get started</p>
+                        <Wand2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">Your optimized prompt will appear here</p>
+                        <p className="text-xs mt-1">Select a profile and describe your idea to get started</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {generatedPrompt && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center space-x-4">
+                  <div className="mt-3 pt-3 border-t border-border flex-shrink-0">
+                    <div className="flex items-center space-x-3">
                       <div className="flex-1">
-                        <Label htmlFor="prompt-name" className="text-sm font-medium text-foreground pb-1 block">
+                        <Label htmlFor="prompt-name" className="text-xs font-medium text-foreground pb-1 block">
                           Save as:
                         </Label>
                         <Input
@@ -854,22 +952,22 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                           placeholder="Enter prompt name"
                           value={promptName}
                           onChange={(e) => setPromptName(e.target.value)}
-                          className="mt-1 bg-muted"
+                          className="mt-1 bg-muted h-8 text-sm"
                         />
                       </div>
                       <Button
                         onClick={savePrompt}
                         disabled={!promptName.trim() || isSaving}
-                        className="bg-[#3ebb9e] hover:bg-[#00674f] text-white mt-6"
+                        className="bg-[#3ebb9e] hover:bg-[#00674f] text-white mt-4 h-8 px-3 text-sm"
                       >
                         {isSaving ? (
                           <>
-                            <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                            <RotateCcw className="h-3 w-3 mr-1 animate-spin" />
                             Saving...
                           </>
                         ) : (
                           <>
-                            <Save className="h-4 w-4 mr-2" />
+                            <Save className="h-3 w-3 mr-1" />
                             Save Prompt
                           </>
                         )}
@@ -881,53 +979,54 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
             </div>
 
             {/* Right Column - Prompt Idea Input */}
-            <div className="lg:col-span-1 space-y-4">
-              <Card className="p-4">
-                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                  <Lightbulb className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+            <div className="lg:col-span-1 flex flex-col space-y-3">
+              <Card className="p-4 flex flex-col flex-1 min-h-0">
+                <h2 className="text-base font-semibold text-foreground mb-3 flex items-center flex-shrink-0">
+                  <Lightbulb className="h-4 w-4 mr-2 text-[#3ebb9e]" />
                   Your Idea
                 </h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="prompt-idea" className="text-sm font-medium text-foreground">
+                <div className="flex flex-col flex-1 min-h-0 space-y-3">
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <Label htmlFor="prompt-idea" className="text-xs font-medium text-foreground mb-2">
                       Describe what you want your prompt to do
                     </Label>
                     <textarea
                       id="prompt-idea"
-                      className="w-full mt-2 px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar"
-                      rows={6}
+                      className="w-full px-3 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm resize-none custom-scrollbar flex-1 min-h-[100px] max-h-[200px]"
                       placeholder="e.g., 'Help me write better product descriptions for my online store' or 'Create a prompt that helps debug Python code'"
                       value={promptIdea}
                       onChange={(e) => setPromptIdea(e.target.value)}
                     />
                   </div>
-                  <Button
-                    onClick={generatePrompt}
-                    disabled={!promptIdea.trim() || !selectedPersona || isGenerating}
-                    className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="h-4 w-4 mr-2" />
-                        Generate Prompt
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex-shrink-0 pt-2">
+                    <Button
+                      onClick={generatePrompt}
+                      disabled={!promptIdea.trim() || !selectedPersona || isGenerating}
+                      className="w-full bg-[#3ebb9e] hover:bg-[#00674f] text-white h-10 flex-shrink-0"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-2" />
+                          Generate Prompt
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
-              {/* Tips */}
-              <Card className="p-4 bg-blue-500/5 border-blue-500/20">
-                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center">
-                  <Star className="h-4 w-4 mr-2 text-blue-500" />
+              {/* Compact Tips */}
+              <Card className="p-3 bg-blue-500/5 border-blue-500/20 flex-shrink-0">
+                <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center">
+                  <Star className="h-3 w-3 mr-1 text-blue-500" />
                   Pro Tips
                 </h3>
-                <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="space-y-1 text-xs text-muted-foreground">
                   <div className="flex items-start space-x-2">
                     <div className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
                     <p>Be specific about your desired output format</p>
@@ -1073,69 +1172,285 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     key={model.id}
                     className={`p-3 sm:p-4 ${model.cardBg} ${
                       selectedModel.id === model.id ? model.selectedGlow : model.glowColor
-                    } transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
+                    } border-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer`}
                     onClick={() => setSelectedModel(model)}
                   >
-                    <div className="flex items-center space-x-3 sm:space-x-4">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${model.iconBg} flex items-center justify-center text-lg sm:text-xl`}>
-                        {model.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h3 className={`font-semibold text-sm sm:text-base ${model.textColor} truncate`}>{model.name}</h3>
-                          {index === 0 && (
-                            <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-yellow-500/20 text-yellow-600 text-xs rounded-full shrink-0">
-                              Best Match
-                            </span>
-                          )}
-                          {selectedModel.id === model.id && (
-                            <Check className={`h-3 w-3 sm:h-4 sm:w-4 ${model.textColor} ml-auto`} />
-                          )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-lg">{model.icon}</div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-sm text-foreground truncate">{model.name}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{model.description}</p>
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{model.description}</p>
-                        {model.supportsImages && (
-                          <span className="inline-block mt-1 sm:mt-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-600 text-xs rounded-full">
-                            Supports Images
-                          </span>
-                        )}
                       </div>
+                      {selectedModel.id === model.id && (
+                        <div className="flex-shrink-0">
+                          <Check className="h-5 w-5 text-[#3ebb9e]" />
+                        </div>
+                      )}
                     </div>
                   </Card>
                 ))}
-              </div>
-
-              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <div className="p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex-1">
-                  <p className="text-sm text-blue-600">
-                    💡 <strong>Selected:</strong> {selectedModel.name}
-                  </p>
-                </div>
-                <Button
-                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white sm:w-auto"
-                  onClick={() => setShowModelRecommendations(false)}
-                >
-                  Confirm Selection
-                </Button>
               </div>
             </div>
           </Card>
         </div>
       )}
 
-      {/* Streaming Controls */}
-      <div className="fixed bottom-4 right-4 z-30 flex items-center space-x-2 text-xs text-muted-foreground bg-card/90 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
-        <span>Streaming:</span>
-        <button 
-          onClick={() => setStreamingEnabled(!streamingEnabled)}
-          className={`w-8 h-4 rounded-full transition-colors ${
-            streamingEnabled ? "bg-[#3ebb9e]" : "bg-gray-300 dark:bg-gray-700"
-          } relative`}
-        >
-          <span className={`absolute w-3 h-3 rounded-full bg-white top-0.5 transition-all ${
-            streamingEnabled ? "left-4.5" : "left-0.5"
-          }`} />
-        </button>
-      </div>
+      {/* Help Modal - Prompt Builder Guide */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
+          <div className="bg-background border border-border rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Prompt Builder Guide</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowHelpModal(false)}
+                className="h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
+                aria-label="Close help modal"
+              >
+                <span className="text-lg">✕</span>
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Getting Started */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Getting Started
+                </h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">1.</span>
+                    <p>Choose a profile that matches your role (Developer, Marketer, etc.)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">2.</span>
+                    <p>Describe what you want your prompt to do in simple terms</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e] mt-0.5">3.</span>
+                    <div className="flex items-center space-x-3">
+                      <p>Click Generate Prompt to create your optimized prompt:</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">4.</span>
+                    <p>Review the generated prompt and save it for use</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Builder Features */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Builder Features
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        AI
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Smart Profile Matching</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Each profile comes with specialized knowledge about your field and generates prompts tailored to your specific use cases.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Role-specific optimization, industry terminology, relevant examples
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-violet-500 text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        📋
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Template Library</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Access pre-built templates for common tasks like code reviews, story generation, and business analysis.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Quick starts, learning examples, standard formats
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        🎯
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Model Recommendations</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Get AI model suggestions based on your profile and prompt type for optimal results.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Choosing the right AI, maximizing performance, task-specific models
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Advanced Features */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Advanced Features
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">✨</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Streaming Generation</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Watch your prompts being generated in real-time with adjustable typing speed.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📄</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Export Options</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Copy to clipboard or export as PDF with metadata and generation details.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">💾</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Direct Save</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Save generated prompts directly to your collection with automatic metadata.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">🔄</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Template Integration</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Templates automatically select matching profiles and fill in your idea field.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Best Practices */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Best Practices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Be specific about your desired output format</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Include examples in your idea description</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Choose the profile that best matches your role</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Test generated prompts in the Testing Ground</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Start with templates for common use cases</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Use model recommendations for best results</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Save successful prompts to your collection</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Iterate and refine based on testing results</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Example Workflows */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Example Workflows
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Developer Workflow</h4>
+                    <p className="text-xs text-muted-foreground">
+                      1. Choose Developer profile → 2. Describe "Debug my React component errors" → 3. Generate → 4. Test in Testing Ground → 5. Save working prompt
+                    </p>
+                  </div>
+                  
+                  <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Marketer Workflow</h4>
+                    <p className="text-xs text-muted-foreground">
+                      1. Select Marketer profile → 2. Use "Marketing Copy" template → 3. Customize for your product → 4. Generate variations → 5. Export as PDF
+                    </p>
+                  </div>
+                  
+                  <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Creative Workflow</h4>
+                    <p className="text-xs text-muted-foreground">
+                      1. Pick Creative profile → 2. Browse story templates → 3. Describe your story concept → 4. Generate with recommended model → 5. Refine and save
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Profile Details */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  What Each Profile Includes
+                </h3>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-[#3ebb9e] flex-shrink-0">•</span>
+                      <p><strong>Specialized Knowledge:</strong> Industry-specific terminology and best practices</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-[#3ebb9e] flex-shrink-0">•</span>
+                      <p><strong>Use Case Optimization:</strong> Prompts tailored to your specific work scenarios</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-[#3ebb9e] flex-shrink-0">•</span>
+                      <p><strong>Model Recommendations:</strong> AI models that work best for your profile type</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-[#3ebb9e] flex-shrink-0">•</span>
+                      <p><strong>Template Access:</strong> Pre-built prompts designed for your role and tasks</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-[#3ebb9e] flex-shrink-0">•</span>
+                      <p><strong>Context Awareness:</strong> Understanding of your professional challenges and goals</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

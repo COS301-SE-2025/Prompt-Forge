@@ -512,24 +512,24 @@ export default function WidgetManager({
               </Button>
             </div>
 
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {inactiveWidgets.map((widget) => (
-                  <Card
-                    key={widget.id}
-                    className="p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-[#3ebb9e]"
-                    onClick={() => addWidget(widget)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      {widget.icon}
-                      <div className="flex-1">
-                        <h3 className="font-medium text-foreground">{widget.title}</h3>
-                        <p className="text-sm text-muted-foreground capitalize">{widget.type} widget</p>
-                        <p className="text-xs text-muted-foreground mt-1">Size: {sizeLabels[widget.size]}</p>
+              <div className="p-6 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(80vh - 100px)' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {inactiveWidgets.map((widget) => (
+                    <Card
+                      key={widget.id}
+                      className="p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-[#3ebb9e]"
+                      onClick={() => addWidget(widget)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {widget.icon}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-foreground">{widget.title}</h3>
+                          <p className="text-sm text-muted-foreground capitalize">{widget.type} widget</p>
+                          <p className="text-xs text-muted-foreground mt-1">Size: {sizeLabels[widget.size]}</p>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
               </div>
 
               {inactiveWidgets.length === 0 && (
