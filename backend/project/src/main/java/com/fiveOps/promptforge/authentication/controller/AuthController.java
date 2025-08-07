@@ -3,7 +3,6 @@ package com.fiveOps.promptforge.authentication.controller;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
