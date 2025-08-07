@@ -12,6 +12,7 @@ import { useTypingEffect } from "@/hooks/useTypingEffect"
 import { StreamingDisplay } from "@/components/StreamingDisplay";
 import { StreamingControls } from "@/components/StreamingControls";
 import { StreamingService } from "@/services/streamingService";
+import promptSubmissionService from '../services/promptSubmissionService'
 
 type ViewType = "test" | "rate" | "suggest";
 
@@ -46,6 +47,7 @@ export default function EditorPage() {
   const [modelsCollapsed, setModelsCollapsed] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const handlePageChange = (page: number) => {
   // Save current response before switching
@@ -843,11 +845,13 @@ const fallbackToWorkingModel = async () => {
     "suggest": "Suggestion Models"
   };
 
-  // Replace the handleSavePrompt function with this simpler redirect:
-  const handleSavePrompt = () => {
+  // Update the handleSavePrompt function in your EditorPage.tsx:
+  const handleSavePrompt = async () => {
     // Check if user is authenticated
     const username = localStorage.getItem('username')
-    if (!username || username === 'Guest') {
+    const userId = localStorage.getItem('userId')
+    
+    if (!username || username === 'Guest' || !userId) {
       showNotification("error", "Login Required", "Please log in to save prompts");
       return
     }
@@ -858,25 +862,29 @@ const fallbackToWorkingModel = async () => {
       return
     }
 
-    // Generate a title from the prompt (first 50 characters)
-    const autoTitle = promptText.length > 50 
+    // Generate a suggested title from the prompt (first 50 characters)
+    const suggestedTitle = promptText.length > 50 
       ? promptText.substring(0, 50).trim() + "..."
       : promptText.trim()
 
-    // Redirect to SubmitPromptPage with pre-filled data
+    // Navigate to submit page with prefilled data (NOT edit mode)
     navigate('/submit', {
       state: {
         prefilled: {
-          title: autoTitle,
-          description: `Auto-saved prompt from Editor - ${new Date().toLocaleString()}`,
+          title: suggestedTitle,
+          description: `Prompt created in Testing Ground - ${new Date().toLocaleString()}`,
           content: promptText.trim(),
-          tags: [],
-          visibility: "private",
-          price: 0,
-          featured: false
+          promptText: promptText.trim(), // Add this for backward compatibility
+          visibility: "private", // Default to private
+          price: 0, // Default price
+          featured: false,
+          // IMPORTANT: Don't include an 'id' field - this ensures we're NOT in edit mode
         }
       }
     })
+
+    // Show success notification
+    showNotification("success", "Redirecting", "Taking you to the publish page to complete your prompt submission...");
   }
 
   // Component for rendering model cards with glow effects
@@ -936,7 +944,7 @@ const fallbackToWorkingModel = async () => {
               {/* Optimizer button styled to match the OptimizerPage main button */}
               <Link to="/optimizer">
                 <Button
-                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
+                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
                   title="Optimize Prompt"
                   size="icon"
                 >
@@ -952,9 +960,6 @@ const fallbackToWorkingModel = async () => {
               >
                 <Save className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
-                <History className="h-3 w-3 lg:h-4 lg:w-4" />
-              </Button>
               {/*NEW: Add streaming controls button */}
               <Button 
                 variant="ghost" 
@@ -965,12 +970,15 @@ const fallbackToWorkingModel = async () => {
               >
                 <Settings className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
-              {/*Link HelpCircle to help page */}
-              <Link to="/help">
-                <Button variant="ghost" size="icon" className="h-7 w-7 lg:h-8 lg:w-8">
-                  <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 lg:h-8 lg:w-8"
+                onClick={() => setShowHelpModal(true)}
+                title="Help & Tips"
+              >
+                <HelpCircle className="h-3 w-3 lg:h-4 lg:w-4" />
+              </Button>
             </div>
           </div>
 
@@ -1058,10 +1066,10 @@ explain how the response should be adapted to fit.]"
             <div className="flex space-x-2">
               <Button 
                 size="sm" 
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white text-xs h-8" 
+                className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold text-xs h-8" 
                 onClick={testPrompt}
                 disabled={isLoading}
-              >
+                >
                 <Play className="h-3 w-3 mr-1" />
                 {isLoading ? "Testing..." : "Test Prompt"}
               </Button>
@@ -1412,7 +1420,278 @@ explain how the response should be adapted to fit.]"
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Help Modal - Compact version */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
+          <div className="bg-background border border-border rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Testing Ground Guide</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowHelpModal(false)}
+                className="h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
+                aria-label="Close help modal"
+              >
+                <span className="text-lg">✕</span>
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+
+            {/* Getting Started */}
+            <section>
+              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                Getting Started
+              </h3>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-3">
+                  <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">1.</span>
+                  <p>Write your prompt in the left editor panel</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">2.</span>
+                  <p>Select an AI model from the bottom cards</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e] mt-0.5">3.</span>
+                  <div className="flex items-center space-x-3">
+                    <p>Click Test Prompt to see AI responses:</p>
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] text-white font-semibold pointer-events-none h-8 text-xs"
+                    >
+                      <Play className="h-3 w-3 mr-1" />
+                      Test Prompt
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">4.</span>
+                  <p>Use numbered tabs (1, 2, 3) to switch between Test, Rate, and Suggest modes</p>
+                </div>
+              </div>
+            </section>
+
+              {/* AI Models */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  AI Models
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🔮</span>
+                      <span className="font-semibold text-violet-400 text-sm">Deepseek R1</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Best for reasoning and code generation</p>
+                  </div>
+                  
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🦙</span>
+                      <div>
+                        <span className="font-semibold text-green-400 text-sm">Meta Llama 4</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded ml-2">📷</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Advanced coding, reasoning, and image understanding</p>
+                  </div>
+                  
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">💎</span>
+                      <div>
+                        <span className="font-semibold text-purple-400 text-sm">Google Gemini 2.0</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded ml-2">📷</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Multimodal AI with excellent image capabilities</p>
+                  </div>
+                  
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🧠</span>
+                      <span className="font-semibold text-orange-400 text-sm">Kimi Dev 72B</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Specialized for software engineering tasks</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Three Testing Modes */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Three Testing Modes
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        1
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Test Mode</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Get direct AI responses to your prompts. Start testing ideas and compare model responses.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Initial testing, comparing responses, iterating
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        2
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <h4 className="text-base font-bold text-foreground">Rate Mode</h4>
+                        <Button size="sm" className="bg-amber-500 text-white pointer-events-none h-6 text-xs">
+                          <Star className="h-3 w-3 mr-1" />
+                          Rate
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Get AI feedback with 1-10 rating scale and specific improvement suggestions.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Quality analysis, improvement tips, optimization
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        3
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <h4 className="text-base font-bold text-foreground">Suggest Mode</h4>
+                        <Button size="sm" className="bg-violet-500 text-white pointer-events-none h-6 text-xs">
+                          <HelpCircle className="h-3 w-3 mr-1" />
+                          Suggest
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Get AI-powered prompt rewrites and alternative versions for better results.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Fresh perspectives, alternatives, learning techniques
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Advanced Features */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Advanced Features
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📷</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Image Upload</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Models with 📷 badge analyze images with text prompts.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">⚙️</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Streaming Controls</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Adjust response typing speed with gear icon settings.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">💾</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Auto-Save</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Responses save automatically when switching modes.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📁</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Export Options</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Copy to clipboard or download as PDF files.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">✨</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Prompt Optimizer</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Click sparkles button for advanced optimization tools.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Quick Tips */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <span className="text-xl mr-3">💡</span>
+                  Quick Tips
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Start with Test mode for basic responses</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Use Rate mode for quality feedback</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Try Suggest mode for improvements</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Different models excel at different tasks</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Check character counter for length</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Use Reset button for fresh start</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Save successful prompts regularly</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Models switch if unavailable</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}</div>
   )
 }
 
