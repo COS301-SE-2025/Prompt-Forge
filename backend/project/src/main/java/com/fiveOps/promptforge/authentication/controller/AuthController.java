@@ -84,13 +84,14 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletResponse response) {
-    ResponseCookie cookie = ResponseCookie.from("token", "")
-        .httpOnly(true)
-        .secure(true)      // Match login settings
-        .path("/")
-        .maxAge(0)                 // Delete cookie
-        .sameSite("None")  // Match login settings
-        .build();
+    ResponseCookie cookie =
+        ResponseCookie.from("token", "")
+            .httpOnly(true)
+            .secure(true) // Match login settings
+            .path("/")
+            .maxAge(0) // Delete cookie
+            .sameSite("None") // Match login settings
+            .build();
 
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, cookie.toString())
