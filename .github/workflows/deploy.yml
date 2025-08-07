@@ -112,7 +112,8 @@ jobs:
     - name: Build Docker image
       run: |
         cd backend/project
-        docker build -t prompt-forge-backend:${{ github.sha }} .
+        # Force clean build without cache to ensure latest configuration
+        docker build --no-cache -t prompt-forge-backend:${{ github.sha }} .
         docker save prompt-forge-backend:${{ github.sha }} > backend-image.tar
         
     - name: Upload backend artifact
@@ -300,16 +301,11 @@ jobs:
           # Start services
           sudo docker-compose -f docker-compose.prod.yml up -d
           
-          # Update nginx configuration
-          sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge
-          sudo ln -sf /etc/nginx/sites-available/prompt-forge /etc/nginx/sites-enabled/
-          sudo nginx -t && sudo systemctl reload nginx
-          
-          # Verify deployment
+          # Verify deployment through nginx proxy (containerized)
           sleep 30
-          curl -f http://localhost:8080/health || echo "Backend health check failed"
-          curl -f http://localhost:8000/health || echo "AI Service health check failed"
-          curl -f http://localhost:8001/health || echo "ML Service health check failed"
+          curl -f http://localhost:80/api/health || echo "Backend health check through nginx failed"
+          curl -f http://localhost:80/ai/health || echo "AI Service health check through nginx failed"
+          curl -f http://localhost:80/ml/health || echo "ML Service health check through nginx failed"
         EOF
 
   deploy-frontend:
@@ -337,7 +333,7 @@ jobs:
     - name: Check backend health
       run: |
         for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health; then
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/api/health; then
             echo "Backend is healthy"
             break
           else
@@ -349,7 +345,7 @@ jobs:
     - name: Check AI service health
       run: |
         for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000/health; then
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ai/health; then
             echo "AI Service is healthy"
             break
           else
@@ -361,7 +357,7 @@ jobs:
     - name: Check ML service health
       run: |
         for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001/health; then
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ml/health; then
             echo "ML Service is healthy"
             break
           else
@@ -389,9 +385,9 @@ jobs:
         if [ "${{ job.status }}" == "success" ]; then
           echo "Deployment completed successfully!"
           echo "Frontend: https://prompt-forge.co.za"
-          echo "Backend API: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080"
-          echo "AI Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000"
-          echo "ML Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001"
+          echo "Backend API: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/api/"
+          echo "AI Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ai/"
+          echo "ML Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ml/"
         else
           echo "Deployment failed. Please check the logs."
         fi
