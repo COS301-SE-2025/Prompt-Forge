@@ -22,10 +22,10 @@ public class PythonServiceIntegrationController {
 
   private final RestTemplate restTemplate;
 
-  @Value("${ai.service.url:http://localhost:8000}")
+  @Value("${ai.service.url:http://ai-service:8000}")
   private String aiServiceUrl;
 
-  @Value("${ml.service.url:http://localhost:8001}")
+  @Value("${ml.service.url:http://ml-service:8001}")
   private String mlServiceUrl;
 
   public PythonServiceIntegrationController() {
