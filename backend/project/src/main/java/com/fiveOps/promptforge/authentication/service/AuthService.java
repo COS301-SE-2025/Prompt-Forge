@@ -15,6 +15,9 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @Service
 public class AuthService {
 
+  private static final org.slf4j.Logger LOGGER =
+      org.slf4j.LoggerFactory.getLogger(AuthService.class);
+
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
@@ -60,6 +63,7 @@ public class AuthService {
       throw new IllegalArgumentException("Invalid email or password");
     }
 
+    LOGGER.info("JWT generated for user: {}", user.getUsername());
     return jwtUtil.generateToken(user.getEmail());
   }
 
@@ -68,7 +72,6 @@ public class AuthService {
         userRepository
             .findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
-
     // Logic to handle forgot password (e.g., send reset link)
     // This is a placeholder for actual implementation
   }
