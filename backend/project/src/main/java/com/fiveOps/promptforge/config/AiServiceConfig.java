@@ -20,6 +20,9 @@ public class AiServiceConfig {
   @Bean
   public WebClient aiWebClient() {
     LOGGER.info("Configuring AI WebClient with URL: {}", aiServiceUrl);
+    LOGGER.info("Environment AI_SERVICE_URL: {}", System.getenv("AI_SERVICE_URL"));
+    LOGGER.info("System property ai.service.url: {}", System.getProperty("ai.service.url"));
+    LOGGER.info("Active profiles: {}", System.getProperty("spring.profiles.active"));
     return WebClient.builder()
         .baseUrl(aiServiceUrl)
         .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
