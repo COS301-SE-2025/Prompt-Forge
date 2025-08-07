@@ -66,10 +66,10 @@ public class AuthController {
       ResponseCookie cookie =
           ResponseCookie.from("token", token)
               .httpOnly(true)
-              .secure(false)
+              .secure(true)
               .path("/")
               .maxAge(7 * 24 * 60 * 60) // 7 days
-              .sameSite("Lax")
+              .sameSite("None")
               .build();
 
       System.out.println("Setting cookie: " + cookie.toString());
@@ -85,14 +85,16 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletResponse response) {
-    // Clear the cookie by setting maxAge=0
-    Cookie cookie = new Cookie("token", null);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false); // if using HTTPS
-    cookie.setPath("/");
-    cookie.setMaxAge(0); // delete cookie
-    response.addCookie(cookie);
+    ResponseCookie cookie = ResponseCookie.from("token", "")
+        .httpOnly(true)
+        .secure(true)      // Match login settings
+        .path("/")
+        .maxAge(0)                 // Delete cookie
+        .sameSite("None")  // Match login settings
+        .build();
 
-    return ResponseEntity.ok(Map.of("message", "Logout successful"));
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(Map.of("message", "Logout successful"));
   }
 }
