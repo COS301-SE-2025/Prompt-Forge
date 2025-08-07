@@ -11,9 +11,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class AiServiceConfig {
-  
+
   private static final Logger LOGGER = LoggerFactory.getLogger(AiServiceConfig.class);
-  
+
   @Value("${ai.service.url:http://localhost:8000}")
   private String aiServiceUrl;
 
