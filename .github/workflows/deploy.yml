@@ -112,7 +112,8 @@ jobs:
     - name: Build Docker image
       run: |
         cd backend/project
-        docker build -t prompt-forge-backend:${{ github.sha }} .
+        # Force clean build without cache to ensure latest configuration
+        docker build --no-cache -t prompt-forge-backend:${{ github.sha }} .
         docker save prompt-forge-backend:${{ github.sha }} > backend-image.tar
         
     - name: Upload backend artifact

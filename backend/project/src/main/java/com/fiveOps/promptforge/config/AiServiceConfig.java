@@ -19,10 +19,21 @@ public class AiServiceConfig {
 
   @Bean
   public WebClient aiWebClient() {
+    LOGGER.info("=== AI SERVICE CONFIGURATION DEBUG ===");
     LOGGER.info("Configuring AI WebClient with URL: {}", aiServiceUrl);
     LOGGER.info("Environment AI_SERVICE_URL: {}", System.getenv("AI_SERVICE_URL"));
     LOGGER.info("System property ai.service.url: {}", System.getProperty("ai.service.url"));
-    LOGGER.info("Active profiles: {}", System.getProperty("spring.profiles.active"));
+    LOGGER.info(
+        "System property spring.profiles.active: {}", System.getProperty("spring.profiles.active"));
+    LOGGER.info("Environment SPRING_PROFILES_ACTIVE: {}", System.getenv("SPRING_PROFILES_ACTIVE"));
+
+    // Additional debugging for all environment variables
+    System.getenv().entrySet().stream()
+        .filter(entry -> entry.getKey().contains("SERVICE") || entry.getKey().contains("PROFILE"))
+        .forEach(entry -> LOGGER.info("Env {}: {}", entry.getKey(), entry.getValue()));
+
+    LOGGER.info("=== END AI SERVICE CONFIGURATION DEBUG ===");
+
     return WebClient.builder()
         .baseUrl(aiServiceUrl)
         .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
