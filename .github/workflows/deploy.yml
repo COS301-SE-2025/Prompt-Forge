@@ -269,8 +269,9 @@ jobs:
     - name: Deploy to EC2
       run: |
         ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          # Stop existing services
+          # Stop ALL existing services (both systemd and docker)
           sudo systemctl stop prompt-forge-backend || true
+          sudo systemctl disable prompt-forge-backend || true
           sudo docker-compose -f docker-compose.prod.yml down || true
           
           # Load new Docker images
@@ -300,6 +301,18 @@ jobs:
           
           # Start services
           sudo docker-compose -f docker-compose.prod.yml up -d
+          
+          # Verify all containers are running and in same network
+          echo "=== Container Status ==="
+          sudo docker-compose -f docker-compose.prod.yml ps
+          
+          echo "=== Network Information ==="
+          sudo docker network ls
+          sudo docker network inspect prompt-forge_default || sudo docker network inspect $(sudo docker-compose -f docker-compose.prod.yml ps -q | head -1 | xargs sudo docker inspect --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' | cut -c1-12)
+          
+          echo "=== Service DNS Resolution Test ==="
+          # Test if backend container can resolve ai-service
+          sudo docker-compose -f docker-compose.prod.yml exec -T backend nslookup ai-service || echo "DNS resolution failed"
           
           # Verify deployment through nginx proxy (containerized)
           sleep 30
