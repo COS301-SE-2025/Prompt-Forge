@@ -455,7 +455,7 @@ export default function ProfileSettingsPage() {
                       <div className="space-y-4 bg-muted">
                         <div className="p-4 rounded-md flex justify-between items-center bg-muted">
                           <div className="flex items-center">
-                            <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())} className=""/>
+                            <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())}/>
                           </div>
                           <div className="flex gap-2">
                             <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
