@@ -58,3 +58,16 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - ai-service
+      - ml-service
+    restart: unless-stopped
