@@ -1,0 +1,8 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+transformers
+torch
+sentence-transformers
+numpy
+scikit-learn
+huggingface-hub
