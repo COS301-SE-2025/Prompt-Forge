@@ -16,4 +16,5 @@ RUN ./mvnw clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/project-0.0.1-SNAPSHOT.jar"]
+# Use exec form to ensure proper signal handling and environment variable expansion
+CMD ["sh", "-c", "java -jar -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod} target/project-0.0.1-SNAPSHOT.jar"]
