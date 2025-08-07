@@ -3,9 +3,6 @@ package com.fiveOps.promptforge.authentication.controller;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +19,8 @@ import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
 import com.fiveOps.promptforge.user_profile.model.User;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
