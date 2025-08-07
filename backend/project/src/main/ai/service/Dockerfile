@@ -1,21 +1,38 @@
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install system dependencies and Python packages in one layer
+RUN apt-get update && apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt && \
+    pip cache purge
+
+# Runtime stage
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Install only essential tools
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy installed packages from builder stage
+COPY --from=builder /root/.local /root/.local
 
 # Copy the application code
 COPY . .
 
-# Create models directory if it doesn't exist
+# Create models directory
 RUN mkdir -p training/fine_tuned_model
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
 
 EXPOSE 8000
 
