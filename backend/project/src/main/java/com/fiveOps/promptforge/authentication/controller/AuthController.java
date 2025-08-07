@@ -27,7 +27,7 @@ import com.fiveOps.promptforge.user_profile.model.User;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
   private final AuthService authService;
 
@@ -47,13 +47,13 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     try {
-      logger.info("Login attempt by user: {}", request.getEmail());
+      LOGGER.info("Login attempt by user: {}", request.getEmail());
       System.out.println("Login attempt for email: " + request.getEmail());
 
       String token = authService.login(request);
       System.out.println(
           "Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
-      logger.info("Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
+      LOGGER.info("Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
       // Get user info for response
       User user = authService.getUserByEmail(request.getEmail());
 
