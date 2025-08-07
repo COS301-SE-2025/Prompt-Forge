@@ -3,6 +3,8 @@ package com.fiveOps.promptforge.authentication.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -19,8 +21,6 @@ import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
 import com.fiveOps.promptforge.user_profile.model.User;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -84,13 +84,14 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletResponse response) {
-    ResponseCookie cookie = ResponseCookie.from("token", "")
-        .httpOnly(true)
-        .secure(true)      // Match login settings
-        .path("/")
-        .maxAge(0)                 // Delete cookie
-        .sameSite("None")  // Match login settings
-        .build();
+    ResponseCookie cookie =
+        ResponseCookie.from("token", "")
+            .httpOnly(true)
+            .secure(true) // Match login settings
+            .path("/")
+            .maxAge(0) // Delete cookie
+            .sameSite("None") // Match login settings
+            .build();
 
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, cookie.toString())
