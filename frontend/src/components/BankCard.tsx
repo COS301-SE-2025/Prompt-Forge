@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
-import { getCardColor } from "@/Models/BankCard";
 import { PayoutCard } from "@/Models/Payout"
 import { Wifi } from 'lucide-react'
-import { useEffect, useState } from "react";
 
 
 
@@ -13,9 +11,8 @@ type BankCardProps = {
 }
 
 
-export default function BankCard({ payoutCard, className = "",color="black" }: BankCardProps) {
+export default function BankCard({ payoutCard, className = "", color="black" }: BankCardProps) {
   // let color = getCardColor(payoutCard.bank.name.toLowerCase())
-  console.log("color:", color);
   
   return (
     <div>
