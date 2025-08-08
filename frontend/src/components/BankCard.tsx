@@ -1,85 +1,76 @@
+import { cn } from "@/lib/utils";
 import { PayoutCard } from "@/Models/Payout"
-import { Wifi } from "lucide-react"
+import { Wifi } from 'lucide-react'
 
-const cardColor = {
-  "absa": "red",
-  "african bank": "green",
-  "bidvest": "red",
-  "capitec": "red",
-  "discovery": "purple",
-  "fnb": "green",
-  "nedbank": "green",
-  "standard bank": "blue",
-  "tymebank": "yellow",
-} as const;
 
-type BankKey = keyof typeof cardColor;
 
-function getCardColorStartsWith(input: string): string {
-  const normalizedInput = input.trim().toLowerCase();
-  
-  for (const bank of Object.keys(cardColor)) {        
-    if (normalizedInput.startsWith(bank)) {      
-      return cardColor[bank as BankKey];
-    }
-  }
-
-  return "black";  // default if no match
+type BankCardProps = {
+  payoutCard: PayoutCard,
+  className?: string;
+  color?: string;
 }
 
-export default function BankCard({bank,accountHolder,accountNumber}:PayoutCard) {
+
+export default function BankCard({ payoutCard, className = "", color="black" }: BankCardProps) {
+  // let color = getCardColor(payoutCard.bank.name.toLowerCase())
+  
   return (
-    <div className="relative">
+    <div>
       {/* Card Front */}
-      <div className={`w-96 h-60 bg-gradient-to-br from-slate-900 via-${getCardColorStartsWith(bank.name.toLowerCase())}-900 to-slate-800 rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden`}>
-        {/* Background Pattern */}
+      <div className={cn(
+        `relative overflow-hidden w-90 h-56 max-w-sm min-w-[280px] aspect-[1.6/1] bg-gradient-to-br from-slate-900 via-`+color+`-900 to-slate-800 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 text-white flex flex-col justify-between pb-8`,
+        className
+      )}>
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -translate-y-20 translate-x-20"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full translate-y-16 -translate-x-16"></div>
         </div>
-
-        {/* Contactless Payment Icon */}
-        <div className="absolute top-6 right-6">
-          <Wifi className="w-6 h-6 rotate-90 opacity-60" />
-        </div>
-
-        {/* Bank Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <span className="text-lg font-bold">{bank.name}</span>
-        </div>
-
-        {/* Chip */}
-        <div className="absolute top-20 left-6">
-          <div className="w-12 h-9 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-md flex items-center justify-center">
-            <div className="grid grid-cols-3 gap-0.5">
-              {[...Array(9)].map((_, i) => (
-                <div key={i} className="w-1 h-1 bg-yellow-800 rounded-full"></div>
-              ))}
+        {/* Top Section */}
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-1">
+            <span className="text-lg sm:text-base font-bold truncate">
+              {payoutCard.bank.name}
+            </span>
+            {/* Chip */}
+            <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-md flex items-center justify-center">
+              <div className="grid grid-cols-3 gap-0.5">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className="w-0.5 h-0.5 sm:w-1 sm:h-1 bg-yellow-800 rounded-full"></div>
+                ))}
+              </div>
             </div>
           </div>
+          {/* Contactless Payment Icon */}
+          <Wifi className="w-4 h-4 sm:w-5 sm:h-5 rotate-90 opacity-60" />
         </div>
 
-        {/* Card Number */}
-        <div className="mt-11 mb-8 flex justify-center">
-          <div>
-            <div className="text-2xl font-mono tracking-wider">{accountNumber}</div>
-            <div className="text-xs text-gray-300 uppercase tracking-wide mb-1">Account Number</div>
+        {/* Middle Section - Account Number */}
+        <div className="text-center">
+          <div className="text-2xl sm:text-2xl font-mono tracking-wider break-all">
+            {payoutCard.accountNumber}
+          </div>
+          <div className="text-xs text-gray-300 uppercase tracking-wide mt-1">
+            Account Number
           </div>
         </div>
 
-        {/* Card Details */}
-        <div className="flex justify-between items-end">
-          <div>
-            <div className="text-lg font-semibold uppercase tracking-wide">{accountHolder}</div>
-            <div className="text-xs text-gray-300 uppercase tracking-wide mb-1">Card Holder</div>
+        {/* Bottom Section */}
+        <div className="flex justify-between items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="text-lg sm:text-base font-semibold uppercase tracking-wide truncate">
+              {payoutCard.accountHolder}
+            </div>
+            <div className="text-xs text-gray-300 uppercase tracking-wide">
+              Card Holder
+            </div>
           </div>
 
           {/* Card Network Logo */}
-          <div className="flex items-center mb-3">
-            <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-5 sm:w-10 sm:h-6 bg-white rounded flex items-center justify-center">
               <div className="flex">
-                <div className="w-4 h-4 bg-red-500 rounded-full opacity-80"></div>
-                <div className="w-4 h-4 bg-yellow-500 rounded-full -ml-2 opacity-80"></div>
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full opacity-80"></div>
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded-full -ml-1 sm:-ml-1.5 opacity-80"></div>
               </div>
             </div>
           </div>
