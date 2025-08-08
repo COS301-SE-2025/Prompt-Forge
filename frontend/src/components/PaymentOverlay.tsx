@@ -23,7 +23,7 @@ interface PaymentOverlayProps {
     process: "add" | "edit"
     currentPayoutCard: PayoutCard | null,
     bankList: Array<BankIdentifier>,
-    setPaymentCard: (method: PayoutCard) => void
+    setPaymentCard: (method: PayoutCard) => void,
 }
 
 
@@ -97,7 +97,7 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
 
 
     return (
-        <div className="w-full max-w-sm">
+        <div className="">
 
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 {process === "add" ?
@@ -136,7 +136,7 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                             <Label htmlFor="name">Cardholder Name</Label>
                             <Input
                                 id="name"
-                                placeholder="John Doe"
+                                placeholder="Enter cardholder name..."
                                 value={newCard.accountHolder}
                                 onChange={(e) => setNewCard({ ...newCard, accountHolder: e.target.value })}
                                 className="bg-muted"
@@ -146,7 +146,7 @@ export default function PaymentOverlay({ process = "add", currentPayoutCard, ban
                             <Label htmlFor="number">Account Number</Label>
                             <Input
                                 id="number"
-                                placeholder="1234 5678 9012 3456"
+                                placeholder="Enter account number..."
                                 value={newCard.accountNumber}
                                 onChange={(e) => setNewCard({ ...newCard, accountNumber: e.target.value })}
                                 className="bg-muted"
