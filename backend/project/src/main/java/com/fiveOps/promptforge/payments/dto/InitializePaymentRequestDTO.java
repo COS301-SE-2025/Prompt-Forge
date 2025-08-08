@@ -5,26 +5,25 @@ import java.util.List;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 
 public class InitializePaymentRequestDTO {
-    private List<CartItemDTO> prompts;
-    private Double total;
+  private List<CartItemDTO> prompts;
+  private Double total;
 
-    // Default constructor for JSON deserialization
-    public InitializePaymentRequestDTO() {
-    }
+  // Default constructor for JSON deserialization
+  public InitializePaymentRequestDTO() {}
 
-    public List<CartItemDTO> getPrompts() {
-        return prompts;
-    }
+  public List<CartItemDTO> getPrompts() {
+    return prompts;
+  }
 
-    public Double getTotal() {
-        return total;
-    }
+  public Double getTotal() {
+    return total;
+  }
 
-    public void setPrompts(List<CartItemDTO> prompts) {
-        this.prompts = prompts;
-    }
+  public void setPrompts(List<CartItemDTO> prompts) {
+    this.prompts = prompts;
+  }
 
-    public void setTotal(Double total) {
-        this.total = total;
-    }
+  public void setTotal(Double total) {
+    this.total = total;
+  }
 }
