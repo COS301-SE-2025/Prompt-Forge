@@ -108,7 +108,6 @@ const Link = ({ to, children, className = "" }: LinkProps) => (
 interface PromptSubmission {
   title: string
   description: string
-  category: string
   price:number
   promptText: string
   expectedOutput: string
@@ -141,7 +140,6 @@ export default function SubmitPromptPage() {
   const [formData, setFormData] = useState<PromptSubmission>({
     title: "",
     description: "",
-    category: "",
     price: 0,
     promptText: "",
     expectedOutput: "",
@@ -181,12 +179,14 @@ export default function SubmitPromptPage() {
       } catch (e) {
         editData = null;
       }
-    } else if (location.state?.prefilled) {
-      editData = location.state.prefilled;
     }
 
-    // If we have an edit id (from session or navigation), fetch full prompt info from backend
-    if (((editData && editData.id) || id) && !editLoaded) {
+    // FIXED: Only check for edit mode if we have an actual ID (not prefilled data from EditorPage)
+    const hasEditId = (editData && editData.id) || id;
+    const isPrefilledFromEditor = location.state?.prefilled && !location.state?.prefilled.id;
+
+    // If we have an edit id (from session or URL parameter), fetch full prompt info from backend
+    if (hasEditId && !editLoaded && !isPrefilledFromEditor) {
       const promptId = (editData?.id || id) ?? "";
       setLoadingPrompt(true);
       const promptService = new PromptService();
@@ -195,7 +195,6 @@ export default function SubmitPromptPage() {
           setFormData({
             title: promptData.title || "",
             description: promptData.description || "",
-            category: promptData.tags?.[0]?.name ?? "",
             price: promptData.price || 0,
             promptText: promptData.content || "",
             expectedOutput: (promptData as any).expectedOutput ?? "",
@@ -205,7 +204,7 @@ export default function SubmitPromptPage() {
           setIsEditMode(true);
           setEditingPromptId(promptId);
           setIsPublicEdit(!!promptData.publishedAt);
-          setEditLoaded(true); // Prevent reloading on refresh
+          setEditLoaded(true);
         })
         .catch((err) => {
           // fallback to editData if fetch fails
@@ -213,7 +212,6 @@ export default function SubmitPromptPage() {
             setFormData({
               title: editData.title || "",
               description: editData.description || "",
-              category: editData.category || "",
               price: editData.price || 0,
               promptText: editData.promptText || editData.content || "",
               expectedOutput: editData.expectedOutput || "",
@@ -227,11 +225,12 @@ export default function SubmitPromptPage() {
           }
         })
         .finally(() => setLoadingPrompt(false));
-    } else if (editData && !editLoaded) {
+    } 
+    // FIXED: Handle session edit data (but not prefilled data from EditorPage)
+    else if (editData && editData.id && !editLoaded && !isPrefilledFromEditor) {
       setFormData({
         title: editData.title || "",
         description: editData.description || "",
-        category: editData.category || "",
         price: editData.price || 0,
         promptText: editData.promptText || editData.content || "",
         expectedOutput: editData.expectedOutput || "",
@@ -242,17 +241,23 @@ export default function SubmitPromptPage() {
       setEditingPromptId(editData.id);
       setIsPublicEdit(editData.isPublished === true);
       setEditLoaded(true);
-    } else if (!isEditMode && prefilledData && !editLoaded) {
+    } 
+    // FIXED: Handle prefilled data from EditorPage (NEW PROMPT MODE)
+    else if (isPrefilledFromEditor && !editLoaded) {
+      const prefilledData = location.state.prefilled;
       setFormData({
         title: prefilledData.title || "",
         description: prefilledData.description || "",
-        category: prefilledData.category || "",
         price: prefilledData.p || "",
         promptText: prefilledData.promptText || prefilledData.content || "",
         expectedOutput: prefilledData.expectedOutput || "",
         isPrivate: prefilledData.visibility === "private",
         tags: prefilledData.tags || [],
       });
+      // IMPORTANT: Don't set edit mode for prefilled data from EditorPage
+      setIsEditMode(false);
+      setEditingPromptId(null);
+      setIsPublicEdit(false);
       setEditLoaded(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,24 +282,7 @@ export default function SubmitPromptPage() {
   const [cryptoAddress, setCryptoAddress] = useState("")
   const [cryptoNetwork, setCryptoNetwork] = useState("")
 
-  const categories = [
-    "Development",
-    "Creative Writing",
-    "Business",
-    "Education",
-    "Marketing",
-    "Research",
-    "Data Analysis",
-    "Content Creation",
-    "Problem Solving",
-    "Health",
-    "Science",
-    "Coding",
-    "Technical",
-    "Gaming",
-    "Other",
-  ]
-errors.payoutDetails
+
   const handleInputChange = (field: keyof PromptSubmission, value: string | boolean|number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
@@ -504,9 +492,11 @@ errors.payoutDetails
 
     if (!formData.title.trim()) newErrors.title = "Title is required"
     if (!formData.description.trim()) newErrors.description = "Description is required"
-    if (!formData.category) newErrors.category = "Category is required"
     if (!formData.promptText.trim()) newErrors.promptText = "Prompt text is required"
-    if (!formData.isPrivate && payoutDetails === null && formData.price > 0) newErrors.payoutDetails = "Payment details are required"
+    if (!formData.isPrivate && payoutDetails === null && formData.price > 0){
+      newErrors.payoutDetails = "Payment details are required"
+      document.getElementById("payment-details")?.scrollIntoView();
+    }
     // Remove tags validation
     if (formData.title.length > 100) newErrors.title = "Title must be less than 100 characters"
     if (formData.description.length > 500) newErrors.description = "Description must be less than 500 characters"
@@ -537,6 +527,7 @@ errors.payoutDetails
     return Object.keys(newErrors).length === 0
   }
 
+  // Update the handleSubmit function in your SubmitPromptPage.tsx:
   const handleSubmit = async () => {
     if (!validateForm()) return
 
@@ -554,11 +545,11 @@ errors.payoutDetails
       const submissionData: PromptSubmissionData = {
         title: formData.title,
         description: formData.description,
-        category: formData.category,
         content: formData.promptText, // Backend expects 'content'
+        category: "", // No longer using categories, set to empty string
         price: formData.price, // Default price for now
         visibility: formData.isPrivate ? 'private' : 'private', // Start as private, publish later if needed
-        tagNames: formData.category ? [formData.category] : [] // Use category as tag for now
+        tagNames: [] // Remove category-based tagging: formData.category ? [formData.category] : []
       }
 
       let result
@@ -587,12 +578,14 @@ errors.payoutDetails
       setErrors({})
 
       setTimeout(() => {
-        if (!isEditMode) {
-          // Clear form for new submissions only
+        if (isEditMode) {
+          // FIXED: For edit mode, navigate to My Prompts page
+          navigate("/my-prompts")
+        } else {
+          // For new submissions, clear form and navigate to My Prompts
           setFormData({
             title: "",
             description: "",
-            category: "",
             price:0,
             promptText: "",
             expectedOutput: "",
@@ -609,12 +602,8 @@ errors.payoutDetails
           setCryptoAddress("")
           setCryptoNetwork("")
           
-          // Navigate to My Prompts page only for new submissions
+          // Navigate to My Prompts page
           navigate("/my-prompts")
-        } else {
-          // For edit mode, just reset the edit state but stay on the same page
-          setIsEditMode(false)
-          setEditingPromptId(null)
         }
 
         setShowSuccess(false)
@@ -659,7 +648,6 @@ errors.payoutDetails
     setFormData({
       title: "",
       description: "",
-      category: "",
       price:0,
       promptText: "",
       expectedOutput: "",
@@ -898,33 +886,6 @@ errors.payoutDetails
                   <p className="text-xs text-gray-500 mt-1">{formData.description.length}/500 characters</p>
                 </div>
 
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm ${
-                      errors.category ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    }`}
-                    value={formData.category}
-                    onChange={(e) => handleInputChange("category", e.target.value)}
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.category && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      {errors.category}
-                    </p>
-                  )}
-                </div>
-                
                 {/* Price */}
                 <div >
                   <Label className="block text-sm font-medium text-gray-900 dark:text-white mb-2" htmlFor="price">
@@ -937,14 +898,13 @@ errors.payoutDetails
                       type="number"
                       placeholder="0.00"
                       value={formData.price}
-                      onChange={(e) => handleInputChange("price",e.target.value)}
+                      onChange={(e) => handleInputChange("price", e.target.value)}
                       className={`w-full px-3 pl-8 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] text-sm
                         }`}
                       min="0"
                       step="0.25"
                     />
                   </div>
-                  
                 </div>
 
                 {/* Prompt Text */}
@@ -997,15 +957,15 @@ errors.payoutDetails
                     <button
                       type="button"
                       onClick={() => handleInputChange("isPrivate", !formData.isPrivate)}
-                      className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:ring-offset-2`}
                       style={{
                         backgroundColor: formData.isPrivate ? '#ef4444' : '#3ebb9e'
                       }}
                     >
                       <span
-                        className="pointer-events-none inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                         style={{
-                          transform: formData.isPrivate ? 'translateX(1rem)' : 'translateX(0)'
+                          transform: formData.isPrivate ? 'translateX(20px)' : 'translateX(0px)'
                         }}
                       />
                     </button>
@@ -1079,15 +1039,6 @@ errors.payoutDetails
                       <div className="p-3 sm:p-4 flex-1">
                         {/* Header with category tag and rating */}
                         <div className="flex justify-between items-start mb-2">
-                          {/* Category tag */}
-                          {formData.category && (
-                            <div className="flex flex-wrap gap-1">
-                              <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">
-                                {formData.category}
-                              </span>
-                            </div>
-                          )}
-
                           {/* Rating and favorite button */}
                           <div className="flex items-center gap-2">
                             <div className="flex items-center">
@@ -1257,34 +1208,21 @@ errors.payoutDetails
             </Card>
 
             {/* Payment Details Card - existing code with responsive updates */}
-            {!isEditMode && (
               <Card className={`p-3 sm:p-4 ${errors.payoutDetails ? " border-red-500" : "border-gray-300 dark:border-gray-600"}`}>
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h2 className="text-sm font-semibold text-foreground flex items-center">
-                    <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e]" />
+                <h2 className={`text-sm font-semibold text-foreground flex items-center ${errors.payoutDetails ? `text-red-500` : ``}`}>
+                    <Landmark className="h-4 w-4 mr-2 text-[#3ebb9e] " />
                     Payment Details {showPaymentDetails && <span className="text-red-500 ml-1">*</span>}
                   </h2>
                   
                 </div>
-                  {/* {errors.payoutDetails && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                    {errors.payoutDetails}
-                    </p>
-                  )} */}
-
-                {/* {!showPaymentDetails && (
-                  
-                )} */}
-
                 
                 {
                   payoutDetails===null?
                   <>
-                    <div className={`text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg border border-dashed `}>
+                    <div id="payment-details" className={`text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg border border-dashed `}>
                       <p className={`mb-2 ${errors.payoutDetails ? `text-red-500` : ``} flex `}>
-                          💡
-                        Payment details are required when the prompt is public and its price is greater than zero
+                        Payment details are required when the prompt is set to public and its price is greater than zero
                       </p>
                       <p>
                         Add your payment information to receive earnings from prompt sales. You can always add this later
@@ -1296,9 +1234,7 @@ errors.payoutDetails
                     </div>
                   </>
                   :
-                    // <div className="flex justify-center mt-3">
                     <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())} className="w-78 h-44" />
-                    // </div>
                 }
 
                 {showPaymentDetails && bankingInfoNeeded && (
@@ -1348,7 +1284,6 @@ errors.payoutDetails
                   </>
                 )}
               </Card>
-            )}
           </div>
         </div>
       </div>
