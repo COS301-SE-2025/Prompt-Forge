@@ -48,6 +48,7 @@ export default function OptimizerPage() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const showNotification = (type: "success" | "error", title: string, message: string) => {
     const bg = type === "success"
@@ -176,6 +177,12 @@ export default function OptimizerPage() {
     navigate("/editor?optimized=true")
   }
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await checkServiceHealth();
+    setIsRefreshing(false);
+  };
+
   // Convert ML service response to display format
   const formatSuggestions = () => {
     if (!optimizationResult || !optimizationResult.suggestions) return [];
@@ -241,11 +248,11 @@ export default function OptimizerPage() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={checkServiceHealth}
-                disabled={serviceStatus === 'checking'}
+                onClick={handleRefresh}
+                disabled={serviceStatus === 'checking' || isRefreshing}
                 className="border-gray-300 dark:border-gray-600 h-8"
               >
-                <RefreshCw className={`h-3 w-3 ${serviceStatus === 'checking' ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
