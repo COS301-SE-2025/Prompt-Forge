@@ -444,7 +444,7 @@ jobs:
           # Test Java backend health with retries
           JAVA_HEALTHY=false
           for i in {1..10}; do
-            if curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
+            if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health > /dev/null 2>&1; then
               echo "Java Backend: HEALTHY (attempt $i)"
               JAVA_HEALTHY=true
               break
