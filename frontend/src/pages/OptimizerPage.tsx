@@ -123,7 +123,7 @@ export default function OptimizerPage() {
 
     try {
       const result = await promptOptimizerService.optimizePrompt({
-        prompt: originalPrompt
+        text: originalPrompt
       });
 
       // Filter out empty or invalid suggestions
