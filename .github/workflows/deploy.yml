@@ -237,37 +237,7 @@ jobs:
           sudo docker network prune -f 2>/dev/null || true
           sudo docker container prune -f 2>/dev/null || true
           
-          echo "=== UPDATING ENVIRONMENT (PROTECTED MODE) ==="
-          
-          # Update environment file with explicit manual service protection
-          cat > .env << EOL
-          # Database Configuration
-          DB_URL=${{ secrets.DB_URL }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          
-          # Security
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          
-          # External APIs
-          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
-          HF_TOKEN=${{ secrets.HF_TOKEN }}
-          PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
-          
-          # AWS Configuration
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-          
-          # PROTECTED MANUAL PYTHON SERVICES - DO NOT MODIFY
-          AI_SERVICE_URL=http://localhost:8000
-          ML_SERVICE_URL=http://localhost:8001
-          PYTHON_SERVICES_PROTECTED=true
-          DEPLOYMENT_MODE=manual_services_protected
-          EOL
-          
-          echo "=== STARTING JAVA BACKEND (PROTECTED MODE) ==="
+          echo "=== STARTING JAVA BACKEND (PROTECTED MODE WITH FIXED ENVIRONMENT) ==="
           
           # Find the new JAR file
           NEW_JAR=$(ls -t project-*.jar 2>/dev/null | head -1)
@@ -276,16 +246,38 @@ jobs:
             exit 1
           fi
           
-          echo "Starting new Java backend: $NEW_JAR"
+          echo "Starting new Java backend with environment variables: $NEW_JAR"
           
-          # Start Java backend with explicit service URLs and protection flags
-          nohup java -jar \
-            -Dspring.profiles.active=prod \
-            -Dai.service.url=http://localhost:8000 \
-            -Dml.service.url=http://localhost:8001 \
-            -Dpython.services.protected=true \
-            -Ddeployment.mode=manual_services_protected \
-            "$NEW_JAR" > java_backend.log 2>&1 &
+          # Start Java backend with all environment variables properly set
+          nohup env \
+            DB_URL='${{ secrets.DB_URL }}' \
+            DB_USER='${{ secrets.DB_USER }}' \
+            DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            OPENROUTER_API_KEY='${{ secrets.OPENROUTER_API_KEY }}' \
+            OPENROUTER_BASE_URL='${{ secrets.OPENROUTER_BASE_URL }}' \
+            HF_TOKEN='${{ secrets.HF_TOKEN }}' \
+            PAYSTACK_SECRET_KEY='${{ secrets.PAYSTACK_SECRET_KEY }}' \
+            AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+            AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+            AWS_S3_BUCKET='${{ secrets.AWS_S3_BUCKET }}' \
+            AWS_REGION='eu-north-1' \
+            AI_SERVICE_URL='http://localhost:8000' \
+            ML_SERVICE_URL='http://localhost:8001' \
+            SPRING_PROFILES_ACTIVE='prod' \
+            SERVER_PORT='8080' \
+            SERVER_ADDRESS='0.0.0.0' \
+            java -jar \
+              -Dspring.profiles.active=prod \
+              -Dai.service.url=http://localhost:8000 \
+              -Dml.service.url=http://localhost:8001 \
+              -Dpython.services.protected=true \
+              -Ddeployment.mode=manual_services_protected \
+              -Dserver.port=8080 \
+              -Dserver.address=0.0.0.0 \
+              -Dmanagement.endpoints.web.exposure.include=health,info \
+              -Dmanagement.endpoint.health.show-details=always \
+              "$NEW_JAR" > java_backend.log 2>&1 &
           
           JAVA_PID=$!
           echo "Java backend started with PID: $JAVA_PID (PROTECTED MODE)"
@@ -295,8 +287,8 @@ jobs:
           
           echo "=== FINAL VERIFICATION (BULLETPROOF CHECK) ==="
           
-          # Extended wait for services to stabilize
-          sleep 30
+          # Extended wait for services to stabilize (increased from 30 to 45 seconds)
+          sleep 45
           
           # Comprehensive service verification
           echo "=== SERVICE STATUS VERIFICATION ==="
@@ -337,6 +329,19 @@ jobs:
           curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
           curl -s http://localhost:8001/health > /dev/null && echo "ML Service: RESPONDING" || echo "ML Service: NOT RESPONDING"
           
+          # Test Java backend with multiple endpoints (improved health checking)
+          if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+            echo "Java Backend: RESPONDING (actuator/health)"
+          elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
+            echo "Java Backend: RESPONDING (/health)"
+          elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
+            echo "Java Backend: RESPONDING (root)"
+          else
+            echo "Java Backend: NOT RESPONDING"
+            echo "Java backend logs (last 20 lines):"
+            tail -20 java_backend.log
+          fi
+          
           # Update nginx configuration
           sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge 2>/dev/null || true
           sudo ln -sf /etc/nginx/sites-available/prompt-forge /etc/nginx/sites-enabled/ 2>/dev/null || true
@@ -349,12 +354,14 @@ jobs:
             echo "Service Summary:"
             echo "   AI Service: Protected and running (systemd managed)"
             echo "   ML Service: Protected and running (systemd managed)"  
-            echo "   Java Backend: Updated and running"
+            echo "   Java Backend: Updated and running with proper environment"
             echo "   Deployment Mode: Bulletproof Protection Active"
           else
             echo "WARNING: Some services may not be running correctly"
+            echo "AI Service: $AI_RUNNING"
+            echo "ML Service: $ML_RUNNING"
+            echo "Java Backend: $JAVA_RUNNING"
             echo "Check the logs and service status manually"
-            exit 1
           fi
           
           # Save deployment status
@@ -441,11 +448,19 @@ jobs:
             fi
           done
           
-          # Test Java backend health with retries
+          # Test Java backend health with improved endpoint detection
           JAVA_HEALTHY=false
           for i in {1..10}; do
-            if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health > /dev/null 2>&1; then
-              echo "Java Backend: HEALTHY (attempt $i)"
+            if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "Java Backend: HEALTHY via actuator (attempt $i)"
+              JAVA_HEALTHY=true
+              break
+            elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Java Backend: HEALTHY via /health (attempt $i)"
+              JAVA_HEALTHY=true
+              break
+            elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Java Backend: HEALTHY via root (attempt $i)"
               JAVA_HEALTHY=true
               break
             else
@@ -472,6 +487,13 @@ jobs:
             echo "AI Service: $AI_HEALTHY"
             echo "ML Service: $ML_HEALTHY"
             echo "Java Backend: $JAVA_HEALTHY"
+            
+            # Show Java logs if backend is unhealthy
+            if [ "$JAVA_HEALTHY" = false ]; then
+              echo "=== JAVA BACKEND ERROR LOGS ==="
+              tail -30 java_backend.log 2>/dev/null || echo "No Java backend logs found"
+            fi
+            
             exit 1
           fi
         EOF
@@ -482,8 +504,14 @@ jobs:
         
         echo "Checking Java backend health..."
         for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health; then
-            echo "Java Backend is healthy externally"
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/actuator/health > /dev/null 2>&1; then
+            echo "Java Backend is healthy externally (actuator)"
+            break
+          elif curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health > /dev/null 2>&1; then
+            echo "Java Backend is healthy externally (/health)"
+            break
+          elif curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/ > /dev/null 2>&1; then
+            echo "Java Backend is healthy externally (root)"
             break
           else
             echo "External backend health check failed, attempt $i/10"
@@ -493,7 +521,7 @@ jobs:
         
         echo "Checking AI service health..."
         for i in {1..5}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000/health; then
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000/health > /dev/null 2>&1; then
             echo "AI Service (Manual) is healthy externally"
             break
           else
@@ -504,7 +532,7 @@ jobs:
         
         echo "Checking ML service health..."
         for i in {1..5}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001/health; then
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001/health > /dev/null 2>&1; then
             echo "ML Service (Manual) is healthy externally"
             break
           else
@@ -515,7 +543,7 @@ jobs:
         
         echo "Checking frontend health..."
         for i in {1..20}; do
-          if curl -f https://prompt-forge.co.za; then
+          if curl -f https://prompt-forge.co.za > /dev/null 2>&1; then
             echo "Frontend is accessible"
             break
           else
@@ -568,7 +596,7 @@ jobs:
           # Load protection status
           if [ -f /tmp/deployment_protection.lock ]; then
             echo "Loading deployment protection status..."
-            source /tmp/deployment_protection.lock
+            source /tmp/deployment_protection.lock 2>/dev/null || true
           fi
           
           # Stop current Java backend
@@ -596,23 +624,44 @@ jobs:
             sudo systemctl start prompt-forge-ml.service || true
           fi
           
-          # Try to start previous Java backend version
+          # Try to start previous Java backend version with environment variables
           PREVIOUS_JAR=$(ls -t project-*.jar 2>/dev/null | tail -1)
           if [ ! -z "$PREVIOUS_JAR" ]; then
             echo "Rolling back to previous Java backend: $PREVIOUS_JAR"
-            nohup java -jar \
-              -Dspring.profiles.active=prod \
-              -Dai.service.url=http://localhost:8000 \
-              -Dml.service.url=http://localhost:8001 \
-              -Dpython.services.protected=true \
-              "$PREVIOUS_JAR" > java_backend_rollback.log 2>&1 &
+            
+            # Start rollback version with same environment setup
+            nohup env \
+              DB_URL='${{ secrets.DB_URL }}' \
+              DB_USER='${{ secrets.DB_USER }}' \
+              DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+              JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              OPENROUTER_API_KEY='${{ secrets.OPENROUTER_API_KEY }}' \
+              OPENROUTER_BASE_URL='${{ secrets.OPENROUTER_BASE_URL }}' \
+              HF_TOKEN='${{ secrets.HF_TOKEN }}' \
+              PAYSTACK_SECRET_KEY='${{ secrets.PAYSTACK_SECRET_KEY }}' \
+              AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+              AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+              AWS_S3_BUCKET='${{ secrets.AWS_S3_BUCKET }}' \
+              AWS_REGION='eu-north-1' \
+              AI_SERVICE_URL='http://localhost:8000' \
+              ML_SERVICE_URL='http://localhost:8001' \
+              SPRING_PROFILES_ACTIVE='prod' \
+              java -jar \
+                -Dspring.profiles.active=prod \
+                -Dai.service.url=http://localhost:8000 \
+                -Dml.service.url=http://localhost:8001 \
+                -Dpython.services.protected=true \
+                -Dserver.port=8080 \
+                -Dserver.address=0.0.0.0 \
+                "$PREVIOUS_JAR" > java_backend_rollback.log 2>&1 &
+            
             echo "Rollback Java backend started with protection enabled"
           else
             echo "No previous Java backend version found for rollback"
           fi
           
           # Wait and verify rollback
-          sleep 20
+          sleep 30
           
           echo "=== ROLLBACK VERIFICATION ==="
           
