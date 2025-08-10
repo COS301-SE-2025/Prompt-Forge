@@ -318,12 +318,6 @@ jobs:
             echo "Java Backend: NOT RUNNING"
           fi
           
-          # Verify ports are correctly bound
-          echo "=== PORT VERIFICATION ==="
-          sudo ss -tlnp | grep ":8000" && echo "Port 8000: BOUND" || echo "Port 8000: FREE"
-          sudo ss -tlnp | grep ":8001" && echo "Port 8001: BOUND" || echo "Port 8001: FREE"
-          sudo ss -tlnp | grep ":8080" && echo "Port 8080: BOUND" || echo "Port 8080: FREE"
-          
           # Test actual connectivity
           echo "=== CONNECTIVITY VERIFICATION ==="
           curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
