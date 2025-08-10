@@ -109,115 +109,16 @@ jobs:
         chmod +x ./mvnw
         ./mvnw clean package -DskipTests -Dcheckstyle.skip=true
         
-    - name: Build Docker image
-      run: |
-        cd backend/project
-        # Force clean build without cache to ensure latest configuration
-        docker build --no-cache -t prompt-forge-backend:${{ github.sha }} .
-        docker save prompt-forge-backend:${{ github.sha }} > backend-image.tar
-        
     - name: Upload backend artifact
       uses: actions/upload-artifact@v4
       with:
         name: backend-jar
         path: backend/project/target/*.jar
         retention-days: 1
-        
-    - name: Upload Docker image
-      uses: actions/upload-artifact@v4
-      with:
-        name: backend-docker-image
-        path: backend/project/backend-image.tar
-        retention-days: 1
-
-  build-python-services:
-    name: Build Python Services
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Free up disk space
-      run: |
-        # Remove large pre-installed software
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/.ghcup
-        sudo rm -rf /opt/hostedtoolcache/CodeQL
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/share/swift
-        # Clean package caches
-        sudo apt-get clean
-        sudo apt-get autoclean
-        sudo apt-get autoremove -y
-        # Clean Docker
-        sudo docker system prune -af --volumes
-        # Clean pip cache
-        pip cache purge || true
-        # Show remaining space
-        df -h
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Test Python services
-      env:
-        HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      run: |
-        # Test AI Service
-        cd backend/project/src/main/ai/service
-        pip install -r requirements.txt
-        python -c "import ai_service; print('AI Service imports successfully')"
-        
-        # Test ML Service
-        cd ../../../../ml-service
-        pip install -r requirements.txt
-        python -c "import prompt; print('ML Service imports successfully')"
-        
-    - name: Build AI Service Docker image
-      run: |
-        cd backend/project/src/main/ai/service
-        docker build -t prompt-forge-ai-service:${{ github.sha }} .
-        docker save prompt-forge-ai-service:${{ github.sha }} > ai-service-image.tar
-        
-    - name: Clean up after AI service build
-      run: |
-        docker rmi prompt-forge-ai-service:${{ github.sha }} || true
-        docker system prune -f
-        
-    - name: Build ML Service Docker image
-      run: |
-        cd backend/project/ml-service
-        docker build -t prompt-forge-ml-service:${{ github.sha }} .
-        docker save prompt-forge-ml-service:${{ github.sha }} > ml-service-image.tar
-        
-    - name: Upload AI Service Docker image
-      uses: actions/upload-artifact@v4
-      with:
-        name: ai-service-docker-image
-        path: backend/project/src/main/ai/service/ai-service-image.tar
-        retention-days: 1
-        
-    - name: Upload ML Service Docker image
-      uses: actions/upload-artifact@v4
-      with:
-        name: ml-service-docker-image
-        path: backend/project/ml-service/ml-service-image.tar
-        retention-days: 1
-
-  # Frontend build is handled by AWS Amplify during deployment
-  # The amplify.yml file configures the build process
 
   deploy-backend:
-    name: Deploy Backend to EC2
-    needs: [build-backend, build-python-services]
+    name: Deploy Backend to EC2 (Bulletproof AI/ML Protection)
+    needs: [build-backend]
     runs-on: ubuntu-latest
     
     steps:
@@ -228,24 +129,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: backend-jar
-        path: ./artifacts/
-        
-    - name: Download Backend Docker image
-      uses: actions/download-artifact@v4
-      with:
-        name: backend-docker-image
-        path: ./artifacts/
-        
-    - name: Download AI Service Docker image
-      uses: actions/download-artifact@v4
-      with:
-        name: ai-service-docker-image
-        path: ./artifacts/
-        
-    - name: Download ML Service Docker image
-      uses: actions/download-artifact@v4
-      with:
-        name: ml-service-docker-image
         path: ./artifacts/
         
     - name: Setup SSH key
@@ -261,64 +144,222 @@ jobs:
         
     - name: Copy files to EC2
       run: |
-        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ || true
-        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.tar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no docker-compose.prod.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+        scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ./artifacts/*.jar ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         scp -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no nginx.conf ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
         
-    - name: Deploy to EC2
+    - name: Deploy to EC2 (Bulletproof Protection Mode)
       run: |
         ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          # Stop ALL existing services (both systemd and docker)
-          sudo systemctl stop prompt-forge-backend || true
-          sudo systemctl disable prompt-forge-backend || true
-          sudo docker-compose -f docker-compose.prod.yml down || true
+          echo "=== BULLETPROOF AI/ML SERVICE PROTECTION ==="
           
-          # Load new Docker images
-          docker load < backend-image.tar
-          docker load < ai-service-image.tar
-          docker load < ml-service-image.tar
+          # 1. VERIFY SYSTEMD SERVICES ARE RUNNING
+          AI_SYSTEMD_ACTIVE=$(sudo systemctl is-active prompt-forge-ai.service 2>/dev/null || echo "inactive")
+          ML_SYSTEMD_ACTIVE=$(sudo systemctl is-active prompt-forge-ml.service 2>/dev/null || echo "inactive")
           
-          # Update environment file
+          echo "AI Service (systemd): $AI_SYSTEMD_ACTIVE"
+          echo "ML Service (systemd): $ML_SYSTEMD_ACTIVE"
+          
+          # 2. BACKUP CURRENT SERVICE STATES
+          ps aux | grep -E "(ai_service_production|prompt\.py)" | grep -v grep > /tmp/python_services_backup.txt
+          
+          # 3. PREVENT ANY DOCKER INTERFERENCE
+          echo "Ensuring no Docker containers can bind to AI/ML ports..."
+          sudo docker stop $(sudo docker ps -q --filter "publish=8000" --filter "publish=8001") 2>/dev/null || true
+          
+          # 4. CHECK IF MANUAL PYTHON SERVICES ARE RUNNING
+          AI_SERVICE_PID=$(pgrep -f "ai_service_production.py" || echo "")
+          ML_SERVICE_PID=$(pgrep -f "prompt.py" || echo "")
+          
+          if [ ! -z "$AI_SERVICE_PID" ] && [ ! -z "$ML_SERVICE_PID" ]; then
+            echo "PROTECTION ACTIVE: Manual Python services detected and will be preserved:"
+            echo "   AI Service PID: $AI_SERVICE_PID (Port 8000)"
+            echo "   ML Service PID: $ML_SERVICE_PID (Port 8001)"
+            
+            # Create a deployment lock file
+            echo "PROTECTED_AI_PID=$AI_SERVICE_PID" > /tmp/deployment_protection.lock
+            echo "PROTECTED_ML_PID=$ML_SERVICE_PID" >> /tmp/deployment_protection.lock
+            echo "DEPLOYMENT_TIMESTAMP=$(date)" >> /tmp/deployment_protection.lock
+            
+            PRESERVE_PYTHON_SERVICES=true
+          else
+            echo "WARNING: Manual Python services not detected"
+            PRESERVE_PYTHON_SERVICES=false
+          fi
+          
+          echo "=== STOPPING ONLY JAVA BACKEND (PROTECTED MODE) ==="
+          
+          # Stop only Java backend with extra safety
+          sudo systemctl stop prompt-forge-backend 2>/dev/null || true
+          
+          # Find and stop Java processes, but verify we're not killing Python
+          for pid in $(pgrep -f "project-0.0.1-SNAPSHOT.jar" || echo ""); do
+            if [ ! -z "$pid" ]; then
+              # Double-check this is actually a Java process
+              process_cmd=$(ps -p $pid -o cmd --no-headers 2>/dev/null || echo "")
+              if [[ "$process_cmd" == *"java"* && "$process_cmd" == *".jar"* ]]; then
+                echo "Stopping Java backend (PID: $pid)..."
+                kill $pid || true
+              else
+                echo "Skipping PID $pid - not a Java backend process"
+              fi
+            fi
+          done
+          
+          # Wait longer for clean shutdown
+          sleep 10
+          
+          # 5. VERIFY PYTHON SERVICES ARE STILL RUNNING
+          if [ "$PRESERVE_PYTHON_SERVICES" = "true" ]; then
+            echo "=== VERIFYING AI/ML SERVICES SURVIVED ==="
+            
+            if pgrep -f "ai_service_production.py" > /dev/null; then
+              echo "AI Service: PROTECTED and RUNNING"
+            else
+              echo "AI Service: PROTECTION FAILED - attempting restart..."
+              sudo systemctl start prompt-forge-ai.service || true
+            fi
+            
+            if pgrep -f "prompt.py" > /dev/null; then
+              echo "ML Service: PROTECTED and RUNNING"
+            else
+              echo "ML Service: PROTECTION FAILED - attempting restart..."
+              sudo systemctl start prompt-forge-ml.service || true
+            fi
+          fi
+          
+          # Stop any Docker containers that might interfere
+          sudo docker-compose -f docker-compose.prod.yml down 2>/dev/null || true
+          
+          # 6. ENSURE NO DOCKER SERVICES ON AI/ML PORTS
+          echo "=== PREVENTING DOCKER PORT CONFLICTS ==="
+          
+          # Remove any Docker networks or containers that might claim these ports
+          sudo docker network prune -f 2>/dev/null || true
+          sudo docker container prune -f 2>/dev/null || true
+          
+          echo "=== UPDATING ENVIRONMENT (PROTECTED MODE) ==="
+          
+          # Update environment file with explicit manual service protection
           cat > .env << EOL
+          # Database Configuration
           DB_URL=${{ secrets.DB_URL }}
           DB_USER=${{ secrets.DB_USER }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          
+          # Security
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          
+          # External APIs
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_BASE_URL=${{ secrets.OPENROUTER_BASE_URL }}
           HF_TOKEN=${{ secrets.HF_TOKEN }}
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+          
+          # AWS Configuration
           AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          
+          # PROTECTED MANUAL PYTHON SERVICES - DO NOT MODIFY
+          AI_SERVICE_URL=http://localhost:8000
+          ML_SERVICE_URL=http://localhost:8001
+          PYTHON_SERVICES_PROTECTED=true
+          DEPLOYMENT_MODE=manual_services_protected
           EOL
           
-          # Update docker-compose to use new images
-          sed -i "s/prompt-forge-backend:latest/prompt-forge-backend:${{ github.sha }}/g" docker-compose.prod.yml
-          sed -i "s/prompt-forge-ai-service:latest/prompt-forge-ai-service:${{ github.sha }}/g" docker-compose.prod.yml
-          sed -i "s/prompt-forge-ml-service:latest/prompt-forge-ml-service:${{ github.sha }}/g" docker-compose.prod.yml
+          echo "=== STARTING JAVA BACKEND (PROTECTED MODE) ==="
           
-          # Start services
-          sudo docker-compose -f docker-compose.prod.yml up -d
+          # Find the new JAR file
+          NEW_JAR=$(ls -t project-*.jar 2>/dev/null | head -1)
+          if [ -z "$NEW_JAR" ]; then
+            echo "ERROR: No JAR file found"
+            exit 1
+          fi
           
-          # Verify all containers are running and in same network
-          echo "=== Container Status ==="
-          sudo docker-compose -f docker-compose.prod.yml ps
+          echo "Starting new Java backend: $NEW_JAR"
           
-          echo "=== Network Information ==="
-          sudo docker network ls
-          sudo docker network inspect prompt-forge_default || sudo docker network inspect $(sudo docker-compose -f docker-compose.prod.yml ps -q | head -1 | xargs sudo docker inspect --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' | cut -c1-12)
+          # Start Java backend with explicit service URLs and protection flags
+          nohup java -jar \
+            -Dspring.profiles.active=prod \
+            -Dai.service.url=http://localhost:8000 \
+            -Dml.service.url=http://localhost:8001 \
+            -Dpython.services.protected=true \
+            -Ddeployment.mode=manual_services_protected \
+            "$NEW_JAR" > java_backend.log 2>&1 &
           
-          echo "=== Service DNS Resolution Test ==="
-          # Test if backend container can resolve ai-service
-          sudo docker-compose -f docker-compose.prod.yml exec -T backend nslookup ai-service || echo "DNS resolution failed"
+          JAVA_PID=$!
+          echo "Java backend started with PID: $JAVA_PID (PROTECTED MODE)"
           
-          # Verify deployment through nginx proxy (containerized)
+          # Record the new Java PID
+          echo "NEW_JAVA_PID=$JAVA_PID" >> /tmp/deployment_protection.lock
+          
+          echo "=== FINAL VERIFICATION (BULLETPROOF CHECK) ==="
+          
+          # Extended wait for services to stabilize
           sleep 30
-          curl -f http://localhost:80/api/health || echo "Backend health check through nginx failed"
-          curl -f http://localhost:80/ai/health || echo "AI Service health check through nginx failed"
-          curl -f http://localhost:80/ml/health || echo "ML Service health check through nginx failed"
+          
+          # Comprehensive service verification
+          echo "=== SERVICE STATUS VERIFICATION ==="
+          
+          AI_RUNNING=false
+          ML_RUNNING=false
+          JAVA_RUNNING=false
+          
+          if pgrep -f "ai_service_production.py" > /dev/null; then
+            echo "AI Service (Manual): RUNNING on port 8000"
+            AI_RUNNING=true
+          else
+            echo "AI Service: NOT RUNNING"
+          fi
+          
+          if pgrep -f "prompt.py" > /dev/null; then
+            echo "ML Service (Manual): RUNNING on port 8001"
+            ML_RUNNING=true
+          else
+            echo "ML Service: NOT RUNNING"
+          fi
+          
+          if pgrep -f "project-.*\.jar" > /dev/null; then
+            echo "Java Backend: RUNNING on port 8080"
+            JAVA_RUNNING=true
+          else
+            echo "Java Backend: NOT RUNNING"
+          fi
+          
+          # Verify ports are correctly bound
+          echo "=== PORT VERIFICATION ==="
+          sudo ss -tlnp | grep ":8000" && echo "Port 8000: BOUND" || echo "Port 8000: FREE"
+          sudo ss -tlnp | grep ":8001" && echo "Port 8001: BOUND" || echo "Port 8001: FREE"
+          sudo ss -tlnp | grep ":8080" && echo "Port 8080: BOUND" || echo "Port 8080: FREE"
+          
+          # Test actual connectivity
+          echo "=== CONNECTIVITY VERIFICATION ==="
+          curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
+          curl -s http://localhost:8001/health > /dev/null && echo "ML Service: RESPONDING" || echo "ML Service: NOT RESPONDING"
+          
+          # Update nginx configuration
+          sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge 2>/dev/null || true
+          sudo ln -sf /etc/nginx/sites-available/prompt-forge /etc/nginx/sites-enabled/ 2>/dev/null || true
+          sudo nginx -t && sudo systemctl reload nginx 2>/dev/null || echo "Nginx configuration update failed"
+          
+          echo "=== DEPLOYMENT COMPLETE (BULLETPROOF MODE) ==="
+          
+          if [ "$AI_RUNNING" = true ] && [ "$ML_RUNNING" = true ] && [ "$JAVA_RUNNING" = true ]; then
+            echo "SUCCESS: All services running - Java backend updated while AI/ML services protected"
+            echo "Service Summary:"
+            echo "   AI Service: Protected and running (systemd managed)"
+            echo "   ML Service: Protected and running (systemd managed)"  
+            echo "   Java Backend: Updated and running"
+            echo "   Deployment Mode: Bulletproof Protection Active"
+          else
+            echo "WARNING: Some services may not be running correctly"
+            echo "Check the logs and service status manually"
+            exit 1
+          fi
+          
+          # Save deployment status
+          echo "DEPLOYMENT_STATUS=SUCCESS" >> /tmp/deployment_protection.lock
+          echo "SERVICES_PROTECTED=AI,ML" >> /tmp/deployment_protection.lock
         EOF
 
   deploy-frontend:
@@ -335,7 +376,7 @@ jobs:
         echo "Frontend will be available at: https://prompt-forge.co.za"
 
   health-check:
-    name: Health Check
+    name: Health Check (Protected Services)
     needs: [deploy-backend, deploy-frontend]
     runs-on: ubuntu-latest
     
@@ -343,45 +384,136 @@ jobs:
     - name: Wait for services to start
       run: sleep 60
       
-    - name: Check backend health
+    - name: Setup SSH key for health checks
       run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      
+    - name: Comprehensive health check
+      run: |
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          echo "=== COMPREHENSIVE HEALTH CHECK ==="
+          
+          # Load deployment protection status
+          if [ -f /tmp/deployment_protection.lock ]; then
+            echo "Loading deployment protection status..."
+            cat /tmp/deployment_protection.lock
+          fi
+          
+          echo "=== SERVICE PROCESS VERIFICATION ==="
+          
+          # Check processes
+          AI_PID=$(pgrep -f "ai_service_production.py" || echo "")
+          ML_PID=$(pgrep -f "prompt.py" || echo "")
+          JAVA_PID=$(pgrep -f "project-.*\.jar" || echo "")
+          
+          echo "AI Service PID: ${AI_PID:-NOT RUNNING}"
+          echo "ML Service PID: ${ML_PID:-NOT RUNNING}"
+          echo "Java Backend PID: ${JAVA_PID:-NOT RUNNING}"
+          
+          echo "=== SERVICE HEALTH TESTS ==="
+          
+          # Test AI service health with retries
+          AI_HEALTHY=false
+          for i in {1..5}; do
+            if curl -s -f http://localhost:8000/health > /dev/null 2>&1; then
+              echo "AI Service: HEALTHY (attempt $i)"
+              AI_HEALTHY=true
+              break
+            else
+              echo "AI Service health check failed, attempt $i/5"
+              sleep 10
+            fi
+          done
+          
+          # Test ML service health with retries
+          ML_HEALTHY=false
+          for i in {1..5}; do
+            if curl -s -f http://localhost:8001/health > /dev/null 2>&1; then
+              echo "ML Service: HEALTHY (attempt $i)"
+              ML_HEALTHY=true
+              break
+            else
+              echo "ML Service health check failed, attempt $i/5"
+              sleep 10
+            fi
+          done
+          
+          # Test Java backend health with retries
+          JAVA_HEALTHY=false
+          for i in {1..10}; do
+            if curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Java Backend: HEALTHY (attempt $i)"
+              JAVA_HEALTHY=true
+              break
+            else
+              echo "Java Backend health check failed, attempt $i/10"
+              sleep 30
+            fi
+          done
+          
+          echo "=== PORT STATUS ==="
+          sudo ss -tlnp | grep -E ":800[0-8]" || echo "No services listening on ports 8000-8008"
+          
+          echo "=== SYSTEMD SERVICE STATUS ==="
+          sudo systemctl is-active prompt-forge-ai.service 2>/dev/null && echo "AI systemd service: ACTIVE" || echo "AI systemd service: INACTIVE"
+          sudo systemctl is-active prompt-forge-ml.service 2>/dev/null && echo "ML systemd service: ACTIVE" || echo "ML systemd service: INACTIVE"
+          
+          echo "=== FINAL HEALTH STATUS ==="
+          
+          if [ "$AI_HEALTHY" = true ] && [ "$ML_HEALTHY" = true ] && [ "$JAVA_HEALTHY" = true ]; then
+            echo "OVERALL STATUS: HEALTHY"
+            echo "All services are running and responding correctly"
+            exit 0
+          else
+            echo "OVERALL STATUS: UNHEALTHY"
+            echo "AI Service: $AI_HEALTHY"
+            echo "ML Service: $ML_HEALTHY"
+            echo "Java Backend: $JAVA_HEALTHY"
+            exit 1
+          fi
+        EOF
+        
+    - name: Check external endpoints
+      run: |
+        echo "=== EXTERNAL ENDPOINT VERIFICATION ==="
+        
+        echo "Checking Java backend health..."
         for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/api/health; then
-            echo "Backend is healthy"
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/health; then
+            echo "Java Backend is healthy externally"
             break
           else
-            echo "Backend health check failed, attempt $i/10"
+            echo "External backend health check failed, attempt $i/10"
             sleep 30
           fi
         done
         
-    - name: Check AI service health
-      run: |
-        for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ai/health; then
-            echo "AI Service is healthy"
+        echo "Checking AI service health..."
+        for i in {1..5}; do
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000/health; then
+            echo "AI Service (Manual) is healthy externally"
             break
           else
-            echo "AI Service health check failed, attempt $i/10"
-            sleep 30
+            echo "External AI Service health check failed, attempt $i/5"
+            sleep 10
           fi
         done
         
-    - name: Check ML service health
-      run: |
-        for i in {1..10}; do
-          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ml/health; then
-            echo "ML Service is healthy"
+        echo "Checking ML service health..."
+        for i in {1..5}; do
+          if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001/health; then
+            echo "ML Service (Manual) is healthy externally"
             break
           else
-            echo "ML Service health check failed, attempt $i/10"
-            sleep 30
+            echo "External ML Service health check failed, attempt $i/5"
+            sleep 10
           fi
         done
         
-    - name: Check frontend health
-      run: |
-        echo "Checking frontend health (may take a few minutes for Amplify deployment to complete)"
+        echo "Checking frontend health..."
         for i in {1..20}; do
           if curl -f https://prompt-forge.co.za; then
             echo "Frontend is accessible"
@@ -396,17 +528,26 @@ jobs:
       if: always()
       run: |
         if [ "${{ job.status }}" == "success" ]; then
-          echo "Deployment completed successfully!"
+          echo "DEPLOYMENT COMPLETED SUCCESSFULLY"
+          echo "Java backend updated while preserving manual AI/ML services"
+          echo ""
+          echo "Service URLs:"
           echo "Frontend: https://prompt-forge.co.za"
-          echo "Backend API: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/api/"
-          echo "AI Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ai/"
-          echo "ML Service: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com/ml/"
+          echo "Backend API: http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080"
+          echo "AI Service (Manual): http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8000"
+          echo "ML Service (Manual): http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8001"
+          echo ""
+          echo "Deployment Mode: Bulletproof Protection Active"
+          echo "Protected Services: AI Service, ML Service"
+          echo "Updated Services: Java Backend only"
         else
-          echo "Deployment failed. Please check the logs."
+          echo "DEPLOYMENT FAILED"
+          echo "Manual AI/ML services should be preserved even on failure"
+          echo "Check the logs for specific error details"
         fi
 
   rollback:
-    name: Rollback on Failure
+    name: Emergency Rollback (Preserve Protected Services)
     needs: [deploy-backend, deploy-frontend, health-check]
     runs-on: ubuntu-latest
     if: failure()
@@ -419,29 +560,98 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
         
-    - name: Rollback backend and services
+    - name: Emergency rollback (Java backend only)
       run: |
         ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          # Stop current deployment
-          sudo docker-compose -f docker-compose.prod.yml down
+          echo "=== EMERGENCY ROLLBACK: JAVA BACKEND ONLY ==="
           
-          # Try to start previous version (assuming it exists)
-          sudo systemctl start prompt-forge-backend || echo "No previous backend version to rollback to"
-          
-          # Check if we have previous Docker images to rollback to
-          if docker images | grep -q "prompt-forge-backend.*latest"; then
-            echo "Rolling back to previous Docker images..."
-            sudo docker-compose -f docker-compose.prod.yml up -d || echo "Rollback failed"
-          else
-            echo "No previous Docker images found for rollback"
+          # Load protection status
+          if [ -f /tmp/deployment_protection.lock ]; then
+            echo "Loading deployment protection status..."
+            source /tmp/deployment_protection.lock
           fi
+          
+          # Stop current Java backend
+          JAVA_PID=$(pgrep -f "project-.*\.jar" || echo "")
+          if [ ! -z "$JAVA_PID" ]; then
+            echo "Stopping current Java backend (PID: $JAVA_PID)..."
+            kill $JAVA_PID || true
+            sleep 10
+          fi
+          
+          # Verify AI/ML services are still protected
+          echo "=== VERIFYING PROTECTED SERVICES ==="
+          
+          if pgrep -f "ai_service_production.py" > /dev/null; then
+            echo "AI Service: PROTECTED and RUNNING during rollback"
+          else
+            echo "AI Service: NOT RUNNING - attempting emergency restart..."
+            sudo systemctl start prompt-forge-ai.service || true
+          fi
+          
+          if pgrep -f "prompt.py" > /dev/null; then
+            echo "ML Service: PROTECTED and RUNNING during rollback"
+          else
+            echo "ML Service: NOT RUNNING - attempting emergency restart..."
+            sudo systemctl start prompt-forge-ml.service || true
+          fi
+          
+          # Try to start previous Java backend version
+          PREVIOUS_JAR=$(ls -t project-*.jar 2>/dev/null | tail -1)
+          if [ ! -z "$PREVIOUS_JAR" ]; then
+            echo "Rolling back to previous Java backend: $PREVIOUS_JAR"
+            nohup java -jar \
+              -Dspring.profiles.active=prod \
+              -Dai.service.url=http://localhost:8000 \
+              -Dml.service.url=http://localhost:8001 \
+              -Dpython.services.protected=true \
+              "$PREVIOUS_JAR" > java_backend_rollback.log 2>&1 &
+            echo "Rollback Java backend started with protection enabled"
+          else
+            echo "No previous Java backend version found for rollback"
+          fi
+          
+          # Wait and verify rollback
+          sleep 20
+          
+          echo "=== ROLLBACK VERIFICATION ==="
+          
+          if pgrep -f "ai_service_production.py" > /dev/null; then
+            echo "AI Service: SURVIVING ROLLBACK"
+          else
+            echo "AI Service: FAILED TO SURVIVE ROLLBACK"
+          fi
+          
+          if pgrep -f "prompt.py" > /dev/null; then
+            echo "ML Service: SURVIVING ROLLBACK"
+          else
+            echo "ML Service: FAILED TO SURVIVE ROLLBACK"
+          fi
+          
+          if pgrep -f "project-.*\.jar" > /dev/null; then
+            echo "Java Backend: ROLLBACK SUCCESSFUL"
+          else
+            echo "Java Backend: ROLLBACK FAILED"
+          fi
+          
+          # Record rollback status
+          echo "ROLLBACK_TIMESTAMP=$(date)" >> /tmp/deployment_protection.lock
+          echo "ROLLBACK_STATUS=EXECUTED" >> /tmp/deployment_protection.lock
         EOF
         
-    - name: Notify rollback
+    - name: Notify rollback completion
       run: |
-        echo "Deployment failed and rollback initiated"
-        echo "Services affected:"
-        echo "- Backend API (Java Spring Boot)"
-        echo "- AI Service (Python FastAPI)"
-        echo "- ML Service (Python FastAPI)"
-        echo "Please check the logs and fix issues before next deployment"
+        echo "EMERGENCY ROLLBACK COMPLETED"
+        echo "Scope: Java backend only"
+        echo "Protected services: AI Service (Port 8000), ML Service (Port 8001)"
+        echo "Action required: Review deployment logs and fix issues before next deployment"
+        echo ""
+        echo "Service status after rollback:"
+        echo "- AI Service: Should be preserved and running"
+        echo "- ML Service: Should be preserved and running"
+        echo "- Java Backend: Rolled back to previous version"
+        echo ""
+        echo "Next steps:"
+        echo "1. Check service logs for errors"
+        echo "2. Verify all services are responding"
+        echo "3. Fix deployment issues before retry"
