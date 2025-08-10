@@ -1,5 +1,5 @@
 interface OptimizationRequest {
-  prompt: string;
+  text: string; // <-- change from 'prompt' to 'text'
   target_audience?: string;
   optimization_goals?: string[];
   context?: string;
@@ -41,7 +41,7 @@ interface AnalysisResponse {
 }
 
 class PromptOptimizerService {
-  private baseURL = 'https://69v54mpz44.execute-api.eu-north-1.amazonaws.com/prod/localhost:8001';
+  private baseURL = 'http://localhost:8080/api/ml';
 
   async optimizePrompt(request: OptimizationRequest): Promise<MLServiceOptimizationResponse> {
     try {
