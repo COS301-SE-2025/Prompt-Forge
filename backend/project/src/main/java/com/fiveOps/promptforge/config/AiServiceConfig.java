@@ -14,7 +14,7 @@ public class AiServiceConfig {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AiServiceConfig.class);
 
-  @Value("${ai.service.url:http://localhost:8000}")
+  @Value("${ai.service.url:http://ai-service:8000}")
   private String aiServiceUrl;
 
   @Bean

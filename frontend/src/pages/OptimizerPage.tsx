@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button"
 import { Textarea } from "@/components/ui/Textarea"
 import { Card } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
+import promptOptimizerService from '@/services/promptOptimizerService'
 
 import {
   Sparkles,
@@ -19,70 +20,40 @@ import {
   RefreshCw,
   ChevronRight,
   Star,
+  AlertCircle,
+  BarChart3,
+  Lightbulb
 } from "lucide-react"
 
-// Mock suggestion data - easily replaceable with API endpoint
-const mockSuggestions = [
-  {
-    id: 1,
-    title: "Enhanced Clarity & Structure",
-    prompt:
-      "Act as a professional content writer with 10+ years of experience. Create a comprehensive blog post about sustainable living practices. Include: 1) An engaging introduction that hooks the reader, 2) 5 practical tips with real-world examples, 3) Statistical data to support each point, 4) A compelling call-to-action. Target audience: environmentally conscious millennials. Tone: informative yet conversational. Word count: 1200-1500 words.",
-    improvements: [
-      "Added specific role context",
-      "Structured with numbered requirements",
-      "Defined target audience",
-      "Specified tone and length",
-    ],
-    score: 95,
-    category: "Structure",
-  },
-  {
-    id: 2,
-    title: "Context-Rich Optimization",
-    prompt:
-      "You are an expert sustainability consultant who has helped 500+ companies reduce their carbon footprint. Write a detailed blog post about sustainable living practices for millennials aged 25-35 who are interested in environmental issues but may be overwhelmed by where to start. Focus on actionable, budget-friendly tips that can be implemented immediately. Include personal anecdotes, cite recent studies from 2023-2024, and end with a 30-day challenge. Use a friendly, encouraging tone that avoids being preachy.",
-    improvements: [
-      "Added expert credentials",
-      "Specific demographic targeting",
-      "Included timeline constraints",
-      "Added engagement elements",
-    ],
-    score: 98,
-    category: "Context",
-  },
-  {
-    id: 3,
-    title: "Output Format Specification",
-    prompt:
-      "Create a blog post about sustainable living practices. Format the response as follows:\n\n**Title:** [Catchy, SEO-optimized title]\n**Meta Description:** [150-160 characters]\n**Introduction:** [Hook + preview of content]\n**Main Content:** [5 sections with H2 headers, each containing 2-3 practical tips with examples]\n**Conclusion:** [Summary + call-to-action]\n**SEO Keywords:** [List 10 relevant keywords]\n\nTarget: millennials interested in eco-friendly lifestyle changes. Tone: conversational and inspiring.",
-    improvements: [
-      "Structured output format",
-      "SEO optimization focus",
-      "Clear section requirements",
-      "Keyword targeting",
-    ],
-    score: 92,
-    category: "Format",
-  },
-]
+interface OptimizationResult {
+  prompt: string;
+  suggestions: Array<{
+    suggestion: string;
+    before: string;
+    after: string;
+    impact: string;
+  }>;
+  source: string;
+}
 
 export default function OptimizerPage() {
   const navigate = useNavigate();
   const location = useLocation();
-   const searchParams = new window.URLSearchParams(location.search);
+  const searchParams = new window.URLSearchParams(location.search);
 
   const [originalPrompt, setOriginalPrompt] = useState("")
-  const [suggestions, setSuggestions] = useState<typeof mockSuggestions>([])
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [serviceStatus, setServiceStatus] = useState<'checking' | 'online' | 'offline'>('checking')
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const showNotification = (type: "success" | "error", title: string, message: string) => {
-    const color = type === "success" ? "green" : "red"
-    const bg = type === "success" ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
-                                  : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const bg = type === "success"
+      ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+      : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
     const icon = type === "success"
       ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
       : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
@@ -108,6 +79,11 @@ export default function OptimizerPage() {
     }, 4000)
   }
 
+  // Check service health on component mount
+  useEffect(() => {
+    checkServiceHealth();
+  }, []);
+
   // Get prompt from URL params or localStorage
   useEffect(() => {
     const promptFromUrl = searchParams.get("prompt")
@@ -120,24 +96,69 @@ export default function OptimizerPage() {
     }
   }, [location.search])
 
+  const checkServiceHealth = async () => {
+    try {
+      await promptOptimizerService.healthCheck();
+      setServiceStatus('online');
+    } catch (error) {
+      setServiceStatus('offline');
+      console.error('ML service is offline:', error);
+    }
+  };
+
   const handleGenerateSuggestions = async () => {
     if (!originalPrompt.trim()) {
       showNotification("error", "No prompt provided", "Please enter a prompt to optimize")
       return
     }
 
+    if (serviceStatus !== 'online') {
+      showNotification("error", "Service Unavailable", "ML optimization service is currently offline")
+      return
+    }
+
     setIsGenerating(true)
     setShowSuggestions(false)
-    setSuggestions([])
+    setOptimizationResult(null)
 
-    // Simulate API call with realistic delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const result = await promptOptimizerService.optimizePrompt({
+        text: originalPrompt
+      });
 
-    setSuggestions(mockSuggestions)
-    setIsGenerating(false)
+      // Filter out empty or invalid suggestions
+      const filteredSuggestions = Array.isArray(result.suggestions)
+        ? result.suggestions.filter(
+            (s: any) =>
+              s &&
+              typeof s.suggestion === "string" &&
+              typeof s.before === "string" &&
+              typeof s.after === "string" &&
+              typeof s.impact === "string"
+          )
+        : [];
 
-    // Trigger animation
-    setTimeout(() => setShowSuggestions(true), 100)
+      // Map to your local type
+      const mapped: OptimizationResult = {
+        prompt: result.prompt ?? "",
+        suggestions: filteredSuggestions.map((s: any) => ({
+          suggestion: s.suggestion,
+          before: s.before,
+          after: s.after,
+          impact: s.impact
+        })),
+        source: result.source ?? ""
+      };
+
+      setOptimizationResult(mapped);
+      setTimeout(() => setShowSuggestions(true), 100);
+      showNotification("success", "Optimization Complete", "Your prompt has been optimized with AI suggestions!")
+    } catch (error) {
+      console.error('Optimization failed:', error);
+      showNotification("error", "Optimization Failed", "Unable to optimize prompt. Please try again.")
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   const handleCopyPrompt = async (prompt: string, id: number) => {
@@ -151,36 +172,89 @@ export default function OptimizerPage() {
     }
   }
 
-  const handleApplySuggestion = (suggestion: (typeof mockSuggestions)[0]) => {
-    // Store the optimized prompt and navigate back to editor
-    localStorage.setItem("optimizedPrompt", suggestion.prompt)
+  const handleApplySuggestion = (optimizedPrompt: string) => {
+    localStorage.setItem("optimizedPrompt", optimizedPrompt)
     navigate("/editor?optimized=true")
   }
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await checkServiceHealth();
+    setIsRefreshing(false);
+  };
+
+  // Convert ML service response to display format
+  const formatSuggestions = () => {
+    if (!optimizationResult || !optimizationResult.suggestions) return [];
+    return optimizationResult.suggestions.map((suggestion, index) => ({
+      id: index + 1,
+      title: suggestion.suggestion,
+      prompt: suggestion.after || optimizationResult.prompt,
+      improvements: [suggestion.suggestion, `Impact: ${suggestion.impact}`],
+      score: 85 + (index * 5), // Mock scoring
+      category: suggestion.impact?.includes('clarity') ? 'Clarity' : 
+               suggestion.impact?.includes('structure') ? 'Structure' : 'Enhancement',
+      before: suggestion.before,
+      after: suggestion.after,
+      impact: suggestion.impact
+    }));
+  };
+
+  const suggestions = formatSuggestions();
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - More responsive */}
+      {/* Header - Smaller and compact */}
       <div className="relative overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-r from-[#40ffaa]/10 via-[#4079ff]/10 to-[#40ffaa]/10"></div>
-        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-3 sm:mb-4">
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <div className="relative">
-                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-[#40ffaa] dark:text-[#4079ff] animate-pulse" />
+                <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-[#40ffaa] dark:text-[#4079ff] animate-pulse" />
                 <Star
-                  className="absolute -top-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 text-[#40ffaa] dark:text-[#4079ff] animate-pulse"
+                  className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#40ffaa] dark:text-[#4079ff] animate-pulse"
                   style={{
                     filter: "drop-shadow(0 0 6px #40ffaa)",
                   }}
                 />
               </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent">
+                  AI Prompt Optimizer
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
+                  Transform your prompts with AI-powered optimization
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent mb-3 sm:mb-4">
-              AI Prompt Optimizer
-            </h1>
-            <p className="text-sm sm:text-base lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-              Transform your prompts into powerful, optimized instructions that deliver exceptional results
-            </p>
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                serviceStatus === 'online' 
+                  ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+                  : serviceStatus === 'offline'
+                  ? 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                  : 'bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  serviceStatus === 'online' ? 'bg-green-500' : 
+                  serviceStatus === 'offline' ? 'bg-red-500' : 'bg-gray-400'
+                }`} />
+                <span className="hidden sm:inline">
+                  {serviceStatus === 'checking' ? 'Connecting...' : 
+                   serviceStatus === 'online' ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={serviceStatus === 'checking' || isRefreshing}
+                className="border-gray-300 dark:border-gray-600 h-8"
+              >
+                <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -202,13 +276,20 @@ export default function OptimizerPage() {
                 onChange={(e) => setOriginalPrompt(e.target.value)}
                 placeholder="Enter your prompt here to get AI-powered optimization suggestions..."
                 className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-white-400/50 text-sm sm:text-base"
-                />
+              />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 sm:mt-4 gap-2">
-                <div className="text-xs sm:text-sm text-muted-foreground">{originalPrompt.length} characters</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  {originalPrompt.length} characters
+                  {originalPrompt.length > 1000 && (
+                    <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                      • Long prompts may take more time
+                    </span>
+                  )}
+                </div>
                 <Button
                   onClick={handleGenerateSuggestions}
-                  disabled={isGenerating || !originalPrompt.trim()}
+                  disabled={isGenerating || !originalPrompt.trim() || serviceStatus !== 'online'}
                   className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto text-sm sm:text-base"
                 >
                   {isGenerating ? (
@@ -226,8 +307,21 @@ export default function OptimizerPage() {
                   )}
                 </Button>
               </div>
-            </Card>
 
+              {serviceStatus !== 'online' && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <p className="text-sm text-red-700 dark:text-red-400 font-medium">
+                      ML Service Unavailable
+                    </p>
+                  </div>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    Please ensure the optimization service is running to use this feature.
+                  </p>
+                </div>
+              )}
+            </Card>
             {/* Stats Cards - Hidden on mobile, shown on desktop */}
             <div className="hidden lg:grid grid-cols-3 gap-3 sm:gap-4">
               <Card className="p-3 sm:p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 text-center">
@@ -247,16 +341,14 @@ export default function OptimizerPage() {
               </Card>
             </div>
           </div>
-
           {/* Suggestions Section */}
           <div className="space-y-4 sm:space-y-6 order-2">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <div className="p-1.5 sm:p-2 bg-gradient-to-r from-[#4079ff]/20 to-[#40ffaa]/20 dark:from-[#4079ff]/30 dark:to-[#40ffaa]/30 rounded-lg">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff] dark:text-[#40ffaa]" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground dark:text-foreground">Optimized Suggestions</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground dark:text-foreground">AI Optimization Results</h2>
             </div>
-
             {/* Loading State */}
             {isGenerating && (
               <div className="space-y-3 sm:space-y-4">
@@ -281,8 +373,7 @@ export default function OptimizerPage() {
                 ))}
               </div>
             )}
-
-            {/* Suggestions */}
+            {/* Suggestions from ML Service */}
             {showSuggestions && suggestions.length > 0 && (
               <div className="space-y-3 sm:space-y-4">
                 {suggestions.map((suggestion, index) => (
@@ -309,7 +400,7 @@ export default function OptimizerPage() {
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                         <Badge className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] text-background text-xs">
-                          {suggestion.score}%
+                          AI Enhanced
                         </Badge>
                         <ChevronRight
                           className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-300 ${
@@ -323,7 +414,7 @@ export default function OptimizerPage() {
                     <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
                       {suggestion.improvements.slice(0, 2).map((improvement, i) => (
                         <Badge key={i} variant="outline" className="text-[10px] sm:text-xs border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa]">
-                          {improvement}
+                          {improvement.length > 30 ? improvement.substring(0, 30) + '...' : improvement}
                         </Badge>
                       ))}
                       {suggestion.improvements.length > 2 && (
@@ -336,33 +427,59 @@ export default function OptimizerPage() {
                     {/* Expanded Content */}
                     {selectedSuggestion === suggestion.id && (
                       <div className="space-y-3 sm:space-y-4 animate-fadeIn">
+                        {/* Before/After Comparison */}
+                        {suggestion.before && suggestion.after && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3 sm:p-4 border border-red-200 dark:border-red-800">
+                              <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 text-sm flex items-center">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Before
+                              </h4>
+                              <p className="text-xs sm:text-sm text-red-600 dark:text-red-300">
+                                {suggestion.before}
+                              </p>
+                            </div>
+                            <div className="bg-green-50 dark:bg-green-900/10 rounded-lg p-3 sm:p-4 border border-green-200 dark:border-green-800">
+                              <h4 className="font-medium text-green-700 dark:text-green-400 mb-2 text-sm flex items-center">
+                                <Check className="h-3 w-3 mr-1" />
+                                After
+                              </h4>
+                              <p className="text-xs sm:text-sm text-green-600 dark:text-green-300">
+                                {suggestion.after}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Optimized Full Prompt */}
                         <div className="bg-muted dark:bg-muted/50 rounded-lg p-3 sm:p-4">
-                          <h4 className="font-medium text-foreground dark:text-foreground mb-2 text-sm sm:text-base">Optimized Prompt:</h4>
+                          <h4 className="font-medium text-foreground dark:text-foreground mb-2 text-sm sm:text-base flex items-center">
+                            <Lightbulb className="h-4 w-4 mr-2 text-[#40ffaa]" />
+                            Optimized Prompt
+                          </h4>
                           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                             {suggestion.prompt}
                           </p>
                         </div>
 
-                        <div>
-                          <h4 className="font-medium text-foreground dark:text-foreground mb-2 text-sm sm:text-base">Key Improvements:</h4>
-                          <div className="grid grid-cols-1 gap-1 sm:gap-2">
-                            {suggestion.improvements.map((improvement, i) => (
-                              <div
-                                key={i}
-                                className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"
-                              >
-                                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#40ffaa] shrink-0" />
-                                <span className="line-clamp-2">{improvement}</span>
-                              </div>
-                            ))}
+                        {/* Impact Description */}
+                        {suggestion.impact && (
+                          <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+                            <h4 className="font-medium text-blue-700 dark:text-blue-400 mb-2 text-sm flex items-center">
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                              Impact Analysis
+                            </h4>
+                            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-300">
+                              {suggestion.impact}
+                            </p>
                           </div>
-                        </div>
+                        )}
 
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-border">
                           <Button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleApplySuggestion(suggestion)
+                              handleApplySuggestion(suggestion.prompt)
                             }}
                             className="flex-1 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
                           >
@@ -387,18 +504,19 @@ export default function OptimizerPage() {
                 ))}
               </div>
             )}
-
             {/* Empty State */}
-            {!isGenerating && suggestions.length === 0 && originalPrompt && (
+            {!isGenerating && (!optimizationResult || suggestions.length === 0) && (
               <Card className="p-6 sm:p-8 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border text-center">
                 <Wand2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-[#4079ff] dark:text-[#40ffaa] mx-auto mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-medium text-foreground dark:text-foreground mb-2">Ready to Optimize</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Click "Optimize Prompt" to get AI-powered suggestions for your prompt
+                  {serviceStatus === 'online' 
+                    ? "Enter your prompt above and click 'Optimize Prompt' to get AI-powered suggestions"
+                    : "Waiting for ML service to come online..."
+                  }
                 </p>
               </Card>
             )}
-
             {/* Stats Cards - Shown on mobile under suggestions */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:hidden">
               <Card className="p-2 sm:p-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 text-center">
@@ -420,7 +538,6 @@ export default function OptimizerPage() {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes slideInUp {
           from {
