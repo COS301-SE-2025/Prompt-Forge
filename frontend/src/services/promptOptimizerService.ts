@@ -1,3 +1,5 @@
+import API_BASE_URL from '@/config/api';
+
 interface OptimizationRequest {
   text: string; // <-- change from 'prompt' to 'text'
   target_audience?: string;
@@ -41,7 +43,7 @@ interface AnalysisResponse {
 }
 
 class PromptOptimizerService {
-  private baseURL = 'http://localhost:8080/api/ml';
+  private baseURL = `${API_BASE_URL}/ml`;
 
   async optimizePrompt(request: OptimizationRequest): Promise<MLServiceOptimizationResponse> {
     try {
