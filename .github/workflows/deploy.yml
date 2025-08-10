@@ -287,8 +287,8 @@ jobs:
           
           echo "=== FINAL VERIFICATION (BULLETPROOF CHECK) ==="
           
-          # Extended wait for services to stabilize (increased from 30 to 45 seconds)
-          sleep 45
+          # Extended wait for services to stabilize (increased from 45 to 90 seconds)
+          sleep 90
           
           # Comprehensive service verification
           echo "=== SERVICE STATUS VERIFICATION ==="
@@ -329,17 +329,38 @@ jobs:
           curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
           curl -s http://localhost:8001/health > /dev/null && echo "ML Service: RESPONDING" || echo "ML Service: NOT RESPONDING"
           
-          # Test Java backend with multiple endpoints (improved health checking)
-          if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-            echo "Java Backend: RESPONDING (actuator/health)"
-          elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
-            echo "Java Backend: RESPONDING (/health)"
-          elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
-            echo "Java Backend: RESPONDING (root)"
-          else
-            echo "Java Backend: NOT RESPONDING"
-            echo "Java backend logs (last 20 lines):"
-            tail -20 java_backend.log
+          # Test Java backend with multiple endpoints and better retry logic
+          JAVA_RESPONDING=false
+          for attempt in {1..15}; do
+            if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "Java Backend: RESPONDING (actuator/health)"
+              JAVA_RESPONDING=true
+              break
+            elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Java Backend: RESPONDING (/health)"
+              JAVA_RESPONDING=true
+              break
+            elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Java Backend: RESPONDING (root)"
+              JAVA_RESPONDING=true
+              break
+            else
+              echo "Java Backend connectivity check attempt $attempt/15..."
+              sleep 10
+            fi
+          done
+          
+          if [ "$JAVA_RESPONDING" = false ]; then
+            echo "Java Backend: NOT RESPONDING after 15 attempts"
+            echo "Java backend logs (last 30 lines):"
+            tail -30 java_backend.log
+            
+            # Check if port is bound
+            if sudo ss -tlnp | grep ":8080" > /dev/null; then
+              echo "Port 8080 is bound - Java backend may still be initializing"
+            else
+              echo "Port 8080 is not bound - Java backend failed to start"
+            fi
           fi
           
           # Update nginx configuration
@@ -361,7 +382,14 @@ jobs:
             echo "AI Service: $AI_RUNNING"
             echo "ML Service: $ML_RUNNING"
             echo "Java Backend: $JAVA_RUNNING"
-            echo "Check the logs and service status manually"
+            
+            # Don't fail deployment if Java backend is slow to respond but process is running
+            if [ "$AI_RUNNING" = true ] && [ "$ML_RUNNING" = true ] && [ "$JAVA_RUNNING" = true ]; then
+              echo "All processes are running - Java backend may still be initializing"
+              echo "Continuing with deployment..."
+            else
+              echo "Check the logs and service status manually"
+            fi
           fi
           
           # Save deployment status
@@ -389,7 +417,7 @@ jobs:
     
     steps:
     - name: Wait for services to start
-      run: sleep 60
+      run: sleep 120
       
     - name: Setup SSH key for health checks
       run: |
@@ -448,9 +476,9 @@ jobs:
             fi
           done
           
-          # Test Java backend health with improved endpoint detection
+          # Test Java backend health with improved endpoint detection and longer timeout
           JAVA_HEALTHY=false
-          for i in {1..10}; do
+          for i in {1..20}; do
             if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
               echo "Java Backend: HEALTHY via actuator (attempt $i)"
               JAVA_HEALTHY=true
@@ -464,8 +492,8 @@ jobs:
               JAVA_HEALTHY=true
               break
             else
-              echo "Java Backend health check failed, attempt $i/10"
-              sleep 30
+              echo "Java Backend health check failed, attempt $i/20"
+              sleep 15
             fi
           done
           
@@ -491,7 +519,19 @@ jobs:
             # Show Java logs if backend is unhealthy
             if [ "$JAVA_HEALTHY" = false ]; then
               echo "=== JAVA BACKEND ERROR LOGS ==="
-              tail -30 java_backend.log 2>/dev/null || echo "No Java backend logs found"
+              tail -50 java_backend.log 2>/dev/null || echo "No Java backend logs found"
+              
+              # Additional debugging
+              echo "=== JAVA PROCESS CHECK ==="
+              if pgrep -f "project-.*\.jar" > /dev/null; then
+                echo "Java process is running but not responding to HTTP requests"
+                echo "This may be normal during Spring Boot initialization"
+              else
+                echo "Java process is not running - startup failed"
+              fi
+              
+              echo "=== PORT 8080 STATUS ==="
+              sudo ss -tlnp | grep ":8080" || echo "Port 8080 is not bound"
             fi
             
             exit 1
@@ -503,7 +543,7 @@ jobs:
         echo "=== EXTERNAL ENDPOINT VERIFICATION ==="
         
         echo "Checking Java backend health..."
-        for i in {1..10}; do
+        for i in {1..15}; do
           if curl -f http://ec2-13-51-199-205.eu-north-1.compute.amazonaws.com:8080/actuator/health > /dev/null 2>&1; then
             echo "Java Backend is healthy externally (actuator)"
             break
@@ -514,8 +554,8 @@ jobs:
             echo "Java Backend is healthy externally (root)"
             break
           else
-            echo "External backend health check failed, attempt $i/10"
-            sleep 30
+            echo "External backend health check failed, attempt $i/15"
+            sleep 20
           fi
         done
         
@@ -661,7 +701,7 @@ jobs:
           fi
           
           # Wait and verify rollback
-          sleep 30
+          sleep 45
           
           echo "=== ROLLBACK VERIFICATION ==="
           
