@@ -1,10 +1,28 @@
-from transformers import pipeline
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
 
-# ~1.5GB - Qwen2.5-1.5B
-pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+# Load environment variables from .env file
+load_dotenv()
 
+# Get API key from environment
+api_key = os.getenv("HF")
+if not api_key:
+    raise ValueError("Hugging Face API key not found. Please set HF in your .env file.")
 
+client = OpenAI(
+    base_url="https://router.huggingface.co/v1",
+    api_key=api_key,
+)
 
-messages = [{"role": "user", "content": "Who are you?"}]
-result = pipe(messages, max_new_tokens=100)
-print(result)
+stream = client.chat.completions.create(
+    model="Qwen/Qwen3-Coder-30B-A3B-Instruct:fireworks-ai",
+    messages=[
+        {"role": "user", "content": "What is the capital of France?"}
+    ],
+    stream=True,
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
