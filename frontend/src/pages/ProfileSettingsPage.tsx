@@ -168,9 +168,7 @@ export default function ProfileSettingsPage() {
             <TabsList className="mb-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="api">API</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
@@ -257,7 +255,7 @@ export default function ProfileSettingsPage() {
                           placeholder="Tell us about yourself"
                           value={pendingBio}
                           onChange={handleBioChange}
-                          className="min-h-[100px] bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#3ebb9e]"
+                          className="min-h-[100px] bg-muted border focus:ring-2 focus:ring-[#3ebb9e]"
                         />
                       </div>
                     </div>
@@ -325,7 +323,7 @@ export default function ProfileSettingsPage() {
                   </div>
                 </Card>
 
-                <Card className="p-6">
+                {/* <Card className="p-6">
                   <h2 className="text-lg font-medium mb-4">Privacy Settings</h2>
 
                   <div className="space-y-4">
@@ -362,7 +360,7 @@ export default function ProfileSettingsPage() {
                       <Switch defaultChecked />
                     </div>
                   </div>
-                </Card>
+                </Card> */}
 
                 <Card className="p-6 border-red-200">
                   <h2 className="text-lg font-medium text-red-500 mb-4">Danger Zone</h2>
@@ -393,7 +391,7 @@ export default function ProfileSettingsPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="notifications">
+            {/* <TabsContent value="notifications">
               <Card className="p-6">
                 <h2 className="text-lg font-medium mb-4">Notification Preferences</h2>
 
@@ -442,7 +440,7 @@ export default function ProfileSettingsPage() {
                   </Button>
                 </div>
               </Card>
-            </TabsContent>
+            </TabsContent> */}
 
             <TabsContent value="billing">
               <div className="grid gap-6">
@@ -472,7 +470,7 @@ export default function ProfileSettingsPage() {
                   }
                 </Card>
 
-                <Card className="p-6 bg-muted">
+                {/* <Card className="p-6 bg-muted">
                   <h2 className="text-lg font-medium mb-4">Billing History</h2>
 
                   <div className="space-y-4 bg-muted">
@@ -517,61 +515,8 @@ export default function ProfileSettingsPage() {
                   <div className="mt-4 flex justify-center bg-muted">
                     <Button variant="link">View All Invoices</Button>
                   </div>
-                </Card>
+                </Card> */}
               </div>
-            </TabsContent>
-
-            <TabsContent value="api">
-              <Card className="p-6">
-                <h2 className="text-lg font-medium mb-4">API Keys</h2>
-
-                <div className="space-y-6">
-                  <div className="bg-muted p-4 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">Production Key</h3>
-                      <Button variant="outline" size="sm">
-                        Regenerate
-                      </Button>
-                    </div>
-                    <div className="bg-card p-2 rounded border border-border font-mono text-sm mb-2">
-                      pf_live_••••••••••••••••••••••••••••••
-                    </div>
-                    <p className="text-xs text-muted-foreground">Created on January 15, 2025</p>
-                  </div>
-
-                  <div className="bg-muted p-4 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">Development Key</h3>
-                      <Button variant="outline" size="sm">
-                        Regenerate
-                      </Button>
-                    </div>
-                    <div className="bg-card p-2 rounded border border-border font-mono text-sm mb-2">
-                      pf_test_••••••••••••••••••••••••••••••
-                    </div>
-                    <p className="text-xs text-muted-foreground">Created on January 15, 2025</p>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="font-medium mb-2">API Usage</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>This Month</span>
-                        <span>1,245 / 5,000 calls</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-[#3ebb9e] rounded-full" style={{ width: "25%" }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f]">View API Documentation</Button>
-                </div>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>
