@@ -360,25 +360,27 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                        <GoogleLogin
-                          onSuccess={async (credentialResponse) => {
-                            try {
-                              const result = await authService.googleLogin(credentialResponse.credential!);
-                              if (result?.message === "Google login successful") {
-                                if (result.username) localStorage.setItem("username", result.username);
-                                if (result.userId) localStorage.setItem("userId", result.userId);
-                                if (result.email) localStorage.setItem("userEmail", result.email);
-                                setError("");
-                                navigate("/home");
-                              } else {
-                                setError("Google login failed");
+                        <div style={{ maxWidth: 180, margin: "0 auto" }}>
+                          <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                              try {
+                                const result = await authService.googleLogin(credentialResponse.credential!);
+                                if (result?.message === "Google login successful") {
+                                  if (result.username) localStorage.setItem("username", result.username);
+                                  if (result.userId) localStorage.setItem("userId", result.userId);
+                                  if (result.email) localStorage.setItem("userEmail", result.email);
+                                  setError("");
+                                  navigate("/home");
+                                } else {
+                                  setError("Google login failed");
+                                }
+                              } catch (err: any) {
+                                setError(err.message || "Google login error");
                               }
-                            } catch (err: any) {
-                              setError(err.message || "Google login error");
-                            }
-                          }}
-                          onError={() => setError("Google login failed")}
-                        />
+                            }}
+                            onError={() => setError("Google login failed")}
+                          />
+                        </div>
                     </div>
                   )}
 
@@ -518,25 +520,27 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                        <GoogleLogin
-                          onSuccess={async (credentialResponse) => {
-                            try {
-                              const result = await authService.googleLogin(credentialResponse.credential!);
-                              if (result?.message === "Google login successful") {
-                                if (result.username) localStorage.setItem("username", result.username);
-                                if (result.userId) localStorage.setItem("userId", result.userId);
-                                if (result.email) localStorage.setItem("userEmail", result.email);
-                                setError("");
-                                navigate("/home");
-                              } else {
-                                setError("Google login failed");
+                        <div style={{ maxWidth: 180, margin: "0 auto" }}>
+                          <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                              try {
+                                const result = await authService.googleLogin(credentialResponse.credential!);
+                                if (result?.message === "Google login successful") {
+                                  if (result.username) localStorage.setItem("username", result.username);
+                                  if (result.userId) localStorage.setItem("userId", result.userId);
+                                  if (result.email) localStorage.setItem("userEmail", result.email);
+                                  setError("");
+                                  navigate("/home");
+                                } else {
+                                  setError("Google login failed");
+                                }
+                              } catch (err: any) {
+                                setError(err.message || "Google login error");
                               }
-                            } catch (err: any) {
-                              setError(err.message || "Google login error");
-                            }
-                          }}
-                          onError={() => setError("Google login failed")}
-                        />
+                            }}
+                            onError={() => setError("Google login failed")}
+                          />
+                        </div>
                     </div>
                   )}
                 </>
