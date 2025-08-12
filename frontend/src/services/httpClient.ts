@@ -11,11 +11,6 @@ class HttpClient {
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
     
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('jwtToken') || 
-                  localStorage.getItem('authToken') || 
-                  localStorage.getItem('token');
-    
     // Only set default JSON content type if body is not FormData
     const isFormData = options.body instanceof FormData;
     const headers = new Headers(options.headers);
@@ -23,19 +18,18 @@ class HttpClient {
     if (!isFormData && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
     }
-    
-    // Add JWT token if available and not already set
-    if (token && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
+
+    // Don't add Authorization header - rely on HTTP-only cookies
+    // The browser will automatically include cookies with credentials: 'include'
 
     const config: RequestInit = {
       headers,
-      credentials: 'include',
+      credentials: 'include', // This is the key - ensures cookies are sent
       ...options,
     };
 
     console.log(`🔍 ${options.method || 'GET'} ${url}`);
+    console.log('📋 Request headers:', Object.fromEntries(headers.entries()));
     
     return fetch(url, config);
   }

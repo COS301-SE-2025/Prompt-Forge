@@ -19,9 +19,55 @@ services:
       - AWS_REGION=eu-north-1
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
       - SPRING_PROFILES_ACTIVE=prod
+      - AI_SERVICE_URL=http://ai-service:8000
+      - ML_SERVICE_URL=http://ml-service:8001
     restart: unless-stopped
+    depends_on:
+      - ai-service
+      - ml-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  ai-service:
+    image: prompt-forge-ai-service:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  ml-service:
+    image: prompt-forge-ml-service:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - ai-service
+      - ml-service
+    restart: unless-stopped

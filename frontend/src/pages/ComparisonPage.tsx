@@ -23,8 +23,8 @@ explain how the response should be adapted to fit.]`
 
 export default function ComparisonsPage() {
   const navigate = useNavigate()
-  const [promptTextA, setPromptTextA] = useState(defaultPrompt)
-  const [promptTextB, setPromptTextB] = useState(defaultPrompt)
+  const [promptTextA, setPromptTextA] = useState("")
+  const [promptTextB, setPromptTextB] = useState("")
   const [aiResponseA, setAiResponseA] = useState("AI response to prompt A will appear here...")
   const [aiResponseB, setAiResponseB] = useState("AI response to prompt B will appear here...")
   const [selectedModelA, setSelectedModelA] = useState(0)
@@ -39,6 +39,7 @@ export default function ComparisonsPage() {
   const [responseBCollapsed, setResponseBCollapsed] = useState(false)
   const [editorACollapsed, setEditorACollapsed] = useState(false)
   const [editorBCollapsed, setEditorBCollapsed] = useState(false)
+  const [showHelpModal, setShowHelpModal] = useState(false)
 
   // Add streaming related state
   const [streamingEnabled, setStreamingEnabled] = useState(true);
@@ -103,7 +104,7 @@ export default function ComparisonsPage() {
       glowColor: "hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:border-green-500/50",
       selectedGlow: "shadow-[0_0_15px_rgba(34,197,94,0.4)] border-green-500/60",
       available: true,
-      model: "meta-llama/llama-4-scout:free",
+      model: "meta-llama/llama-4-scout",
       supportsImages: true,
     },
     {
@@ -438,20 +439,15 @@ Please provide:
                   <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
                     className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
-                    onClick={swapPrompts}
-                    title="Swap prompts"
+                    onClick={() => setShowHelpModal(true)}
+                    title="Help & Tips"
                   >
-                    <ArrowLeftRight className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
+                    <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  <Link to="/help">
-                    <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" title="Help">
-                      <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
-                    </Button>
-                  </Link>
                 </div>
               </div>
 
@@ -473,8 +469,16 @@ Please provide:
                 {!editorACollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
-                      placeholder="Write your first prompt here..."
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                      placeholder="Write your first prompt here...
+
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]"
                       value={promptTextA}
                       onChange={(e) => setPromptTextA(e.target.value)}
                     />
@@ -542,12 +546,15 @@ Please provide:
                   <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" onClick={handleReset}>
                     <RotateCcw className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
                   </Button>
-                  {/*Replace the existing HelpCircle with linked Help button */}
-                  <Link to="/help">
-                    <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" title="Help">
-                      <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
+                    onClick={() => setShowHelpModal(true)}
+                    title="Help & Tips"
+                  >
+                    <HelpCircle className="h-3 w-3 sm:h-3 sm:w-3 lg:h-4 lg:w-4" />
+                  </Button>
                 </div>
               </div>
 
@@ -569,8 +576,16 @@ Please provide:
                 {!editorBCollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-gray-500 dark:placeholder:text-muted-foreground custom-scrollbar"
-                      placeholder="Write your second prompt here..."
+                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                      placeholder="Write your second prompt here...
+
+Example:
+When writing a prompt, always follow these guidelines:
+1. [Clearly define the task or question you want answered.]
+2. [Specify any format or structure you expect in the response (e.g., list, paragraph, code block).]
+3. [Include relevant context, constraints, or examples to guide the output.]
+4. [If your prompt involves a specific topic or style, mention it explicitly and 
+explain how the response should be adapted to fit.]"
                       value={promptTextB}
                       onChange={(e) => setPromptTextB(e.target.value)}
                     />
@@ -636,28 +651,6 @@ Please provide:
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Reset
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground text-xs h-7 sm:h-8"
-                onClick={() => handleSavePrompt("A")}
-                title="Save Prompt A"
-              >
-                <Save className="h-3 w-3 mr-1" />
-                Save A
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground text-xs h-7 sm:h-8"
-                onClick={() => handleSavePrompt("B")}
-                title="Save Prompt B"
-              >
-                <Save className="h-3 w-3 mr-1" />
-                Save B
               </Button>
             </div>
 
@@ -868,6 +861,288 @@ Please provide:
           />
         )}
       </div>
+
+      {/* Help Modal - Comparison Guide */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
+          <div className="bg-background border border-border rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Comparison Mode Guide</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowHelpModal(false)}
+                className="h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
+                aria-label="Close help modal"
+              >
+                <span className="text-lg">✕</span>
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Getting Started */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Getting Started
+                </h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">1.</span>
+                    <p>Write your first prompt in the left panel (Prompt A)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">2.</span>
+                    <p>Write your second prompt in the right panel (Prompt B)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">3.</span>
+                      <p>Click Test Both to see AI responses:</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">4.</span>
+                    <p>Use the Models button to select different AI models for each prompt</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">5.</span>
+                      <p>Click Rate to compare both responses:</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Available AI Models */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  AI Models
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🔮</span>
+                      <span className="font-semibold text-violet-400 text-sm">Deepseek R1</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Best for reasoning and code generation</p>
+                  </div>
+                  
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🦙</span>
+                      <div>
+                        <span className="font-semibold text-green-400 text-sm">Meta Llama 4</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded ml-2">📷</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Advanced coding, reasoning, and image understanding</p>
+                  </div>
+                  
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">💎</span>
+                      <div>
+                        <span className="font-semibold text-purple-400 text-sm">Google Gemini 2.0</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded ml-2">📷</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Multimodal AI with excellent image capabilities</p>
+                  </div>
+                  
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-2">🧠</span>
+                      <span className="font-semibold text-orange-400 text-sm">Kimi Dev 72B</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Specialized for software engineering tasks</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Comparison Features */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Comparison Features
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        A
+                      </div>
+                      <div className="w-8 h-8 bg-[#3ebb9e] text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        B
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Side-by-Side Testing</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Test two different prompts simultaneously and compare their results. Perfect for A/B testing prompt variations.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Testing variations, prompt optimization, finding the best approach
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        ★
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">AI-Powered Rating</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Get detailed comparison analysis including ratings, explanations, and suggestions for improvement.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Objective analysis, understanding differences, making decisions
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 bg-violet-500 text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3">
+                        🔄
+                      </div>
+                      <h4 className="text-base font-bold text-foreground">Model Flexibility</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Use different AI models for each prompt to see how various models handle the same task.
+                    </p>
+                    <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                      Perfect for: Model comparison, finding the best model for specific tasks
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Advanced Features */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Advanced Features
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📊</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Collapse Panels</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Collapse editor or response panels to focus on specific content areas.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">💾</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Save Individual Prompts</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Save Prompt A or Prompt B separately using the Save A and Save B buttons.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📁</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Export Options</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Copy responses to clipboard using the copy buttons on each response panel.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">⚙️</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Streaming Controls</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Adjust response typing speed and streaming settings for both panels.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Best Practices */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Best Practices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Test small variations to find optimal wording</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Use different models to see varied perspectives</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Compare context vs. no context versions</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Test different instruction formats</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Use the rating feature for objective analysis</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Save successful prompts for future use</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Test with same model for fair comparison</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Use Reset to start fresh comparisons</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Common Use Cases */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Common Use Cases
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">A/B Testing Prompts</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Compare two versions of the same prompt to see which produces better results. Test different approaches, wording, or structures.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Model Performance Testing</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Use the same prompt with different AI models to see which one handles your specific task better.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Context vs. No Context</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Compare responses with detailed context against minimal prompts to find the optimal balance.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Format Comparison</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Test different instruction formats like bullet points vs. paragraphs, or questions vs. statements.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

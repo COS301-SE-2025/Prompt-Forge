@@ -308,18 +308,35 @@ export default function MyPromptsPage() {
     try {
       const response = await httpClient.delete(`/prompts/${id}`)
       if (response.ok) {
+        // Remove from current display
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+        // Remove from cache (allUserPrompts)
+        setAllUserPrompts((prev) => prev.filter((p) => p.id !== id))
+        // Update prompt count
+        setPromptCount((prev) => prev - 1)
+        // Recalculate total pages
+        const newCount = promptCount - 1
+        const newTotalPages = Math.max(1, Math.ceil(newCount / PROMPTS_PER_PAGE))
+        setTotalPages(newTotalPages)
+        
+        // If we're on a page that no longer exists, go to the last page
+        if (currentPage > newTotalPages) {
+          setCurrentPage(newTotalPages)
+        }
 
-
+        console.log(`✅ Prompt ${id} deleted successfully`)
       } else {
+        // Even if backend fails, update UI for better UX
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+        setAllUserPrompts((prev) => prev.filter((p) => p.id !== id))
+        console.log(`⚠️ Backend delete failed for prompt ${id}, but updated UI`)
       }
     } catch (error) {
-
       console.error("Error deleting prompt:", error)
-      // For now, still remove from UI even if backend fails
-
+      // Still update UI even on network error
       setMyPrompts((prev) => prev.filter((p) => p.id !== id))
+      setAllUserPrompts((prev) => prev.filter((p) => p.id !== id))
+      console.log(`⚠️ Network error deleting prompt ${id}, but updated UI`)
     }
   }
 
