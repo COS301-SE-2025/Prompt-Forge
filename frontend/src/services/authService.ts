@@ -66,4 +66,22 @@ export class AuthService {
       throw new Error(error.message || "Logout error");
     }
   }
+
+  async googleLogin(credential: string) {
+    try {
+      const response = await this.httpClient.post(
+        `${this.baseUrl}/google`,
+        { credential },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Google login failed");
+      }
+      return data;
+    } catch (error: any) {
+      console.error("Google login failed:", error);
+      throw new Error(error.message || "Google login error");
+    }
+  }
 }

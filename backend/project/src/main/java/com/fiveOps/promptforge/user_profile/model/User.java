@@ -63,6 +63,9 @@ public class User {
   @Column(columnDefinition = "uuid[]")
   private UUID[] following = new UUID[] {};
 
+  private String googleId;
+  private String oauthProvider;
+
   // === Getters ===
 
   public UUID getUserId() {
@@ -125,6 +128,14 @@ public class User {
     return this.profilePictureUrl;
   }
 
+  public String getGoogleId() {
+    return googleId;
+  }
+
+  public String getOauthProvider() {
+    return oauthProvider;
+  }
+
   // === Setters ===
 
   public void setUserId(UUID userId) {
@@ -185,5 +196,13 @@ public class User {
 
   public void setAvatarUrl(String avatarUrl) {
     this.profilePictureUrl = avatarUrl;
+  }
+
+  public void setGoogleId(String googleId) {
+    this.googleId = googleId;
+  }
+
+  public void setOauthProvider(String oauthProvider) {
+    this.oauthProvider = oauthProvider;
   }
 }
