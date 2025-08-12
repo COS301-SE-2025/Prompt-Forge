@@ -327,39 +327,6 @@ jobs:
           curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
           curl -s http://localhost:8001/health > /dev/null && echo "ML Service: RESPONDING" || echo "ML Service: NOT RESPONDING"
           
-          # Test Java backend with multiple endpoints and better retry logic
-          JAVA_RESPONDING=false
-          for attempt in {1..15}; do
-            if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (actuator/health)"
-              JAVA_RESPONDING=true
-              break
-            elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (/health)"
-              JAVA_RESPONDING=true
-              break
-            elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (root)"
-              JAVA_RESPONDING=true
-              break
-            else
-              echo "Java Backend connectivity check attempt $attempt/15..."
-              sleep 10
-            fi
-          done
-          
-          if [ "$JAVA_RESPONDING" = false ]; then
-            echo "Java Backend: NOT RESPONDING after 15 attempts"
-            echo "Java backend logs (last 30 lines):"
-            tail -30 java_backend.log
-            
-            # Check if port is bound
-            if sudo ss -tlnp | grep ":8080" > /dev/null; then
-              echo "Port 8080 is bound - Java backend may still be initializing"
-            else
-              echo "Port 8080 is not bound - Java backend failed to start"
-            fi
-          fi
           
           # Update nginx configuration
           sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge 2>/dev/null || true
