@@ -416,7 +416,7 @@ export default function OptimizerPage() {
                 <Button
                   onClick={handleGenerateSuggestions}
                   disabled={isGenerating || !originalPrompt.trim() || serviceStatus !== "online"}
-                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto text-sm sm:text-base"
+                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto text-sm sm:text-base"
                 >
                   {isGenerating ? (
                     <>
