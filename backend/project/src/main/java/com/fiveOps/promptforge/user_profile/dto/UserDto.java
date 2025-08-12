@@ -18,6 +18,7 @@ public class UserDto {
   private List<UUID> badges;
   private List<UUID> followers;
   private List<UUID> following;
+  private String oauthProvider;
 
   // Getters
   public UUID getUserId() {
@@ -72,6 +73,10 @@ public class UserDto {
     return following;
   }
 
+  public String getOauthProvider() {
+    return oauthProvider;
+  }
+
   // Setters
   public void setUserId(UUID userId) {
     this.userId = userId;
@@ -123,5 +128,9 @@ public class UserDto {
 
   public void setFollowing(List<UUID> following) {
     this.following = following;
+  }
+
+  public void setOauthProvider(String oauthProvider) {
+    this.oauthProvider = oauthProvider;
   }
 }
