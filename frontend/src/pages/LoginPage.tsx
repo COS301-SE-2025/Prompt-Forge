@@ -360,7 +360,6 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <div className="w-full h-10 sm:h-11 rounded-md bg-muted flex items-center justify-center transition-all hover:bg-muted cursor-pointer">
                         <GoogleLogin
                           onSuccess={async (credentialResponse) => {
                             try {
@@ -380,7 +379,6 @@ export default function LoginPage() {
                           }}
                           onError={() => setError("Google login failed")}
                         />
-                      </div>
                     </div>
                   )}
 
@@ -520,7 +518,6 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <div className="w-full h-10 sm:h-11 rounded-md bg-muted flex items-center justify-center transition-all hover:bg-muted cursor-pointer">
                         <GoogleLogin
                           onSuccess={async (credentialResponse) => {
                             try {
@@ -540,7 +537,6 @@ export default function LoginPage() {
                           }}
                           onError={() => setError("Google login failed")}
                         />
-                      </div>
                     </div>
                   )}
                 </>
