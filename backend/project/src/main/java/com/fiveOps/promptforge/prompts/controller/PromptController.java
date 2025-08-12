@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fiveOps.promptforge.analytics.services.ActivityTrackingService;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
@@ -34,6 +36,9 @@ public class PromptController {
   private final PromptService promptService;
   private final JwtUtil jwtUtil;
   private final UserService userService;
+  
+  @Autowired
+  private ActivityTrackingService activityTrackingService;
 
   public PromptController(PromptService promptService, JwtUtil jwtUtil, UserService userService) {
     this.promptService = promptService;
@@ -53,9 +58,19 @@ public class PromptController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id) {
+  public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id, HttpServletRequest request) {
     Prompt prompt = promptService.getPromptById(id);
-    return prompt != null ? ResponseEntity.ok(prompt) : ResponseEntity.notFound().build();
+    
+    if (prompt != null) {
+      // Track prompt view
+      UUID userId = getUserIdFromRequest(request);
+      if (userId != null) {
+        activityTrackingService.trackPromptView(userId, id, 0L);
+      }
+      return ResponseEntity.ok(prompt);
+    } else {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @PostMapping
@@ -115,6 +130,16 @@ public class PromptController {
           "Creating prompt for user: " + userEmail + " (ID: " + user.getUserId() + ")");
 
       Prompt created = promptService.createPrompt(prompt);
+      
+      // Track prompt creation
+      if (created != null && created.getPromptId() != null) {
+        activityTrackingService.trackPromptCreation(
+            user.getUserId(), 
+            created.getPromptId(), 
+            created.getCategory() != null ? created.getCategory().toString() : "uncategorized"
+        );
+      }
+      
       return ResponseEntity.ok(created);
 
     } catch (Exception e) {
@@ -222,5 +247,41 @@ public class PromptController {
     return ResponseEntity.ok(
         promptService.getAuthoredAndPurchasedPromptsByFilter(
             userId, tagName, filterName, pageable));
+  }
+  
+  // Helper method to extract user ID from JWT token in request
+  private UUID getUserIdFromRequest(HttpServletRequest request) {
+    try {
+      String token = null;
+      Cookie[] cookies = request.getCookies();
+
+      if (cookies != null) {
+        for (Cookie cookie : cookies) {
+          if ("token".equals(cookie.getName())) {
+            token = cookie.getValue();
+            break;
+          }
+        }
+      }
+
+      if (token == null || token.isEmpty()) {
+        return null;
+      }
+
+      if (!jwtUtil.validateToken(token)) {
+        return null;
+      }
+
+      String userEmail = jwtUtil.extractUsername(token);
+      if (userEmail == null || userEmail.isEmpty()) {
+        return null;
+      }
+
+      User user = userService.findByEmail(userEmail);
+      return user != null ? user.getUserId() : null;
+    } catch (Exception e) {
+      System.err.println("Error extracting user ID from request: " + e.getMessage());
+      return null;
+    }
   }
 }
