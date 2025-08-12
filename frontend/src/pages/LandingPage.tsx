@@ -471,76 +471,71 @@ export default function LandingPage() {
               <p className="text-gray-400 text-sm">Empowering the future of AI through better prompts.</p>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Product</h4>
+              <h4 className="font-semibold mb-4">Help Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Marketplace
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Testing Ground
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Analytics
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    API
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <Link to="/help" className="hover:text-white transition-colors duration-300">
-                    Help & FAQ
+                  <Link to="#" className="hover:text-white">
+                    Getting Started
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Community
+                  <a
+                    href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Video Tutorial
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Status
+                  <Link to="#" className="hover:text-white">
+                    Best Practices
+                  </Link>
+                </li>
+                <li>
+                  <Link to="#" className="hover:text-white">
+                    API Documentation
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li>
+                  <Link to="#" className="hover:text-white">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/COS301-SE-2025/Prompt-Forge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    System Status
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Community</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li>
+                  <Link to="#" className="hover:text-white">
+                    Discord
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/COS301-SE-2025/Prompt-Forge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Github
                   </a>
                 </li>
               </ul>
