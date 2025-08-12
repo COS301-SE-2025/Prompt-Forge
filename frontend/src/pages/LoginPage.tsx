@@ -360,7 +360,7 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                        <div style={{ maxWidth: 180, margin: "0 auto" }}>
+                        <div style={{ display: "flex", justifyContent: "center", minWidth: 250, width: "100%" }}>
                           <GoogleLogin
                             onSuccess={async (credentialResponse) => {
                               try {
@@ -520,7 +520,7 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                        <div style={{ maxWidth: 180, margin: "0 auto" }}>
+                        <div style={{ display: "flex", justifyContent: "center", minWidth: 250, width: "100%" }}>
                           <GoogleLogin
                             onSuccess={async (credentialResponse) => {
                               try {
