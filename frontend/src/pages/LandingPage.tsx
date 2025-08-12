@@ -483,16 +483,6 @@ export default function LandingPage() {
                     Testing Ground
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Analytics
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    API
-                  </a>
-                </li>
               </ul>
             </div>
             <div>
@@ -501,16 +491,6 @@ export default function LandingPage() {
                 <li>
                   <a href="#" className="hover:text-white transition-colors duration-300">
                     About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Careers
                   </a>
                 </li>
                 <li>
@@ -532,16 +512,6 @@ export default function LandingPage() {
                   <Link to="/help" className="hover:text-white transition-colors duration-300">
                     Help & FAQ
                   </Link>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Community
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors duration-300">
-                    Status
-                  </a>
                 </li>
               </ul>
             </div>
