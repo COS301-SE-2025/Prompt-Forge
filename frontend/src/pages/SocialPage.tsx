@@ -14,8 +14,8 @@ interface SocialUser {
   username: string
   profilePicture?: string
   bio?: string
-  followers: number
-  following: number
+  followers: string[]
+  following: string[]
   isFollowing: boolean
 
 }
@@ -98,51 +98,48 @@ export default function SocialPage() {
     setFilteredUsers(filtered)
   }, [searchQuery, users])
 
-  const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
-    try {
-      const endpoint = isCurrentlyFollowing ? "unfollow" : "follow"
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      })
+ const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
+  try {
+    const endpoint = isCurrentlyFollowing ? "unfollow" : "follow";
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
 
-      if (response.ok) {
-        // Update users list
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId
-              ? {
-                  ...user,
-                  isFollowing: !isCurrentlyFollowing,
-                  followers: isCurrentlyFollowing ? user.followers - 1 : user.followers + 1,
-                }
-              : user,
-          ),
-        )
+    if (response.ok) {
+      // Optimized update function
+      const updateUserArrays = (prevUser: SocialUser): SocialUser => {
+        const newFollowers = isCurrentlyFollowing
+          ? prevUser.followers.filter(id => id !== userId) // Remove from followers
+          : [...prevUser.followers, userId]; // Add to followers
 
-        // Update filtered users
-        setFilteredUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId
-              ? {
-                  ...user,
-                  isFollowing: !isCurrentlyFollowing,
-                  followers: isCurrentlyFollowing ? user.followers - 1 : user.followers + 1,
-                }
-              : user,
-          ),
-        )
+        return {
+          ...prevUser,
+          isFollowing: !isCurrentlyFollowing,
+          followers: newFollowers,
+        };
+      };
 
-        // Update following users if needed
-        if (isCurrentlyFollowing) {
-          setFollowingUsers((prev) => prev.filter((user) => user.id !== userId))
-        }
+      // Update all relevant states in one pass
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? updateUserArrays(user) : user
+      ));
+      
+      setFilteredUsers(prev => prev.map(user => 
+        user.id === userId ? updateUserArrays(user) : user
+      ));
+
+      // Update following list if unfollowing
+      if (isCurrentlyFollowing) {
+        setFollowingUsers(prev => prev.filter(user => user.id !== userId));
       }
-    } catch (err) {
-      console.error("Failed to follow/unfollow:", err)
     }
+  } catch (err) {
+    console.error("Failed to follow/unfollow:", err);
+    // Consider adding error state feedback to UI
   }
+};
 
   const UserCard = ({ user }: { user: SocialUser }) => (
     <Card className="p-4 hover:shadow-md transition-shadow">
@@ -202,12 +199,13 @@ export default function SocialPage() {
               <div className="text-xs text-muted-foreground">Rating</div>
             </div>
             <div>
-              <div className="font-semibold">{user.followers}</div>
-              <div className="text-xs text-muted-foreground">Followers</div>
-            </div>
-            <div>
-              <div className="font-semibold">{user.following}</div>
-              <div className="text-xs text-muted-foreground">Following</div>
+             <div className="font-semibold">{user.followers?.length ?? 0}</div>
+<div className="text-xs text-muted-foreground">Followers</div>
+</div>
+<div>
+  <div className="font-semibold">{user.following?.length ?? 0}</div>
+  <div className="text-xs text-muted-foreground">Following</div>
+
             </div>
           </div>
         </div>
@@ -283,16 +281,29 @@ export default function SocialPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="popular">
-            <div className="space-y-4">
-              {filteredUsers
-                // .filter((user) => user.isPopular)
-                .sort((a, b) => b.followers - a.followers)
-                .map((user) => (
-                  <UserCard key={user.id} user={user} />
-                ))}
-            </div>
-          </TabsContent>
+       <TabsContent value="popular">
+  <div className="space-y-4">
+    {filteredUsers
+      .sort((a, b) => {
+        // Safely get follower counts with null checks
+        const aFollowers = a.followers?.length || 0;
+        const bFollowers = b.followers?.length || 0;
+        
+        // Primary sort by follower count (descending)
+        const followerDiff = bFollowers - aFollowers;
+        
+        // Secondary sort by username if follower counts are equal
+        if (followerDiff === 0) {
+          return a.username.localeCompare(b.username);
+        }
+        
+        return followerDiff;
+      })
+      .map((user) => (
+        <UserCard key={user.id} user={user} />
+      ))}
+  </div>
+</TabsContent>
 
           <TabsContent value="following">
             {followingLoading ? (
