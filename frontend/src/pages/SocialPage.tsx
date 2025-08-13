@@ -147,12 +147,21 @@ export default function SocialPage() {
   const UserCard = ({ user }: { user: SocialUser }) => (
     <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start space-x-4">
+      <div className="relative w-16 h-16 flex-shrink-0">
         <img
-          src={user.profilePicture || "/placeholder.svg?height=60&width=60"}
+          src={user.profilePicture || "/placeholder-user.svg"}
           alt={user.username}
-          className="w-15 h-15 rounded-full object-cover cursor-pointer"
+          className="rounded-full w-full h-full object-cover cursor-pointer"
           onClick={() => navigate(`/profile/${user.id}`)}
+          width={64}
+          height={64}
+          onError={(e) => {
+            // Fallback if image fails to load
+            const target = e.target as HTMLImageElement;
+            target.src = "/placeholder-user.svg";
+          }}
         />
+      </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
