@@ -25,4 +25,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   Optional<User> findByGoogleId(String googleId);
 
   Optional<User> findByResetToken(String resetToken);
+
+  List<User> findAllByEmailNot(String email);
 }

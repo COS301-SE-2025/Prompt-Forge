@@ -1,13 +1,16 @@
 package com.fiveOps.promptforge.user_profile.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,9 @@ import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 import com.fiveOps.promptforge.util.service.MailService;
+
+import org.springframework.data.domain.Page;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -129,9 +135,39 @@ public class UserController {
   }
 
   @GetMapping("/search")
-  public List<UserDto> searchUsers(@RequestParam String query) {
-    return userService.searchUsers(query);
-  }
+    public ResponseEntity<Map<String, Object>> searchUsers(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        // Basic validation
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Search query cannot be empty"
+            ));
+        }
+
+        // Process query - remove special chars and normalize
+        String processedQuery = query.replaceAll("[^a-zA-Z0-9\\s]", "").toLowerCase().trim();
+        if (processedQuery.isEmpty()) {
+            return ResponseEntity.ok(Map.of(
+                "results", List.of(),
+                "total", 0,
+                "page", page,
+                "size", size
+            ));
+        }
+
+        Page<UserDto> results = userService.fuzzySearchUsers(processedQuery, PageRequest.of(page, size));
+        
+        return ResponseEntity.ok(Map.of(
+            "results", results.getContent(),
+            "total", results.getTotalElements(),
+            "page", results.getNumber(),
+            "size", results.getSize(),
+            "totalPages", results.getTotalPages()
+        ));
+    }
 
   @GetMapping("/me/followers")
   public List<UserDto> getFollowers(HttpServletRequest request) {
@@ -228,5 +264,35 @@ public class UserController {
     user.setPasswordHash(userService.encodePassword(newPassword));
     userService.save(user);
     return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+  }
+
+  @GetMapping("/discover")
+  public ResponseEntity<Map<String, Object>> getDiscoverableUsers(HttpServletRequest request) {
+    String currentUserEmail = extractEmailFromCookie(request);
+    List<UserDto> users = userService.getAllUsersExceptCurrent(currentUserEmail);
+
+    List<Map<String, Object>> formattedUsers =
+        users.stream()
+            .map(
+                user -> {
+                  Map<String, Object> userMap = new HashMap<>();
+
+                  userMap.put("username", user.getUsername() != null ? user.getUsername() : "");
+                  userMap.put("bio", user.getBio() != null ? user.getBio() : "");
+                  userMap.put(
+                      "profilePicture",
+                      user.getProfilePicture() != null ? user.getProfilePicture() : "");
+                  userMap.put(
+                      "followersCount",
+                      user.getFollowers() != null ? user.getFollowers().size() : 0);
+                  userMap.put(
+                      "followingCount",
+                      user.getFollowing() != null ? user.getFollowing().size() : 0);
+
+                  return userMap;
+                })
+            .collect(Collectors.toList());
+
+    return ResponseEntity.ok(Map.of("count", formattedUsers.size(), "users", formattedUsers));
   }
 }

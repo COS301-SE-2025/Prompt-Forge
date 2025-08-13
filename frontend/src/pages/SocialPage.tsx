@@ -16,11 +16,8 @@ interface SocialUser {
   bio?: string
   followers: number
   following: number
-  totalPrompts: number
-  averageRating: number
   isFollowing: boolean
-  isPopular: boolean
-  joinedAt: string
+
 }
 
 export default function SocialPage() {
@@ -33,30 +30,32 @@ export default function SocialPage() {
   const [followingUsers, setFollowingUsers] = useState<SocialUser[]>([])
   const [followingLoading, setFollowingLoading] = useState(false)
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/discover`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        })
+ useEffect(() => {
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/discover`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      })
 
-        if (response.ok) {
-          const data = await response.json()
-          setUsers(data || [])
-          setFilteredUsers(data || [])
-        }
-      } catch (err) {
-        console.error("Failed to fetch users:", err)
-      } finally {
-        setLoading(false)
+      if (response.ok) {
+        const data = await response.json()
+        // Handle both array and object response formats
+        const usersArray = Array.isArray(data) ? data : data?.users || []
+        setUsers(usersArray)
+        setFilteredUsers(usersArray)
       }
+    } catch (err) {
+      console.error("Failed to fetch users:", err)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    fetchUsers()
-  }, [])
+  fetchUsers()
+}, [])
 
   useEffect(() => {
     const fetchFollowing = async () => {
@@ -162,7 +161,7 @@ export default function SocialPage() {
               onClick={() => navigate(`/profile/${user.id}`)}
             >
               {user.username}
-              {user.isPopular && <Star className="h-4 w-4 text-yellow-400 ml-1 inline" />}
+              {/* {user.isPopular && <Star className="h-4 w-4 text-yellow-400 ml-1 inline" />} */}
             </h3>
 
             <Button
@@ -183,13 +182,13 @@ export default function SocialPage() {
 
           <div className="grid grid-cols-4 gap-2 text-center text-sm">
             <div>
-              <div className="font-semibold">{user.totalPrompts}</div>
+              {/* <div className="font-semibold">{user.totalPrompts}</div> */}
               <div className="text-xs text-muted-foreground">Prompts</div>
             </div>
             <div>
               <div className="font-semibold flex items-center justify-center">
                 <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                {user.averageRating.toFixed(1)}
+                {/* {user.averageRating.toFixed(1)} */}
               </div>
               <div className="text-xs text-muted-foreground">Rating</div>
             </div>
@@ -278,7 +277,7 @@ export default function SocialPage() {
           <TabsContent value="popular">
             <div className="space-y-4">
               {filteredUsers
-                .filter((user) => user.isPopular)
+                // .filter((user) => user.isPopular)
                 .sort((a, b) => b.followers - a.followers)
                 .map((user) => (
                   <UserCard key={user.id} user={user} />
