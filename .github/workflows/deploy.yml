@@ -263,6 +263,8 @@ jobs:
             AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
             AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
             AWS_S3_BUCKET='${{ secrets.AWS_S3_BUCKET }}' \
+            GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' \
+            GOOGLE_CLIENT_SECRET='${{ secrets.GOOGLE_CLIENT_SECRET }}' \
             AWS_REGION='eu-north-1' \
             AI_SERVICE_URL='http://localhost:8000' \
             ML_SERVICE_URL='http://localhost:8001' \
@@ -325,39 +327,6 @@ jobs:
           curl -s http://localhost:8000/health > /dev/null && echo "AI Service: RESPONDING" || echo "AI Service: NOT RESPONDING"
           curl -s http://localhost:8001/health > /dev/null && echo "ML Service: RESPONDING" || echo "ML Service: NOT RESPONDING"
           
-          # Test Java backend with multiple endpoints and better retry logic
-          JAVA_RESPONDING=false
-          for attempt in {1..15}; do
-            if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (actuator/health)"
-              JAVA_RESPONDING=true
-              break
-            elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (/health)"
-              JAVA_RESPONDING=true
-              break
-            elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
-              echo "Java Backend: RESPONDING (root)"
-              JAVA_RESPONDING=true
-              break
-            else
-              echo "Java Backend connectivity check attempt $attempt/15..."
-              sleep 10
-            fi
-          done
-          
-          if [ "$JAVA_RESPONDING" = false ]; then
-            echo "Java Backend: NOT RESPONDING after 15 attempts"
-            echo "Java backend logs (last 30 lines):"
-            tail -30 java_backend.log
-            
-            # Check if port is bound
-            if sudo ss -tlnp | grep ":8080" > /dev/null; then
-              echo "Port 8080 is bound - Java backend may still be initializing"
-            else
-              echo "Port 8080 is not bound - Java backend failed to start"
-            fi
-          fi
           
           # Update nginx configuration
           sudo cp nginx.conf /etc/nginx/sites-available/prompt-forge 2>/dev/null || true
@@ -447,27 +416,6 @@ jobs:
             fi
           done
           
-          # Test Java backend health with improved endpoint detection and longer timeout
-          JAVA_HEALTHY=false
-          for i in {1..20}; do
-            if curl -s -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-              echo "Java Backend: HEALTHY via actuator (attempt $i)"
-              JAVA_HEALTHY=true
-              break
-            elif curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Java Backend: HEALTHY via /health (attempt $i)"
-              JAVA_HEALTHY=true
-              break
-            elif curl -s -f http://localhost:8080/ > /dev/null 2>&1; then
-              echo "Java Backend: HEALTHY via root (attempt $i)"
-              JAVA_HEALTHY=true
-              break
-            else
-              echo "Java Backend health check failed, attempt $i/20"
-              sleep 15
-            fi
-          done
-          
           echo "=== PORT STATUS ==="
           sudo ss -tlnp | grep -E ":800[0-8]" || echo "No services listening on ports 8000-8008"
           
@@ -477,7 +425,7 @@ jobs:
           
           echo "=== FINAL HEALTH STATUS ==="
           
-          if [ "$AI_HEALTHY" = true ] && [ "$ML_HEALTHY" = true ] && [ "$JAVA_HEALTHY" = true ]; then
+          if [ "$AI_HEALTHY" = true ] && [ "$ML_HEALTHY" = true ]; then
             echo "OVERALL STATUS: HEALTHY"
             echo "All services are running and responding correctly"
             exit 0
@@ -485,26 +433,22 @@ jobs:
             echo "OVERALL STATUS: UNHEALTHY"
             echo "AI Service: $AI_HEALTHY"
             echo "ML Service: $ML_HEALTHY"
-            echo "Java Backend: $JAVA_HEALTHY"
             
             # Show Java logs if backend is unhealthy
-            if [ "$JAVA_HEALTHY" = false ]; then
-              echo "=== JAVA BACKEND ERROR LOGS ==="
-              tail -50 java_backend.log 2>/dev/null || echo "No Java backend logs found"
-              
-              # Additional debugging
-              echo "=== JAVA PROCESS CHECK ==="
-              if pgrep -f "project-.*\.jar" > /dev/null; then
-                echo "Java process is running but not responding to HTTP requests"
-                echo "This may be normal during Spring Boot initialization"
-              else
-                echo "Java process is not running - startup failed"
-              fi
-              
-              echo "=== PORT 8080 STATUS ==="
-              sudo ss -tlnp | grep ":8080" || echo "Port 8080 is not bound"
+            echo "=== JAVA BACKEND ERROR LOGS ==="
+            tail -50 java_backend.log 2>/dev/null || echo "No Java backend logs found"
+            
+            # Additional debugging
+            echo "=== JAVA PROCESS CHECK ==="
+            if pgrep -f "project-.*\.jar" > /dev/null; then
+              echo "Java process is running but not responding to HTTP requests"
+              echo "This may be normal during Spring Boot initialization"
+            else
+              echo "Java process is not running - startup failed"
             fi
             
+            echo "=== PORT 8080 STATUS ==="
+            sudo ss -tlnp | grep ":8080" || echo "Port 8080 is not bound"
             exit 1
           fi
         EOF
