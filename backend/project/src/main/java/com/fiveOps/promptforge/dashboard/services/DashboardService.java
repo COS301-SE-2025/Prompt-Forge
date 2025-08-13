@@ -13,6 +13,15 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 
 @Service
 public class DashboardService {
+  // Category breakdown for all prompts by a user
+  public List<Object[]> getCategoryBreakdown(UUID userId) {
+    return dashboardRepository.getCategoryBreakdownByUser(userId);
+  }
+
+  // Monthly prompt counts for each month of the year
+  public List<Object[]> getMonthlyPromptCounts(UUID userId, int year) {
+    return dashboardRepository.getMonthlyPromptCountsByUser(userId, year);
+  }
 
   @Autowired private DashboardRepository dashboardRepository;
 
@@ -28,7 +37,8 @@ public class DashboardService {
 
   // Total downloads for all prompts (public and private)
   public Long getTotalDownloads(UUID userId) {
-    return dashboardRepository.totalDownloadsByUser(userId);
+    Long count = dashboardRepository.totalDownloadsByUser(userId);
+    return (count != null && count > 0) ? count : null;
   }
 
   // Top performing prompts by downloads (public and private)

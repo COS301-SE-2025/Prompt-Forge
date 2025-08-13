@@ -2,6 +2,7 @@ package com.fiveOps.promptforge.dashboard.controller;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,6 +20,66 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class DashboardController {
+  @GetMapping("/category-breakdown")
+  public Map<String, Long> getCategoryBreakdown(Principal principal) {
+    UUID userId = null;
+    String userEmail = null;
+
+    if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+      userEmail = principal.getName();
+      User user = userRepository.findByEmail(userEmail).orElse(null);
+      if (user != null) {
+        userId = user.getUserId();
+      }
+    }
+    if (userId == null) {
+      return new HashMap<>();
+    }
+
+    Map<String, Long> breakdown = new HashMap<>();
+    try {
+      List<Object[]> raw = dashboardService.getCategoryBreakdown(userId);
+      for (Object[] row : raw) {
+        String category = row[0] != null ? row[0].toString() : "Unknown";
+        Long count = row[1] != null ? Long.valueOf(row[1].toString()) : 0L;
+        breakdown.put(category, count);
+      }
+    } catch (Exception e) {
+      System.err.println("Error fetching category breakdown: " + e.getMessage());
+    }
+    return breakdown;
+  }
+
+  @GetMapping("/monthly-prompt-counts")
+  public Map<Integer, Long> getMonthlyPromptCounts(Principal principal) {
+    UUID userId = null;
+    String userEmail = null;
+
+    if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+      userEmail = principal.getName();
+      User user = userRepository.findByEmail(userEmail).orElse(null);
+      if (user != null) {
+        userId = user.getUserId();
+      }
+    }
+    if (userId == null) {
+      return new HashMap<>();
+    }
+
+    int year = java.time.LocalDate.now().getYear();
+    Map<Integer, Long> result = new HashMap<>();
+    try {
+      List<Object[]> raw = dashboardService.getMonthlyPromptCounts(userId, year);
+      for (Object[] row : raw) {
+        Integer month = row[0] != null ? ((Number) row[0]).intValue() : null;
+        Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+        if (month != null) result.put(month, count);
+      }
+    } catch (Exception e) {
+      System.err.println("Error fetching monthly prompt counts: " + e.getMessage());
+    }
+    return result;
+  }
 
   @Autowired private DashboardService dashboardService;
 
@@ -52,41 +113,51 @@ public class DashboardController {
       }
     }
 
-    // Fallback for development/testing
+    // Return empty data if no user found instead of dummy data
     if (userId == null) {
-      System.out.println("No userId found, using development fallback");
-      return createDummyDashboardData();
+      System.out.println("No userId found, returning empty dashboard data");
+      return createEmptyDashboardData();
     }
 
-    System.out.println("🎯 Dashboard request for userId: " + userId);
+    System.out.println("Dashboard request for userId: " + userId);
 
     // Get real data from service
     Map<String, Object> result = new HashMap<>();
     try {
+      Long totalDownloads = dashboardService.getTotalDownloads(userId);
+      Double averageRating = dashboardService.getAverageRating(userId);
+
       result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
-      result.put("averageRating", dashboardService.getAverageRating(userId));
-      result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
+      result.put("averageRating", averageRating);
+      result.put("totalDownloads", totalDownloads);
       result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
       result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
+      result.put("categoryBreakdown", dashboardService.getCategoryBreakdown(userId));
+      result.put(
+          "monthlyAnalytics",
+          dashboardService.getMonthlyPromptCounts(userId, java.time.LocalDate.now().getYear()));
 
-      System.out.println("Dashboard data retrieved successfully");
+      System.out.println(
+          "Dashboard data retrieved - Downloads: " + totalDownloads + ", Rating: " + averageRating);
     } catch (Exception e) {
-      System.err.println(" Dashboard service error: " + e.getMessage());
+      System.err.println("Dashboard service error: " + e.getMessage());
       e.printStackTrace();
-      return createDummyDashboardData();
+      return createEmptyDashboardData();
     }
 
     return result;
   }
 
-  private Map<String, Object> createDummyDashboardData() {
+  private Map<String, Object> createEmptyDashboardData() {
     Map<String, Object> result = new HashMap<>();
     result.put("totalPrompts", 12);
     result.put("averageRating", 4.6);
     result.put("totalDownloads", 3847);
     result.put("topPrompts", new java.util.ArrayList<>());
     result.put("monthlyUsage", 1250);
-    System.out.println("✅ Returning dummy dashboard data");
+    result.put("categoryBreakdown", new HashMap<String, Long>());
+    result.put("monthlyAnalytics", new java.util.ArrayList<>());
+    System.out.println("⚠️ Returning empty dashboard data (no user or error)");
     return result;
   }
 }

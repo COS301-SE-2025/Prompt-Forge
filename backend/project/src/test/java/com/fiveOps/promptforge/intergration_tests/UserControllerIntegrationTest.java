@@ -47,7 +47,7 @@ class UserControllerIntegrationTest {
 
   @Autowired private PasswordEncoder passwordEncoder;
 
-  private final String TEST_EMAIL = "testuser@integration.com";
+  private final String TEST_EMAIL = "testuser" + System.currentTimeMillis() + "@integration.com";
   private final String TEST_PASSWORD = "securePass123";
   private final String TEST_USERNAME = "IntegrationUser";
 
@@ -56,7 +56,7 @@ class UserControllerIntegrationTest {
 
   @BeforeAll
   void setup() {
-    // Clean up any existing test user
+    // Clean up any existing test user (just in case)
     userRepository.findByEmail(TEST_EMAIL).ifPresent(userRepository::delete);
   }
 
