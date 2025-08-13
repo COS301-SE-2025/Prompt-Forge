@@ -296,7 +296,7 @@ export default function MyPromptsPage() {
 
   const filters = [
     { value: "all", label: "All" },
-    { value: "favorites", label: "Favorites" },
+    // { value: "favorites", label: "Favorites" },
     { value: "recent", label: "Recent" },
     { value: "popular", label: "Popular" },
     { value: "private", label: "Private" },
