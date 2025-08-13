@@ -72,6 +72,35 @@ export default function DashboardPage() {
   // Top user prompts (by avgRating)
   const [topUserPrompts, setTopUserPrompts] = useState<(MyPrompt & { avgRating: number })[]>([])
   const [loadingTopUserPrompts, setLoadingTopUserPrompts] = useState(true)
+  //Analytics Overview
+
+const [monthlyPromptCounts, setMonthlyPromptCounts] = useState<Record<number, number>>({});
+const [loadingMonthlyCounts, setLoadingMonthlyCounts] = useState(true);
+
+// Add this useEffect to fetch monthly prompt counts
+  useEffect(() => {
+    const fetchMonthlyPromptCounts = async () => {
+      if (!isAuthenticated) return;
+      setLoadingMonthlyCounts(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/monthly-prompt-counts`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setMonthlyPromptCounts(data);
+        } else {
+          setMonthlyPromptCounts({});
+        }
+      } catch {
+        setMonthlyPromptCounts({});
+      }
+      setLoadingMonthlyCounts(false);
+    };
+    if (isAuthenticated) fetchMonthlyPromptCounts();
+  }, [isAuthenticated]);
 
   // Widget management with default widgets
   const [widgets, setWidgets] = useState<Widget[]>([
@@ -622,6 +651,8 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
                 categoryBreakdown: categoryBreakdown
               }}
               topUserPrompts={topUserPrompts}
+              analyticsOverviewData={monthlyPromptCounts}
+              loadingAnalyticsOverview={loadingMonthlyCounts}
               loadingTopUserPrompts={loadingTopUserPrompts}
             />
           </div>

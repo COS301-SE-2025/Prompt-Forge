@@ -50,6 +50,8 @@ interface WidgetManagerProps {
   widgets: Widget[]
   onUpdateWidgets: (widgets: Widget[]) => void
   dashboardData?: any
+  analyticsOverviewData?: Record<number, number>
+  loadingAnalyticsOverview?: boolean
   topUserPrompts?: any[]
   loadingTopUserPrompts?: boolean
 }
@@ -157,6 +159,8 @@ export default function WidgetManager({
   widgets,
   onUpdateWidgets,
   dashboardData,
+  analyticsOverviewData = {},
+  loadingAnalyticsOverview = false,
   topUserPrompts = [],
   loadingTopUserPrompts = false,
 }: WidgetManagerProps) {
@@ -308,39 +312,44 @@ export default function WidgetManager({
           </div>
         )
       case "analytics-chart": {
-        // Mock data for bar chart
-        const analyticsData = [
-          { month: "Jan", usage: 40 },
-          { month: "Feb", usage: 60 },
-          { month: "Mar", usage: 30 },
-          { month: "Apr", usage: 80 },
-          { month: "May", usage: 55 },
-          { month: "Jun", usage: 70 },
-        ]
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const analyticsData = Array.from({ length: 12 }, (_, i) => ({
+          month: monthNames[i],
+          prompts: analyticsOverviewData[i + 1] || 0, // i+1 because months are 1-12
+        }));
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
               <p className="text-sm font-semibold">Analytics Overview</p>
               {widgetType.icon}
             </div>
-            {/* Shift chart left using justify-start */}
             <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl pl-8">
-              <ResponsiveContainer width="95%" height={220}>
-                <ReBarChart data={analyticsData}>
-                  <XAxis dataKey="month" stroke="#4079ff" />
-                  <YAxis stroke="#3ebb9e" />
-                  <Tooltip
-                    wrapperStyle={{ backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px #3ebb9e22" }}
-                    labelStyle={{ color: "#4079ff" }}
-                    itemStyle={{ color: "#3ebb9e" }}
-                  />
-                  <Bar dataKey="usage" radius={[8, 8, 0, 0]}>
-                    {analyticsData.map((entry, idx) => (
-                      <Cell key={`cell-bar-${idx}`} fill={chartColors[idx % chartColors.length]} />
-                    ))}
-                  </Bar>
-                </ReBarChart>
-              </ResponsiveContainer>
+              {loadingAnalyticsOverview ? (
+                <div className="text-muted-foreground">Loading analytics...</div>
+              ) : (
+                <ResponsiveContainer width="95%" height={220}>
+                  <ReBarChart data={analyticsData}>
+                    <XAxis dataKey="month" stroke="#4079ff" />
+                    <YAxis stroke="#3ebb9e" />
+                    <Tooltip
+                      wrapperStyle={{ backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px #3ebb9e22" }}
+                      labelStyle={{ color: "#4079ff" }}
+                      itemStyle={{ color: "#3ebb9e" }}
+                      formatter={(value: number) => [`${value} prompts`, "Count"]}
+                      labelFormatter={(label) => `Month: ${label}`}
+                    />
+                    <Bar 
+                      name="Prompts Created" 
+                      dataKey="prompts" 
+                      radius={[8, 8, 0, 0]}
+                    >
+                      {analyticsData.map((entry, idx) => (
+                        <Cell key={`cell-bar-${idx}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                    </Bar>
+                  </ReBarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         )

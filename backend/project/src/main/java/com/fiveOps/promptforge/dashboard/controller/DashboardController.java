@@ -50,6 +50,37 @@ public class DashboardController {
     return breakdown;
   }
 
+    @GetMapping("/monthly-prompt-counts")
+    public Map<Integer, Long> getMonthlyPromptCounts(Principal principal) {
+      UUID userId = null;
+      String userEmail = null;
+
+      if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+        userEmail = principal.getName();
+        User user = userRepository.findByEmail(userEmail).orElse(null);
+        if (user != null) {
+          userId = user.getUserId();
+        }
+      }
+      if (userId == null) {
+        return new HashMap<>();
+      }
+
+      int year = java.time.LocalDate.now().getYear();
+      Map<Integer, Long> result = new HashMap<>();
+      try {
+        List<Object[]> raw = dashboardService.getMonthlyPromptCounts(userId, year);
+        for (Object[] row : raw) {
+          Integer month = row[0] != null ? ((Number) row[0]).intValue() : null;
+          Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+          if (month != null) result.put(month, count);
+        }
+      } catch (Exception e) {
+        System.err.println("Error fetching monthly prompt counts: " + e.getMessage());
+      }
+      return result;
+    }
+
   @Autowired private DashboardService dashboardService;
 
   @Autowired private UserRepository userRepository;

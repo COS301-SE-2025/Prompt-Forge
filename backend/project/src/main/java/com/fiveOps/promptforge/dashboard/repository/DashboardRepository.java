@@ -86,4 +86,17 @@ public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
   nativeQuery = true
   )
   List<Object[]> getCategoryBreakdownByUser(UUID userId);
+
+    @Query(
+      value = """
+        SELECT EXTRACT(MONTH FROM p.created_at) AS month, COUNT(*) AS count
+        FROM prompts p
+        WHERE p.author_id = :userId
+          AND EXTRACT(YEAR FROM p.created_at) = :year
+        GROUP BY month
+        ORDER BY month
+      """,
+      nativeQuery = true
+    )
+    List<Object[]> getMonthlyPromptCountsByUser(UUID userId, int year);
 }
