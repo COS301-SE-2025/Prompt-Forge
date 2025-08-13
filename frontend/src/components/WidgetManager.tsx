@@ -560,7 +560,7 @@ const renderPieLabel = ({
     <text
       x={x}
       y={y}
-      fill="#222"
+      fill="#ffffffff"
       textAnchor="middle"
       dominantBaseline="central"
       fontSize={13}
