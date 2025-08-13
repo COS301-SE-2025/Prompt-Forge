@@ -37,7 +37,8 @@ public class DashboardService {
 
   // Total downloads for all prompts (public and private)
   public Long getTotalDownloads(UUID userId) {
-    return dashboardRepository.totalDownloadsByUser(userId);
+    Long count = dashboardRepository.totalDownloadsByUser(userId);
+    return (count != null && count > 0) ? count : null;
   }
 
   // Top performing prompts by downloads (public and private)
