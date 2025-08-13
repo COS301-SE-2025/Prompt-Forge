@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { AuthService } from "@/services/authService";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const authService = new AuthService();
@@ -359,10 +360,27 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <Button variant="outline" className="w-full h-10 sm:h-11 text-sm sm:text-base transition-all hover:bg-muted">
-                        <Chrome className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        Continue with Google
-                      </Button>
+                        <div style={{ display: "flex", justifyContent: "center", minWidth: 250, width: "100%" }}>
+                          <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                              try {
+                                const result = await authService.googleLogin(credentialResponse.credential!);
+                                if (result?.message === "Google login successful") {
+                                  if (result.username) localStorage.setItem("username", result.username);
+                                  if (result.userId) localStorage.setItem("userId", result.userId);
+                                  if (result.email) localStorage.setItem("userEmail", result.email);
+                                  setError("");
+                                  navigate("/home");
+                                } else {
+                                  setError("Google login failed");
+                                }
+                              } catch (err: any) {
+                                setError(err.message || "Google login error");
+                              }
+                            }}
+                            onError={() => setError("Google login failed")}
+                          />
+                        </div>
                     </div>
                   )}
 
@@ -387,7 +405,18 @@ export default function LoginPage() {
                           className="bg-muted border-muted h-10 sm:h-11 text-sm"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
+                          onBlur={() => {
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (signupEmail && !emailRegex.test(signupEmail)) {
+                              setError("Please enter a valid email address");
+                            } else {
+                              setError("");
+                            }
+                          }}
                         />
+                        {signupEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail) && (
+                          <div className="text-xs text-red-500 mt-1">Please enter a valid email address</div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <label className="text-labelText px-1 text-sm">Password</label>
@@ -491,10 +520,27 @@ export default function LoginPage() {
                         <div className="flex-grow border-t border-border"></div>
                       </div>
 
-                      <Button variant="outline" className="w-full h-10 sm:h-11 text-sm sm:text-base transition-all hover:bg-muted">
-                        <Chrome className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        Continue with Google
-                      </Button>
+                        <div style={{ display: "flex", justifyContent: "center", minWidth: 250, width: "100%" }}>
+                          <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                              try {
+                                const result = await authService.googleLogin(credentialResponse.credential!);
+                                if (result?.message === "Google login successful") {
+                                  if (result.username) localStorage.setItem("username", result.username);
+                                  if (result.userId) localStorage.setItem("userId", result.userId);
+                                  if (result.email) localStorage.setItem("userEmail", result.email);
+                                  setError("");
+                                  navigate("/home");
+                                } else {
+                                  setError("Google login failed");
+                                }
+                              } catch (err: any) {
+                                setError(err.message || "Google login error");
+                              }
+                            }}
+                            onError={() => setError("Google login failed")}
+                          />
+                        </div>
                     </div>
                   )}
                 </>
