@@ -333,8 +333,7 @@ public class PromptService {
     // if(filter == "favorites")
     //   return getFavouritePrompts(userId, pageable);
 
-    if (filter.equals("popular"))
-      return getPopularPromptsByOptionalTag(userId, tagName, pageable);
+    if (filter.equals("popular")) return getPopularPromptsByOptionalTag(userId, tagName, pageable);
 
     if (filter.equals("recent"))
       return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
