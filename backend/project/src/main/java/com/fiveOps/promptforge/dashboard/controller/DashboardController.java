@@ -58,7 +58,7 @@ public class DashboardController {
       return createEmptyDashboardData();
     }
 
-    System.out.println("🎯 Dashboard request for userId: " + userId);
+    System.out.println("Dashboard request for userId: " + userId);
 
     // Get real data from service
     Map<String, Object> result = new HashMap<>();
@@ -72,10 +72,10 @@ public class DashboardController {
       result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
       result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
 
-      System.out.println("✅ Dashboard data retrieved - Downloads: " + totalDownloads 
+      System.out.println("Dashboard data retrieved - Downloads: " + totalDownloads 
           + ", Rating: " + averageRating);
     } catch (Exception e) {
-      System.err.println("❌ Dashboard service error: " + e.getMessage());
+      System.err.println("Dashboard service error: " + e.getMessage());
       e.printStackTrace();
       return createEmptyDashboardData();
     }

@@ -10,29 +10,47 @@ import org.springframework.data.repository.CrudRepository;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 
 public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
+  // Average rating for all prompts by a user
+  @Query(
+    value = """
+    SELECT AVG(r.rating) FROM reviews r WHERE r.prompt_id 
+    IN (SELECT p.prompt_id FROM prompts p WHERE p.author_id = :userId)
+    """,
+    nativeQuery = true
+  )
+  Double averageRatingByUser(UUID userId);
 
   // Count all prompts by user (public and private)
   @Query("SELECT COUNT(p) FROM Prompt p WHERE p.authorId = :userId")
   long countAllByUser(UUID userId);
 
   // Average rating for all user's prompts (public and private)
-  @Query(
-      """
-    SELECT AVG(a.avgRating)
-    FROM Prompt p
-    JOIN PromptAnalytics a ON p.id = a.promptId
-    WHERE p.authorId = :userId
-    """)
-  Double averageRatingByUser(UUID userId);
+  // @Query(
+  //     """
+  //   SELECT AVG(a.rating)
+  //   FROM Prompt p
+  //   JOIN reviews a ON p.prompt_id = a.prompt_id
+  //   WHERE p.authorId = :userId
+   
+  //   """)
+  // Double averageRatingByUser(UUID userId);
 
   // Total downloads for all user's prompts (public and private)
+//   @Query(
+//       """
+//     SELECT SUM(a.downloadCount)
+//     FROM Prompt p
+//     JOIN PromptAnalytics a ON p.id = a.promptId
+//     WHERE p.authorId = :userId
+// """)
+//   Long totalDownloadsByUser(UUID userId);
   @Query(
-      """
-    SELECT SUM(a.downloadCount)
-    FROM Prompt p
-    JOIN PromptAnalytics a ON p.id = a.promptId
-    WHERE p.authorId = :userId
-""")
+  value = """
+    SELECT COUNT(*) FROM purchased_prompts pp
+    WHERE pp.prompt_id IN (SELECT p.prompt_id FROM prompts p WHERE p.author_id = :userId)
+  """,
+  nativeQuery = true
+  )
   Long totalDownloadsByUser(UUID userId);
 
   // Top performing prompts by downloads (public and private)

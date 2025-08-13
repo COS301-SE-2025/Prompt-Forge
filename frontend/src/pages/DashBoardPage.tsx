@@ -28,23 +28,13 @@ type UserProfile = {
 
 // Update the allowedTags array to match the actual Category type
 const allowedTags = [
-  "default",
   "Business", 
-  "Development", 
   "Coding", 
   "Science", 
-  "Problem Solving", 
   "Technical", 
   "Health", 
-  "Creative Writing",  // Add this
-  "Research", 
-  "Education", 
-  "Marketing", 
-  "Data Analysis", 
-  "Content Creation",  // Add this
-  "Gaming", 
-  "Environment", 
-  "null"
+  "General"
+
 ] as const;
 
 export default function DashboardPage() {
@@ -427,22 +417,6 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Create a mapping function to handle tag conversion
-  const mapTagToCategory = (tag: string): typeof allowedTags[number] => {
-    const tagMap: Record<string, typeof allowedTags[number]> = {
-      "Writing": "Creative Writing",
-      "Content": "Content Creation", 
-      "Design": "default",  // Map to default since "Design" isn't in Category type
-      "SEO": "Marketing",
-      // Add other mappings as needed
-    };
-    
-    const mappedTag = tagMap[tag] || tag;
-    return allowedTags.includes(mappedTag as typeof allowedTags[number]) 
-      ? (mappedTag as typeof allowedTags[number])
-      : "default";
-  };
-
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -633,7 +607,7 @@ export default function DashboardPage() {
                       prompt.tags.map(tag =>
                         allowedTags.includes(tag as typeof allowedTags[number])
                           ? (tag as typeof allowedTags[number])
-                          : "default"
+                          : "General"
                       )
                     }
                     category={prompt.category}
