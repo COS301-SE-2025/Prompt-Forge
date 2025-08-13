@@ -157,6 +157,17 @@ class ProfileService {
       throw error
     }
   }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    const response = await this.httpClient.post(
+      "/user/change-password",
+      { currentPassword, newPassword },
+      { headers: { "Content-Type": "application/json" }, credentials: "include" }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Failed to change password");
+    return
+  }
 }
 
 export const profileService = new ProfileService();

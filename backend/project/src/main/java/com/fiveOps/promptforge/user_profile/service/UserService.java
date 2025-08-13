@@ -249,4 +249,20 @@ public class UserService {
         .findByEmail(email)
         .orElse(null); // Return null if not found, let controller handle it
   }
+
+  public User findByResetToken(String token) {
+    return userRepository.findByResetToken(token).orElse(null);
+  }
+
+  public void save(User user) {
+    userRepository.save(user);
+  }
+
+  public String encodePassword(String raw) {
+    return passwordEncoder.encode(raw);
+  }
+
+  public boolean matchesPassword(String raw, String encoded) {
+    return passwordEncoder.matches(raw, encoded);
+  }
 }

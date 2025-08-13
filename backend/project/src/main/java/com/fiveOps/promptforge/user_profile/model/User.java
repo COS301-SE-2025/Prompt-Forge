@@ -66,6 +66,9 @@ public class User {
   private String googleId;
   private String oauthProvider;
 
+  @Column(name = "reset_token")
+  private String resetToken;
+
   // === Getters ===
 
   public UUID getUserId() {
@@ -136,6 +139,10 @@ public class User {
     return oauthProvider;
   }
 
+  public String getResetToken() {
+    return resetToken;
+  }
+
   // === Setters ===
 
   public void setUserId(UUID userId) {
@@ -204,5 +211,9 @@ public class User {
 
   public void setOauthProvider(String oauthProvider) {
     this.oauthProvider = oauthProvider;
+  }
+
+  public void setResetToken(String resetToken) {
+    this.resetToken = resetToken;
   }
 }
