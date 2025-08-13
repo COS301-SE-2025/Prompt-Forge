@@ -18,10 +18,10 @@ public class DashboardService {
     return dashboardRepository.getCategoryBreakdownByUser(userId);
   }
 
-    // Monthly prompt counts for each month of the year
-    public List<Object[]> getMonthlyPromptCounts(UUID userId, int year) {
-      return dashboardRepository.getMonthlyPromptCountsByUser(userId, year);
-    }
+  // Monthly prompt counts for each month of the year
+  public List<Object[]> getMonthlyPromptCounts(UUID userId, int year) {
+    return dashboardRepository.getMonthlyPromptCountsByUser(userId, year);
+  }
 
   @Autowired private DashboardRepository dashboardRepository;
 

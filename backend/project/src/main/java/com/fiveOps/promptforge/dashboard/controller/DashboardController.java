@@ -2,9 +2,9 @@ package com.fiveOps.promptforge.dashboard.controller;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -50,36 +50,36 @@ public class DashboardController {
     return breakdown;
   }
 
-    @GetMapping("/monthly-prompt-counts")
-    public Map<Integer, Long> getMonthlyPromptCounts(Principal principal) {
-      UUID userId = null;
-      String userEmail = null;
+  @GetMapping("/monthly-prompt-counts")
+  public Map<Integer, Long> getMonthlyPromptCounts(Principal principal) {
+    UUID userId = null;
+    String userEmail = null;
 
-      if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
-        userEmail = principal.getName();
-        User user = userRepository.findByEmail(userEmail).orElse(null);
-        if (user != null) {
-          userId = user.getUserId();
-        }
+    if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+      userEmail = principal.getName();
+      User user = userRepository.findByEmail(userEmail).orElse(null);
+      if (user != null) {
+        userId = user.getUserId();
       }
-      if (userId == null) {
-        return new HashMap<>();
-      }
-
-      int year = java.time.LocalDate.now().getYear();
-      Map<Integer, Long> result = new HashMap<>();
-      try {
-        List<Object[]> raw = dashboardService.getMonthlyPromptCounts(userId, year);
-        for (Object[] row : raw) {
-          Integer month = row[0] != null ? ((Number) row[0]).intValue() : null;
-          Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
-          if (month != null) result.put(month, count);
-        }
-      } catch (Exception e) {
-        System.err.println("Error fetching monthly prompt counts: " + e.getMessage());
-      }
-      return result;
     }
+    if (userId == null) {
+      return new HashMap<>();
+    }
+
+    int year = java.time.LocalDate.now().getYear();
+    Map<Integer, Long> result = new HashMap<>();
+    try {
+      List<Object[]> raw = dashboardService.getMonthlyPromptCounts(userId, year);
+      for (Object[] row : raw) {
+        Integer month = row[0] != null ? ((Number) row[0]).intValue() : null;
+        Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+        if (month != null) result.put(month, count);
+      }
+    } catch (Exception e) {
+      System.err.println("Error fetching monthly prompt counts: " + e.getMessage());
+    }
+    return result;
+  }
 
   @Autowired private DashboardService dashboardService;
 
@@ -126,18 +126,19 @@ public class DashboardController {
     try {
       Long totalDownloads = dashboardService.getTotalDownloads(userId);
       Double averageRating = dashboardService.getAverageRating(userId);
-      
+
       result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
       result.put("averageRating", averageRating);
       result.put("totalDownloads", totalDownloads);
       result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
       result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
       result.put("categoryBreakdown", dashboardService.getCategoryBreakdown(userId));
-      result.put("monthlyAnalytics", 
+      result.put(
+          "monthlyAnalytics",
           dashboardService.getMonthlyPromptCounts(userId, java.time.LocalDate.now().getYear()));
 
-      System.out.println("Dashboard data retrieved - Downloads: " + totalDownloads 
-          + ", Rating: " + averageRating);
+      System.out.println(
+          "Dashboard data retrieved - Downloads: " + totalDownloads + ", Rating: " + averageRating);
     } catch (Exception e) {
       System.err.println("Dashboard service error: " + e.getMessage());
       e.printStackTrace();
