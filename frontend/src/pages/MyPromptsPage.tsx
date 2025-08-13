@@ -296,7 +296,7 @@ export default function MyPromptsPage() {
 
   const filters = [
     { value: "all", label: "All" },
-    { value: "favorites", label: "Favorites" },
+    // { value: "favorites", label: "Favorites" },
     { value: "recent", label: "Recent" },
     { value: "popular", label: "Popular" },
     { value: "private", label: "Private" },
@@ -459,9 +459,23 @@ export default function MyPromptsPage() {
     }
 
     // Filter type
+    if (selectedFilter === "recent"){
+      
+      filtered = filtered.filter(p => {
+        const promptCreationDate = new Date(p.createdAt);
+        const today = new Date();
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        const diffMs = today.getDate() - promptCreationDate.getDate();
+
+        return diffMs >= 0 && diffMs <= sevenDaysMs;
+        
+      })
+    }
+    if (selectedFilter === "popular") filtered = filtered.filter(p => p.uses > 3)
     if (selectedFilter === "favorites") filtered = filtered.filter(p => p.isFavorite)
     if (selectedFilter === "private") filtered = filtered.filter(p => p.isPrivate)
     if (selectedFilter === "public") filtered = filtered.filter(p => !p.isPrivate)
+    if (selectedFilter === "purchased") filtered = filtered.filter(p => p.source === "purchased")
 
     // Search: if searchQuery is empty, show all prompts
     if (searchQuery.trim() !== "") {
