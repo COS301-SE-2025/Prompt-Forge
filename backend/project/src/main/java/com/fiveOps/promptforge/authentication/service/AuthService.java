@@ -1,6 +1,7 @@
 package com.fiveOps.promptforge.authentication.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -80,5 +81,35 @@ public class AuthService {
     return userRepository
         .findByEmail(email)
         .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+  }
+
+  public String googleLogin(String googleId, String email, String name, String pictureUrl) {
+    Optional<User> userOpt = userRepository.findByGoogleId(googleId);
+    User user;
+    if (userOpt.isPresent()) {
+      user = userOpt.get();
+    } else {
+      // If not found by googleId, try by email (for users who signed up with email first)
+      userOpt = userRepository.findByEmail(email);
+      if (userOpt.isPresent()) {
+        user = userOpt.get();
+        user.setGoogleId(googleId);
+        user.setOauthProvider("google");
+        userRepository.save(user);
+      } else {
+        // Create new user
+        user = new User();
+        user.setUserId(UUID.randomUUID());
+        user.setEmail(email);
+        user.setGoogleId(googleId);
+        user.setOauthProvider("google");
+        user.setUsername(name);
+        user.setProfilePictureUrl(pictureUrl);
+        user.setIsActive(true);
+        userRepository.save(user);
+      }
+    }
+    // Generate and return JWT token
+    return jwtUtil.generateToken(user.getEmail());
   }
 }

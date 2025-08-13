@@ -27,7 +27,9 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
 import com.fiveOps.promptforge.user_profile.dto.UserDto;
+import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.service.UserService;
+import com.fiveOps.promptforge.util.service.MailService;
 
 @RestController
 @RequestMapping("/api/user")
@@ -39,6 +41,8 @@ public class UserController {
   @Autowired private UserService userService;
 
   @Autowired private JwtUtil jwtUtil;
+
+  @Autowired private MailService mailService;
 
   @GetMapping("/{id}")
   public UserDto getUser(@PathVariable UUID id) {
@@ -172,5 +176,57 @@ public class UserController {
   public ResponseEntity<UserDto> getFullCurrentUser(HttpServletRequest request) {
     String email = extractEmailFromCookie(request);
     return ResponseEntity.ok(userService.getUserByEmail(email));
+  }
+
+  // Forgot password: send email
+  @PostMapping("/forgot-password")
+  public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+    String email = body.get("email");
+    User user = userService.findByEmail(email);
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "User not found"));
+    }
+    String token = java.util.UUID.randomUUID().toString();
+    user.setResetToken(token);
+    userService.save(user);
+
+    String resetLink = "https://your-frontend-url/reset-password?token=" + token;
+    mailService.sendMail(email, "Password Reset", "Reset your password: " + resetLink);
+
+    return ResponseEntity.ok(Map.of("message", "Reset email sent"));
+  }
+
+  // Reset password: use token
+  @PostMapping("/reset-password")
+  public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+    String token = body.get("token");
+    String newPassword = body.get("newPassword");
+    User user = userService.findByResetToken(token);
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid token"));
+    }
+    user.setPasswordHash(userService.encodePassword(newPassword));
+    user.setResetToken(null);
+    userService.save(user);
+    return ResponseEntity.ok(Map.of("message", "Password reset successful"));
+  }
+
+  @PostMapping("/change-password")
+  public ResponseEntity<?> changePassword(
+      HttpServletRequest request, @RequestBody Map<String, String> body) {
+    String email = extractEmailFromCookie(request);
+    String currentPassword = body.get("currentPassword");
+    String newPassword = body.get("newPassword");
+    User user = userService.findByEmail(email);
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "User not found"));
+    }
+    if (!userService.matchesPassword(currentPassword, user.getPasswordHash())) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(Map.of("message", "Current password incorrect"));
+    }
+    user.setPasswordHash(userService.encodePassword(newPassword));
+    userService.save(user);
+    return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
   }
 }

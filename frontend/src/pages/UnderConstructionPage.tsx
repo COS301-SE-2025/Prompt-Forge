@@ -47,7 +47,7 @@ export default function UnderConstructionPage() {
           <Card className="p-6 bg-muted/50 border-border">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-foreground">Development Progress</span>
-              <span className="text-sm text-[#3ebb9e] font-semibold">20%</span>
+              <span className="text-sm text-[#3ebb9e] font-semibold">70%</span>
             </div>
             <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
               <div

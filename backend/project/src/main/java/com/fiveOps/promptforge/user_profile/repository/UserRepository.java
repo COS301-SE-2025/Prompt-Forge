@@ -21,4 +21,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       String usernamePart, String emailPart);
 
   void deleteByEmail(String email);
+
+  Optional<User> findByGoogleId(String googleId);
+
+  Optional<User> findByResetToken(String resetToken);
 }

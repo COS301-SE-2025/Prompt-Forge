@@ -50,6 +50,8 @@ interface WidgetManagerProps {
   widgets: Widget[]
   onUpdateWidgets: (widgets: Widget[]) => void
   dashboardData?: any
+  analyticsOverviewData?: Record<number, number>
+  loadingAnalyticsOverview?: boolean
   topUserPrompts?: any[]
   loadingTopUserPrompts?: boolean
 }
@@ -157,6 +159,8 @@ export default function WidgetManager({
   widgets,
   onUpdateWidgets,
   dashboardData,
+  analyticsOverviewData = {},
+  loadingAnalyticsOverview = false,
   topUserPrompts = [],
   loadingTopUserPrompts = false,
 }: WidgetManagerProps) {
@@ -202,9 +206,9 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Total Prompts</p>
+              <p className="text-sm text-muted-foreground mb-1">Total Prompts</p>
               <p className="text-2xl font-bold">{data?.totalPrompts || 0}</p>
-              <p className="text-sm text-muted-foreground">+12.5% from last month</p>
+              <p className="text-xs text-muted-foreground">Total prompts you've made</p>
             </div>
             {widgetType.icon}
           </div>
@@ -213,9 +217,9 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Total Users</p>
+              <p className="text-sm text-muted-foreground mb-1">Total Users</p>
               <p className="text-2xl font-bold">{data?.totalDownloads || 0}</p>
-              <p className="text-sm text-muted-foreground">Active users</p>
+              <p className="text-xs text-muted-foreground">Active users</p>
             </div>
             {widgetType.icon}
           </div>
@@ -224,9 +228,9 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Average Rating</p>
+              <p className="text-sm text-muted-foreground mb-1">Average Rating</p>
               <p className="text-2xl font-bold">{data?.averageRating?.toFixed(1) || "0.0"}</p>
-              <p className="text-sm text-muted-foreground">-2.1% from last month</p>
+              <p className="text-xs text-muted-foreground">Across your published prompts</p>
             </div>
             {widgetType.icon}
           </div>
@@ -235,9 +239,9 @@ export default function WidgetManager({
         return (
           <div className="flex items-center justify-between h-full">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Monthly Usage</p>
+              <p className="text-sm text-muted-foreground mb-1">Monthly Usage</p>
               <p className="text-2xl font-bold">{data?.monthlyUsage || 0}</p>
-              <p className="text-sm text-muted-foreground">+8.2% from last month</p>
+              <p className="text-xs text-muted-foreground">Number of times your prompts were used</p>
             </div>
             {widgetType.icon}
           </div>
@@ -272,75 +276,57 @@ export default function WidgetManager({
         )
       case "recent-activity":
         return (
-          <div className="h-full flex flex-col">
-            <div className="mb-3 flex justify-between items-center">
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="mb-3 flex justify-between items-center w-full">
               <p className="text-sm font-semibold">Recent Activity</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 overflow-y-auto">
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="h-3 w-3 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-1">
-                      <span className="font-medium">Boityyyyy</span>
-                      <span className="text-muted-foreground">followed you</span>
-                    </div>
-                    <div className="text-muted-foreground">1.5h</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Star className="h-3 w-3 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-1">
-                      <span className="font-medium">NavD</span>
-                      <span className="text-muted-foreground">rated your prompt</span>
-                    </div>
-                    <div className="text-muted-foreground">5h</div>
-                  </div>
-                </div>
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <Activity className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Activity heatmap</p>
+              <p className="text-xs text-muted-foreground">coming soon</p>
             </div>
           </div>
         )
       case "analytics-chart": {
-        // Mock data for bar chart
-        const analyticsData = [
-          { month: "Jan", usage: 40 },
-          { month: "Feb", usage: 60 },
-          { month: "Mar", usage: 30 },
-          { month: "Apr", usage: 80 },
-          { month: "May", usage: 55 },
-          { month: "Jun", usage: 70 },
-        ]
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const analyticsData = Array.from({ length: 12 }, (_, i) => ({
+          month: monthNames[i],
+          prompts: analyticsOverviewData[i + 1] || 0, // i+1 because months are 1-12
+        }));
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
               <p className="text-sm font-semibold">Analytics Overview</p>
               {widgetType.icon}
             </div>
-            {/* Shift chart left using justify-start */}
             <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl pl-8">
-              <ResponsiveContainer width="95%" height={220}>
-                <ReBarChart data={analyticsData}>
-                  <XAxis dataKey="month" stroke="#4079ff" />
-                  <YAxis stroke="#3ebb9e" />
-                  <Tooltip
-                    wrapperStyle={{ backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px #3ebb9e22" }}
-                    labelStyle={{ color: "#4079ff" }}
-                    itemStyle={{ color: "#3ebb9e" }}
-                  />
-                  <Bar dataKey="usage" radius={[8, 8, 0, 0]}>
-                    {analyticsData.map((entry, idx) => (
-                      <Cell key={`cell-bar-${idx}`} fill={chartColors[idx % chartColors.length]} />
-                    ))}
-                  </Bar>
-                </ReBarChart>
-              </ResponsiveContainer>
+              {loadingAnalyticsOverview ? (
+                <div className="text-muted-foreground">Loading analytics...</div>
+              ) : (
+                <ResponsiveContainer width="95%" height={220}>
+                  <ReBarChart data={analyticsData}>
+                    <XAxis dataKey="month" stroke="#4079ff" />
+                    <YAxis stroke="#3ebb9e" />
+                    <Tooltip
+                      wrapperStyle={{ backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px #3ebb9e22" }}
+                      labelStyle={{ color: "#4079ff" }}
+                      itemStyle={{ color: "#3ebb9e" }}
+                      formatter={(value: number) => [`${value} prompts`, "Count"]}
+                      labelFormatter={(label) => `Month: ${label}`}
+                    />
+                    <Bar 
+                      name="Prompts Created" 
+                      dataKey="prompts" 
+                      radius={[8, 8, 0, 0]}
+                    >
+                      {analyticsData.map((entry, idx) => (
+                        <Cell key={`cell-bar-${idx}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                    </Bar>
+                  </ReBarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         )
@@ -356,68 +342,56 @@ export default function WidgetManager({
           { month: "Jun", score: 95 },
         ]
         return (
-          <div className="h-full flex flex-col">
-            <div className="mb-3 flex justify-between items-center">
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="mb-3 flex justify-between items-center w-full">
               <p className="text-sm font-semibold">Performance Metrics</p>
               {widgetType.icon}
             </div>
-            {/* Shift chart left using justify-start */}
-            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl">
-              <ResponsiveContainer width="95%" height={220}>
-                <ReLineChart data={performanceData}>
-                  <XAxis dataKey="month" stroke="#4079ff" />
-                  <YAxis stroke="#3ebb9e" />
-                  <Tooltip
-                    wrapperStyle={{ backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px #3ebb9e22" }}
-                    labelStyle={{ color: "#4079ff" }}
-                    itemStyle={{ color: "#3ebb9e" }}
-                  />
-                  <Line type="monotone" dataKey="score" stroke="#3ebb9e" strokeWidth={3} dot={{ r: 5, fill: "#4079ff" }} />
-                </ReLineChart>
-              </ResponsiveContainer>
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <LineChart className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Performance metrics</p>
+              <p className="text-xs text-muted-foreground">coming soon</p>
             </div>
           </div>
         )
       }
       case "category-breakdown": {
-        // Mock data for pie chart
-        const pieData = [
-          { name: "Writing", value: 8 },
-          { name: "Marketing", value: 5 },
-          { name: "Development", value: 3 },
-          { name: "Design", value: 2 },
-          { name: "SEO", value: 1 },
-          { name: "Content", value: 4 },
-        ]
+        // Use live data from dashboardData.categoryBreakdown
+        const breakdown = (data && data.categoryBreakdown) ? data.categoryBreakdown : {};
+        const pieData = Object.entries(breakdown).map(([name, value]) => ({ name, value }));
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
               <p className="text-sm font-semibold">Category Breakdown</p>
               {widgetType.icon}
             </div>
-            {/* Updated gradient for a more pleasing look */}
             <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-center shadow-2xl">
-              <ResponsiveContainer width="100%" height={240}>
-                <RePieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {pieData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={chartColors[idx % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                </RePieChart>
-              </ResponsiveContainer>
+              {pieData.length === 0 ? (
+                <div className="text-background">No category data available.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <RePieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={renderPieLabel} // <-- use your custom label
+                      labelLine={false}
+                    >
+                      {pieData.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                  </RePieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
-        )
+        );
       }
       case "calendar-view":
         return (
@@ -573,3 +547,26 @@ export default function WidgetManager({
     </div>
   )
 }
+
+const renderPieLabel = ({
+  cx, cy, midAngle, innerRadius, outerRadius, percent, index, value, name
+}: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#ffffffff"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={13}
+      fontWeight={600}
+    >
+      {value}
+    </text>
+  );
+};
