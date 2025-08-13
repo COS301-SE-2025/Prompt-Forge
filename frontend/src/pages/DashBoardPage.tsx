@@ -6,6 +6,7 @@ import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
 import { MyPrompt } from '@/models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
+import { dashProfileService } from '../services/dashprofileService';
 
 
 // Category breakdown widget
