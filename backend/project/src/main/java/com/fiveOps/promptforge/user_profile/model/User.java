@@ -39,7 +39,7 @@ public class User {
   @Column(length = 500)
   private String bio;
 
-  @Column(name = "profile_picture_url", length = 255)
+  @Column(name = "profile_picture_url", length = 1024)
   private String profilePictureUrl;
 
   @Column(length = 20, nullable = false)
@@ -65,6 +65,9 @@ public class User {
 
   private String googleId;
   private String oauthProvider;
+
+  @Column(name = "reset_token")
+  private String resetToken;
 
   // === Getters ===
 
@@ -136,6 +139,10 @@ public class User {
     return oauthProvider;
   }
 
+  public String getResetToken() {
+    return resetToken;
+  }
+
   // === Setters ===
 
   public void setUserId(UUID userId) {
@@ -204,5 +211,9 @@ public class User {
 
   public void setOauthProvider(String oauthProvider) {
     this.oauthProvider = oauthProvider;
+  }
+
+  public void setResetToken(String resetToken) {
+    this.resetToken = resetToken;
   }
 }

@@ -36,6 +36,13 @@ export default function ProfileSettingsPage() {
   const [payoutDetails, setPayoutDetails] = useState<PayoutCard | null>(null)
   const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
 
+  // password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordStatus, setPasswordStatus] = useState<null | "saving" | "success" | "error">(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   // Load profile data on mount
   useEffect(() => {
     async function fetchProfile() {
@@ -60,13 +67,13 @@ export default function ProfileSettingsPage() {
         setUsername(profile.username || "")
         setEmail(profile.email || "")
         setBio(profile.bio || "")
-        setProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
         
         // Set pending state to match loaded profile
         setPendingUsername(profile.username || "")
         setPendingEmail(profile.email || "")
         setPendingBio(profile.bio || "")
-        setPendingProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
+        setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
       } catch (error) {
         console.error("Failed to load profile", error)
         // You might want to show an error message to the user here
@@ -155,6 +162,31 @@ export default function ProfileSettingsPage() {
       console.error("Save failed", error);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus(null), 2000);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All fields are required.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    try {
+      setPasswordStatus("saving");
+      await profileService.changePassword(currentPassword, newPassword);
+      setPasswordStatus("success");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPasswordStatus(null), 2000);
+    } catch (err: any) {
+      setPasswordStatus("error");
+      setPasswordError(err.message || "Failed to change password");
+      setTimeout(() => setPasswordStatus(null), 2000);
     }
   };
 
@@ -300,26 +332,51 @@ export default function ProfileSettingsPage() {
               <div className="grid gap-6">
                 <Card className="p-6">
                   <h2 className="text-lg font-medium mb-4">Account Settings</h2>
-
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="current-password">Current Password</Label>
-                      <Input id="current-password" type="password" />
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={currentPassword}
+                        onChange={e => setCurrentPassword(e.target.value)}
+                      />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" />
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                        />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end">
-                    <Button className="bg-[#3ebb9e] hover:bg-[#00674f]">Update Password</Button>
+                    {passwordError && (
+                      <div className="text-red-500 text-sm">{passwordError}</div>
+                    )}
+                    {passwordStatus === "success" && (
+                      <div className="text-green-500 text-sm">Password updated!</div>
+                    )}
+                    <div className="mt-6 flex justify-end">
+                      <Button
+                        className="bg-[#3ebb9e] hover:bg-[#00674f]"
+                        onClick={handleChangePassword}
+                        disabled={passwordStatus === "saving"}
+                      >
+                        {passwordStatus === "saving" ? "Updating..." : "Update Password"}
+                      </Button>
+                    </div>
                   </div>
                 </Card>
 

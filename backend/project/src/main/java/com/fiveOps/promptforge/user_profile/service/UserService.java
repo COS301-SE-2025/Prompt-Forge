@@ -150,16 +150,20 @@ public class UserService {
   }
 
   public String saveProfilePicture(String email, MultipartFile file) {
+    validateImageFile(file); // ✅ Ensure file type, size, and extension are valid
+
     User user =
         userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-    // Optional: delete old picture first
-    if (user.getProfilePictureUrl() != null) {
-      s3Service.deleteFile(user.getProfilePictureUrl());
-    }
-
     try {
+      // Upload first, so we don't lose old image if upload fails
       String imageUrl = s3Service.uploadFile(file);
+
+      // Delete old picture only if upload succeeded
+      if (user.getProfilePictureUrl() != null) {
+        s3Service.deleteFile(user.getProfilePictureUrl());
+      }
+
       user.setProfilePictureUrl(imageUrl);
       userRepository.save(user);
       return imageUrl;
@@ -248,5 +252,21 @@ public class UserService {
     return userRepository
         .findByEmail(email)
         .orElse(null); // Return null if not found, let controller handle it
+  }
+
+  public User findByResetToken(String token) {
+    return userRepository.findByResetToken(token).orElse(null);
+  }
+
+  public void save(User user) {
+    userRepository.save(user);
+  }
+
+  public String encodePassword(String raw) {
+    return passwordEncoder.encode(raw);
+  }
+
+  public boolean matchesPassword(String raw, String encoded) {
+    return passwordEncoder.matches(raw, encoded);
   }
 }

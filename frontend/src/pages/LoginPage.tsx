@@ -182,16 +182,20 @@ export default function LoginPage() {
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!forgotEmail) {
       setError("Email is required");
       return;
     }
-
     setError("");
-    alert(`If this were real, password reset instructions would be sent to ${forgotEmail}`);
-    setShowForgotPassword(false);
-    setForgotEmail("");
+    try {
+      const result = await authService.forgotPassword(forgotEmail);
+      setError("If this email exists, reset instructions have been sent.");
+      setShowForgotPassword(false);
+      setForgotEmail("");
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset instructions");
+    }
   };
 
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
