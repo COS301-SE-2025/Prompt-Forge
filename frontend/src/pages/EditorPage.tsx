@@ -942,15 +942,16 @@ const fallbackToWorkingModel = async () => {
             <h2 className="text-lg lg:text-xl font-semibold text-foreground">Prompt Editor</h2>
             <div className="flex items-center space-x-1">
               {/* Optimizer button styled to match the OptimizerPage main button */}
-              <Link to="/optimizer">
-                <Button
-                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
-                  title="Optimize Prompt"
-                  size="icon"
-                >
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button
+                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-7 w-7 lg:h-8 lg:w-8"
+                title="Optimize Prompt"
+                size="icon"
+                onClick={() => {
+                  navigate(`/optimizer?prompt=${encodeURIComponent(promptText)}`);
+                }}
+              >
+                <Sparkles className="h-4 w-4" />
+              </Button>
               <Button 
                 variant="ghost" 
                 size="icon" 
