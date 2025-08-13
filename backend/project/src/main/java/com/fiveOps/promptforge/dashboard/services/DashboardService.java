@@ -13,6 +13,10 @@ import com.fiveOps.promptforge.prompts.model.Prompt;
 
 @Service
 public class DashboardService {
+  // Category breakdown for all prompts by a user
+  public List<Object[]> getCategoryBreakdown(UUID userId) {
+    return dashboardRepository.getCategoryBreakdownByUser(userId);
+  }
 
   @Autowired private DashboardRepository dashboardRepository;
 

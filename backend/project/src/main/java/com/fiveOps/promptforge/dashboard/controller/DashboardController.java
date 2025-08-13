@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,6 +20,35 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class DashboardController {
+  @GetMapping("/category-breakdown")
+  public Map<String, Long> getCategoryBreakdown(Principal principal) {
+    UUID userId = null;
+    String userEmail = null;
+
+    if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+      userEmail = principal.getName();
+      User user = userRepository.findByEmail(userEmail).orElse(null);
+      if (user != null) {
+        userId = user.getUserId();
+      }
+    }
+    if (userId == null) {
+      return new HashMap<>();
+    }
+
+    Map<String, Long> breakdown = new HashMap<>();
+    try {
+      List<Object[]> raw = dashboardService.getCategoryBreakdown(userId);
+      for (Object[] row : raw) {
+        String category = row[0] != null ? row[0].toString() : "Unknown";
+        Long count = row[1] != null ? Long.valueOf(row[1].toString()) : 0L;
+        breakdown.put(category, count);
+      }
+    } catch (Exception e) {
+      System.err.println("Error fetching category breakdown: " + e.getMessage());
+    }
+    return breakdown;
+  }
 
   @Autowired private DashboardService dashboardService;
 

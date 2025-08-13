@@ -380,44 +380,41 @@ export default function WidgetManager({
         )
       }
       case "category-breakdown": {
-        // Mock data for pie chart
-        const pieData = [
-          { name: "Writing", value: 8 },
-          { name: "Marketing", value: 5 },
-          { name: "Development", value: 3 },
-          { name: "Design", value: 2 },
-          { name: "SEO", value: 1 },
-          { name: "Content", value: 4 },
-        ]
+        // Use live data from dashboardData.categoryBreakdown
+        const breakdown = (data && data.categoryBreakdown) ? data.categoryBreakdown : {};
+        const pieData = Object.entries(breakdown).map(([name, value]) => ({ name, value }));
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
               <p className="text-sm font-semibold">Category Breakdown</p>
               {widgetType.icon}
             </div>
-            {/* Updated gradient for a more pleasing look */}
             <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-center shadow-2xl">
-              <ResponsiveContainer width="100%" height={240}>
-                <RePieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {pieData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={chartColors[idx % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                </RePieChart>
-              </ResponsiveContainer>
+              {pieData.length === 0 ? (
+                <div className="text-muted-foreground">No category data available.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <RePieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                    >
+                      {pieData.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                  </RePieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
-        )
+        );
       }
       case "calendar-view":
         return (

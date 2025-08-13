@@ -73,4 +73,17 @@ public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
       AND EXTRACT(MONTH FROM p.createdAt) = :month
 """)
   Long monthlyPromptCountByUser(UUID userId, int year, int month);
+
+  @Query(
+  value = """
+    SELECT t.name, COUNT(*) 
+    FROM prompts p 
+    JOIN LATERAL unnest(p.prompt_tags) AS tag_id(tag_id) ON TRUE 
+    JOIN tags t ON t.tag_id = tag_id.tag_id 
+    WHERE p.author_id = :userId 
+    GROUP BY t.name
+  """,
+  nativeQuery = true
+  )
+  List<Object[]> getCategoryBreakdownByUser(UUID userId);
 }
