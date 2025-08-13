@@ -4,8 +4,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
-import { MyPrompt } from '@/Models/MyPrompt';
+import { MyPrompt } from '@/models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
+
+// Category breakdown widget
+import { PieChart } from "lucide-react";
 
 
 type DashboardData = {
@@ -26,18 +29,20 @@ type UserProfile = {
   following: number
 }
 
-// Update the allowedTags array to match the actual Category type
+// Only allow the original 6 tags
 const allowedTags = [
-  "Business", 
-  "Coding", 
-  "Science", 
-  "Technical", 
-  "Health", 
+  "Business",
+  "Coding",
+  "Science",
+  "Technical",
+  "Health",
   "General"
-
 ] as const;
 
 export default function DashboardPage() {
+  // Category breakdown state
+  const [categoryBreakdown, setCategoryBreakdown] = useState<Record<string, number>>({});
+  const [loadingCategoryBreakdown, setLoadingCategoryBreakdown] = useState(true);
   const navigate = useNavigate()
 
   // Auth and profile
@@ -93,13 +98,24 @@ export default function DashboardPage() {
       minSize: "small",
     },
     {
+      id: "category-breakdown",
+      type: "list",
+      title: "Category Breakdown",
+      icon: <PieChart size={20} color="#60A5FA" />,
+      component: <CategoryBreakdownWidget data={categoryBreakdown} loading={loadingCategoryBreakdown} />,
+      isActive: true,
+      position: 2,
+      size: "medium",
+      minSize: "medium",
+    },
+    {
       id: "top-prompts",
       type: "list",
       title: "Your Top Rated Prompts",
       icon: <Star size={24} color="#60A5FA" />,
       component: <div></div>,
       isActive: true,
-      position: 2,
+      position: 3,
       size: "medium",
       minSize: "medium",
     },
@@ -110,11 +126,54 @@ export default function DashboardPage() {
       icon: <Activity size={24} color="#60A5FA" />,
       component: <div></div>,
       isActive: true,
-      position: 3,
+      position: 4,
       size: "medium",
       minSize: "medium",
     },
   ])
+  // Fetch category breakdown
+  useEffect(() => {
+    const fetchCategoryBreakdown = async () => {
+      setLoadingCategoryBreakdown(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/category-breakdown`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCategoryBreakdown(data);
+        } else {
+          setCategoryBreakdown({});
+        }
+      } catch {
+        setCategoryBreakdown({});
+      }
+      setLoadingCategoryBreakdown(false);
+    };
+    if (isAuthenticated) fetchCategoryBreakdown();
+  }, [isAuthenticated]);
+// Category breakdown widget component
+function CategoryBreakdownWidget({ data, loading }: { data: Record<string, number>, loading: boolean }) {
+  if (loading) {
+    return <div className="flex items-center justify-center h-24"><span className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mr-2"></span>Loading...</div>;
+  }
+  const categories = Object.entries(data);
+  if (!categories.length) {
+    return <div className="text-muted-foreground">No category data available.</div>;
+  }
+  return (
+    <div className="space-y-2">
+      {categories.map(([category, count]) => (
+        <div key={category} className="flex justify-between items-center py-1 border-b border-border last:border-b-0">
+          <span className="font-medium">{category}</span>
+          <span className="text-sm text-muted-foreground">{count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
   // Auth check
   useEffect(() => {
@@ -558,7 +617,10 @@ export default function DashboardPage() {
             <WidgetManager
               widgets={widgets}
               onUpdateWidgets={handleUpdateWidgets}
-              dashboardData={dashboard}
+              dashboardData={{
+                ...dashboard,
+                categoryBreakdown: categoryBreakdown
+              }}
               topUserPrompts={topUserPrompts}
               loadingTopUserPrompts={loadingTopUserPrompts}
             />
@@ -591,37 +653,39 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               ) : (
-                displayPrompts.map((prompt) => (
-                  <StandardPromptCard
-                    key={prompt.id}
-                    id={prompt.id}
-                    title={prompt.title}
-                    description={prompt.description}
-                    rating={avgRatingMap[prompt.id] ?? 0}
-                    uses={prompt.uses}
-                    price={prompt.price}
-                    featured={prompt.featured}
-                    isPrivate={prompt.isPrivate}
-                    isFavorite={prompt.isFavorite}
-                    tags={
-                      prompt.tags.map(tag =>
-                        allowedTags.includes(tag as typeof allowedTags[number])
-                          ? (tag as typeof allowedTags[number])
-                          : "General"
-                      )
-                    }
-                    category={prompt.category}
-                    authorName={username}
-                    isOwned={true}
-                    source={prompt.source}
-                    onEdit={handleEditPrompt}
-                    onDelete={handleDeletePrompt}
-                    onToggleFavorite={handleToggleFavorite}
-                    onCopy={handleCopyPrompt}
-                    copiedId={copiedId}
-                    content={prompt.content}
-                  />
-                ))
+                displayPrompts.map((prompt, idx) => {
+                  const tags = prompt.tags.map((tag, tagIdx) =>
+                    allowedTags.includes(tag as typeof allowedTags[number])
+                      ? (tag as typeof allowedTags[number])
+                      : "General"
+                  );
+                  return (
+                    <div key={prompt.id + '-' + idx}>
+                      <StandardPromptCard
+                        id={prompt.id}
+                        title={prompt.title}
+                        description={prompt.description}
+                        rating={avgRatingMap[prompt.id] ?? 0}
+                        uses={prompt.uses}
+                        price={prompt.price}
+                        featured={prompt.featured}
+                        isPrivate={prompt.isPrivate}
+                        isFavorite={prompt.isFavorite}
+                        tags={tags.map((tag, tagIdx) => tag )}
+                        category={prompt.category}
+                        authorName={username}
+                        isOwned={true}
+                        source={prompt.source}
+                        onEdit={handleEditPrompt}
+                        onDelete={handleDeletePrompt}
+                        onToggleFavorite={handleToggleFavorite}
+                        onCopy={handleCopyPrompt}
+                        copiedId={copiedId}
+                        content={prompt.content}
+                      />
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
