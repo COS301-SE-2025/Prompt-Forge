@@ -277,7 +277,7 @@ public class PromptService {
     long totalPurchased =
         promptRepository.countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId);
     long totalAuthored =
-        promptRepository.countRecentPromptsByAuthorIdAndAndOptionalTag(userId, tagId);
+        promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId);
     long totalElements = totalPurchased + totalAuthored;
 
     System.out.println("\n\n///////////////////////////page:" + pageable.getPageNumber());
@@ -303,7 +303,7 @@ public class PromptService {
          * and dont add up to the limit
          */
         List<PromptWithSourceDTO> authoredPrompts =
-            promptRepository.findRecentPromptsByAuthorIdAndAndOptionalTag(
+            promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(
                 userId, tagId, remaining, 0);
         combined.addAll(authoredPrompts);
 
@@ -313,7 +313,7 @@ public class PromptService {
       System.out.println("elseeeeeeeeeeeeeee");
       int authoredOffset = (int) (offset - totalPurchased);
       List<PromptWithSourceDTO> authoredPrompts =
-          promptRepository.findRecentPromptsByAuthorIdAndAndOptionalTag(
+          promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(
               userId, tagId, pageSize, authoredOffset);
       combined.addAll(authoredPrompts);
     }
@@ -333,8 +333,7 @@ public class PromptService {
     // if(filter == "favorites")
     //   return getFavouritePrompts(userId, pageable);
 
-    if (filter.equals("popular"))
-      return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
+    if (filter.equals("popular")) return getPopularPromptsByOptionalTag(userId, tagName, pageable);
 
     if (filter.equals("recent"))
       return getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
