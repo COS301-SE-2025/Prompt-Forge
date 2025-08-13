@@ -6,7 +6,7 @@ import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
 import { MyPrompt } from '@/Models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
-
+import {dashProfileService} from '../services/dashprofileService'
 
 type DashboardData = {
   monthlyUsage: number
@@ -17,15 +17,13 @@ type DashboardData = {
 }
 
 type UserProfile = {
-  id: string
   username: string
-  email: string
+  bio: string
+  badges: any[]
+  followingCount: number
+  followersCount: number
   profilePicture?: string
-  bio?: string
-  followers: number
-  following: number
 }
-
 // Update the allowedTags array to match the actual Category type
 const allowedTags = [
   "default",
@@ -151,36 +149,38 @@ export default function DashboardPage() {
   // Fetch user profile
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!isAuthenticated || !currentUserId) return
+      if (!isAuthenticated) return
+      
       try {
-        const token = localStorage.getItem("token")
-        const response = await fetch(`/users/${currentUserId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-        if (response.ok) {
-          const profile: UserProfile = await response.json()
-          setUserProfile(profile)
-          setUsername(profile.username)
-          setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.")
-          setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80")
-          setFollowers(profile.followers)
-          setFollowing(profile.following)
-          localStorage.setItem("username", profile.username)
-          if (profile.bio) localStorage.setItem("userBio", profile.bio)
-          if (profile.profilePicture) localStorage.setItem("userProfileImage", profile.profilePicture)
-        } else if (response.status === 401) {
+        const profile: UserProfile = await dashProfileService.getDashboardProfile()
+        
+        setUserProfile(profile)
+        setUsername(profile.username)
+        setUserBio(profile.bio || "AI prompt engineer specializing in creative writing and technical documentation.")
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=80&width=80")
+        setFollowers(profile.followersCount)
+        setFollowing(profile.followingCount)
+        
+        // Update localStorage with new profile data
+        localStorage.setItem("username", profile.username)
+        if (profile.bio) localStorage.setItem("userBio", profile.bio)
+        if (profile.profilePicture) localStorage.setItem("userProfileImage", profile.profilePicture)
+        
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error)
+        // Check if it's an authentication error
+        if (error instanceof Error && error.message.includes('401')) {
           localStorage.removeItem("token")
           localStorage.removeItem("userId")
+          localStorage.removeItem("username")
           setIsAuthenticated(false)
           navigate("/login")
         }
-      } catch {}
+      }
     }
+    
     fetchUserProfile()
-  }, [isAuthenticated, currentUserId, navigate])
+  }, [isAuthenticated, navigate])
 
   // Fetch user's prompts
   useEffect(() => {
