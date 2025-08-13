@@ -106,6 +106,8 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               p.slug AS slug,
               p.description AS description,
               p.price AS price,
+              p.created_at AS createdAt,
+              p.published_at AS publishedAt,
               p.visibility AS visibility,
               author_user.username AS authorName,
               array_agg(t.name) AS tagNames,
@@ -124,7 +126,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
        GROUP BY pp.purchase_id, p.prompt_id, author_user.username,
               p.author_id, p.title, p.slug, p.description, p.price,
-              p.visibility
+              p.created_at, p.published_at, p.visibility
        LIMIT :limit
        OFFSET :offset
        """,
@@ -347,6 +349,7 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
 
        SELECT COUNT(*)
        FROM purchased_prompts pp
+       JOIN prompts p ON pp.prompt_id = p.prompt_id
        WHERE pp.user_id = :userId AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
               AND (
                      SELECT COUNT(*) FROM purchased_prompts pp
