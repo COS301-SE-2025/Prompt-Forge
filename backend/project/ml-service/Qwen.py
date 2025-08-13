@@ -6,7 +6,7 @@ from openai import OpenAI
 load_dotenv()
 
 # Get API key from environment
-api_key = os.getenv("HF")
+api_key = os.getenv("HF_TOKEN")
 if not api_key:
     raise ValueError("Hugging Face API key not found. Please set HF in your .env file.")
 
