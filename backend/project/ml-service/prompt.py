@@ -8,6 +8,7 @@ import time
 import json
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
 # ----------------------------
 # Logging Configuration
@@ -30,6 +31,7 @@ app = FastAPI(title="Prompt Optimizer API")
 # ----------------------------
 class QwenModels:
     def __init__(self):
+        load_dotenv()
         self.api_token = os.getenv("HF_TOKEN", "")  # Read from environment variable
         
         # Available Qwen models via Hugging Face router
