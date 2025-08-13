@@ -1,4 +1,4 @@
-# Detailed Prompt Template for TinyLlama Optimizer
+# Detailed Prompt Template for PromptOptimizer
 
 Save this content as `prompt.txt` in your project directory:
 
