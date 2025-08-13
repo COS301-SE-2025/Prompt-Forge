@@ -7,6 +7,8 @@ from sentence_transformers import SentenceTransformer, util
 import time
 import json
 import os
+from openai import OpenAI
+from dotenv import load_dotenv
 
 # ----------------------------
 # Logging Configuration
@@ -25,56 +27,59 @@ logger.addHandler(console_handler)
 app = FastAPI(title="Prompt Optimizer API")
 
 # ----------------------------
-# Hugging Face Model Class
+# Qwen Model Class
 # ----------------------------
-class HuggingFaceModels:
+class QwenModels:
     def __init__(self):
+        load_dotenv()
         self.api_token = os.getenv("HF_TOKEN", "")  # Read from environment variable
         
-        # Updated model endpoints - these are more likely to work
+        # Available Qwen models via Hugging Face router
         self.model_endpoints = [
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-            "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",
-            "https://api-inference.huggingface.co/models/distilbert-base-uncased",
-            "https://api-inference.huggingface.co/models/gpt2"
+            "Qwen/Qwen3-Coder-30B-A3B-Instruct:fireworks-ai",
+            "Qwen/Qwen2.5-72B-Instruct",
+            "Qwen/Qwen2.5-32B-Instruct",
+            "Qwen/Qwen2.5-14B-Instruct",
+            "Qwen/Qwen2.5-7B-Instruct"
         ]
         
-        self.current_endpoint = 0
         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
         self.token_validated = False
+        self.client = None
 
         if not self.api_token:
             logger.warning("No Hugging Face token provided. Some features may be limited.")
             logger.info("Set HF_TOKEN environment variable to enable full functionality.")
+        else:
+            self.client = OpenAI(
+                base_url="https://router.huggingface.co/v1",
+                api_key=self.api_token,
+            )
 
     def validate_token(self) -> bool:
-        """Validate the Hugging Face API token"""
+        """Validate the Hugging Face API token by making a test request"""
         if self.token_validated:
             return True
             
-        headers = {
-            "Authorization": f"Bearer {self.api_token}",
-            "Content-Type": "application/json"
-        }
-        
+        if not self.api_token or not self.client:
+            logger.error("No API token or client available")
+            return False
+            
         try:
-            # Test with a simple model that should always exist
-            response = requests.get(
-                "https://api-inference.huggingface.co/models/bert-base-uncased",
-                headers=headers,
+            # Test with a simple completion request
+            response = self.client.chat.completions.create(
+                model=self.model_endpoints[0],
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=10,
                 timeout=10
             )
             
-            if response.status_code == 200:
+            if response and response.choices:
                 logger.info("✅ API token is valid")
                 self.token_validated = True
                 return True
-            elif response.status_code == 401:
-                logger.error("❌ Invalid API token")
-                return False
             else:
-                logger.warning(f"Token validation returned {response.status_code}")
+                logger.error("❌ Invalid API response")
                 return False
                 
         except Exception as e:
@@ -82,141 +87,83 @@ class HuggingFaceModels:
             return False
 
     def get_available_models(self) -> List[str]:
-        """Get a list of available models for text generation"""
+        """Get a list of available models"""
         if not self.validate_token():
             return []
             
-        headers = {
-            "Authorization": f"Bearer {self.api_token}",
-            "Content-Type": "application/json"
-        }
-        
-        # Test each model endpoint
         available_models = []
-        for endpoint in self.model_endpoints:
+        
+        # Test each model
+        for model in self.model_endpoints[:3]:  # Test first 3 to avoid rate limits
             try:
-                response = requests.get(endpoint, headers=headers, timeout=5)
-                if response.status_code == 200:
-                    available_models.append(endpoint)
-                    logger.info(f"✅ Model available: {endpoint}")
-                else:
-                    logger.warning(f"❌ Model unavailable: {endpoint} (Status: {response.status_code})")
-            except Exception as e:
-                logger.error(f"Error checking model {endpoint}: {e}")
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": "Test"}],
+                    max_tokens=5,
+                    timeout=5
+                )
                 
+                if response and response.choices:
+                    available_models.append(model)
+                    logger.info(f"✅ Model available: {model}")
+                else:
+                    logger.warning(f"❌ Model unavailable: {model}")
+                    
+            except Exception as e:
+                logger.warning(f"Error testing model {model}: {e}")
+                
+        # If no models tested successfully, return all models as potentially available
+        if not available_models:
+            logger.info("No models tested successfully, returning all models")
+            return self.model_endpoints
+            
         return available_models
 
-    def optimize_prompt_with_openai_style(self, text: str) -> Optional[str]:
-        """Try using OpenAI-compatible endpoints if available"""
-        try:
-            # Some providers offer OpenAI-compatible endpoints
-            openai_style_urls = [
-                "https://api-inference.huggingface.co/v1/chat/completions",  # If available
-            ]
-            
-            for url in openai_style_urls:
-                headers = {
-                    "Authorization": f"Bearer {self.api_token}",
-                    "Content-Type": "application/json"
-                }
-                
-                payload = {
-                    "model": "gpt-3.5-turbo",  # This might work with HF's OpenAI compatibility
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": f"Improve this prompt: '{text}'. Provide 3 specific suggestions with format: 'Suggestion: X\\nAfter: Y\\nImpact: Z'"
-                        }
-                    ],
-                    "max_tokens": 300,
-                    "temperature": 0.7
-                }
-                
-                response = requests.post(url, headers=headers, json=payload, timeout=30)
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    
-        except Exception as e:
-            logger.error(f"OpenAI-style API failed: {e}")
-            
-        return None
-
     def optimize_prompt(self, text: str) -> List[Dict[str, str]]:
-        """Try multiple approaches to optimize the prompt"""
+        """Use Qwen model to optimize the prompt"""
         
         # First, validate the token
         if not self.validate_token():
             logger.error("Invalid API token, using fallback suggestions")
             return self.get_fallback_suggestions(text)
         
-        # Try OpenAI-style API first
-        openai_result = self.optimize_prompt_with_openai_style(text)
-        if openai_result:
-            suggestions = self.extract_suggestions(openai_result, text)
-            if suggestions:
-                return suggestions
-        
-        # Get available models
-        available_models = self.get_available_models()
-        if not available_models:
-            logger.warning("No models available, using fallback suggestions")
-            return self.get_fallback_suggestions(text)
-        
         # Try each available model
-        for model_url in available_models:
+        for model in self.model_endpoints:
             try:
-                logger.info(f"Trying model: {model_url}")
+                logger.info(f"Trying model: {model}")
                 
-                prompt = (
-                    f"Improve this prompt: \"{text}\"\n"
-                    f"Suggest 3 improvements. Format each improvement as:\n"
-                    f"Suggestion: ...\nAfter: ...\nImpact: low/medium/high"
+                prompt = f"""Please analyze this prompt and provide 3 specific suggestions to improve it:
+
+Original prompt: "{text}"
+
+For each suggestion, please format your response exactly as follows:
+Suggestion: [brief description of the improvement]
+After: [the improved version of the prompt]
+Impact: [low/medium/high]
+
+Make sure each suggestion addresses a different aspect of prompt improvement such as clarity, specificity, structure, or completeness."""
+
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=800,
+                    temperature=0.7,
+                    timeout=30
                 )
-
-                headers = {
-                    "Authorization": f"Bearer {self.api_token}",
-                    "Content-Type": "application/json"
-                }
-
-                payload = {
-                    "inputs": prompt,
-                    "parameters": {
-                        "max_new_tokens": 300,
-                        "temperature": 0.7,
-                        "do_sample": True,
-                        "return_full_text": False
-                    }
-                }
-
-                response = requests.post(model_url, headers=headers, json=payload, timeout=30)
                 
-                if response.status_code == 200:
-                    result = response.json()
-                    logger.info(f"✅ Successfully got response from {model_url}")
+                if response and response.choices and response.choices[0].message:
+                    generated = response.choices[0].message.content
+                    logger.info(f"✅ Successfully got response from {model}")
                     
-                    generated = result[0]["generated_text"] if isinstance(result, list) else result.get("generated_text", "")
                     suggestions = self.extract_suggestions(generated, text)
                     
                     if suggestions:
                         return self.remove_suggestion_duplicates(suggestions)
                 
-                elif response.status_code == 503:
-                    logger.warning(f"Model loading (503), waiting 10 seconds...")
-                    time.sleep(10)
-                    continue
-                    
-                else:
-                    logger.warning(f"Model {model_url} returned {response.status_code}: {response.text}")
-                    continue
-
-            except requests.exceptions.Timeout:
-                logger.error(f"Timeout for model {model_url}")
-                continue
-                
             except Exception as e:
-                logger.error(f"Error with model {model_url}: {e}")
+                logger.error(f"Error with model {model}: {e}")
                 continue
 
         # If all models fail, return fallback suggestions
@@ -241,7 +188,7 @@ class HuggingFaceModels:
             suggestions.append({
                 "suggestion": "Make your prompt more concise and focused",
                 "before": text,
-                "after": f"Concisely explain {text.split()[:10][:5]} with key points",
+                "after": f"Concisely explain {' '.join(text.split()[:10])} with key points",
                 "impact": "medium"
             })
         
@@ -304,6 +251,7 @@ class HuggingFaceModels:
         return suggestions[:3]
 
     def extract_suggestions(self, generated: str, original: str) -> List[Dict[str, str]]:
+        """Extract suggestions from the generated text"""
         if not generated or generated.strip() == "":
             return self.get_fallback_suggestions(original)
             
@@ -319,9 +267,23 @@ class HuggingFaceModels:
                 current["after"] = line.split(":", 1)[-1].strip()
             elif line.lower().startswith("impact:"):
                 current["impact"] = line.split(":", 1)[-1].strip().lower()
+                # When we find an impact, save the current suggestion if complete
                 if all(current.values()):
                     suggestions.append(current.copy())
                     current = {"suggestion": "", "before": original, "after": "", "impact": ""}
+
+        # Also check for patterns without exact formatting
+        if not suggestions:
+            # Try to extract suggestions using different patterns
+            parts = generated.split("\n\n")
+            for part in parts:
+                if len(part.strip()) > 20:  # Reasonable length for a suggestion
+                    suggestions.append({
+                        "suggestion": "AI-generated improvement suggestion",
+                        "before": original,
+                        "after": part.strip(),
+                        "impact": "medium"
+                    })
 
         if not suggestions:
             return self.get_fallback_suggestions(original)
@@ -329,6 +291,7 @@ class HuggingFaceModels:
         return suggestions[:3]
 
     def remove_suggestion_duplicates(self, suggestions: List[Dict[str, str]], threshold: float = 0.8) -> List[Dict[str, str]]:
+        """Remove duplicate suggestions using semantic similarity"""
         if len(suggestions) <= 1:
             return suggestions
 
@@ -375,25 +338,25 @@ class TokenValidationResponse(BaseModel):
 # ----------------------------
 # Initialize Model
 # ----------------------------
-hf = HuggingFaceModels()
+qwen = QwenModels()
 
 # ----------------------------
 # FastAPI Routes
 # ----------------------------
 @app.get("/")
 def read_root():
-    return {"message": "Prompt Optimizer API is running."}
+    return {"message": "Prompt Optimizer API with Qwen is running."}
 
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "prompt-optimizer"}
+    return {"status": "healthy", "service": "prompt-optimizer-qwen"}
 
 @app.get("/validate-token", response_model=TokenValidationResponse)
 def validate_token():
     """Validate the Hugging Face API token and check available models"""
-    is_valid = hf.validate_token()
-    available_models = hf.get_available_models() if is_valid else []
+    is_valid = qwen.validate_token()
+    available_models = qwen.get_available_models() if is_valid else []
     
     message = "Token is valid" if is_valid else "Token is invalid or expired"
     
@@ -409,10 +372,10 @@ async def optimize_prompt(request: PromptRequest):
         if not request.text or request.text.strip() == "":
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
             
-        suggestions = hf.optimize_prompt(request.text)
+        suggestions = qwen.optimize_prompt(request.text)
         
         # Determine source based on whether we got AI suggestions or fallback
-        source = "ai" if hf.token_validated and hf.get_available_models() else "fallback"
+        source = "ai" if qwen.token_validated and qwen.get_available_models() else "fallback"
         
         return OptimizationResponse(
             prompt=request.text, 
