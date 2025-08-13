@@ -1,7 +1,7 @@
 <h1 align="center">5iveOps - Prompt Forge</h1>
 
 <p align="center">
-  <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="700"/>
+  <img src="./assests/Logo.png" alt="Prompt Forge Logo" width="300"/>
 </p>
 
 <h3 align="center">A Capstone Project for
