@@ -52,10 +52,10 @@ public class DashboardController {
       }
     }
 
-    // Fallback for development/testing
+    // Return empty data if no user found instead of dummy data
     if (userId == null) {
-      System.out.println("No userId found, using development fallback");
-      return createDummyDashboardData();
+      System.out.println("No userId found, returning empty dashboard data");
+      return createEmptyDashboardData();
     }
 
     System.out.println("🎯 Dashboard request for userId: " + userId);
@@ -63,30 +63,34 @@ public class DashboardController {
     // Get real data from service
     Map<String, Object> result = new HashMap<>();
     try {
+      Long totalDownloads = dashboardService.getTotalDownloads(userId);
+      Double averageRating = dashboardService.getAverageRating(userId);
+      
       result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
-      result.put("averageRating", dashboardService.getAverageRating(userId));
-      result.put("totalDownloads", dashboardService.getTotalDownloads(userId));
+      result.put("averageRating", averageRating != null ? averageRating : 0.0);
+      result.put("totalDownloads", totalDownloads != null ? totalDownloads : 0L);
       result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
       result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
 
-      System.out.println("Dashboard data retrieved successfully");
+      System.out.println("✅ Dashboard data retrieved - Downloads: " + totalDownloads 
+          + ", Rating: " + averageRating);
     } catch (Exception e) {
-      System.err.println(" Dashboard service error: " + e.getMessage());
+      System.err.println("❌ Dashboard service error: " + e.getMessage());
       e.printStackTrace();
-      return createDummyDashboardData();
+      return createEmptyDashboardData();
     }
 
     return result;
   }
 
-  private Map<String, Object> createDummyDashboardData() {
+  private Map<String, Object> createEmptyDashboardData() {
     Map<String, Object> result = new HashMap<>();
-    result.put("totalPrompts", 12);
-    result.put("averageRating", 4.6);
-    result.put("totalDownloads", 3847);
+    result.put("totalPrompts", 0);
+    result.put("averageRating", 0.0);
+    result.put("totalDownloads", 0L);
     result.put("topPrompts", new java.util.ArrayList<>());
-    result.put("monthlyUsage", 1250);
-    System.out.println("✅ Returning dummy dashboard data");
+    result.put("monthlyUsage", 0);
+    System.out.println("⚠️ Returning empty dashboard data (no user or error)");
     return result;
   }
 }
