@@ -149,28 +149,28 @@ public class UserService {
         .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
- public String saveProfilePicture(String email, MultipartFile file) {
+  public String saveProfilePicture(String email, MultipartFile file) {
     validateImageFile(file); // ✅ Ensure file type, size, and extension are valid
 
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
     try {
-        // Upload first, so we don't lose old image if upload fails
-        String imageUrl = s3Service.uploadFile(file);
+      // Upload first, so we don't lose old image if upload fails
+      String imageUrl = s3Service.uploadFile(file);
 
-        // Delete old picture only if upload succeeded
-        if (user.getProfilePictureUrl() != null) {
-            s3Service.deleteFile(user.getProfilePictureUrl());
-        }
+      // Delete old picture only if upload succeeded
+      if (user.getProfilePictureUrl() != null) {
+        s3Service.deleteFile(user.getProfilePictureUrl());
+      }
 
-        user.setProfilePictureUrl(imageUrl);
-        userRepository.save(user);
-        return imageUrl;
+      user.setProfilePictureUrl(imageUrl);
+      userRepository.save(user);
+      return imageUrl;
     } catch (IOException e) {
-        throw new RuntimeException("Failed to upload image", e);
+      throw new RuntimeException("Failed to upload image", e);
     }
-}
+  }
 
   public void deleteProfilePicture(String email) {
     User user =
