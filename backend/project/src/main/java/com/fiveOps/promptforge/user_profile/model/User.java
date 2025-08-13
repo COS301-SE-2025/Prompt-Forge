@@ -39,7 +39,7 @@ public class User {
   @Column(length = 500)
   private String bio;
 
-  @Column(name = "profile_picture_url", length = 255)
+  @Column(name = "profile_picture_url", length = 1024)
   private String profilePictureUrl;
 
   @Column(length = 20, nullable = false)
