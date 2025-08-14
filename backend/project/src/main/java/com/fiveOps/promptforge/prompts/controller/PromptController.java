@@ -174,7 +174,9 @@ public class PromptController {
   @GetMapping("/purchased")
   public ResponseEntity<Page<PromptWithSourceDTO>> getPurchasedPrompts(
       Pageable pageable, Authentication authentication) {
-    if (authentication == null || authentication.getName() == null) {
+    if (authentication == null
+        || authentication.getName() == null
+        || authentication.getName().trim().equals("")) {
       return ResponseEntity.status(401).build();
     }
     String userEmail = authentication.getName();
@@ -186,13 +188,22 @@ public class PromptController {
         promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable));
   }
 
-  @GetMapping("/myprompts/{userId}")
+  @GetMapping("/myprompts")
   public ResponseEntity<Page<PromptWithSourceDTO>> getAuthoredAndPurchasedPrompts(
-      @PathVariable UUID userId,
+      Authentication authentication,
       @RequestParam(required = false) String tagName,
       @RequestParam(required = false) String filterName,
       Pageable pageable) {
     System.out.println("\n\ntag:" + tagName + " and filter:" + filterName);
+
+    if (authentication == null
+        || authentication.getName() == null
+        || authentication.getName().trim().equals("")) {
+      return ResponseEntity.status(401).build();
+    }
+
+    String userEmail = authentication.getName();
+    UUID userId = userService.getUserIdByEmail(userEmail);
 
     if (tagName == null && filterName == null) {
       System.out.println("\n\ntag and filter are null");
