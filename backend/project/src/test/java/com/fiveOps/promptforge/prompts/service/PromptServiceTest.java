@@ -816,4 +816,113 @@ class PromptServiceTest {
     verify(promptRepository, never())
         .findByAuthorIdAndOptionalTagName(any(), any(), anyInt(), anyInt());
   }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByFilter_ShouldHandlePopularFilter() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    String tagName = "tag";
+    Pageable pageable = PageRequest.of(0, 2);
+    UUID tagId = UUID.randomUUID();
+
+    // Mock the dependencies
+    when(tagService.getTagIdByName(tagName)).thenReturn(tagId);
+    when(promptRepository.countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(1L);
+    when(promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(1L);
+
+    PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.findPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0))
+        .thenReturn(List.of(mockPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "popular",
+        pageable);
+
+    // Assert
+    assertEquals(2, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(mockPrompt));
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByFilter_ShouldHandleRecentFilter() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    String tagName = "tag";
+    Pageable pageable = PageRequest.of(0, 2);
+    UUID tagId = UUID.randomUUID();
+
+    when(tagService.getTagIdByName(tagName)).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(1L);
+    when(promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(1L);
+
+    PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId, 1, 0))
+        .thenReturn(List.of(mockPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "recent",
+        pageable);
+
+    // Assert
+    assertEquals(2, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(mockPrompt));
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByFilter_ShouldHandlePurchasedFilter() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    String tagName = "tag";
+    Pageable pageable = PageRequest.of(0, 2);
+    UUID tagId = UUID.randomUUID();
+
+    when(tagService.getTagIdByName(tagName)).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId))
+        .thenReturn(1L);
+
+    PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 2, 0))
+        .thenReturn(List.of(mockPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName,
+        "purchased", pageable);
+
+    // Assert
+    assertEquals(1, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(mockPrompt));
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByFilter_ShouldHandleNullTagName() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    when(promptRepository.countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, null))
+        .thenReturn(1L);
+    when(promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, null))
+        .thenReturn(1L);
+
+    PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.findPopularPurchasedPromptsByUserIdAndOptionalTag(userId, null, 1, 0))
+        .thenReturn(List.of(mockPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, null, "popular",
+        pageable);
+
+    // Assert
+    assertEquals(2, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(mockPrompt));
+    verify(tagService, never()).getTagIdByName(any());
+  }
 }
