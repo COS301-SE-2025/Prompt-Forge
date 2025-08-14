@@ -428,4 +428,68 @@ class PromptServiceTest {
         () -> promptService.getAuthoredAndPurchasedPromptsByFilter(
             userId, null, "invalidFilter", pageable));
   }
+
+  @Test
+  void getPopularPromptsByOptionalTag_ShouldReturnCombinedPrompts() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    String tagName = "popularTag";
+    UUID tagId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    // Mock tag lookup
+    when(tagService.getTagIdByName(tagName)).thenReturn(tagId);
+
+    // Mock counts
+    when(promptRepository.countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(1L);
+    when(promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId))
+        .thenReturn(2L);
+
+    // Mock purchased and authored prompts
+    PromptWithSourceDTO purchasedPrompt = mock(PromptWithSourceDTO.class);
+    PromptWithSourceDTO authoredPrompt = mock(PromptWithSourceDTO.class);
+
+    when(promptRepository.findPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0))
+        .thenReturn(List.of(purchasedPrompt));
+    when(promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0))
+        .thenReturn(List.of(authoredPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getPopularPromptsByOptionalTag(userId, tagName, pageable);
+
+    // Assert
+    assertEquals(3, result.getTotalElements());
+    assertEquals(2, result.getContent().size());
+    assertTrue(result.getContent().contains(purchasedPrompt));
+    assertTrue(result.getContent().contains(authoredPrompt));
+    verify(tagService).getTagIdByName(tagName);
+    verify(promptRepository).findPopularPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0);
+    verify(promptRepository).findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0);
+  }
+
+  @Test
+  void getPopularPromptsByOptionalTag_ShouldHandleNullTagName() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    when(promptRepository.countPopularPurchasedPromptsByUserIdAndOptionalTag(userId, null))
+        .thenReturn(0L);
+    when(promptRepository.countPopularAuthoredPromptsByUserIdAndOptionalTag(userId, null))
+        .thenReturn(1L);
+
+    PromptWithSourceDTO authoredPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, null, 2, 0))
+        .thenReturn(List.of(authoredPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getPopularPromptsByOptionalTag(userId, null, pageable);
+
+    // Assert
+    assertEquals(1, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(authoredPrompt));
+    verify(promptRepository).findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, null, 2, 0);
+  }
 }
