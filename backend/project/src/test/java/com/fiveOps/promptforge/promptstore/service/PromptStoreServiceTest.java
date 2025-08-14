@@ -126,7 +126,33 @@ class PromptStoreServiceReviewTest {
 
     // Act & Assert
     assertTrue(promptStoreService.isOwned(userId, promptId));
-    verify(purchaseRepository, never()).existsByPromptIdAndUserId(any(), any()); // Verify second check was never called
+    verify(purchaseRepository, never()).existsByPromptIdAndUserId(any(), any());
+  }
+
+  @Test
+  void isOwned_ShouldReturnTrueWhenUserPurchased() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptStoreRepository.existsByIdAndAuthorId(promptId, userId)).thenReturn(false);
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(true);
+
+    // Act & Assert
+    assertTrue(promptStoreService.isOwned(userId, promptId));
+  }
+
+  @Test
+  void isOwned_ShouldReturnFalseWhenNotAuthorOrPurchaser() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptStoreRepository.existsByIdAndAuthorId(promptId, userId)).thenReturn(false);
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(false);
+
+    // Act & Assert
+    assertFalse(promptStoreService.isOwned(userId, promptId));
   }
 
   @Test
