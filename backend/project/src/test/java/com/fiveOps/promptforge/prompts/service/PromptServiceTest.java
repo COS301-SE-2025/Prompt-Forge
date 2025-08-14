@@ -714,4 +714,106 @@ class PromptServiceTest {
     assertEquals(3, result.getTotalPages());
   }
 
+  @Test
+  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldHandleEmptyResults() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    UUID tagId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    when(tagService.getTagIdByName("tag")).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(0L);
+    when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(0L);
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
+        pageable);
+
+    // Assert
+    assertEquals(0, result.getTotalElements());
+    assertTrue(result.getContent().isEmpty());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldHandleNullTagName() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, null)).thenReturn(1L);
+    when(promptRepository.countByAuthoredAndTags(userId, null)).thenReturn(1L);
+
+    PromptWithSourceDTO purchasedPrompt = mock(PromptWithSourceDTO.class);
+
+    // Use lenient() and argument matchers for more flexible stubbing
+    lenient()
+        .when(
+            promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(
+                eq(userId), eq(null), anyInt(), anyInt()))
+        .thenReturn(List.of(purchasedPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, null,
+        pageable);
+
+    // Assert
+    assertEquals(2, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(purchasedPrompt));
+    verify(tagService, never()).getTagIdByName(any());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldHandleOnlyAuthored() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    UUID tagId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 2);
+
+    when(tagService.getTagIdByName("tag")).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(0L);
+    when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(2L);
+
+    PromptWithSourceDTO authoredPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.findByAuthorIdAndOptionalTagName(userId, tagId, 2, 0))
+        .thenReturn(List.of(authoredPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
+        pageable);
+
+    // Assert
+    assertEquals(2, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(authoredPrompt));
+    verify(promptRepository, never())
+        .getPurchasedPromptsByUserIdAndOptionalTag(any(), any(), anyInt(), anyInt());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldHandlePaginationWithinPurchased() {
+    // Arrange
+    UUID userId = UUID.randomUUID();
+    UUID tagId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(1, 1); // Second item, page size 1
+
+    when(tagService.getTagIdByName("tag")).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(3L);
+    when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(1L);
+
+    PromptWithSourceDTO purchasedPrompt = mock(PromptWithSourceDTO.class);
+    when(promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 1, 1))
+        .thenReturn(List.of(purchasedPrompt));
+
+    // Act
+    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
+        pageable);
+
+    // Assert
+    assertEquals(4, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertTrue(result.getContent().contains(purchasedPrompt));
+    verify(promptRepository, never())
+        .findByAuthorIdAndOptionalTagName(any(), any(), anyInt(), anyInt());
+  }
 }
