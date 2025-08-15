@@ -155,6 +155,136 @@ class UserServiceTest {
     assertEquals(0, dto.getFollowing().size());
   }
 
+  // saveProfilePicture tests
+  @Test
+  void saveProfilePicture_success() throws IOException {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "image.jpg",
+        "test-image.jpg",
+        "image/jpeg",
+        "test data".getBytes());
+
+    User user = new User();
+    user.setEmail(email);
+    String oldPictureUrl = "old-picture-url";
+    user.setProfilePictureUrl(oldPictureUrl);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(s3Service.uploadFile(file)).thenReturn("new-picture-url");
+
+    String result = userService.saveProfilePicture(email, file);
+
+    assertEquals("new-picture-url", result);
+    verify(s3Service).deleteFile(oldPictureUrl);
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void saveProfilePicture_shouldValidateAndSaveImage() throws IOException {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "image.jpg",
+        "test-image.jpg",
+        "image/jpeg",
+        "test data".getBytes());
+
+    User user = new User();
+    user.setEmail(email);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(s3Service.uploadFile(file)).thenReturn("new-url");
+
+    String result = userService.saveProfilePicture(email, file);
+
+    assertEquals("new-url", result);
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void saveProfilePicture_shouldThrowExceptionForInvalidImage() throws IOException {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "file.txt",
+        "test.txt",
+        "text/plain",
+        "test data".getBytes());
+
+    User user = new User();
+    user.setEmail(email);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    assertThrows(RuntimeException.class, () -> userService.saveProfilePicture(email, file));
+    verify(s3Service, never()).uploadFile(any());
+  }
+
+  @Test
+  void saveProfilePicture_withEmptyFile() {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "image.jpg",
+        "image.jpg",
+        "image/jpeg",
+        new byte[0]);
+
+    User user = new User();
+    user.setEmail(email);
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    assertThrows(RuntimeException.class, () -> userService.saveProfilePicture(email, file));
+  }
+
+  @Test
+  void saveProfilePicture_withNullContentType() {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "image.jpg",
+        "image.jpg",
+        null,
+        "test data".getBytes());
+
+    User user = new User();
+    user.setEmail(email);
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    assertThrows(RuntimeException.class, () -> userService.saveProfilePicture(email, file));
+  }
+
+  @Test
+  void saveProfilePicture_withNullFilename() {
+    String email = "test@example.com";
+    MockMultipartFile file = new MockMultipartFile(
+        "image",
+        null,
+        "image/jpeg",
+        "test data".getBytes());
+
+    User user = new User();
+    user.setEmail(email);
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    assertThrows(RuntimeException.class, () -> userService.saveProfilePicture(email, file));
+  }
+
+  @Test
+  void saveProfilePicture_withOversizedFile() {
+    String email = "test@example.com";
+    byte[] oversizedContent = new byte[6 * 1024 * 1024]; // 6MB
+    MockMultipartFile file = new MockMultipartFile(
+        "image.jpg",
+        "image.jpg",
+        "image/jpeg",
+        oversizedContent);
+
+    User user = new User();
+    user.setEmail(email);
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    assertThrows(RuntimeException.class, () -> userService.saveProfilePicture(email, file));
+  }
+
+  // updateUser tests
   @Test
   void testUpdateUser_success() {
     UUID id = UUID.randomUUID();
