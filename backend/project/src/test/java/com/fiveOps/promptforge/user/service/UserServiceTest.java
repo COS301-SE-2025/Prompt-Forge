@@ -92,6 +92,68 @@ class UserServiceTest {
     assertEquals("john@example.com", dto.getEmail());
   }
 
+  @Test
+  void testGetUserById_userNotFound() {
+    UUID id = UUID.randomUUID();
+    when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+    assertThrows(RuntimeException.class, () -> userService.getUserById(id));
+  }
+
+  @Test
+  void testGetUserById_shouldMapAllFields() {
+    UUID id = UUID.randomUUID();
+    User user = new User();
+    user.setUserId(id);
+    user.setUsername("testUser");
+    user.setEmail("test@example.com");
+    user.setProfilePictureUrl("http://example.com/pic.jpg");
+    user.setBio("Test bio");
+    user.setRole("USER");
+    user.setIsVerified(true);
+    user.setIsActive(true);
+    user.setCreatedAt(LocalDateTime.now());
+    user.setUpdatedAt(LocalDateTime.now());
+    user.setBadges(new UUID[] { UUID.randomUUID() });
+    user.setFollowers(new UUID[] { UUID.randomUUID() });
+    user.setFollowing(new UUID[] { UUID.randomUUID() });
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+    UserDto dto = userService.getUserById(id);
+
+    assertEquals(user.getUserId(), dto.getUserId());
+    assertEquals(user.getUsername(), dto.getUsername());
+    assertEquals(user.getEmail(), dto.getEmail());
+    assertEquals(user.getProfilePictureUrl(), dto.getProfilePicture());
+    assertEquals(user.getBio(), dto.getBio());
+    assertEquals(user.getRole(), dto.getRole());
+    assertTrue(dto.isVerified());
+    assertTrue(dto.isActive());
+    assertEquals(1, dto.getBadges().size());
+    assertEquals(1, dto.getFollowers().size());
+    assertEquals(1, dto.getFollowing().size());
+  }
+
+  @Test
+  void testGetUserById_withNullArrays() {
+    UUID id = UUID.randomUUID();
+    User user = new User();
+    user.setUserId(id);
+    user.setUsername("testUser");
+    user.setEmail("test@example.com");
+    user.setBadges(null);
+    user.setFollowers(null);
+    user.setFollowing(null);
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+    UserDto dto = userService.getUserById(id);
+
+    assertEquals(0, dto.getBadges().size());
+    assertEquals(0, dto.getFollowers().size());
+    assertEquals(0, dto.getFollowing().size());
+  }
 
   @Test
   void testUpdateUser_success() {
