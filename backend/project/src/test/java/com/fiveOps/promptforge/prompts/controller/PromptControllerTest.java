@@ -255,6 +255,27 @@ class PromptControllerTest {
   }
 
   @Test
+  void createPrompt_ShouldSetDefaultPriceWhenNull() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] { cookie });
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
+    when(userService.findByEmail(userEmail)).thenReturn(testUser);
+
+    testPrompt.setPrice(null);
+    when(promptService.createPrompt(any(Prompt.class))).thenReturn(testPrompt);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0.0, ((Prompt) response.getBody()).getPrice());
+    verify(promptService).createPrompt(any(Prompt.class));
+  }
+
+  @Test
   void getAllPrompts_ShouldReturnAllPrompts() {
     // Arrange
     List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
