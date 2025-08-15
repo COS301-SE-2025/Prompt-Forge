@@ -422,4 +422,48 @@ class PromptControllerTest {
     assertEquals(expectedPrompts, response2.getBody());
     verify(promptService, times(2)).searchByTitle(query);
   }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnUnauthorized_WhenNoAuthentication() {
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getPurchasedPrompts(mock(Pageable.class),
+        null);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnPrompts_WhenAuthenticated() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getPurchasedPromptsByOptionalTag(testAuthorId, null, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getPurchasedPrompts(pageable, auth);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnBadRequest_WhenUserIdNotFound() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenThrow(new RuntimeException("User not found"));
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getPurchasedPrompts(pageable, auth);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
 }
