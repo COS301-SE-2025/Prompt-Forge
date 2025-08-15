@@ -60,7 +60,7 @@ public class PromptController {
 
   @PostMapping
   public ResponseEntity<?> createPrompt(@RequestBody Prompt prompt, HttpServletRequest request) {
-    
+
     if (prompt == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("{\"error\": \"Prompt details missing" + "\"}");
@@ -123,13 +123,11 @@ public class PromptController {
       Prompt created = promptService.createPrompt(prompt);
       return ResponseEntity.ok(created);
 
-    } 
-    catch(IllegalArgumentException e){
+    } catch (IllegalArgumentException e) {
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("{\"error\": \"" + e.getMessage() + "\"}");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       System.err.println("Error creating prompt: " + e.getMessage());
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -220,24 +218,24 @@ public class PromptController {
     }
 
     String userEmail = authentication.getName();
-    
+
     try {
       UUID userId = userService.getUserIdByEmail(userEmail);
-  
+
       if (tagName == null && filterName == null) {
         System.out.println("\n\ntag and filter are null");
-  
+
         return ResponseEntity.ok(
             promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, null, pageable));
       }
-  
+
       if (filterName == null) {
         System.out.println("\n\nfilter is null and tag isnt");
         return ResponseEntity.ok(
             promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, tagName, pageable));
         // return ResponseEntity.ok(promptService.getAuthoredAndPurchasedPrompts(userId, pageable));
       }
-  
+
       if (tagName == null) {
         System.out.println("\n\ntag is null and filter isnt");
         return ResponseEntity.ok(
@@ -245,14 +243,14 @@ public class PromptController {
                 userId, tagName, filterName, pageable));
         // TODO:
       }
-  
+
       System.out.println("\n\nboth arent null");
-  
+
       // TODO:
       return ResponseEntity.ok(
           promptService.getAuthoredAndPurchasedPromptsByFilter(
               userId, tagName, filterName, pageable));
-   
+
     } catch (RuntimeException e) {
       // TODO: handle exception
       return ResponseEntity.status(401).build();

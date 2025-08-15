@@ -34,20 +34,14 @@ import com.fiveOps.promptforge.promptstore.repository.PromptStoreRepository;
 @ExtendWith(MockitoExtension.class)
 class PromptStoreServiceReviewTest {
 
-  @Mock
-  private PromptReviewRepository reviewRepository;
+  @Mock private PromptReviewRepository reviewRepository;
 
-  @Mock
-  private PromptStoreRepository promptStoreRepository;
-  @Mock
-  private PromptService promptService;
-  @Mock
-  private PromptPurchaseRepository purchaseRepository;
-  @Mock
-  private TagService tagService;
+  @Mock private PromptStoreRepository promptStoreRepository;
+  @Mock private PromptService promptService;
+  @Mock private PromptPurchaseRepository purchaseRepository;
+  @Mock private TagService tagService;
 
-  @InjectMocks
-  private PromptStoreService promptStoreService;
+  @InjectMocks private PromptStoreService promptStoreService;
 
   private UUID testPromptId;
   private UUID testUserId;
@@ -99,7 +93,8 @@ class PromptStoreServiceReviewTest {
     when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(true);
 
     // Act & Assert
-    assertThrows(PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
+    assertThrows(
+        PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
     verify(purchaseRepository, never()).save(any());
   }
 
@@ -112,7 +107,8 @@ class PromptStoreServiceReviewTest {
     when(promptService.getPromptById(promptId)).thenReturn(null);
 
     // Act & Assert
-    assertThrows(PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
+    assertThrows(
+        PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
     verify(purchaseRepository, never()).save(any());
   }
 
@@ -198,15 +194,17 @@ class PromptStoreServiceReviewTest {
     when(reviewRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     // Act - update only rating
-    PromptReview result = promptStoreService.updateReviewPartial(reviewId, testUserId, testPromptId, 5.0, null);
+    PromptReview result =
+        promptStoreService.updateReviewPartial(reviewId, testUserId, testPromptId, 5.0, null);
 
     // Assert
     assertEquals(5.0, result.getRating());
     assertEquals("Original comment", result.getComment());
 
     // Act - update only comment
-    result = promptStoreService.updateReviewPartial(
-        reviewId, testUserId, testPromptId, null, "New comment");
+    result =
+        promptStoreService.updateReviewPartial(
+            reviewId, testUserId, testPromptId, null, "New comment");
 
     // Assert
     assertEquals(5.0, result.getRating()); // Rating remains unchanged
@@ -223,8 +221,9 @@ class PromptStoreServiceReviewTest {
     // Act & Assert
     assertThrows(
         IllegalArgumentException.class,
-        () -> promptStoreService.updateReviewPartial(
-            reviewId, testUserId, testPromptId, 5.0, "Comment"));
+        () ->
+            promptStoreService.updateReviewPartial(
+                reviewId, testUserId, testPromptId, 5.0, "Comment"));
   }
 
   @Test
@@ -429,7 +428,7 @@ class PromptStoreServiceReviewTest {
   void getRecentlyPublishedPrompts_ShouldReturnList() {
     List<Prompt> prompts = List.of(mock(Prompt.class));
     when(promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(
-        "public"))
+            "public"))
         .thenReturn(prompts);
     assertFalse(promptStoreService.getRecentlyPublishedPrompts().isEmpty());
   }
@@ -437,7 +436,7 @@ class PromptStoreServiceReviewTest {
   @Test
   void getRecentlyPublishedPrompts_ShouldReturnEmptyList() {
     when(promptStoreRepository.findByVisibilityAndPublishedAtIsNotNullOrderByPublishedAtDesc(
-        "public"))
+            "public"))
         .thenReturn(Collections.emptyList());
     assertTrue(promptStoreService.getRecentlyPublishedPrompts().isEmpty());
   }
