@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Example: Suppress false positives -->
+    <suppress>
+        <notes>False positive - this vulnerability doesn't apply to our usage</notes>
+        <packageUrl regex="true">^pkg:maven/org\.example/.*$</packageUrl>
+        <cve>CVE-2021-12345</cve>
+    </suppress>
+
+    <!-- Suppress development dependencies -->
+    <suppress>
+        <notes>Development dependency - not in production</notes>
+        <filePath regex="true">.*test.*</filePath>
+    </suppress>
+</suppressions>

@@ -388,6 +388,29 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- OWASP- DEPENDENCY CHECKER -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>8.4.2</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
+                    <format>ALL</format>
+                    <suppressionFile>owasp-suppressions.xml</suppressionFile>
+                    <failBuildOnCVSS>7.0</failBuildOnCVSS>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>
+                    <nugetconfAnalyzerEnabled>false</nugetconfAnalyzerEnabled>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
