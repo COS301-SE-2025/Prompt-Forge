@@ -466,4 +466,112 @@ class PromptControllerTest {
     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
 
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnUnauthorized_WhenNoAuthentication() {
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(null, null,
+        null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WhenNoFilters() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(testAuthorId, null, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(auth, null,
+        null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithTagOnly() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String tagName = "test-tag";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(testAuthorId, tagName, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(auth, tagName,
+        null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithFilterOnly() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String filter = "recent";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByFilter(testAuthorId, null, filter, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(auth, null,
+        filter, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithTagAndFilter() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String tagName = "test-tag";
+    String filter = "popular";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByFilter(testAuthorId, tagName, filter, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(auth, tagName,
+        filter, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnBadRequest_WhenUserIdNotFound() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenThrow(new RuntimeException("User not found"));
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response = promptController.getAuthoredAndPurchasedPrompts(auth, null,
+        null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
 }
