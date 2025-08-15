@@ -29,7 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -41,17 +40,13 @@ import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 @ExtendWith(MockitoExtension.class)
 class PromptServiceTest {
 
-  @Mock
-  private PromptRepository promptRepository;
+  @Mock private PromptRepository promptRepository;
 
-  @Mock
-  private TagService tagService;
+  @Mock private TagService tagService;
 
-  @Mock
-  private UniversalTaggingService universalTaggingService;
+  @Mock private UniversalTaggingService universalTaggingService;
 
-  @InjectMocks
-  private PromptService promptService;
+  @InjectMocks private PromptService promptService;
 
   private Prompt testPrompt;
   private UUID testId;
@@ -321,7 +316,8 @@ class PromptServiceTest {
     when(promptRepository.findById(testId)).thenReturn(Optional.empty());
 
     // Act & Assert
-    RuntimeException ex = assertThrows(RuntimeException.class, () -> promptService.generateTagsForPrompt(testId));
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> promptService.generateTagsForPrompt(testId));
     assertEquals("Prompt not found", ex.getMessage());
   }
 
@@ -367,7 +363,8 @@ class PromptServiceTest {
     when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, null)).thenReturn(1L);
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable);
 
     // Assert
     assertEquals(1, result.getTotalElements());
@@ -375,7 +372,8 @@ class PromptServiceTest {
   }
 
   @Test
-  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldReturnOnlyAuthoredWhenPurchasedExhausted() {
+  void
+      getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldReturnOnlyAuthoredWhenPurchasedExhausted() {
     // Arrange
     Pageable pageable = PageRequest.of(2, 2); // offset beyond purchased
     UUID userId = UUID.randomUUID();
@@ -386,8 +384,8 @@ class PromptServiceTest {
     when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(3L);
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
 
     // Assert
     assertEquals(5, result.getTotalElements());
@@ -408,8 +406,8 @@ class PromptServiceTest {
         .thenReturn(List.of(mock(PromptWithSourceDTO.class)));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
 
     // Assert
     assertEquals(4, result.getTotalElements());
@@ -425,8 +423,9 @@ class PromptServiceTest {
     // Act & Assert
     assertThrows(
         RuntimeException.class,
-        () -> promptService.getAuthoredAndPurchasedPromptsByFilter(
-            userId, null, "invalidFilter", pageable));
+        () ->
+            promptService.getAuthoredAndPurchasedPromptsByFilter(
+                userId, null, "invalidFilter", pageable));
   }
 
   @Test
@@ -456,7 +455,8 @@ class PromptServiceTest {
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getPopularPromptsByOptionalTag(userId, tagName, pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getPopularPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(3, result.getTotalElements());
@@ -484,7 +484,8 @@ class PromptServiceTest {
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getPopularPromptsByOptionalTag(userId, null, pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getPopularPromptsByOptionalTag(userId, null, pageable);
 
     // Assert
     assertEquals(1, result.getTotalElements());
@@ -511,14 +512,14 @@ class PromptServiceTest {
     PromptWithSourceDTO authoredPrompt = mock(PromptWithSourceDTO.class);
 
     when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(
-        userId, tagId, 1, 0))
+            userId, tagId, 1, 0))
         .thenReturn(List.of(purchasedPrompt));
     when(promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId, 1, 0))
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(3, result.getTotalElements());
@@ -547,8 +548,8 @@ class PromptServiceTest {
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, null,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, null, pageable);
 
     // Assert
     assertEquals(1, result.getTotalElements());
@@ -572,8 +573,8 @@ class PromptServiceTest {
         .thenReturn(0L);
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(0, result.getTotalElements());
@@ -585,7 +586,8 @@ class PromptServiceTest {
   }
 
   @Test
-  void getRecentAuthoredAndPurchasedPromptsByOptionalTag_ShouldHandlePaginationBeyondTotalElements() {
+  void
+      getRecentAuthoredAndPurchasedPromptsByOptionalTag_ShouldHandlePaginationBeyondTotalElements() {
     // Arrange
     UUID userId = UUID.randomUUID();
     String tagName = "tag";
@@ -599,8 +601,8 @@ class PromptServiceTest {
         .thenReturn(2L);
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(3, result.getTotalElements());
@@ -626,14 +628,14 @@ class PromptServiceTest {
     PromptWithSourceDTO authoredPrompt = mock(PromptWithSourceDTO.class);
 
     when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(
-        userId, tagId, 1, 0))
+            userId, tagId, 1, 0))
         .thenReturn(List.of(purchasedPrompt));
     when(promptRepository.findPopularAuthoredPromptsByUserIdAndOptionalTag(userId, tagId, 3, 0))
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -660,12 +662,12 @@ class PromptServiceTest {
     PromptWithSourceDTO purchasedPrompt2 = mock(PromptWithSourceDTO.class);
 
     when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(
-        userId, tagId, 2, 0))
+            userId, tagId, 2, 0))
         .thenReturn(List.of(purchasedPrompt1, purchasedPrompt2));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -678,7 +680,8 @@ class PromptServiceTest {
   }
 
   @Test
-  void getRecentAuthoredAndPurchasedPromptsByOptionalTag_ShouldHandleSecondPageWithRemainingAuthored() {
+  void
+      getRecentAuthoredAndPurchasedPromptsByOptionalTag_ShouldHandleSecondPageWithRemainingAuthored() {
     // Arrange
     UUID userId = UUID.randomUUID();
     String tagName = "tag";
@@ -703,8 +706,8 @@ class PromptServiceTest {
         .thenReturn(List.of(purchasedPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getRecentAuthoredAndPurchasedPromptsByOptionalTag(userId, tagName, pageable);
 
     // Assert
     assertEquals(5, result.getTotalElements());
@@ -726,8 +729,8 @@ class PromptServiceTest {
     when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(0L);
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
 
     // Assert
     assertEquals(0, result.getTotalElements());
@@ -753,8 +756,8 @@ class PromptServiceTest {
         .thenReturn(List.of(purchasedPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, null,
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, null, pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -779,8 +782,8 @@ class PromptServiceTest {
         .thenReturn(List.of(authoredPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -806,8 +809,8 @@ class PromptServiceTest {
         .thenReturn(List.of(purchasedPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
 
     // Assert
     assertEquals(4, result.getTotalElements());
@@ -837,8 +840,8 @@ class PromptServiceTest {
         .thenReturn(List.of(mockPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "popular",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "popular", pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -861,12 +864,13 @@ class PromptServiceTest {
         .thenReturn(1L);
 
     PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
-    when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(userId, tagId, 1, 0))
+    when(promptRepository.getPurchasedPromptsRecentlyCreatedByUserIdAndOptionalTag(
+            userId, tagId, 1, 0))
         .thenReturn(List.of(mockPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "recent",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName, "recent", pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
@@ -883,16 +887,16 @@ class PromptServiceTest {
     UUID tagId = UUID.randomUUID();
 
     when(tagService.getTagIdByName(tagName)).thenReturn(tagId);
-    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId))
-        .thenReturn(1L);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(1L);
 
     PromptWithSourceDTO mockPrompt = mock(PromptWithSourceDTO.class);
     when(promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 2, 0))
         .thenReturn(List.of(mockPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, tagName,
-        "purchased", pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByFilter(
+            userId, tagName, "purchased", pageable);
 
     // Assert
     assertEquals(1, result.getTotalElements());
@@ -916,8 +920,8 @@ class PromptServiceTest {
         .thenReturn(List.of(mockPrompt));
 
     // Act
-    Page<PromptWithSourceDTO> result = promptService.getAuthoredAndPurchasedPromptsByFilter(userId, null, "popular",
-        pageable);
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByFilter(userId, null, "popular", pageable);
 
     // Assert
     assertEquals(2, result.getTotalElements());
