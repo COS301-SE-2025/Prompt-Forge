@@ -276,6 +276,32 @@ class PromptControllerTest {
   }
 
   @Test
+  void deletePrompt_ShouldReturnNotFound_WhenNotExists() {
+    // Arrange
+    when(promptService.deletePrompt(testPromptId)).thenReturn(false);
+
+    // Act
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    verify(promptService).deletePrompt(testPromptId);
+  }
+
+  @Test
+  void deletePrompt_ShouldReturnOk_WhenDeleted() {
+    // Arrange
+    when(promptService.deletePrompt(testPromptId)).thenReturn(true);
+
+    // Act
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(promptService).deletePrompt(testPromptId);
+  }
+
+  @Test
   void getAllPrompts_ShouldReturnAllPrompts() {
     // Arrange
     List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
