@@ -574,4 +574,28 @@ class PromptControllerTest {
     // Assert
     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
+
+  @Test
+  void publishPrompt_ShouldReturnNotFound_WhenPromptNull() {
+    // Arrange
+    when(promptService.publishPrompt(testPromptId)).thenReturn(null);
+
+    // Act
+    ResponseEntity<Prompt> response = promptController.publishPrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void unpublishPrompt_ShouldReturnNotFound_WhenPromptNull() {
+    // Arrange
+    when(promptService.unpublishPrompt(testPromptId)).thenReturn(null);
+
+    // Act
+    ResponseEntity<Prompt> response = promptController.unpublishPrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
 }
