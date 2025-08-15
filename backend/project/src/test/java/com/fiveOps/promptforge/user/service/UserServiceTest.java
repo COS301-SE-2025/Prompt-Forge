@@ -319,4 +319,100 @@ class UserServiceTest {
 
     assertThrows(RuntimeException.class, () -> userService.updateUser(id, dto));
   }
+
+  @Test
+  void testUpdateUser_shouldUpdateAllFields() {
+    UUID id = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setUserId(id);
+    existingUser.setEmail("old@example.com");
+    existingUser.setUsername("oldUsername");
+
+    UpdateProfileDto dto = new UpdateProfileDto();
+    dto.setEmail("new@example.com");
+    dto.setUsername("newUsername");
+    dto.setBio("new bio");
+    dto.setPassword("newPassword");
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+    when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
+    when(userRepository.existsByUsername("newUsername")).thenReturn(false);
+    when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
+    when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+    UserDto result = userService.updateUser(id, dto);
+
+    assertEquals("new@example.com", result.getEmail());
+    assertEquals("newUsername", result.getUsername());
+    assertEquals("new bio", result.getBio());
+  }
+
+  @Test
+  void testUpdateUser_shouldRejectDuplicateEmail() {
+    UUID id = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setUserId(id);
+    existingUser.setEmail("old@example.com");
+
+    UpdateProfileDto dto = new UpdateProfileDto();
+    dto.setEmail("taken@example.com");
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+    when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
+
+    assertThrows(RuntimeException.class, () -> userService.updateUser(id, dto));
+  }
+
+  @Test
+  void testUpdateUser_withEmptyFields() {
+    UUID id = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setUserId(id);
+    existingUser.setEmail("old@example.com");
+    existingUser.setUsername("oldUsername");
+
+    UpdateProfileDto dto = new UpdateProfileDto();
+    dto.setEmail("");
+    dto.setUsername("");
+    dto.setBio("");
+    dto.setPassword("");
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+    when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+    UserDto result = userService.updateUser(id, dto);
+
+    assertEquals("old@example.com", result.getEmail());
+    assertEquals("oldUsername", result.getUsername());
+  }
+
+  @Test
+  void testUpdateUser_withShortPassword() {
+    UUID id = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setUserId(id);
+
+    UpdateProfileDto dto = new UpdateProfileDto();
+    dto.setPassword("12345"); // Less than 6 characters
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+
+    assertThrows(RuntimeException.class, () -> userService.updateUser(id, dto));
+  }
+
+  @Test
+  void testUpdateUser_withDuplicateUsername() {
+    UUID id = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setUserId(id);
+    existingUser.setUsername("oldUsername");
+
+    UpdateProfileDto dto = new UpdateProfileDto();
+    dto.setUsername("takenUsername");
+
+    when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+    when(userRepository.existsByUsername("takenUsername")).thenReturn(true);
+
+    assertThrows(RuntimeException.class, () -> userService.updateUser(id, dto));
+  }
 }
