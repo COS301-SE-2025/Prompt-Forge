@@ -325,4 +325,81 @@ class UserControllerTest {
     assertEquals("Profile picture deleted", response.getBody().get("message"));
     verify(userService).deleteProfilePicture(testEmail);
   }
+
+
+  // ============== Change Password ======================
+
+  @Test
+  void changePassword_ValidCurrentPassword_ShouldReturnSuccess() {
+    // Arrange
+    setupAuthenticatedRequest();
+    String currentPassword = "currentPassword";
+    String newPassword = "newPassword";
+    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    when(userService.findByEmail(testEmail)).thenReturn(testUser);
+    when(userService.matchesPassword(currentPassword, "encodedPassword")).thenReturn(true);
+    when(userService.encodePassword(newPassword)).thenReturn("newEncodedPassword");
+    doNothing().when(userService).save(any(User.class));
+
+    // Act
+    ResponseEntity<?> response = userController.changePassword(request, body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Password changed successfully", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByEmail(testEmail);
+    verify(userService).matchesPassword(currentPassword, "encodedPassword");
+    verify(userService).encodePassword(newPassword);
+    verify(userService).save(any(User.class));
+  }
+
+  @Test
+  void changePassword_UserNotFound_ShouldReturnNotFound() {
+    // Arrange
+    setupAuthenticatedRequest();
+    String currentPassword = "currentPassword";
+    String newPassword = "newPassword";
+    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    when(userService.findByEmail(testEmail)).thenReturn(null);
+
+    // Act
+    ResponseEntity<?> response = userController.changePassword(request, body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("User not found", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByEmail(testEmail);
+    verify(userService, never()).matchesPassword(anyString(), anyString());
+    verify(userService, never()).encodePassword(anyString());
+    verify(userService, never()).save(any(User.class));
+  }
+
+  @Test
+  void changePassword_InvalidCurrentPassword_ShouldReturnUnauthorized() {
+    // Arrange
+    setupAuthenticatedRequest();
+    String currentPassword = "wrongPassword";
+    String newPassword = "newPassword";
+    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    when(userService.findByEmail(testEmail)).thenReturn(testUser);
+    when(userService.matchesPassword(currentPassword, "encodedPassword"))
+        .thenReturn(false);
+
+    // Act
+    ResponseEntity<?> response = userController.changePassword(request, body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Current password incorrect", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByEmail(testEmail);
+    verify(userService).matchesPassword(currentPassword, "encodedPassword");
+    verify(userService, never()).encodePassword(anyString());
+    verify(userService, never()).save(any(User.class));
+  }
 }
