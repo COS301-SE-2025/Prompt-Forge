@@ -266,4 +266,43 @@ class UserControllerTest {
     assertEquals(testUserId, result.getUserId());
     verify(userService).updateUserByEmail(testEmail, testUpdateDto);
   }
+
+  
+  // ============== Upload profile picture ======================
+
+  @Test
+  void uploadProfilePicture_ShouldReturnSuccessResponse() {
+    // Arrange
+    setupAuthenticatedRequest();
+    MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
+    String imageUrl = "https://example.com/uploaded-image.jpg";
+    when(userService.saveProfilePicture(testEmail, file)).thenReturn(imageUrl);
+
+    // Act
+    ResponseEntity<Map<String, String>> response = userController.uploadProfilePicture(file, request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(imageUrl, response.getBody().get("url"));
+    assertEquals("Profile picture uploaded successfully", response.getBody().get("message"));
+    verify(userService).saveProfilePicture(testEmail, file);
+  }
+
+  @Test
+  void uploadProfilePicture_ServiceException_ShouldThrowException() {
+    // Arrange
+    setupAuthenticatedRequest();
+    MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
+    when(userService.saveProfilePicture(testEmail, file))
+        .thenThrow(new RuntimeException("Upload failed"));
+
+    // Act & Assert
+    ResponseStatusException exception = assertThrows(
+        ResponseStatusException.class,
+        () -> userController.uploadProfilePicture(file, request));
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
+    assertEquals("Failed to upload profile picture", exception.getReason());
+  }
 }
