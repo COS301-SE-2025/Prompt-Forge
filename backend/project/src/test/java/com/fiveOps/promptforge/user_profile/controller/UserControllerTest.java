@@ -81,6 +81,15 @@ class UserControllerTest {
     testUser.setPasswordHash("encodedPassword");
   }
 
+  // Helper method to setup authenticated request
+  private void setupAuthenticatedRequest() {
+    Cookie[] cookies = new Cookie[1];
+    cookies[0] = new Cookie("token", testToken);
+    when(request.getCookies()).thenReturn(cookies);
+    when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
+  }
+
+
   // ============== Get all Users ======================
 
   @Test
@@ -166,5 +175,59 @@ class UserControllerTest {
 
     // Assert
     verify(userService).deleteUser(testUserId);
+  }
+
+
+  // ============== Get current user ======================
+
+  @Test
+  void getCurrentUser_ShouldReturnUserDto() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.getUserByEmail(testEmail)).thenReturn(testUserDto);
+
+    // Act
+    ResponseEntity<UserDto> response = userController.getCurrentUser(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(testUserId, response.getBody().getUserId());
+    verify(userService).getUserByEmail(testEmail);
+  }
+
+  @Test
+  void getCurrentUser_NoTokenCookie_ShouldThrowException() {
+    // Arrange
+    Cookie[] cookies = new Cookie[1];
+    cookies[0] = new Cookie("other", "value");
+    when(request.getCookies()).thenReturn(cookies);
+
+    // Act & Assert
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        () -> userController.getCurrentUser(request));
+    assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+    assertEquals("Authentication token not found", exception.getReason());
+  }
+
+
+  // ============== Get full current user ======================
+
+  @Test
+  void getFullCurrentUser_ShouldReturnUserDto() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.getUserByEmail(testEmail)).thenReturn(testUserDto);
+
+    // Act
+    ResponseEntity<UserDto> response = userController.getFullCurrentUser(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(testUserId, response.getBody().getUserId());
+    verify(userService).getUserByEmail(testEmail);
   }
 }
