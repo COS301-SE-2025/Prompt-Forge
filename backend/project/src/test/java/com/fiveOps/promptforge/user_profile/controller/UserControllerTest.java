@@ -118,5 +118,25 @@ class UserControllerTest {
   }
 
 
+  // ============== Search users ======================
+
+  @Test
+  void searchUsers_ShouldReturnUserList() {
+    // Arrange
+    String query = "test";
+    List<UserDto> users = Arrays.asList(testUserDto);
+    when(userService.searchUsers(query)).thenReturn(users);
+
+    // Act
+    List<UserDto> result = userController.searchUsers(query);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(testUserId, result.get(0).getUserId());
+    verify(userService).searchUsers(query);
+  }
+
+
   
 }
