@@ -128,7 +128,7 @@ export function StandardPromptCard({
                 <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
                 <span className="text-xs ml-1">{rating.toFixed(1)}</span>
               </div>
-              {onToggleFavorite && (
+              {/*onToggleFavorite && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -137,7 +137,7 @@ export function StandardPromptCard({
                 >
                   <Star className={`h-3 w-3 ${isFavorite ? "fill-yellow-400 text-yellow-400" : ""}`} />
                 </Button>
-              )}
+              )*/}
             </div>
           </div>
 

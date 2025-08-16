@@ -67,13 +67,13 @@ export default function ProfileSettingsPage() {
         setUsername(profile.username || "")
         setEmail(profile.email || "")
         setBio(profile.bio || "")
-        setProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
+        setProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
         
         // Set pending state to match loaded profile
         setPendingUsername(profile.username || "")
         setPendingEmail(profile.email || "")
         setPendingBio(profile.bio || "")
-        setPendingProfileImage(profile.profilePictureUrl || "/placeholder.svg?height=100&width=100")
+        setPendingProfileImage(profile.profilePicture || "/placeholder.svg?height=100&width=100")
       } catch (error) {
         console.error("Failed to load profile", error)
         // You might want to show an error message to the user here
