@@ -495,4 +495,72 @@ class UserControllerTest {
     verify(userService, never()).save(any(User.class));
   }
 
+
+  // ============== Get dashboard card data ======================
+
+  @Test
+  void getDashboardCardData_ShouldReturnCardData() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.getUserByEmail(testEmail)).thenReturn(testUserDto);
+
+    // Act
+    ResponseEntity<Map<String, Object>> response = userController.getDashboardCardData(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+
+    Map<String, Object> cardData = response.getBody();
+    assertEquals("testuser", cardData.get("username"));
+    assertEquals("Test bio", cardData.get("bio"));
+    assertEquals("https://example.com/picture.jpg", cardData.get("profilePicture"));
+    assertEquals(1, cardData.get("followersCount"));
+    assertEquals(1, cardData.get("followingCount"));
+    assertEquals(1, ((List<?>) cardData.get("badges")).size());
+
+    verify(userService).getUserByEmail(testEmail);
+  }
+
+  @Test
+  void getDashboardCardData_UserNotFound_ShouldReturnNotFound() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.getUserByEmail(testEmail)).thenReturn(null);
+
+    // Act
+    ResponseEntity<Map<String, Object>> response = userController.getDashboardCardData(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("User not found", response.getBody().get("error"));
+  }
+
+  @Test
+  void getDashboardCardData_NullFields_ShouldHandleGracefully() {
+    // Arrange
+    setupAuthenticatedRequest();
+    UserDto userWithNulls = new UserDto();
+    userWithNulls.setUserId(testUserId);
+    when(userService.getUserByEmail(testEmail)).thenReturn(userWithNulls);
+
+    // Act
+    ResponseEntity<Map<String, Object>> response = userController.getDashboardCardData(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+
+    Map<String, Object> cardData = response.getBody();
+    assertEquals("", cardData.get("username"));
+    assertEquals("", cardData.get("bio"));
+    assertEquals("", cardData.get("profilePicture"));
+    assertEquals(0, cardData.get("followersCount"));
+    assertEquals(0, cardData.get("followingCount"));
+    assertEquals(0, ((List<?>) cardData.get("badges")).size());
+  }
 }
