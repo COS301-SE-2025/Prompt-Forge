@@ -563,4 +563,46 @@ class UserControllerTest {
     assertEquals(0, cardData.get("followingCount"));
     assertEquals(0, ((List<?>) cardData.get("badges")).size());
   }
+
+  
+  // ============== Get followers ======================
+
+  @Test
+  void getFollowers_ShouldReturnFollowersList() {
+    // Arrange
+    setupAuthenticatedRequest();
+    List<UserDto> followers = Arrays.asList(testUserDto);
+    when(userService.getFollowersByEmail(testEmail)).thenReturn(followers);
+
+    // Act
+    List<UserDto> result = userController.getFollowers(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(testUserId, result.get(0).getUserId());
+    verify(userService).getFollowersByEmail(testEmail);
+  }
+
+  
+  // ============== Get following ======================
+
+  @Test
+  void getFollowing_ShouldReturnFollowingList() {
+    // Arrange
+    setupAuthenticatedRequest();
+    List<UserDto> following = Arrays.asList(testUserDto);
+    when(userService.getFollowingByEmail(testEmail)).thenReturn(following);
+
+    // Act
+    List<UserDto> result = userController.getFollowing(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(testUserId, result.get(0).getUserId());
+    verify(userService).getFollowingByEmail(testEmail);
+  }
+  
+  
 }
