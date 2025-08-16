@@ -447,4 +447,52 @@ class UserControllerTest {
     verify(userService, never()).save(any(User.class));
     verify(mailService, never()).sendMail(anyString(), anyString(), anyString());
   }
+
+
+  // ============== Reset password ======================
+
+  @Test
+  void resetPassword_ValidToken_ShouldReturnSuccess() {
+    // Arrange
+    String token = "valid-token";
+    String newPassword = "newpassword";
+    Map<String, String> body = Map.of("token", token, "newPassword", newPassword);
+    when(userService.findByResetToken(token)).thenReturn(testUser);
+    when(userService.encodePassword(newPassword)).thenReturn("encodedPassword");
+    doNothing().when(userService).save(any(User.class));
+
+    // Act
+    ResponseEntity<?> response = userController.resetPassword(body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Password reset successful", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByResetToken(token);
+    verify(userService).encodePassword(newPassword);
+    verify(userService).save(any(User.class));
+  }
+
+  @Test
+  void resetPassword_InvalidToken_ShouldReturnBadRequest() {
+    // Arrange
+    String token = "invalid-token";
+    String newPassword = "newpassword";
+    Map<String, String> body = Map.of("token", token, "newPassword", newPassword);
+    when(userService.findByResetToken(token)).thenReturn(null);
+
+    // Act
+    ResponseEntity<?> response = userController.resetPassword(body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Invalid token", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByResetToken(token);
+    verify(userService, never()).encodePassword(anyString());
+    verify(userService, never()).save(any(User.class));
+  }
+
 }
