@@ -230,4 +230,40 @@ class UserControllerTest {
     assertEquals(testUserId, response.getBody().getUserId());
     verify(userService).getUserByEmail(testEmail);
   }
+
+
+  // ============== Get current user ID ======================
+
+  @Test
+  void getCurrentUserId_ShouldReturnUserId() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.getUserIdByEmail(testEmail)).thenReturn(testUserId);
+
+    // Act
+    Map<String, UUID> result = userController.getCurrentUserId(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(testUserId, result.get("userId"));
+    verify(userService).getUserIdByEmail(testEmail);
+  }
+
+
+  // ============== Update current user ======================
+
+  @Test
+  void updateCurrentUser_ShouldReturnUpdatedUserDto() {
+    // Arrange
+    setupAuthenticatedRequest();
+    when(userService.updateUserByEmail(testEmail, testUpdateDto)).thenReturn(testUserDto);
+
+    // Act
+    UserDto result = userController.updateCurrentUser(request, testUpdateDto);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(testUserId, result.getUserId());
+    verify(userService).updateUserByEmail(testEmail, testUpdateDto);
+  }
 }
