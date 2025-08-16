@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,8 +25,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
 
@@ -313,5 +319,123 @@ class PromptServiceTest {
     assertEquals(1, result.size());
     assertEquals(testPrompt, result.get(0));
     verify(promptRepository).searchPublicByTitle(searchTerm);
+  }
+
+  @Test
+  void generateTagsForPrompt_ShouldThrowWhenPromptNotFound() {
+    // Arrange
+    when(promptRepository.findById(testId)).thenReturn(Optional.empty());
+
+    // Act & Assert
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> promptService.generateTagsForPrompt(testId));
+    assertEquals("Prompt not found", ex.getMessage());
+  }
+
+  @Test
+  void generateTagsForPrompt_ShouldReturnPredictedTags() {
+    // Arrange
+    Map<String, Object> expectedTags = Map.of("tag1", 1);
+    when(promptRepository.findById(testId)).thenReturn(Optional.of(testPrompt));
+    when(universalTaggingService.predictTags("Test Content")).thenReturn(expectedTags);
+
+    // Act
+    Map<String, Object> result = promptService.generateTagsForPrompt(testId);
+
+    // Assert
+    assertEquals(expectedTags, result);
+    verify(universalTaggingService).predictTags("Test Content");
+  }
+
+  @Test
+  void getPromptsByAuthor_ShouldReturnPagedResults() {
+    // Arrange
+    Pageable pageable = PageRequest.of(0, 10);
+
+    when(promptRepository.countAuthoredPrompts(authorId)).thenReturn(5L);
+
+    // Act
+    Page<PromptWithSourceDTO> page = promptService.getPromptsByAuthor(authorId, pageable);
+
+    // Assert
+    assertEquals(5, page.getTotalElements());
+    assertTrue(page.getContent().isEmpty());
+  }
+
+  @Test
+  void getPurchasedPromptsByOptionalTag_ShouldHandleNullTagName() {
+    // Arrange
+    Pageable pageable = PageRequest.of(0, 10);
+    UUID userId = UUID.randomUUID();
+    List<PromptWithSourceDTO> prompts = List.of(mock(PromptWithSourceDTO.class));
+
+    when(promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, null, 10, 0))
+        .thenReturn(prompts);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, null)).thenReturn(1L);
+
+    // Act
+    Page<PromptWithSourceDTO> result =
+        promptService.getPurchasedPromptsByOptionalTag(userId, null, pageable);
+
+    // Assert
+    assertEquals(1, result.getTotalElements());
+    assertEquals(prompts, result.getContent());
+  }
+
+  @Test
+  void
+      getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldReturnOnlyAuthoredWhenPurchasedExhausted() {
+    // Arrange
+    Pageable pageable = PageRequest.of(2, 2); // offset beyond purchased
+    UUID userId = UUID.randomUUID();
+    UUID tagId = UUID.randomUUID();
+
+    when(tagService.getTagIdByName("tag")).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(2L);
+    when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(3L);
+
+    // Act
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
+
+    // Assert
+    assertEquals(5, result.getTotalElements());
+    assertEquals(0, result.getContent().size());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByOptionalTagID_ShouldReturnPurchasedAndAuthoredWhenMixed() {
+    // Arrange
+    Pageable pageable = PageRequest.of(0, 3);
+    UUID userId = UUID.randomUUID();
+    UUID tagId = UUID.randomUUID();
+
+    when(tagService.getTagIdByName("tag")).thenReturn(tagId);
+    when(promptRepository.countPurchasedPromptsByOptionalTagName(userId, tagId)).thenReturn(2L);
+    when(promptRepository.countByAuthoredAndTags(userId, tagId)).thenReturn(2L);
+    when(promptRepository.getPurchasedPromptsByUserIdAndOptionalTag(userId, tagId, 2, 0))
+        .thenReturn(List.of(mock(PromptWithSourceDTO.class)));
+
+    // Act
+    Page<PromptWithSourceDTO> result =
+        promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(userId, "tag", pageable);
+
+    // Assert
+    assertEquals(4, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPromptsByFilter_ShouldThrowForInvalidFilter() {
+    // Arrange
+    Pageable pageable = PageRequest.of(0, 5);
+    UUID userId = UUID.randomUUID();
+
+    // Act & Assert
+    assertThrows(
+        RuntimeException.class,
+        () ->
+            promptService.getAuthoredAndPurchasedPromptsByFilter(
+                userId, null, "invalidFilter", pageable));
   }
 }
