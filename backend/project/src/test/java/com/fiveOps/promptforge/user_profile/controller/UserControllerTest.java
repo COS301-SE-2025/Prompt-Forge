@@ -305,4 +305,24 @@ class UserControllerTest {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
     assertEquals("Failed to upload profile picture", exception.getReason());
   }
+
+
+  // ============== Delete Profile Picture ======================
+
+  @Test
+  void deleteProfilePicture_ShouldReturnSuccessResponse() {
+    // Arrange
+    setupAuthenticatedRequest();
+    doNothing().when(userService).deleteProfilePicture(testEmail);
+
+    // Act
+    ResponseEntity<Map<String, String>> response = userController.deleteProfilePicture(request);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Profile picture deleted", response.getBody().get("message"));
+    verify(userService).deleteProfilePicture(testEmail);
+  }
 }
