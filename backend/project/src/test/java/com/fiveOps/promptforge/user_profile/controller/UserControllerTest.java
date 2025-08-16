@@ -138,5 +138,33 @@ class UserControllerTest {
   }
 
 
-  
+  // ============== Update User ======================
+
+  @Test
+  void updateUser_ShouldReturnUpdatedUserDto() {
+    // Arrange
+    when(userService.updateUser(testUserId, testUpdateDto)).thenReturn(testUserDto);
+
+    // Act
+    UserDto result = userController.updateUser(testUserId, testUpdateDto);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(testUserId, result.getUserId());
+    verify(userService).updateUser(testUserId, testUpdateDto);
+  }
+
+  // ============== Delete User ======================
+
+  @Test
+  void deleteUser_ShouldCallService() {
+    // Arrange
+    doNothing().when(userService).deleteUser(testUserId);
+
+    // Act
+    userController.deleteUser(testUserId);
+
+    // Assert
+    verify(userService).deleteUser(testUserId);
+  }
 }
