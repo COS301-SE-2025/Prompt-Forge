@@ -402,4 +402,49 @@ class UserControllerTest {
     verify(userService, never()).encodePassword(anyString());
     verify(userService, never()).save(any(User.class));
   }
+
+  
+  // ============== Forgot Password ======================
+
+  @Test
+  void forgotPassword_UserExists_ShouldReturnSuccess() {
+    // Arrange
+    String email = "test@example.com";
+    Map<String, String> body = Map.of("email", email);
+    when(userService.findByEmail(email)).thenReturn(testUser);
+    doNothing().when(userService).save(any(User.class));
+    doNothing().when(mailService).sendMail(eq(email), anyString(), anyString());
+
+    // Act
+    ResponseEntity<?> response = userController.forgotPassword(body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Reset email sent", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByEmail(email);
+    verify(userService).save(any(User.class));
+    verify(mailService).sendMail(eq(email), anyString(), anyString());
+  }
+
+  @Test
+  void forgotPassword_UserNotFound_ShouldReturnNotFound() {
+    // Arrange
+    String email = "nonexistent@example.com";
+    Map<String, String> body = Map.of("email", email);
+    when(userService.findByEmail(email)).thenReturn(null);
+
+    // Act
+    ResponseEntity<?> response = userController.forgotPassword(body);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("User not found", ((Map<?, ?>) response.getBody()).get("message"));
+    verify(userService).findByEmail(email);
+    verify(userService, never()).save(any(User.class));
+    verify(mailService, never()).sendMail(anyString(), anyString(), anyString());
+  }
 }
