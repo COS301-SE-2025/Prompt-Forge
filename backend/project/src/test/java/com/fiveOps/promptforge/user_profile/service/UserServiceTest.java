@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.user.service;
+package com.fiveOps.promptforge.user_profile.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,7 +20,6 @@ import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
 import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-import com.fiveOps.promptforge.user_profile.service.UserService;
 
 class UserServiceTest {
 
@@ -114,9 +113,9 @@ class UserServiceTest {
     user.setIsActive(true);
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
-    user.setBadges(new UUID[] { UUID.randomUUID() });
-    user.setFollowers(new UUID[] { UUID.randomUUID() });
-    user.setFollowing(new UUID[] { UUID.randomUUID() });
+    user.setBadges(new UUID[] {UUID.randomUUID()});
+    user.setFollowers(new UUID[] {UUID.randomUUID()});
+    user.setFollowing(new UUID[] {UUID.randomUUID()});
 
     when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
@@ -159,11 +158,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_success() throws IOException {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "image.jpg",
-        "test-image.jpg",
-        "image/jpeg",
-        "test data".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("image.jpg", "test-image.jpg", "image/jpeg", "test data".getBytes());
 
     User user = new User();
     user.setEmail(email);
@@ -183,11 +179,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_shouldValidateAndSaveImage() throws IOException {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "image.jpg",
-        "test-image.jpg",
-        "image/jpeg",
-        "test data".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("image.jpg", "test-image.jpg", "image/jpeg", "test data".getBytes());
 
     User user = new User();
     user.setEmail(email);
@@ -204,11 +197,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_shouldThrowExceptionForInvalidImage() throws IOException {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "file.txt",
-        "test.txt",
-        "text/plain",
-        "test data".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("file.txt", "test.txt", "text/plain", "test data".getBytes());
 
     User user = new User();
     user.setEmail(email);
@@ -222,11 +212,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_withEmptyFile() {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "image.jpg",
-        "image.jpg",
-        "image/jpeg",
-        new byte[0]);
+    MockMultipartFile file =
+        new MockMultipartFile("image.jpg", "image.jpg", "image/jpeg", new byte[0]);
 
     User user = new User();
     user.setEmail(email);
@@ -238,11 +225,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_withNullContentType() {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "image.jpg",
-        "image.jpg",
-        null,
-        "test data".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("image.jpg", "image.jpg", null, "test data".getBytes());
 
     User user = new User();
     user.setEmail(email);
@@ -254,11 +238,8 @@ class UserServiceTest {
   @Test
   void saveProfilePicture_withNullFilename() {
     String email = "test@example.com";
-    MockMultipartFile file = new MockMultipartFile(
-        "image",
-        null,
-        "image/jpeg",
-        "test data".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("image", null, "image/jpeg", "test data".getBytes());
 
     User user = new User();
     user.setEmail(email);
@@ -271,11 +252,8 @@ class UserServiceTest {
   void saveProfilePicture_withOversizedFile() {
     String email = "test@example.com";
     byte[] oversizedContent = new byte[6 * 1024 * 1024]; // 6MB
-    MockMultipartFile file = new MockMultipartFile(
-        "image.jpg",
-        "image.jpg",
-        "image/jpeg",
-        oversizedContent);
+    MockMultipartFile file =
+        new MockMultipartFile("image.jpg", "image.jpg", "image/jpeg", oversizedContent);
 
     User user = new User();
     user.setEmail(email);
