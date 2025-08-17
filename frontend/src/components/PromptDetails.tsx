@@ -216,6 +216,12 @@ export const PromptDetails = () => {
   }
 
   const handleShare = async () => {
+    if (!currentUserId) {
+      showNotification("error", "Login required", "Please log in to view shared prompts.")
+      window.location.href = "/login"
+      return
+    }
+
     const shareData = {
       title: prompt?.title || "Check out this prompt",
       text: prompt?.description || "Amazing AI prompt on PromptForge",

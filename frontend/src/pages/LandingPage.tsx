@@ -474,11 +474,6 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Help Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
-                    Getting Started
-                  </Link>
-                </li>
-                <li>
                   <a
                     href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
                     target="_blank"
@@ -488,25 +483,18 @@ export default function LandingPage() {
                     Video Tutorial
                   </a>
                 </li>
-                <li>
-                  <Link to="#" className="hover:text-white">
-                    Best Practices
-                  </Link>
-                </li>
-                <li>
-                  <Link to="#" className="hover:text-white">
-                    API Documentation
-                  </Link>
-                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a
+                    href="mailto:5iveOps.Capstone@gmail.com"
+                    className="hover:text-white"
+                  >
                     Contact Us
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <a
@@ -523,11 +511,6 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Community</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <Link to="#" className="hover:text-white">
-                    Discord
-                  </Link>
-                </li>
                 <li>
                   <a
                     href="https://github.com/COS301-SE-2025/Prompt-Forge"
