@@ -476,8 +476,17 @@ export const PromptDetails = () => {
                   onClick={() => setReviewsCollapsed(!reviewsCollapsed)}
                   className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
-                  {reviewsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  {reviewsCollapsed ? "Show" : "Hide"}
+                  {reviewsCollapsed ? (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      <span className="hidden sm:inline">Show</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      <span className="hidden sm:inline">Hide</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

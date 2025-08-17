@@ -805,32 +805,57 @@ const fallbackToWorkingModel = async () => {
   const downloadAsPDF = (promptText: string, aiResponse: string, modelName: string) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const lineHeight = 7;
 
+    let y = margin;
+
     // Add title and metadata
     doc.setFontSize(16);
-    doc.text('Prompt Forge - Generated Response', margin, margin);
+    doc.text('Prompt Forge - Generated Response', margin, y);
+    y += lineHeight;
 
     // Add timestamp and model info
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, margin + lineHeight);
-    doc.text(`Model: ${modelName}`, margin, margin + (lineHeight * 2));
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, y);
+    y += lineHeight;
+    doc.text(`Model: ${modelName}`, margin, y);
+    y += lineHeight * 2;
 
     // Add prompt section
     doc.setFontSize(12);
-    doc.text('Prompt', margin, margin + (lineHeight * 4));
+    doc.text('Prompt', margin, y);
+    y += lineHeight;
     doc.setFontSize(10);
     const promptLines = doc.splitTextToSize(promptText, pageWidth - (margin * 2));
-    doc.text(promptLines, margin, margin + (lineHeight * 5));
+    for (const line of promptLines) {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    }
 
     // Add response section
-    const responseStartY = margin + (lineHeight * (6 + promptLines.length));
+    if (y > pageHeight - margin * 2) {
+      doc.addPage();
+      y = margin;
+    }
     doc.setFontSize(12);
-    doc.text('Response:', margin, responseStartY);
+    doc.text('Response:', margin, y);
+    y += lineHeight;
     doc.setFontSize(10);
     const responseLines = doc.splitTextToSize(aiResponse, pageWidth - (margin * 2));
-    doc.text(responseLines, margin, responseStartY + lineHeight);
+    for (const line of responseLines) {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    }
 
     // Save the PDF
     doc.save(`prompt-response-${new Date().toISOString().slice(0,10)}.pdf`);
