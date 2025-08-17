@@ -67,7 +67,7 @@ export function StandardPromptCard({
   content
 }: StandardPromptCardProps) {
   const navigate = useNavigate()
-  const displayTags = tags || []
+  const displayTags = Array.from(new Set(tags || []));
   const displayUsage = uses || 0
 
   const handleEdit = () => {
