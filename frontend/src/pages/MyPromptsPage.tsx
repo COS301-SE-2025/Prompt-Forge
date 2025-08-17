@@ -255,7 +255,7 @@ export default function MyPromptsPage() {
               description: p.description || "",
               content: p.content || "",
               category: "General", // Default, backend does not provide
-              tags: p.tagNames || [],
+              tags: (p.tagNames || []).filter((t: string, i: number, arr: string[]) => t !== "all" && arr.indexOf(t) === i),
               createdAt: p.createdAt,
               updatedAt: p.publishedAt || p.createdAt,
               rating: averageRating || 0, // Default, backend does not provide
