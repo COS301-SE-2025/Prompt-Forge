@@ -226,7 +226,7 @@ export default function WidgetManager({
         )
       case "average-rating":
         return (
-          <div className="flex items-center justify-between h-full">
+          <div className="flex items-center justify-between h-full ">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Average Rating</p>
               <p className="text-2xl font-bold">{data?.averageRating?.toFixed(1) || "0.0"}</p>
@@ -300,7 +300,7 @@ export default function WidgetManager({
               <p className="text-sm font-semibold">Analytics Overview</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-start shadow-2xl pl-8">
+            <div className="flex-1 bg-muted rounded-lg flex items-center justify-start shadow-2xl pl-8 border border-border transition-transform duration-500 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
               {loadingAnalyticsOverview ? (
                 <div className="text-muted-foreground">Loading analytics...</div>
               ) : (
@@ -365,9 +365,9 @@ export default function WidgetManager({
               <p className="text-sm font-semibold">Category Breakdown</p>
               {widgetType.icon}
             </div>
-            <div className="flex-1 bg-gradient-to-br from-[#f8fafc] via-[#e0f2fe] to-[#c7d2fe] rounded-lg flex items-center justify-center shadow-2xl">
+            <div className="flex-1 bg-muted rounded-lg flex items-center justify-center shadow-2xl border border-border transition-transform duration-500 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
               {pieData.length === 0 ? (
-                <div className="text-background">No category data available.</div>
+                <div className="text-muted-foreground">No category data available.</div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
                   <RePieChart>
@@ -378,7 +378,7 @@ export default function WidgetManager({
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={renderPieLabel} // <-- use your custom label
+                      label={renderPieLabel}
                       labelLine={false}
                     >
                       {pieData.map((entry, idx) => (
@@ -427,7 +427,7 @@ export default function WidgetManager({
   return (
     <div className="space-y-6">
       {/* Dynamic Widget Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr ">
         {activeWidgets.map((widget) => (
           <Card key={widget.id} className={`p-4 relative group min-h-[120px] ${sizeClasses[widget.size]}`}>
             <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -477,9 +477,9 @@ export default function WidgetManager({
 
       {/* Add Widget Modal */}
       {showAddWidget && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
           <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-border">
+            <div className="flex items-center justify-between p-6 border-b border-border ">
               <h2 className="text-xl font-semibold text-foreground">Add Widget</h2>
               <Button variant="ghost" size="icon" onClick={() => setShowAddWidget(false)}>
                 <X className="h-4 w-4" />
