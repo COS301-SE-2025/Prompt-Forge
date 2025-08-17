@@ -311,7 +311,7 @@ export const PromptDetails = () => {
   }
 
   const isPaidPrompt = prompt.price > 0
-  const canViewContent = !isPaidPrompt || userOwnsPrompt
+  const canViewContent = !isPaidPrompt || userOwnsPrompt || currentUserId === prompt.authorId
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3)
 
   return (
