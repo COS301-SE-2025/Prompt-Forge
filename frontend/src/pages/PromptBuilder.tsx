@@ -911,7 +911,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                       variant="outline" 
                       size="sm" 
                       onClick={() => setShowHelpModal(true)}
-                      className="flex items-center"
+                      className="flex items-center px-2 h-7" // <-- match size and padding
                       title="Help & Tips"
                     >
                       <HelpCircle className="h-3 w-3 mr-1" />
