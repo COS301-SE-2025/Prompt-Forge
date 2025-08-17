@@ -504,7 +504,10 @@ export default function OptimizerPage() {
                         >
                           {suggestion.category}
                         </Badge>
-                        <h3 className="font-semibold text-foreground dark:text-foreground text-sm sm:text-base truncate">
+                        <h3
+                          className="font-semibold text-foreground dark:text-foreground text-sm sm:text-base line-clamp-2"
+                          title={suggestion.title}
+                        >
                           {suggestion.title}
                         </h3>
                       </div>
@@ -520,26 +523,14 @@ export default function OptimizerPage() {
                       </div>
                     </div>
 
-                    {/* Improvements Preview */}
-                    <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-                      {suggestion.improvements.slice(0, 2).map((improvement, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="text-[10px] sm:text-xs border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa]"
-                        >
-                          {improvement.length > 30 ? improvement.substring(0, 30) + "..." : improvement}
-                        </Badge>
-                      ))}
-                      {suggestion.improvements.length > 2 && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] sm:text-xs border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa]"
-                        >
-                          +{suggestion.improvements.length - 2} more
-                        </Badge>
-                      )}
-                    </div>
+                    {/* Show the optimized prompt title when collapsed */}
+                    {selectedSuggestion !== suggestion.id && (
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground font-medium truncate">
+                          {suggestion.prompt}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Expanded Content */}
                     {selectedSuggestion === suggestion.id && (
