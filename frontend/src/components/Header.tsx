@@ -33,7 +33,16 @@ export default function Header() {
       await authService.logout();
       localStorage.removeItem("userEmail");
       setDropdownOpen(false);
-      navigate('/login');
+
+      // Remove any non-HTTP-only cookies
+      document.cookie = "token=; Max-Age=0; path=/; domain=" + window.location.hostname;
+      document.cookie = "jwt=; Max-Age=0; path=/; domain=" + window.location.hostname;
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Force a full reload to clear all React state and cached data
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
     }
