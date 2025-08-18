@@ -248,5 +248,95 @@ class PythonServiceIntegrationControllerTest {
     verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
   }
 
-  
+  @Test
+  @DisplayName("Test AI classification - success")
+  void testAiClassify_Success() {
+    // Arrange
+    Map<String, Object> request = Map.of("prompt", "Create a sorting algorithm");
+    Map<String, Object> expectedResponse = Map.of("category", "algorithm", "confidence", 0.95);
+    ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testAiClassify(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals("success", body.get("status"));
+    assertEquals(expectedResponse, body.get("classification"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
+    assertNotNull(requestBody);
+    assertEquals("Create a sorting algorithm", requestBody.get("text"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+  }
+
+  @Test
+  @DisplayName("Test AI classification - with default prompt")
+  void testAiClassify_WithDefaultPrompt() {
+    // Arrange
+    Map<String, Object> request = new HashMap<>();
+    Map<String, Object> expectedResponse = Map.of("category", "general", "confidence", 0.8);
+    ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testAiClassify(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals("success", body.get("status"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
+    assertNotNull(requestBody);
+    assertEquals("Create a sorting algorithm", requestBody.get("text"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+  }
+
+  @Test
+  @DisplayName("Test AI classification - failure")
+  void testAiClassify_Failure() {
+    // Arrange
+    Map<String, Object> request = Map.of("prompt", "Create a sorting algorithm");
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenThrow(new RestClientException("Classification service unavailable"));
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testAiClassify(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals("error", body.get("status"));
+    assertEquals("Classification service unavailable", body.get("error"));
+    assertEquals(request, body.get("request"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+  }
 }
