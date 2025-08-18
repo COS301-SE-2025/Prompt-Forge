@@ -71,4 +71,41 @@ class MLProxyControllerTest {
     assertEquals("ML service unavailable", exception.getReason());
     verify(restTemplate, times(1)).getForEntity(url, String.class);
   }
+
+  @Test
+  @DisplayName("Validate token - Success")
+  void validateToken_Success() {
+    // Arrange
+    String url = ML_SERVICE_URL + "/validate-token";
+    ResponseEntity<String> mockResponse = ResponseEntity.ok("valid");
+    when(restTemplate.getForEntity(url, String.class)).thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<String> response = controller.validateToken();
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals("valid", response.getBody());
+    verify(restTemplate, times(1)).getForEntity(url, String.class);
+  }
+
+  @Test
+  @DisplayName("Validate token - Service Unavailable")
+  void validateToken_ServiceUnavailable() {
+    // Arrange
+    String url = ML_SERVICE_URL + "/validate-token";
+    when(restTemplate.getForEntity(url, String.class))
+      .thenThrow(new RestClientException("Service unavailable"));
+
+    // Act & Assert
+    ResponseStatusException exception = assertThrows(
+      ResponseStatusException.class,
+      () -> controller.validateToken()
+    );
+
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
+    assertEquals("ML service unavailable", exception.getReason());
+    verify(restTemplate, times(1)).getForEntity(url, String.class);
+  }
 }
