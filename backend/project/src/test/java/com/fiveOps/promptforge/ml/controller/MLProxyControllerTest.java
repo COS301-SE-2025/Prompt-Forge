@@ -108,4 +108,68 @@ class MLProxyControllerTest {
     assertEquals("ML service unavailable", exception.getReason());
     verify(restTemplate, times(1)).getForEntity(url, String.class);
   }
+
+  @Test
+  @DisplayName("Optimize - Success")
+  void optimize_Success() {
+    // Arrange
+    String url = ML_SERVICE_URL + "/optimize";
+    String requestBody = "{\"prompt\":\"test prompt\"}";
+    String responseBody = "{\"optimized\":\"optimized prompt\"}";
+    ResponseEntity<String> mockResponse = ResponseEntity.ok(responseBody);
+    
+    when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
+      .thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<String> response = controller.optimize(requestBody);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(responseBody, response.getBody());
+    verify(restTemplate, times(1)).postForEntity(eq(url), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  @DisplayName("Optimize - Service Unavailable")
+  void optimize_ServiceUnavailable() {
+    // Arrange
+    String url = ML_SERVICE_URL + "/optimize";
+    String requestBody = "{\"prompt\":\"test prompt\"}";
+    
+    when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
+      .thenThrow(new RestClientException("Service unavailable"));
+
+    // Act & Assert
+    ResponseStatusException exception = assertThrows(
+      ResponseStatusException.class,
+      () -> controller.optimize(requestBody)
+    );
+
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
+    assertEquals("ML service unavailable", exception.getReason());
+    verify(restTemplate, times(1)).postForEntity(eq(url), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  @DisplayName("Optimize - Invalid Request Body")
+  void optimize_InvalidRequestBody() {
+    // Arrange
+    String url = ML_SERVICE_URL + "/optimize";
+    String invalidRequestBody = "invalid json";
+    ResponseEntity<String> mockResponse = ResponseEntity.badRequest().body("Invalid request");
+    
+    when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
+      .thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<String> response = controller.optimize(invalidRequestBody);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertEquals("Invalid request", response.getBody());
+    verify(restTemplate, times(1)).postForEntity(eq(url), any(HttpEntity.class), eq(String.class));
+  }
 }
