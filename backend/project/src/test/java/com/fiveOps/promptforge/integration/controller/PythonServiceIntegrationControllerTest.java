@@ -156,4 +156,97 @@ class PythonServiceIntegrationControllerTest {
 
     verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
   }
+
+  @Test
+  @DisplayName("Test all services health check - both healthy")
+  void testAllHealth_BothHealthy() {
+    // Arrange
+    Map<String, Object> aiResponse = Map.of("status", "healthy", "service", "ai");
+    Map<String, Object> mlResponse = Map.of("status", "healthy", "service", "ml");
+    
+    ResponseEntity<Object> aiMockResponse = ResponseEntity.ok(aiResponse);
+    ResponseEntity<Object> mlMockResponse = ResponseEntity.ok(mlResponse);
+
+    when(restTemplate.getForEntity(AI_SERVICE_URL + "/health", Object.class))
+        .thenReturn(aiMockResponse);
+    when(restTemplate.getForEntity(ML_SERVICE_URL + "/health", Object.class))
+        .thenReturn(mlMockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testAllHealth();
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertNotNull(body.get("timestamp"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> services = (Map<String, Object>) body.get("services");
+    assertNotNull(services);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> aiService = (Map<String, Object>) services.get("aiService");
+    assertNotNull(aiService);
+    assertEquals("healthy", aiService.get("status"));
+    assertEquals(200, aiService.get("statusCode"));
+    assertEquals(aiResponse, aiService.get("response"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> mlService = (Map<String, Object>) services.get("mlService");
+    assertNotNull(mlService);
+    assertEquals("healthy", mlService.get("status"));
+    assertEquals(200, mlService.get("statusCode"));
+    assertEquals(mlResponse, mlService.get("response"));
+
+    verify(restTemplate, times(1)).getForEntity(AI_SERVICE_URL + "/health", Object.class);
+    verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
+  }
+
+  @Test
+  @DisplayName("Test all services health check - AI unhealthy, ML healthy")
+  void testAllHealth_AiUnhealthy_MlHealthy() {
+    // Arrange
+    Map<String, Object> mlResponse = Map.of("status", "healthy", "service", "ml");
+    ResponseEntity<Object> mlMockResponse = ResponseEntity.ok(mlResponse);
+
+    when(restTemplate.getForEntity(AI_SERVICE_URL + "/health", Object.class))
+        .thenThrow(new RestClientException("AI service down"));
+    when(restTemplate.getForEntity(ML_SERVICE_URL + "/health", Object.class))
+        .thenReturn(mlMockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testAllHealth();
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> services = (Map<String, Object>) body.get("services");
+    assertNotNull(services);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> aiService = (Map<String, Object>) services.get("aiService");
+    assertNotNull(aiService);
+    assertEquals("unhealthy", aiService.get("status"));
+    assertEquals("AI service down", aiService.get("error"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> mlService = (Map<String, Object>) services.get("mlService");
+    assertNotNull(mlService);
+    assertEquals("healthy", mlService.get("status"));
+    assertEquals(200, mlService.get("statusCode"));
+    assertEquals(mlResponse, mlService.get("response"));
+
+    verify(restTemplate, times(1)).getForEntity(AI_SERVICE_URL + "/health", Object.class);
+    verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
+  }
+
+  
 }
