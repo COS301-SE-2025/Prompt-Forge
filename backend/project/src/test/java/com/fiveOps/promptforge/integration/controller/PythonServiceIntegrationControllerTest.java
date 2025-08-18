@@ -98,4 +98,62 @@ class PythonServiceIntegrationControllerTest {
 
     verify(restTemplate, times(1)).getForEntity(AI_SERVICE_URL + "/health", Object.class);
   }
+
+  @Test
+  @DisplayName("Test ML service health check - success")
+  void testMlHealth_Success() {
+    // Arrange
+    Map<String, Object> expectedResponse = Map.of("status", "healthy", "service", "ml");
+    ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
+
+    when(restTemplate.getForEntity(ML_SERVICE_URL + "/health", Object.class))
+        .thenReturn(mockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testMlHealth();
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals("success", body.get("status"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> mlService = (Map<String, Object>) body.get("mlService");
+    assertNotNull(mlService);
+    assertEquals(ML_SERVICE_URL + "/health", mlService.get("url"));
+    assertEquals(200, mlService.get("statusCode"));
+    assertEquals(expectedResponse, mlService.get("response"));
+
+    verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
+  }
+
+  @Test
+  @DisplayName("Test ML service health check - failure")
+  void testMlHealth_Failure() {
+    // Arrange
+    when(restTemplate.getForEntity(ML_SERVICE_URL + "/health", Object.class))
+        .thenThrow(new RestClientException("Service unavailable"));
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testMlHealth();
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals("error", body.get("status"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> mlService = (Map<String, Object>) body.get("mlService");
+    assertNotNull(mlService);
+    assertEquals(ML_SERVICE_URL + "/health", mlService.get("url"));
+    assertEquals("Service unavailable", mlService.get("error"));
+
+    verify(restTemplate, times(1)).getForEntity(ML_SERVICE_URL + "/health", Object.class);
+  }
 }
