@@ -41,7 +41,7 @@ export default function MyPromptsPage() {
       try {
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-          console.log("User not authenticated, redirecting to login")
+          // console.log("User not authenticated, redirecting to login")
 
           navigate('/login')
           return
@@ -50,7 +50,7 @@ export default function MyPromptsPage() {
 
 
         //Get user profile using JWT token (sent via cookies)
-        console.log("Fetching user profile...")
+        // console.log("Fetching user profile...")
 
         const response = await httpClient.get('/user/me')
         if (response.ok) {
@@ -58,9 +58,9 @@ export default function MyPromptsPage() {
           setUserProfile(userData)
 
 
-          console.log("User profile loaded:", userData)
+          // console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
-          console.log("Unauthorized, redirecting to login")
+          // console.log("Unauthorized, redirecting to login")
 
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
@@ -94,15 +94,15 @@ export default function MyPromptsPage() {
         if (userProfile?.userId) {
           authorId = userProfile.userId
 
-          console.log("Using authorId from profile:", authorId)
+          // console.log("Using authorId from profile:", authorId)
         }
         else { //Fallback: get from localStorage if profile not loaded yet
           authorId = localStorage.getItem('userId')
-          console.log("Using authorId from localStorage:", authorId)
+          // console.log("Using authorId from localStorage:", authorId)
         }
 
         if (!authorId) {
-          console.log("No authorId available, using empty prompts")
+          // console.log("No authorId available, using empty prompts")
 
           setMyPrompts([])
           // setFilteredPrompts([])
@@ -111,14 +111,14 @@ export default function MyPromptsPage() {
         }
 
         //Fetch prompts using JWT authentication (cookies)
-        console.log("Fetching prompts for authorId:", authorId)
+        // console.log("Fetching prompts for authorId:", authorId)
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
 
 
         let prompts = userPromptsPage.content
-        console.log("prompts", prompts);
+        // console.log("prompts", prompts);
 
         if (!Array.isArray(prompts)) prompts = []
         // Map backend fields to frontend MyPrompt interface
@@ -218,15 +218,15 @@ export default function MyPromptsPage() {
         if (userProfile?.userId) {
           authorId = userProfile.userId
 
-          console.log("Using authorId from profile:", authorId)
+          // console.log("Using authorId from profile:", authorId)
         }
         else { //Fallback: get from localStorage if profile not loaded yet
           authorId = localStorage.getItem('userId')
-          console.log("Using authorId from localStorage:", authorId)
+          // console.log("Using authorId from localStorage:", authorId)
         }
 
         if (!authorId) {
-          console.log("No authorId available, using empty prompts")
+          // console.log("No authorId available, using empty prompts")
 
           setMyPrompts([])
           // setFilteredPrompts([])
@@ -235,7 +235,7 @@ export default function MyPromptsPage() {
         }
 
         //Fetch prompts using JWT authentication (cookies)
-        console.log("Fetching prompts for authorId:", authorId)
+        // console.log("Fetching prompts for authorId:", authorId)
 
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         setTotalPages(userPromptsPage.totalPages);
@@ -324,19 +324,19 @@ export default function MyPromptsPage() {
           setCurrentPage(newTotalPages)
         }
 
-        console.log(`✅ Prompt ${id} deleted successfully`)
+        // console.log(`Prompt ${id} deleted successfully`)
       } else {
         // Even if backend fails, update UI for better UX
         setMyPrompts((prev) => prev.filter((p) => p.id !== id))
         setAllUserPrompts((prev) => prev.filter((p) => p.id !== id))
-        console.log(`⚠️ Backend delete failed for prompt ${id}, but updated UI`)
+        // console.log(`Backend delete failed for prompt ${id}, but updated UI`)
       }
     } catch (error) {
       console.error("Error deleting prompt:", error)
       // Still update UI even on network error
       setMyPrompts((prev) => prev.filter((p) => p.id !== id))
       setAllUserPrompts((prev) => prev.filter((p) => p.id !== id))
-      console.log(`⚠️ Network error deleting prompt ${id}, but updated UI`)
+      // console.log(`Network error deleting prompt ${id}, but updated UI`)
     }
   }
 
@@ -376,7 +376,7 @@ export default function MyPromptsPage() {
 
       const action = isCurrentlyPublished ? "unpublish" : "publish"
 
-      console.log(`${action}ing prompt ${id}...`)
+      // console.log(`${action}ing prompt ${id}...`)
       // For now, just update local state (you can add API call later)
       setMyPrompts((prev) => prev.map((p) =>
         p.id === id
@@ -391,7 +391,7 @@ export default function MyPromptsPage() {
       ))
 
 
-      console.log(`Prompt ${action}ed successfully`)
+      // console.log(`Prompt ${action}ed successfully`)
     } catch (error) {
       console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }

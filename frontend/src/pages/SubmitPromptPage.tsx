@@ -162,7 +162,7 @@ export default function SubmitPromptPage() {
       setPayoutDetails(details)
     })
     .catch((error)=> {
-      console.log("No payout details found or error fetching:", error);
+      // console.log("No payout details found or error fetching:", error);
       setPayoutDetails(null)
       profileService.getBankList()
       .then(list=>{
@@ -622,7 +622,7 @@ export default function SubmitPromptPage() {
   const saveDraft = () => {
     // Use a temporary variable to store draft data instead of localStorage
     const draftData = JSON.stringify(formData)
-    console.log("Draft saved:", draftData) // In a real app, you'd save this to your backend
+    // console.log("Draft saved:", draftData) // In a real app, you'd save this to your backend
 
     // Update both save draft buttons
     const updateButton = (buttonId: string) => {
