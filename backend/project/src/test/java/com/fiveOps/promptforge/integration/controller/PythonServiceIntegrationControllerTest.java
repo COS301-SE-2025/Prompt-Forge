@@ -448,4 +448,171 @@ class PythonServiceIntegrationControllerTest {
     verify(restTemplate, times(1))
         .postForEntity(eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class));
   }
+
+  @Test
+  @DisplayName("Test full workflow - both steps successful")
+  void testFullWorkflow_BothStepsSuccessful() {
+    // Arrange
+    Map<String, Object> request = Map.of(
+        "prompt", "Create a React component for user authentication",
+        "context", "Frontend development",
+        "user_level", "intermediate"
+    );
+    
+    Map<String, Object> classificationResponse = Map.of("category", "frontend", "confidence", 0.9);
+    Map<String, Object> optimizationResponse = Map.of(
+        "optimized_prompt", "Create a React authentication component with proper validation",
+        "improvements", "Added validation and security considerations"
+    );
+    
+    ResponseEntity<Object> classificationMockResponse = ResponseEntity.ok(classificationResponse);
+    ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(classificationMockResponse);
+    when(restTemplate.postForEntity(
+            eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(optimizationMockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testFullWorkflow(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    assertEquals(request, body.get("originalRequest"));
+    assertNotNull(body.get("timestamp"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
+    assertNotNull(workflow);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
+    assertNotNull(step1);
+    assertEquals("success", step1.get("status"));
+    assertEquals(classificationResponse, step1.get("response"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
+    assertNotNull(step2);
+    assertEquals("success", step2.get("status"));
+    assertEquals(optimizationResponse, step2.get("response"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+    verify(restTemplate, times(1))
+        .postForEntity(eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class));
+  }
+
+  @Test
+  @DisplayName("Test full workflow - classification fails, optimization succeeds")
+  void testFullWorkflow_ClassificationFails_OptimizationSucceeds() {
+    // Arrange
+    Map<String, Object> request = Map.of(
+        "prompt", "Create a React component for user authentication",
+        "context", "Frontend development"
+    );
+    
+    Map<String, Object> optimizationResponse = Map.of(
+        "optimized_prompt", "Create a React authentication component",
+        "improvements", "Enhanced clarity"
+    );
+    
+    ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenThrow(new RestClientException("Classification service down"));
+    when(restTemplate.postForEntity(
+            eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(optimizationMockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testFullWorkflow(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
+    assertNotNull(workflow);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
+    assertNotNull(step1);
+    assertEquals("error", step1.get("status"));
+    assertEquals("Classification service down", step1.get("error"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
+    assertNotNull(step2);
+    assertEquals("success", step2.get("status"));
+    assertEquals(optimizationResponse, step2.get("response"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+    verify(restTemplate, times(1))
+        .postForEntity(eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class));
+  }
+
+  @Test
+  @DisplayName("Test full workflow - with default values")
+  void testFullWorkflow_WithDefaultValues() {
+    // Arrange
+    Map<String, Object> request = new HashMap<>();
+    
+    Map<String, Object> classificationResponse = Map.of("category", "general", "confidence", 0.7);
+    Map<String, Object> optimizationResponse = Map.of(
+        "optimized_prompt", "Create a React component for user authentication",
+        "improvements", "Added specific framework and functionality"
+    );
+    
+    ResponseEntity<Object> classificationMockResponse = ResponseEntity.ok(classificationResponse);
+    ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(classificationMockResponse);
+    when(restTemplate.postForEntity(
+            eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(optimizationMockResponse);
+
+    // Act
+    ResponseEntity<Map<String, Object>> result = controller.testFullWorkflow(request);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    
+    Map<String, Object> body = result.getBody();
+    assertNotNull(body);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
+    assertNotNull(workflow);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
+    assertNotNull(step1);
+    assertEquals("success", step1.get("status"));
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
+    assertNotNull(step2);
+    assertEquals("success", step2.get("status"));
+
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class));
+    verify(restTemplate, times(1))
+        .postForEntity(eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class));
+  }
 }
