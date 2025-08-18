@@ -615,4 +615,28 @@ class PythonServiceIntegrationControllerTest {
     verify(restTemplate, times(1))
         .postForEntity(eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class));
   }
+
+  @Test
+  @DisplayName("Test HTTP entity creation with correct headers")
+  void testHttpEntityCreation() {
+    // Arrange
+    Map<String, Object> request = Map.of("prompt", "test prompt");
+    Map<String, Object> expectedResponse = Map.of("result", "success");
+    ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
+
+    when(restTemplate.postForEntity(
+            eq(AI_SERVICE_URL + "/classify"), any(HttpEntity.class), eq(Object.class)))
+        .thenReturn(mockResponse);
+
+    // Act
+    controller.testAiClassify(request);
+
+    // Capture and Assert
+    ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+    verify(restTemplate, times(1))
+        .postForEntity(eq(AI_SERVICE_URL + "/classify"), captor.capture(), eq(Object.class));
+
+    HttpHeaders headers = captor.getValue().getHeaders();
+    assertEquals(MediaType.APPLICATION_JSON, headers.getContentType());
+  }
 }
