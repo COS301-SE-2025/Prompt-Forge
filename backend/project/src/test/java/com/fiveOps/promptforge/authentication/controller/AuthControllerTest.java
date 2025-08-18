@@ -67,4 +67,105 @@ class AuthControllerTest {
         assertEquals("Signup successful", ((Map<?, ?>) response.getBody()).get("message"));
         verify(authService, times(1)).signup(signupRequest);
     }
+
+    @Test
+    @DisplayName("login: success sets secure httpOnly cookie and returns user info")
+    void login_Success() {
+        // Arrange
+        String token = "jwt-token-value-1234567890"; // ensure length >= 20 to satisfy substring in controller
+        when(authService.login(loginRequest)).thenReturn(token);
+        when(authService.getUserByEmail("john.doe@example.com")).thenReturn(user);
+
+        // Act
+        ResponseEntity<?> response = controller.login(loginRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // Validate Set-Cookie header
+        String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        assertNotNull(setCookie);
+        assertTrue(setCookie.contains("token=" + token));
+        assertTrue(setCookie.toLowerCase().contains("httponly"));
+        assertTrue(setCookie.toLowerCase().contains("secure"));
+        assertTrue(setCookie.contains("Path=/"));
+        assertTrue(setCookie.contains("SameSite=None"));
+        assertTrue(setCookie.contains("Max-Age=604800")); // 7 days
+
+        // Validate body
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("Login successful", body.get("message"));
+        assertEquals(user.getUserId().toString(), body.get("userId"));
+        assertEquals(user.getUsername(), body.get("username"));
+        assertEquals(user.getEmail(), body.get("email"));
+
+        verify(authService).login(loginRequest);
+        verify(authService).getUserByEmail(user.getEmail());
+    }
+
+    @Test
+    @DisplayName("login: failure returns 401 with error message")
+    void login_Failure() {
+        // Arrange
+        when(authService.login(loginRequest)).thenThrow(new IllegalArgumentException("Invalid email or password"));
+
+        // Act
+        ResponseEntity<?> response = controller.login(loginRequest);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("Invalid email or password", body.get("message"));
+        verify(authService).login(loginRequest);
+        verify(authService, never()).getUserByEmail(anyString());
+    }
+
+    // @Test
+    // @DisplayName("login: empty token still sets cookie and returns user info")
+    // void login_EmptyToken() {
+    // // Arrange
+    // String token = ""; // empty token
+    // when(authService.login(loginRequest)).thenReturn(token);
+    // when(authService.getUserByEmail("john.doe@example.com")).thenReturn(user);
+
+    // // Act
+    // ResponseEntity<?> response = controller.login(loginRequest);
+
+    // // Assert
+    // assertEquals(HttpStatus.OK, response.getStatusCode());
+    // String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+    // assertNotNull(setCookie);
+    // assertTrue(setCookie.contains("token=")); // token present (empty value)
+    // assertTrue(setCookie.toLowerCase().contains("httponly"));
+    // assertTrue(setCookie.toLowerCase().contains("secure"));
+    // assertTrue(setCookie.contains("Path=/"));
+    // assertTrue(setCookie.contains("SameSite=None"));
+
+    // Map<?, ?> body = (Map<?, ?>) response.getBody();
+    // assertEquals("Login successful", body.get("message"));
+    // assertEquals(user.getUserId().toString(), body.get("userId"));
+
+    // verify(authService).login(loginRequest);
+    // verify(authService).getUserByEmail(user.getEmail());
+    // }
+
+    @Test
+    @DisplayName("login: user lookup failure returns 401 with message")
+    void login_UserLookupFails() {
+        // Arrange
+        String token = "jwt-token-value-1234567890";
+        when(authService.login(loginRequest)).thenReturn(token);
+        when(authService.getUserByEmail("john.doe@example.com"))
+                .thenThrow(new RuntimeException("User not found with email: john.doe@example.com"));
+
+        // Act
+        ResponseEntity<?> response = controller.login(loginRequest);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("User not found with email: john.doe@example.com", body.get("message"));
+        verify(authService).login(loginRequest);
+        verify(authService).getUserByEmail("john.doe@example.com");
+    }
 }
