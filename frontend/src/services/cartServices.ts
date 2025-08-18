@@ -71,7 +71,7 @@ export class CartService {
 
       const Response = await this.httpClient.post(`/cart/checkout`, {"prompts": mappedPrompts });
       const rsp:APIResponse = await Response.json();
-      console.log("rsp:", rsp);
+      // console.log("rsp:", rsp);
       
       if(rsp.status == "success"){
         return rsp.message
