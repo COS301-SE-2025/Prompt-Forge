@@ -108,9 +108,7 @@ export default function LandingPage() {
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6">
-              <Badge className="bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20 text-base sm:text-lg px-2 py-2">
-                <span className="animate-rocket text-xl">🚀</span>
-              </Badge>
+              
               <Badge className="bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center">
                 The Future of AI Prompt Engineering
               </Badge>
