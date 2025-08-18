@@ -1,4 +1,4 @@
-package com.fiveOps.promptforge.cart;
+package com.fiveOps.promptforge.cart.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -17,11 +17,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
+import com.fiveOps.promptforge.cart.dto.APIResponse;
+import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
+import com.fiveOps.promptforge.cart.dto.CartItemDTO;
+
 import com.fiveOps.promptforge.cart.controller.CartItemController;
 import com.fiveOps.promptforge.cart.dto.APIResponse;
+import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
+import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
 import com.fiveOps.promptforge.cart.service.CartItemService;
@@ -47,7 +54,7 @@ class CartItemControllerTest {
     cartItemProjection = mock(CartItemProjection.class);
     pageable = mock(Pageable.class);
     when(authentication.getName()).thenReturn("user@example.com");
-    when(userService.getUserIdByEmail(anyString())).thenReturn(userId);
+    lenient().when(userService.getUserIdByEmail(anyString())).thenReturn(userId);
   }
 
   @Test
@@ -141,35 +148,75 @@ class CartItemControllerTest {
     assertFalse(response.getBody());
   }
 
-  // @Test
-  // void checkoutCart_ShouldReturnOk() {
-  //   CartCheckoutRequest request = mock(CartCheckoutRequest.class);
-  //   CartItemDTO cartItem = mock(CartItemDTO.class);
-  //   List<CartItemDTO> prompts = List.of(cartItem);
-  //   when(request.getPrompts()).thenReturn(prompts);
+  @Test
+  void checkoutCart_WithSinglePrompt_ShouldReturnOk() throws Exception {
+    CartCheckoutRequest request = mock(CartCheckoutRequest.class);
+    CartItemDTO cartItem = mock(CartItemDTO.class);
+    List<CartItemDTO> prompts = List.of(cartItem);
+    when(request.getPrompts()).thenReturn(prompts);
+    when(authentication.getName()).thenReturn("user@example.com");
 
-  //   doNothing().when(cartItemService).purchase("user@example.com", prompts);
+    doNothing().when(cartItemService).purchase("user@example.com", prompts);
 
-  //   ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
+    ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
 
-  //   assertEquals(200, response.getStatusCodeValue());
-  //   assertTrue(response.getBody().getMessage().contains("Prompt purchased successfully"));
-  // }
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals("Prompt purchased successfully.", response.getBody().getMessage());
+    assertEquals("success", response.getBody().getStatus());
+    verify(cartItemService).purchase("user@example.com", prompts);
+  }
 
-  // @Test
-  // void checkoutCart_ShouldReturnBadRequestOnException() {
-  //   CartCheckoutRequest request = mock(CartCheckoutRequest.class);
-  //   CartItemDTO cartItem = mock(CartItemDTO.class);
-  //   List<CartItemDTO> prompts = List.of(cartItem);
-  //   when(request.getPrompts()).thenReturn(prompts);
+  @Test
+  void checkoutCart_WithMultiplePrompts_ShouldReturnOk() throws Exception {
+    CartCheckoutRequest request = mock(CartCheckoutRequest.class);
+    List<CartItemDTO> prompts = List.of(
+        mock(CartItemDTO.class),
+        mock(CartItemDTO.class)
+    );
+    when(request.getPrompts()).thenReturn(prompts);
+    when(authentication.getName()).thenReturn("user@example.com");
 
-  //   doThrow(new RuntimeException("purchase failed"))
-  //       .when(cartItemService)
-  //       .purchase("user@example.com", prompts);
+    doNothing().when(cartItemService).purchase("user@example.com", prompts);
 
-  //   ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
+    ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
 
-  //   assertEquals(400, response.getStatusCodeValue());
-  //   assertTrue(response.getBody().getMessage().contains("Checkout failed"));
-  // }
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals("Prompts purchased successfully.", response.getBody().getMessage());
+    assertEquals("success", response.getBody().getStatus());
+    verify(cartItemService).purchase("user@example.com", prompts);
+  }
+
+  @Test
+  void checkoutCart_WhenPurchaseFails_ShouldReturnBadRequest() throws Exception {
+    CartCheckoutRequest request = mock(CartCheckoutRequest.class);
+    List<CartItemDTO> prompts = List.of(mock(CartItemDTO.class));
+    when(request.getPrompts()).thenReturn(prompts);
+    when(authentication.getName()).thenReturn("user@example.com");
+
+    String errorMessage = "Purchase failed: Insufficient funds";
+    doThrow(new Exception(errorMessage))
+        .when(cartItemService).purchase("user@example.com", prompts);
+
+    ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
+
+    assertEquals(400, response.getStatusCodeValue());
+    assertEquals("Checkout failed: " + errorMessage, response.getBody().getMessage());
+    assertEquals("success", response.getBody().getStatus());
+  }
+
+  @Test
+  void checkoutCart_WithEmptyPromptsList_ShouldProcessNormally() throws Exception {
+    CartCheckoutRequest request = mock(CartCheckoutRequest.class);
+    List<CartItemDTO> prompts = List.of();
+    when(request.getPrompts()).thenReturn(prompts);
+    when(authentication.getName()).thenReturn("user@example.com");
+
+    doNothing().when(cartItemService).purchase("user@example.com", prompts);
+
+    ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals("Prompt purchased successfully.", response.getBody().getMessage());
+    verify(cartItemService).purchase("user@example.com", prompts);
+  }
 }
