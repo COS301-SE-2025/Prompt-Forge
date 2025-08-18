@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
@@ -25,10 +24,6 @@ import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 
-import com.fiveOps.promptforge.cart.controller.CartItemController;
-import com.fiveOps.promptforge.cart.dto.APIResponse;
-import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
-import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
 import com.fiveOps.promptforge.cart.service.CartItemService;
