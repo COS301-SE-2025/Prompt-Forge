@@ -168,4 +168,38 @@ class AuthControllerTest {
         verify(authService).login(loginRequest);
         verify(authService).getUserByEmail("john.doe@example.com");
     }
+
+    @Test
+    @DisplayName("logout: clears cookie and returns success message")
+    void logout_Success() {
+        // Act
+        ResponseEntity<?> response = controller.logout(null);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        assertNotNull(setCookie);
+        assertTrue(setCookie.contains("token="));
+        assertTrue(setCookie.toLowerCase().contains("httponly"));
+        assertTrue(setCookie.toLowerCase().contains("secure"));
+        assertTrue(setCookie.contains("Path=/"));
+        assertTrue(setCookie.contains("SameSite=None"));
+        assertTrue(setCookie.contains("Max-Age=0"));
+
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("Logout successful", body.get("message"));
+    }
+
+    @Test
+    @DisplayName("google login: missing credential returns 400")
+    void googleLogin_MissingCredential() {
+        // Act
+        ResponseEntity<?> response = controller.googleLogin(Map.of());
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("Missing Google credential", body.get("message"));
+        verifyNoInteractions(authService);
+    }
 }
