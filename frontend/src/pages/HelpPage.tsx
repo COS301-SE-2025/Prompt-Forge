@@ -901,84 +901,14 @@ export default function HelpPage() {
         </div>
       </section>
 
-      {/* Contact Support */}
-      <section className="py-16 bg-muted/30">
+       {/* Footer - Mobile Responsive */}
+      <footer className="bg-[#0C201B] text-white py-8 sm:py-12 animate-fadeInUp">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-16 h-16">
-                <img 
-                  src="/Forgi-help.png" 
-                  alt="Support Robot" 
-                  className="object-contain w-full h-full"
-                />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Still Need Help?</h2>
-                <button
-                  onClick={() => {
-                    setRobotMessage("🤝 Our support team is amazing! Live chat is fastest for urgent issues, while email works great for detailed questions. I can help you choose the best option!")
-                    setShowRobotHelper(true)
-                  }}
-                  className="bg-[#3ebb9e]/10 px-3 py-1 rounded-full hover:bg-[#3ebb9e]/20 transition-colors text-sm"
-                >
-                  <Bot className="h-3 w-3 text-[#3ebb9e] inline mr-1" />
-                  Get personalized help
-                </button>
-              </div>
-            </div>
-            <p className="text-lg text-muted-foreground">Our support team is here to help you succeed</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <Card className="text-center hover:shadow-lg transition-shadow p-6 flex flex-col">
-              <div className="bg-[#3ebb9e]/10 p-4 rounded-full w-fit mx-auto mb-4">
-                <MessageCircle className="h-8 w-8 text-[#3ebb9e]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Live Chat</h3>
-              <p className="text-muted-foreground mb-4">Get instant help from our support team</p>
-              <p className="text-sm text-muted-foreground mb-6 flex-1">Available 24/7 for urgent issues</p>
-              <Button className="w-full bg-[#3ebb9e] hover:bg-[#00674f] mt-auto">
-                Start Chat
-              </Button>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow p-6 flex flex-col">
-              <div className="bg-[#3ebb9e]/10 p-4 rounded-full w-fit mx-auto mb-4">
-                <Mail className="h-8 w-8 text-[#3ebb9e]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Email Support</h3>
-              <p className="text-muted-foreground mb-4">Send us a detailed message</p>
-              <p className="text-sm text-muted-foreground mb-6 flex-1">Response within 24 hours</p>
-              <Button variant="outline" className="w-full mt-auto">
-                Send Email
-              </Button>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow p-6 flex flex-col">
-              <div className="bg-[#3ebb9e]/10 p-4 rounded-full w-fit mx-auto mb-4">
-                <Users className="h-8 w-8 text-[#3ebb9e]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Community Forum</h3>
-              <p className="text-muted-foreground mb-4">Connect with other users</p>
-              <p className="text-sm text-muted-foreground mb-6 flex-1">Share tips and get advice</p>
-              <Button variant="outline" className="w-full mt-auto">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visit Forum
-              </Button>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#0C201B] text-white py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
-                <BrainCircuit className="w-6 h-6 text-[#3ebb9e]" />
-                <span className="text-lg font-bold">PROMPT FORGE</span>
+                <BrainCircuit className="w-4 h-4 text-[#3ebb9e] animate-pulse" />
+                <span className="text-base font-bold">PROMPT FORGE</span>
               </div>
               <p className="text-gray-400 text-sm">Empowering the future of AI through better prompts.</p>
             </div>
@@ -986,29 +916,14 @@ export default function HelpPage() {
               <h4 className="font-semibold mb-4">Help Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
-                    Getting Started
-                  </Link>
-                </li>
-                <li>
-                  <a 
-                    href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view" 
-                    target="_blank" 
+                  <a
+                    href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
                   >
                     Video Tutorial
                   </a>
-                </li>
-                <li>
-                  <Link to="#" className="hover:text-white">
-                    Best Practices
-                  </Link>
-                </li>
-                <li>
-                  <Link to="#" className="hover:text-white">
-                    API Documentation
-                  </Link>
                 </li>
               </ul>
             </div>
@@ -1016,14 +931,17 @@ export default function HelpPage() {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
+                  <a
+                    href="mailto:5iveOps.Capstone@gmail.com"
+                    className="hover:text-white"
+                  >
                     Contact Us
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <a 
-                    href="https://github.com/COS301-SE-2025/Prompt-Forge" 
-                    target="_blank" 
+                  <a
+                    href="https://github.com/COS301-SE-2025/Prompt-Forge"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
                   >
@@ -1036,14 +954,9 @@ export default function HelpPage() {
               <h4 className="font-semibold mb-4">Community</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link to="#" className="hover:text-white">
-                    Discord
-                  </Link>
-                </li>
-                <li>
-                  <a 
-                    href="https://github.com/COS301-SE-2025/Prompt-Forge" 
-                    target="_blank" 
+                  <a
+                    href="https://github.com/COS301-SE-2025/Prompt-Forge"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
                   >
@@ -1053,7 +966,7 @@ export default function HelpPage() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-gray-400">
             <p>&copy; 2025 Prompt Forge. All rights reserved. Built with ❤️ for the AI community.</p>
           </div>
         </div>

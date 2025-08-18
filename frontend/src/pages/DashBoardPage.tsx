@@ -647,7 +647,7 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
           <h1 className="text-xl font-semibold mb-6">Dashboard</h1>
 
           {/* Widget Manager */}
-          <div className="mb-8">
+          <div className="mb-8 ">
             <WidgetManager
               widgets={widgets}
               onUpdateWidgets={handleUpdateWidgets}

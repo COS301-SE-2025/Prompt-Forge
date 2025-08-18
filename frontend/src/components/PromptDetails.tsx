@@ -3,7 +3,25 @@
 import { useEffect, useState, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { ReviewCard } from "./ReviewCard"
-import { BookOpen, MessageSquare, Info, Edit, Trash2, X } from "lucide-react"
+import {
+  BookOpen,
+  MessageSquare,
+  Info,
+  Edit,
+  Trash2,
+  X,
+  Copy,
+  Check,
+  Share2,
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Eye,
+  Calendar,
+  User,
+  TrendingUp,
+  Award,
+} from "lucide-react"
 import { PurchaseButton } from "./PurchaseButton"
 import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
@@ -13,35 +31,45 @@ import type { PromptWithTags, Review } from "@/Models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
 import httpClient from "../services/httpClient"
+import { CategoryColors } from "@/Models/Prompt"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
   const [prompt, setPrompt] = useState<PromptWithTags | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  //const [hasReviewed, setHasReviewed] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userOwnsPrompt, setUserOwnsPrompt] = useState(false)
   const [userAddedToCart, setUserAddedToCart] = useState(false)
-
   const [editingReview, setEditingReview] = useState<string | null>(null)
   const [deletingReview, setDeletingReview] = useState<string | null>(null)
-  const [editingReviewData, setEditingReviewData] = useState<{id: string, rating: number, comment: string} | null>(null)
+  const [editingReviewData, setEditingReviewData] = useState<{ id: string; rating: number; comment: string } | null>(
+    null,
+  )
+
+  // New state for enhanced features
+  const [reviewsCollapsed, setReviewsCollapsed] = useState(false)
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
+  const [viewCount] = useState(1247) // Mock view count
+  const [showAllReviews, setShowAllReviews] = useState(false)
 
   const promptService = new PromptService()
   const cartService = new CartService()
   const notificationRef = useRef<HTMLDivElement | null>(null)
 
-  // Notification helper (EditorPage style, bottom right)
+  // Notification helper
   const showNotification = (type: "success" | "error", title: string, message: string) => {
-    const bg = type === "success"
-      ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
-      : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
-    const icon = type === "success"
-      ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
-      : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`
-    const notification = document.createElement('div')
+    const bg =
+      type === "success"
+        ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
+        : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
+    const icon =
+      type === "success"
+        ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>`
+        : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>`
+    const notification = document.createElement("div")
     notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in`
     notification.innerHTML = `
       <div class="flex items-start">
@@ -54,7 +82,7 @@ export const PromptDetails = () => {
     `
     document.body.appendChild(notification)
     setTimeout(() => {
-      notification.classList.add('animate-fade-out')
+      notification.classList.add("animate-fade-out")
       setTimeout(() => {
         if (document.body.contains(notification)) {
           document.body.removeChild(notification)
@@ -69,56 +97,41 @@ export const PromptDetails = () => {
         setLoading(true)
         setError(null)
 
-        // First fetch prompt, then reviews (sequential to avoid 405 errors)
         const promptData = await promptService.getPromptById(id!)
-        setUserOwnsPrompt(promptData.ownership);
-        setUserAddedToCart(promptData.addedToCart);
+        setUserOwnsPrompt(promptData.ownership)
+        setUserAddedToCart(promptData.addedToCart)
         setPrompt(promptData)
-    
-        // Only try to fetch reviews if we got a prompt successfully
+
         const reviewsData = await promptService.getPromptReviews(id!)
         setReviews(reviewsData)
-        
-        // Enhanced JWT token parsing (same as MyPromptsPage)
+
         const checkAuthAndGetUserId = async () => {
           try {
-            // Check if user is logged in
-            const username = localStorage.getItem('username')
-            if (!username || username === 'Guest') {
-              console.log("User not authenticated")
+            const username = localStorage.getItem("username")
+            if (!username || username === "Guest") {
               setCurrentUserId(null)
               return
             }
 
-            //Get user profile using JWT token (sent via cookies)
-            console.log("Fetching user profile for review permissions...")
-            const response = await httpClient.get('/user/me')
+            const response = await httpClient.get("/user/me")
 
             if (response.ok) {
               const userData = await response.json()
               setCurrentUserId(userData.userId)
-              console.log("User profile loaded for reviews:", userData.userId)
             } else if (response.status === 401) {
-              console.log("Unauthorized")
               setCurrentUserId(null)
             } else {
-              // Fallback: try to get from localStorage
-              const fallbackUserId = localStorage.getItem('userId')
+              const fallbackUserId = localStorage.getItem("userId")
               if (fallbackUserId) {
                 setCurrentUserId(fallbackUserId)
-                console.log("Using fallback userId:", fallbackUserId)
               } else {
-                console.log("No userId available")
                 setCurrentUserId(null)
               }
             }
           } catch (error) {
-            console.error("Auth check failed:", error)
-            // Fallback: try to get from localStorage
-            const fallbackUserId = localStorage.getItem('userId')
+            const fallbackUserId = localStorage.getItem("userId")
             if (fallbackUserId) {
               setCurrentUserId(fallbackUserId)
-              console.log("Using fallback userId after error:", fallbackUserId)
             } else {
               setCurrentUserId(null)
             }
@@ -126,7 +139,6 @@ export const PromptDetails = () => {
         }
 
         await checkAuthAndGetUserId()
-        
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load data")
       } finally {
@@ -146,12 +158,13 @@ export const PromptDetails = () => {
       return
     }
 
-    cartService.addToCart(id)
-      .then(res => {
+    cartService
+      .addToCart(id)
+      .then((res) => {
         showNotification("success", "Added to cart", res.message)
         setUserAddedToCart(true)
       })
-      .catch(err => {
+      .catch((err) => {
         showNotification("error", "Add to cart failed", err.message)
       })
   }
@@ -190,17 +203,52 @@ export const PromptDetails = () => {
     }
   }
 
-  // Check if current user can edit/delete a review
+  const handleCopyPrompt = async () => {
+    if (!prompt?.content) return
+    try {
+      await navigator.clipboard.writeText(prompt.content)
+      setCopiedPrompt(true)
+      showNotification("success", "Copied!", "Prompt copied to clipboard")
+      setTimeout(() => setCopiedPrompt(false), 2000)
+    } catch (error) {
+      showNotification("error", "Failed to copy", "Please try again")
+    }
+  }
+
+  const handleShare = async () => {
+    if (!currentUserId) {
+      showNotification("error", "Login required", "Please log in to view shared prompts.")
+      window.location.href = "/login"
+      return
+    }
+
+    const shareData = {
+      title: prompt?.title || "Check out this prompt",
+      text: prompt?.description || "Amazing AI prompt on PromptForge",
+      url: window.location.href,
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+        showNotification("success", "Shared!", "Prompt shared successfully")
+      } catch (error) {
+        // User cancelled sharing
+      }
+    } else {
+      // Fallback to copying URL
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        showNotification("success", "Link copied!", "Prompt link copied to clipboard")
+      } catch (error) {
+        showNotification("error", "Failed to share", "Please try again")
+      }
+    }
+  }
+
   const canModifyReview = (review: Review) => {
-    if (!currentUserId) return false;
-    
-    // Log for debugging
-    console.log('Current User ID:', currentUserId);
-    console.log('Review User ID:', review.userId);
-    console.log('Review object:', review);
-    
-    // Try both direct comparison and string comparison
-    return currentUserId === review.userId || currentUserId === review.userId?.toString();
+    if (!currentUserId) return false
+    return currentUserId === review.userId || currentUserId === review.userId?.toString()
   }
 
   if (loading) {
@@ -208,9 +256,7 @@ export const PromptDetails = () => {
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">
-            {loading ? "Loading prompt..." : "Checking access..."}
-          </p>
+          <p className="text-muted-foreground">Loading prompt...</p>
         </div>
       </div>
     )
@@ -232,10 +278,7 @@ export const PromptDetails = () => {
           </div>
           <h3 className="text-lg font-medium mb-2">Error Loading Prompt</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-          >
+          <Button onClick={() => window.location.reload()} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
             Try Again
           </Button>
         </div>
@@ -248,12 +291,7 @@ export const PromptDetails = () => {
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="text-muted-foreground mb-4">
-            <svg
-              className="h-12 w-12 mx-auto mb-4 opacity-50"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-12 w-12 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -263,26 +301,22 @@ export const PromptDetails = () => {
             </svg>
           </div>
           <h3 className="text-lg font-medium mb-2">Prompt Not Found</h3>
-          <p className="text-muted-foreground mb-4">
-            This prompt may have been removed or doesn't exist
-          </p>
+          <p className="text-muted-foreground mb-4">This prompt may have been removed or doesn't exist</p>
           <a href="/marketplace">
-            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
-              Back to Marketplace
-            </Button>
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Back to Marketplace</Button>
           </a>
         </div>
       </div>
     )
   }
 
-  // Check if this is a paid prompt that the user doesn't own
   const isPaidPrompt = prompt.price > 0
-  const canViewContent = !isPaidPrompt || userOwnsPrompt
+  const canViewContent = !isPaidPrompt || userOwnsPrompt || currentUserId === prompt.authorId
+  const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3)
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-6xl">
-      {/* Back button */}
+      {/* Back button and actions */}
       <div className="mb-4 flex items-center justify-between">
         <Button
           onClick={() => window.history.back()}
@@ -293,15 +327,24 @@ export const PromptDetails = () => {
           <X className="h-4 w-4" />
           Back
         </Button>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+        </div>
       </div>
 
-      {/* Breadcrumb - More compact */}
+      {/* Breadcrumb */}
       <div className="mb-4">
         <nav className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
-          <a
-            href="/marketplace"
-            className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-          >
+          <a href="/marketplace" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             Marketplace
           </a>
           {prompt.tags.length > 0 && (
@@ -331,25 +374,29 @@ export const PromptDetails = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Prompt header - More compact */}
+          {/* Prompt header */}
           <div className="mb-4">
             {prompt.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {prompt.tags.map((tag) => (
-                  <span
+                  <a
                     key={tag.id}
-                    className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer"
+                    href={`/marketplace?tag=${tag.name}`}
+                    className={`px-2 py-1 text-xs font-medium rounded-md transition-colors
+                      ${CategoryColors[tag.name as keyof typeof CategoryColors] || "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}
+                    `}
                   >
                     {tag.name}
-                  </span>
+                  </a>
                 ))}
               </div>
             )}
-            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-              {prompt.title}
-            </h1>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white leading-tight">{prompt.title}</h1>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>Published {new Date(prompt.publishedAt).toLocaleDateString()}</span>
+              </div>
               <div className="flex items-center gap-1">
                 <StarRating value={averageRating} size="sm" />
                 <span>({reviews.length})</span>
@@ -362,24 +409,33 @@ export const PromptDetails = () => {
             </div>
           </div>
 
-          {/* Prompt description - Always visible */}
+          {/* Prompt description */}
           <Card className="p-4">
             <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Info className="h-4 w-4 text-[#3ebb9e]" />
               Description
             </h2>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {prompt.description}
-            </p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{prompt.description}</p>
           </Card>
 
-          {/* Prompt content - Only visible if user owns it or it's free */}
+          {/* Prompt content */}
           {canViewContent ? (
             <Card className="p-4">
-              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
-                Prompt
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-[#3ebb9e]" />
+                  Prompt
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyPrompt}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  {copiedPrompt ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedPrompt ? "Copied!" : "Copy"}
+                </Button>
+              </div>
               <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto custom-scrollbar">
                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-mono">
                   {prompt.content}
@@ -397,161 +453,218 @@ export const PromptDetails = () => {
                   <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
                     <BookOpen className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    Premium Content
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Premium Content</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     This prompt is premium content. Purchase it to view the full prompt text and unlock its potential.
                   </p>
                 </div>
-                <div className="flex justify-center"></div>
               </div>
             </Card>
           )}
 
-          {/* Reviews - Always visible */}
+          {/* Reviews - Collapsible */}
           <Card className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-[#3ebb9e]" />
                 Reviews
               </h2>
-              <div className="flex items-center gap-2">
-                <StarRating value={averageRating} size="sm" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  {reviews.length} review{reviews.length !== 1 ? "s" : ""}
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <StarRating value={averageRating} size="sm" />
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReviewsCollapsed(!reviewsCollapsed)}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  {reviewsCollapsed ? (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      <span className="hidden sm:inline">Show</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      <span className="hidden sm:inline">Hide</span>
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 
-            {reviews.length > 0 ? (
-              <div className="space-y-3 mb-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="relative">
-                    <ReviewCard
-                      userName={review.userName}
-                      rating={review.rating}
-                      comment={review.comment}
-                    />
-                    
-                    {/* Bigger Edit/Delete buttons for user's own reviews */}
-                    {canModifyReview(review) && (
-                      <div className="absolute top-3 right-3 flex gap-2 z-20 bg-white dark:bg-gray-800 rounded-lg">
+            {!reviewsCollapsed && (
+              <>
+                {reviews.length > 0 ? (
+                  <div className="space-y-3 mb-4">
+                    {displayedReviews.map((review) => (
+                      <div key={review.id} className="relative">
+                        <ReviewCard userName={review.userName} rating={review.rating} comment={review.comment} />
+
+                        {canModifyReview(review) && (
+                          <div className="absolute top-3 right-3 flex gap-2 z-20 bg-white dark:bg-gray-800 rounded-lg">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md"
+                              onClick={() => {
+                                setEditingReviewData({
+                                  id: review.id,
+                                  rating: review.rating,
+                                  comment: review.comment,
+                                })
+                              }}
+                              disabled={editingReview === review.id}
+                              title="Edit review"
+                            >
+                              {editingReview === review.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              ) : (
+                                <Edit className="h-4 w-4 text-blue-600" />
+                              )}
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-10 w-10 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
+                              onClick={() => handleReviewDelete(review.id)}
+                              disabled={deletingReview === review.id}
+                              title="Delete review"
+                            >
+                              {deletingReview === review.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              ) : (
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {reviews.length > 3 && (
+                      <div className="text-center pt-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md"
-                          onClick={() => {
-                            setEditingReviewData({
-                              id: review.id,
-                              rating: review.rating,
-                              comment: review.comment
-                            })
-                          }}
-                          disabled={editingReview === review.id}
-                          title="Edit review"
+                          onClick={() => setShowAllReviews(!showAllReviews)}
+                          className="text-[#3ebb9e] hover:text-[#00674f]"
                         >
-                          {editingReview === review.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                          ) : (
-                            <Edit className="h-4 w-4 text-blue-600" />
-                          )}
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-10 w-10 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
-                          onClick={() => handleReviewDelete(review.id)}
-                          disabled={deletingReview === review.id}
-                          title="Delete review"
-                        >
-                          {deletingReview === review.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                          ) : (
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          )}
+                          {showAllReviews ? "Show Less" : `Show All ${reviews.length} Reviews`}
                         </Button>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-                No reviews yet. Be the first to review this prompt!
-              </div>
-            )}
-
-            {/* Only allow reviews if user owns the prompt or it's free AND user is not the author */}
-            {canViewContent && currentUserId !== prompt.authorId && (
-              <>
-                {editingReviewData ? (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                        Edit Your Review
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingReviewData(null)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                    <ReviewForm
-                      promptId={id!}
-                      editMode={true}
-                      initialRating={editingReviewData.rating}
-                      initialComment={editingReviewData.comment}
-                      onSubmitSuccess={() => {
-                        // Refresh reviews after successful update
-                        const fetchReviews = async () => {
-                          const reviewsData = await promptService.getPromptReviews(id!)
-                          setReviews(reviewsData)
-                        }
-                        fetchReviews()
-                        setEditingReviewData(null) // Clear edit mode
-                      }}
-                      onUpdate={(updatedReview) => {
-                        handleReviewUpdate(editingReviewData.id, updatedReview)
-                      }}
-                    />
-                  </div>
                 ) : (
-                  <ReviewForm
-                    promptId={id!}
-                    onSubmitSuccess={() => {
-                      // Refresh reviews after successful submission
-                      const fetchReviews = async () => {
-                        const reviewsData = await promptService.getPromptReviews(id!)
-                        setReviews(reviewsData)
-                      }
-                      fetchReviews()
-                    }}
-                  />
+                  <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+                    No reviews yet. Be the first to review this prompt!
+                  </div>
+                )}
+
+                {/* Review Form */}
+                {canViewContent && currentUserId !== prompt.authorId && (
+                  <>
+                    {editingReviewData ? (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Edit Your Review</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingReviewData(null)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                        <ReviewForm
+                          promptId={id!}
+                          editMode={true}
+                          initialRating={editingReviewData.rating}
+                          initialComment={editingReviewData.comment}
+                          onSubmitSuccess={() => {
+                            const fetchReviews = async () => {
+                              const reviewsData = await promptService.getPromptReviews(id!)
+                              setReviews(reviewsData)
+                            }
+                            fetchReviews()
+                            setEditingReviewData(null)
+                          }}
+                          onUpdate={(updatedReview) => {
+                            handleReviewUpdate(editingReviewData.id, updatedReview)
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <ReviewForm
+                        promptId={id!}
+                        onSubmitSuccess={() => {
+                          const fetchReviews = async () => {
+                            const reviewsData = await promptService.getPromptReviews(id!)
+                            setReviews(reviewsData)
+                          }
+                          fetchReviews()
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+
+                {canViewContent && currentUserId === prompt.authorId && (
+                  <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <MessageSquare className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <p className="font-medium text-gray-700 dark:text-gray-300">You can't review your own prompt</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Authors cannot leave reviews on their own prompts
+                      </p>
+                    </div>
+                  </div>
                 )}
               </>
             )}
+          </Card>
 
-            {/* Show message if user is the author */}
-            {canViewContent && currentUserId === prompt.authorId && (
-              <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                    <MessageSquare className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <p className="font-medium text-gray-700 dark:text-gray-300">You can't review your own prompt</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Authors cannot leave reviews on their own prompts</p>
+          {/* Additional Content - Prompt Usage Tips */}
+          <Card className="p-4">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-[#3ebb9e]" />
+              Usage Tips
+            </h2>
+            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-[#3ebb9e]/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-semibold text-[#3ebb9e]">1</span>
                 </div>
+                <p>Copy the prompt and paste it into your preferred AI model (ChatGPT, Claude, etc.)</p>
               </div>
-            )}
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-[#3ebb9e]/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-semibold text-[#3ebb9e]">2</span>
+                </div>
+                <p>Customize the prompt by replacing placeholders with your specific requirements</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-[#3ebb9e]/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-semibold text-[#3ebb9e]">3</span>
+                </div>
+                <p>
+                  Experiment with different variations to get the best results for your use case.
+                  You can also use the <a href="/optimizer" className="text-[#3ebb9e] underline hover:text-[#00674f]">Optimizer</a> to refine your prompt automatically.
+                </p>
+              </div>
+            </div>
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* Enhanced Sidebar */}
         <div className="lg:col-span-1">
           <div className="space-y-4">
             {/* Purchase Card */}
@@ -578,26 +691,13 @@ export const PromptDetails = () => {
                     <span className="text-sm font-medium">✓ Added to cart</span>
                   </div>
                 ) : (
-                  <PurchaseButton
-                    price={prompt.price}
-                    onClick={handlePurchase}
-                  />
+                  <PurchaseButton price={prompt.price} onClick={handlePurchase} />
                 )}
               </div>
 
-              {/* Author Info - More compact */}
+              {/* Enhanced Stats */}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Author</h3>
-                <div className="flex items-center">
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    @{prompt.authorId.substring(0, 8)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Stats</h3>
+                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Stats</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="font-semibold text-gray-900 dark:text-white">{reviews.length}</div>
@@ -610,16 +710,18 @@ export const PromptDetails = () => {
                 </div>
               </div>
 
-              {/* Tags - More compact */}
+              {/* Tags */}
               {prompt.tags.length > 0 && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="pt-8 border-t border-gray-200 dark:border-gray-700 pb-6">
                   <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Tags</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {prompt.tags.map((tag) => (
                       <a
                         key={tag.id}
                         href={`/marketplace?tag=${tag.name}`}
-                        className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        className={`px-2 py-1 text-xs font-medium rounded-md transition-colors
+            ${CategoryColors[tag.name as keyof typeof CategoryColors] || "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}
+          `}
                       >
                         {tag.name}
                       </a>
@@ -627,6 +729,29 @@ export const PromptDetails = () => {
                   </div>
                 </div>
               )}
+
+              {/* Quick Actions */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Quick Actions</h3>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs bg-transparent"
+                    onClick={() => window.open("/marketplace", "_blank")}
+                  >
+                    Browse More Prompts
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs bg-transparent"
+                    onClick={() => window.open("/submit", "_blank")}
+                  >
+                    Create Your Own
+                  </Button>
+                </div>
+              </div>
             </Card>
           </div>
         </div>
