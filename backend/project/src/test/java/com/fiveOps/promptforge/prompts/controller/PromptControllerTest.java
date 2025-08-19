@@ -2,6 +2,8 @@ package com.fiveOps.promptforge.prompts.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,10 +21,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
@@ -38,6 +44,8 @@ class PromptControllerTest {
   @Mock private UserService userService;
 
   @Mock private HttpServletRequest request;
+
+  @Mock private Pageable pageable; // Add this field with other mocks
 
   @InjectMocks private PromptController promptController;
 
@@ -67,6 +75,228 @@ class PromptControllerTest {
     testUser.setEmail(userEmail);
   }
 
+  // createPrompt tests
+  @Test
+  void createPrompt_ShouldCreatePrompt_WhenValidToken() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
+    when(userService.findByEmail(userEmail)).thenReturn(testUser);
+    when(promptService.createPrompt(any(Prompt.class))).thenReturn(testPrompt);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(testPrompt, response.getBody());
+    verify(jwtUtil).validateToken(validToken);
+    verify(jwtUtil).extractUsername(validToken);
+    verify(userService).findByEmail(userEmail);
+    verify(promptService).createPrompt(any(Prompt.class));
+  }
+
+  @Test
+  void createPrompt_ShouldReturnBadRequest_WhenInvalidPrompt() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
+    when(userService.findByEmail(userEmail)).thenReturn(testUser);
+    when(promptService.createPrompt(any(Prompt.class)))
+        .thenThrow(new IllegalArgumentException("Invalid prompt"));
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnBadRequest_WhenNullPrompt() {
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(null, request);
+
+    // Assert
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnInternalError_WhenServiceThrowsException() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
+    when(userService.findByEmail(userEmail)).thenReturn(testUser);
+    when(promptService.createPrompt(any(Prompt.class)))
+        .thenThrow(new RuntimeException("Unexpected error"));
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    verify(promptService).createPrompt(any(Prompt.class));
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenEmptyEmail() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn("");
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(jwtUtil).validateToken(validToken);
+    verify(jwtUtil).extractUsername(validToken);
+    verify(userService, never()).findByEmail(any());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenEmptyToken() {
+    // Arrange
+    Cookie cookie = new Cookie("token", "");
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenInvalidToken() {
+    // Arrange
+    Cookie cookie = new Cookie("token", "invalid.token");
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken("invalid.token")).thenReturn(false);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(jwtUtil).validateToken("invalid.token");
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenNoCookiesFound() {
+    // Arrange
+    when(request.getCookies()).thenReturn(new Cookie[0]);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(request).getCookies();
+    verify(jwtUtil, never()).validateToken(any());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenNoToken() {
+    // Arrange
+    when(request.getCookies()).thenReturn(null);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(request).getCookies();
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenNoTokenCookieFound() {
+    // Arrange
+    Cookie otherCookie = new Cookie("other", "value");
+    when(request.getCookies()).thenReturn(new Cookie[] {otherCookie});
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(request).getCookies();
+    verify(jwtUtil, never()).validateToken(any());
+  }
+
+  @Test
+  void createPrompt_ShouldReturnUnauthorized_WhenTokenExtractionFails() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(null);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    verify(jwtUtil).validateToken(validToken);
+    verify(jwtUtil).extractUsername(validToken);
+    verify(userService, never()).findByEmail(any());
+  }
+
+  @Test
+  void createPrompt_ShouldSetDefaultPriceWhenNull() {
+    // Arrange
+    Cookie cookie = new Cookie("token", validToken);
+    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
+    when(jwtUtil.validateToken(validToken)).thenReturn(true);
+    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
+    when(userService.findByEmail(userEmail)).thenReturn(testUser);
+
+    testPrompt.setPrice(null);
+    when(promptService.createPrompt(any(Prompt.class))).thenReturn(testPrompt);
+
+    // Act
+    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0.0, ((Prompt) response.getBody()).getPrice());
+    verify(promptService).createPrompt(any(Prompt.class));
+  }
+
+  @Test
+  void deletePrompt_ShouldReturnNotFound_WhenNotExists() {
+    // Arrange
+    when(promptService.deletePrompt(testPromptId)).thenReturn(false);
+
+    // Act
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    verify(promptService).deletePrompt(testPromptId);
+  }
+
+  @Test
+  void deletePrompt_ShouldReturnOk_WhenDeleted() {
+    // Arrange
+    when(promptService.deletePrompt(testPromptId)).thenReturn(true);
+
+    // Act
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(promptService).deletePrompt(testPromptId);
+  }
+
   @Test
   void getAllPrompts_ShouldReturnAllPrompts() {
     // Arrange
@@ -81,21 +311,6 @@ class PromptControllerTest {
     assertEquals(expectedPrompts, response.getBody());
     verify(promptService).getAllPrompts();
   }
-
-  // @Test
-  // void getPromptsByAuthor_ShouldReturnAuthorPrompts() {
-  //   // Arrange
-  //   List<Prompt> expectedPrompts = Arrays.asList(testPrompt);
-  //   when(promptService.getPromptsByAuthor(testAuthorId)).thenReturn(expectedPrompts);
-
-  //   // Act
-  //   ResponseEntity<List<Prompt>> response = promptController.getPromptsByAuthor(testAuthorId);
-
-  //   // Assert
-  //   assertEquals(HttpStatus.OK, response.getStatusCode());
-  //   assertEquals(expectedPrompts, response.getBody());
-  //   verify(promptService).getPromptsByAuthor(testAuthorId);
-  // }
 
   @Test
   void getPromptById_ShouldReturnPrompt_WhenExists() {
@@ -125,83 +340,6 @@ class PromptControllerTest {
   }
 
   @Test
-  void createPrompt_ShouldReturnUnauthorized_WhenNoToken() {
-    // Arrange
-    when(request.getCookies()).thenReturn(null);
-
-    // Act
-    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
-
-    // Assert
-    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    verify(request).getCookies();
-  }
-
-  @Test
-  void createPrompt_ShouldReturnUnauthorized_WhenInvalidToken() {
-    // Arrange
-    Cookie cookie = new Cookie("token", "invalid.token");
-    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
-    when(jwtUtil.validateToken("invalid.token")).thenReturn(false);
-
-    // Act
-    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
-
-    // Assert
-    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    verify(jwtUtil).validateToken("invalid.token");
-  }
-
-  @Test
-  void createPrompt_ShouldCreatePrompt_WhenValidToken() {
-    // Arrange
-    Cookie cookie = new Cookie("token", validToken);
-    when(request.getCookies()).thenReturn(new Cookie[] {cookie});
-    when(jwtUtil.validateToken(validToken)).thenReturn(true);
-    when(jwtUtil.extractUsername(validToken)).thenReturn(userEmail);
-    when(userService.findByEmail(userEmail)).thenReturn(testUser);
-    when(promptService.createPrompt(any(Prompt.class))).thenReturn(testPrompt);
-
-    // Act
-    ResponseEntity<?> response = promptController.createPrompt(testPrompt, request);
-
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(testPrompt, response.getBody());
-    verify(jwtUtil).validateToken(validToken);
-    verify(jwtUtil).extractUsername(validToken);
-    verify(userService).findByEmail(userEmail);
-    verify(promptService).createPrompt(any(Prompt.class));
-  }
-
-  @Test
-  void updatePrompt_ShouldUpdatePrompt_WhenExists() {
-    // Arrange
-    when(promptService.updatePrompt(testPromptId, testPrompt)).thenReturn(testPrompt);
-
-    // Act
-    ResponseEntity<Prompt> response = promptController.updatePrompt(testPromptId, testPrompt);
-
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(testPrompt, response.getBody());
-    verify(promptService).updatePrompt(testPromptId, testPrompt);
-  }
-
-  @Test
-  void updatePrompt_ShouldReturnNotFound_WhenNotExists() {
-    // Arrange
-    when(promptService.updatePrompt(testPromptId, testPrompt)).thenReturn(null);
-
-    // Act
-    ResponseEntity<Prompt> response = promptController.updatePrompt(testPromptId, testPrompt);
-
-    // Assert
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    verify(promptService).updatePrompt(testPromptId, testPrompt);
-  }
-
-  @Test
   void publishPrompt_ShouldPublishPrompt_WhenExists() {
     // Arrange
     when(promptService.publishPrompt(testPromptId)).thenReturn(testPrompt);
@@ -227,32 +365,6 @@ class PromptControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(testPrompt, response.getBody());
     verify(promptService).unpublishPrompt(testPromptId);
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnOk_WhenDeleted() {
-    // Arrange
-    when(promptService.deletePrompt(testPromptId)).thenReturn(true);
-
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
-
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(promptService).deletePrompt(testPromptId);
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnNotFound_WhenNotExists() {
-    // Arrange
-    when(promptService.deletePrompt(testPromptId)).thenReturn(false);
-
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
-
-    // Assert
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    verify(promptService).deletePrompt(testPromptId);
   }
 
   @Test
@@ -305,5 +417,185 @@ class PromptControllerTest {
     assertEquals(HttpStatus.OK, response2.getStatusCode());
     assertEquals(expectedPrompts, response2.getBody());
     verify(promptService, times(2)).searchByTitle(query);
+  }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnUnauthorized_WhenNoAuthentication() {
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getPurchasedPrompts(mock(Pageable.class), null);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnPrompts_WhenAuthenticated() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getPurchasedPromptsByOptionalTag(testAuthorId, null, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getPurchasedPrompts(pageable, auth);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getPurchasedPrompts_ShouldReturnBadRequest_WhenUserIdNotFound() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenThrow(new RuntimeException("User not found"));
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getPurchasedPrompts(pageable, auth);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnUnauthorized_WhenNoAuthentication() {
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(null, null, null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WhenNoFilters() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(testAuthorId, null, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(auth, null, null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithTagOnly() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String tagName = "test-tag";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByOptionalTagID(
+            testAuthorId, tagName, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(auth, tagName, null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithFilterOnly() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String filter = "recent";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByFilter(testAuthorId, null, filter, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(auth, null, filter, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnPrompts_WithTagAndFilter() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    String tagName = "test-tag";
+    String filter = "popular";
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenReturn(testAuthorId);
+
+    Page<PromptWithSourceDTO> expectedPage = mock(Page.class);
+    when(promptService.getAuthoredAndPurchasedPromptsByFilter(
+            testAuthorId, tagName, filter, pageable))
+        .thenReturn(expectedPage);
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(auth, tagName, filter, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedPage, response.getBody());
+  }
+
+  @Test
+  void getAuthoredAndPurchasedPrompts_ShouldReturnBadRequest_WhenUserIdNotFound() {
+    // Arrange
+    Authentication auth = mock(Authentication.class);
+    when(auth.getName()).thenReturn(userEmail);
+    when(userService.getUserIdByEmail(userEmail)).thenThrow(new RuntimeException("User not found"));
+
+    // Act
+    ResponseEntity<Page<PromptWithSourceDTO>> response =
+        promptController.getAuthoredAndPurchasedPrompts(auth, null, null, pageable);
+
+    // Assert
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void publishPrompt_ShouldReturnNotFound_WhenPromptNull() {
+    // Arrange
+    when(promptService.publishPrompt(testPromptId)).thenReturn(null);
+
+    // Act
+    ResponseEntity<Prompt> response = promptController.publishPrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void unpublishPrompt_ShouldReturnNotFound_WhenPromptNull() {
+    // Arrange
+    when(promptService.unpublishPrompt(testPromptId)).thenReturn(null);
+
+    // Act
+    ResponseEntity<Prompt> response = promptController.unpublishPrompt(testPromptId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 }

@@ -73,7 +73,7 @@ export default function MarketplacePage() {
     setCategoriesLoading(true)
     try {
       const tags = await promptService.getAllTags()
-      console.log("Fetched tags:", tags) // Debug log
+      // console.log("Fetched tags:", tags) // Debug log
       setAvailableCategories(tags)
     } catch (error) {
       console.error('Error fetching categories:', error)
@@ -86,7 +86,7 @@ export default function MarketplacePage() {
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
     setCurrentPage(1) //Reset to page 1
-    console.log("filter:", filter);
+    // console.log("filter:", filter);
     
     fetchData(selectedCategory, filter, searchQuery, 1)
   }
@@ -94,7 +94,7 @@ export default function MarketplacePage() {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1) //Reset to page 1
-    console.log("category:", category);
+    // console.log("category:", category);
     fetchData(category, selectedFilter, searchQuery, 1)
   }
 

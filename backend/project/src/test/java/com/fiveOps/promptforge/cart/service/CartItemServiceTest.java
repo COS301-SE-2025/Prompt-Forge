@@ -1,15 +1,19 @@
-package com.fiveOps.promptforge.cart;
+package com.fiveOps.promptforge.cart.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,15 +27,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.fiveOps.promptforge.cart.dto.CartItemDTO;
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.model.CartItem;
 import com.fiveOps.promptforge.cart.repository.CartItemRepository;
-import com.fiveOps.promptforge.cart.service.CartItemService;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
+import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.service.PromptStoreService;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class CartItemServiceTest {
@@ -39,6 +45,7 @@ class CartItemServiceTest {
   @Mock private UserRepository userRepository;
   @Mock private PromptRepository promptRepository;
   @Mock private PromptStoreService promptStoreService;
+  @Mock private UserService userService;
   @InjectMocks private CartItemService service;
 
   private UUID userId;
@@ -118,16 +125,54 @@ class CartItemServiceTest {
     assertFalse(service.isPromptAddedToCart(userId, promptId));
   }
 
-  // @Test
-  // void checkout_ShouldSkipInvalidPrompts() {
-  //   CartItemDTO dto = mock(CartItemDTO.class);
-  //   when(dto.getPromptId()).thenReturn(promptId);
-  //   when(promptRepository.findById(promptId)).thenReturn(Optional.empty());
-  //   doNothing().when(cartItemRepository).deleteByUserIdAndPromptId(userId, promptId);
-  //   List<CartItemDTO> prompts = List.of(dto);
-  //   Double totalPrice = prompts.stream().mapToDouble(CartItemDTO::getPromptPrice).sum();
-  //   service.checkout(userId, prompts,totalPrice);
-  //   verify(cartItemRepository).deleteByUserIdAndPromptId(userId, promptId);
-  //   verify(promptStoreService, never()).purchasePrompt(any(), any());
-  // }
+  @Test
+  void isPromptAddedToCart_ShouldReturnTrue() {
+    List<Object[]> mockResult = Collections.singletonList(new Object[] {"mock-id"});
+    when(cartItemRepository.findByUserIdAndPromptId(userId, promptId)).thenReturn(mockResult);
+    assertTrue(service.isPromptAddedToCart(userId, promptId));
+  }
+
+  @Test
+  void purchase_ShouldSuccessfullyPurchaseAndClearCart() throws Exception {
+    String email = "test@example.com";
+    CartItemDTO dto = mock(CartItemDTO.class);
+    when(dto.getPromptId()).thenReturn(promptId);
+    List<CartItemDTO> prompts = Collections.singletonList(dto);
+
+    when(userService.getUserIdByEmail(email)).thenReturn(userId);
+    when(promptStoreService.purchasePrompt(promptId, userId))
+        .thenReturn(mock(PromptPurchase.class));
+    doNothing().when(cartItemRepository).deletebyUserID(userId);
+
+    assertDoesNotThrow(() -> service.purchase(email, prompts));
+
+    verify(promptStoreService).purchasePrompt(promptId, userId);
+    verify(cartItemRepository).deletebyUserID(userId);
+  }
+
+  @Test
+  void purchase_ShouldThrowWhenUserNotFound() {
+    String email = "nonexistent@example.com";
+    List<CartItemDTO> prompts = Collections.singletonList(mock(CartItemDTO.class));
+
+    when(userService.getUserIdByEmail(email)).thenThrow(new RuntimeException("User not found"));
+
+    assertThrows(RuntimeException.class, () -> service.purchase(email, prompts));
+  }
+
+  @Test
+  void purchase_ShouldThrowWhenPurchaseFails() throws Exception {
+    String email = "test@example.com";
+    CartItemDTO dto = mock(CartItemDTO.class);
+    when(dto.getPromptId()).thenReturn(promptId);
+    List<CartItemDTO> prompts = Collections.singletonList(dto);
+
+    when(userService.getUserIdByEmail(email)).thenReturn(userId);
+    when(promptStoreService.purchasePrompt(promptId, userId))
+        .thenThrow(new RuntimeException("Purchase failed"));
+
+    Exception exception =
+        assertThrows(RuntimeException.class, () -> service.purchase(email, prompts));
+    assertEquals("Purchase failed", exception.getMessage());
+  }
 }

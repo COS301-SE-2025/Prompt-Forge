@@ -28,8 +28,8 @@ class HttpClient {
       ...options,
     };
 
-    console.log(`🔍 ${options.method || 'GET'} ${url}`);
-    console.log('📋 Request headers:', Object.fromEntries(headers.entries()));
+    // console.log(`${options.method || 'GET'} ${url}`);
+    // console.log('Request headers:', Object.fromEntries(headers.entries()));
     
     return fetch(url, config);
   }
