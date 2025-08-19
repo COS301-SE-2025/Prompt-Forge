@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config/api';
 
 export class Editor {
   async promptOpenRouter(requestBody: any): Promise<any> {
-    console.log("🔍 Sending request to OpenRouter:", requestBody);
+    // console.log("Sending request to OpenRouter:", requestBody);
     
     try {
       // Validate the request has a model
@@ -26,7 +26,7 @@ export class Editor {
       });
 
       const data = await response.json();
-      console.log("Response status:", response.status, "data:", data);
+      // console.log("Response status:", response.status, "data:", data);
 
       if (!response.ok) {
         let errorMessage = "Unknown error";
@@ -84,12 +84,12 @@ export class Editor {
     onComplete: () => void,
     onError: (error: string) => void
   ): Promise<void> {
-    console.log("🔍 Sending streaming request to OpenRouter:", requestBody);
+    // console.log("Sending streaming request to OpenRouter:", requestBody);
     
     try {
       // Validate the request has a model
       if (!requestBody.model) {
-        console.error("❌ Missing model in request");
+        console.error(" Missing model in request");
         onError("No model specified in request");
         return;
       }
@@ -105,11 +105,11 @@ export class Editor {
         body: JSON.stringify(requestBody),
       });
 
-      console.log(`Response status: ${response.status} ${response.statusText}`);
+      // console.log(`Response status: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log(`Error response: ${errorText}`);
+        // console.log(`Error response: ${errorText}`);
         onError(`Error: ${response.status} ${response.statusText}\n${errorText}`);
         return;
       }
@@ -123,14 +123,14 @@ export class Editor {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      console.log('Starting to process stream...');
+      // console.log('Starting to process stream...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
 
           if (done) {
-            console.log('Stream complete');
+            // console.log('Stream complete');
             onComplete();
             break;
           }
@@ -158,7 +158,7 @@ export class Editor {
               const data = line.slice(6);
 
               if (data === '[DONE]') {
-                console.log('End of stream marker received');
+                // console.log('End of stream marker received');
                 continue;
               }
 
@@ -168,7 +168,7 @@ export class Editor {
                 // Check for error
                 if (parsed.error) {
                   const errorMsg = parsed.error.message || "Unknown error";
-                  console.log(`Error in stream: ${errorMsg}`);
+                  // console.log(`Error in stream: ${errorMsg}`);
                   onError(`Error: ${errorMsg}`);
                   continue;
                 }
@@ -177,19 +177,19 @@ export class Editor {
                 if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
                   const content = parsed.choices[0].delta.content;
                   if (content) {
-                    console.log(`Content: "${content}"`);
+                    // console.log(`Content: "${content}"`);
                     onContent(content);
                   }
                 }
               } catch (e) {
-                console.log(`Error parsing JSON: ${e instanceof Error ? e.message : 'Unknown parsing error'}, Line: ${line}`);
+                // console.log(`Error parsing JSON: ${e instanceof Error ? e.message : 'Unknown parsing error'}, Line: ${line}`);
               }
             }
           }
         }
       } catch (streamError: unknown) {
         const errorMessage = streamError instanceof Error ? streamError.message : "Unknown stream error";
-        console.log(`Stream processing error: ${errorMessage}`);
+        // console.log(`Stream processing error: ${errorMessage}`);
         onError(`Stream processing error: ${errorMessage}`);
       } finally {
         reader.cancel();

@@ -280,7 +280,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       
       if (validatedImage) {
         setUploadedImage(validatedImage);
-        console.log("Image uploaded and validated successfully");
+        // console.log("Image uploaded and validated successfully");
       } else {
         setUploadedImage(null);
         showNotification("error", "Image Upload Failed", "The image could not be processed. Please try a different image.");
@@ -388,7 +388,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       stream: streamingEnabled
     };
 
-    console.log("🚀 Rating request:", requestBody);
+    // console.log("Rating request:", requestBody);
     
     // Use streamingService to handle the request
     await streamingService.streamRequest(
@@ -408,7 +408,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
           if (streamingEnabled && typingEffect.displayText) {
             setRatingResponse(typingEffect.displayText);
           }
-          console.log("Rating completed");
+          // console.log("Rating completed");
         },
         onError: (error: string) => {
           setIsLoadingRating(false);
@@ -422,7 +422,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       }
     );
   } catch (error) {
-    console.error("❌ Rating error:", error);
+    console.error("Rating error:", error);
     setIsLoadingRating(false);
     setRatingResponse("Error generating rating: " + error);
   }
@@ -464,7 +464,7 @@ const getSuggested = async (prompt: string, response: string) => {
       stream: streamingEnabled
     }
 
-    console.log("🚀 Suggestion request:", requestBody);
+    // console.log("Suggestion request:", requestBody);
     
     // Use streamingService to handle the request
     await streamingService.streamRequest(
@@ -485,7 +485,7 @@ const getSuggested = async (prompt: string, response: string) => {
           if (streamingEnabled && typingEffect.displayText) {
             setSuggestionResponse(typingEffect.displayText);
           }
-          console.log("✅ Suggestion completed");
+          // console.log("Suggestion completed");
         },
         onError: (error: string) => {
           setIsLoadingSuggestion(false);
@@ -529,7 +529,7 @@ const fallbackToWorkingModel = async () => {
     if (i === originalModel) continue; // Skip the one that failed
     
     try {
-      console.log(`Trying model ${aiModels[i].name}...`);
+      // console.log(`Trying model ${aiModels[i].name}...`);
       
       // Update status with improved styling
       statusElement.innerHTML = `
@@ -596,7 +596,7 @@ const fallbackToWorkingModel = async () => {
         break;
       }
     } catch (error) {
-      console.log(`Model ${aiModels[i].name} also failed`, error);
+      // console.log(`Model ${aiModels[i].name} also failed`, error);
     }
   }
   
@@ -630,7 +630,7 @@ const fallbackToWorkingModel = async () => {
   setIsLoading(false);
 };
 
-  // ✅ UPDATED: Modified testPrompt function to support streaming
+  // UPDATED: Modified testPrompt function to support streaming
   const testPrompt = async () => {
     if (promptText === lastTestedPrompt && !uploadedImage) {
       setCurrentView("test")
@@ -661,7 +661,7 @@ const fallbackToWorkingModel = async () => {
         aiModels[selectedModel].supportsImages // Pass this parameter
       );
 
-      console.log("🚀 Test request with model:", aiModels[selectedModel].name);
+      // console.log("Test request with model:", aiModels[selectedModel].name);
       
       // Use streamingService to handle the request
       await streamingService.streamRequest(
@@ -682,7 +682,7 @@ const fallbackToWorkingModel = async () => {
             if (streamingEnabled && typingEffect.displayText) {
               setAiResponse(typingEffect.displayText);
             }
-            console.log("✅ Streaming completed");
+            // console.log("Streaming completed");
           },
           onError: (error: string) => {
             setIsLoading(false);

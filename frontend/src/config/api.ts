@@ -7,8 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     : 'https://d898wq8ttyuze.cloudfront.net/api'  // Production fallback
   );
 
-console.log('🔗 API Base URL:', API_BASE_URL);
-console.log('🔧 Environment:', import.meta.env.DEV ? 'development' : 'production');
+// console.log('API Base URL:', API_BASE_URL);
+// console.log('Environment:', import.meta.env.DEV ? 'development' : 'production');
 
 export { API_BASE_URL };
 export default API_BASE_URL;

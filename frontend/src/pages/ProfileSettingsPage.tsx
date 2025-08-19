@@ -60,7 +60,7 @@ export default function ProfileSettingsPage() {
           const payoutDetails = await profileService.getPayoutDetails();
           setPayoutDetails(payoutDetails);
         } catch (error) {
-          console.log("No payout details found or error fetching:", error);
+          // console.log("No payout details found or error fetching:", error);
           setPayoutDetails(null);
         }
 
