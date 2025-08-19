@@ -69,7 +69,8 @@ public class SecurityConfig {
         Arrays.asList(
             "http://localhost:5173",
             "https://prompt-forge.co.za",
-            "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com"));
+            "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com",
+            "https://d898wq8ttyuze.cloudfront.net/api"));
     defaultConfig.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     defaultConfig.setAllowedHeaders(Arrays.asList("*"));
