@@ -27,17 +27,13 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @ExtendWith(MockitoExtension.class)
 class DashboardControllerTest {
 
-  @Mock
-  private DashboardService dashboardService;
+  @Mock private DashboardService dashboardService;
 
-  @Mock
-  private UserRepository userRepository;
+  @Mock private UserRepository userRepository;
 
-  @Mock
-  private Principal principal;
+  @Mock private Principal principal;
 
-  @InjectMocks
-  private DashboardController dashboardController;
+  @InjectMocks private DashboardController dashboardController;
 
   private final UUID testUserId = UUID.randomUUID();
   private final String testEmail = "test@example.com";
@@ -128,9 +124,8 @@ class DashboardControllerTest {
     // Setup
     User testUser = new User();
     testUser.setUserId(testUserId);
-    List<Object[]> mockData = List.of(
-        new Object[] { "Category1", 5L },
-        new Object[] { "Category2", 3L });
+    List<Object[]> mockData =
+        List.of(new Object[] {"Category1", 5L}, new Object[] {"Category2", 3L});
 
     when(principal.getName()).thenReturn(testEmail);
     when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -148,25 +143,23 @@ class DashboardControllerTest {
 
   @Test
   void getCategoryBreakdown_WithNullData_ShouldHandleGracefully() {
-  // Setup
-  User testUser = new User();
-  testUser.setUserId(testUserId);
-  List<Object[]> mockData = (List<Object[]>) List.of(
-    new Object[]{"Unknown", 0L}, new Object[]{"Unknown", 0L}
-  );
+    // Setup
+    User testUser = new User();
+    testUser.setUserId(testUserId);
+    List<Object[]> mockData =
+        (List<Object[]>) List.of(new Object[] {"Unknown", 0L}, new Object[] {"Unknown", 0L});
 
-  when(principal.getName()).thenReturn(testEmail);
-  when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
-  when(dashboardService.getCategoryBreakdown(testUserId)).thenReturn(mockData);
+    when(principal.getName()).thenReturn(testEmail);
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+    when(dashboardService.getCategoryBreakdown(testUserId)).thenReturn(mockData);
 
-  // Execute
-  Map<String, Long> result =
-  dashboardController.getCategoryBreakdown(principal);
+    // Execute
+    Map<String, Long> result = dashboardController.getCategoryBreakdown(principal);
 
-  // Verify
-  assertNotNull(result);
-  assertTrue(result.containsKey("Unknown"));
-  assertEquals(Long.valueOf(0L), result.get("Unknown"));
+    // Verify
+    assertNotNull(result);
+    assertTrue(result.containsKey("Unknown"));
+    assertEquals(Long.valueOf(0L), result.get("Unknown"));
   }
 
   @Test
@@ -187,9 +180,7 @@ class DashboardControllerTest {
     // Setup
     User testUser = new User();
     testUser.setUserId(testUserId);
-    List<Object[]> mockData = List.of(
-        new Object[] { 1, 10L },
-        new Object[] { 2, 15L });
+    List<Object[]> mockData = List.of(new Object[] {1, 10L}, new Object[] {2, 15L});
 
     when(principal.getName()).thenReturn(testEmail);
     when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -203,7 +194,8 @@ class DashboardControllerTest {
     assertEquals(2, result.size());
     assertEquals(10L, result.get(1));
     assertEquals(15L, result.get(2));
-    verify(dashboardService).getMonthlyPromptCounts(testUserId, java.time.LocalDate.now().getYear());
+    verify(dashboardService)
+        .getMonthlyPromptCounts(testUserId, java.time.LocalDate.now().getYear());
   }
 
   @Test
@@ -211,19 +203,15 @@ class DashboardControllerTest {
     // Setup
     User testUser = new User();
     testUser.setUserId(testUserId);
-    List<Object[]> mockData = List.of(
-      new Object[]{null, null}, new Object[] { null, null }
-      );
+    List<Object[]> mockData = List.of(new Object[] {null, null}, new Object[] {null, null});
 
     when(principal.getName()).thenReturn(testEmail);
     when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
-    when(dashboardService.getMonthlyPromptCounts(testUserId,
-      java.time.LocalDate.now().getYear()))
-    .thenReturn(mockData);
+    when(dashboardService.getMonthlyPromptCounts(testUserId, java.time.LocalDate.now().getYear()))
+        .thenReturn(mockData);
 
     // Execute
-    Map<Integer, Long> result =
-    dashboardController.getMonthlyPromptCounts(principal);
+    Map<Integer, Long> result = dashboardController.getMonthlyPromptCounts(principal);
 
     // Verify
     assertTrue(result.isEmpty());
@@ -231,14 +219,13 @@ class DashboardControllerTest {
 
   @Test
   void getMonthlyPromptCounts_WithUnauthenticatedUser_ShouldReturnEmptyMap() {
-  // Setup
-  when(principal.getName()).thenReturn(null);
+    // Setup
+    when(principal.getName()).thenReturn(null);
 
-  // Execute
-  Map<Integer, Long> result =
-  dashboardController.getMonthlyPromptCounts(principal);
+    // Execute
+    Map<Integer, Long> result = dashboardController.getMonthlyPromptCounts(principal);
 
-  // Verify
-  assertTrue(result.isEmpty());
+    // Verify
+    assertTrue(result.isEmpty());
   }
 }

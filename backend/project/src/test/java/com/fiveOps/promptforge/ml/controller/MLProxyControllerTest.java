@@ -1,6 +1,8 @@
 package com.fiveOps.promptforge.ml.controller;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,17 +18,12 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-
-
-
 @ExtendWith(MockitoExtension.class)
 class MLProxyControllerTest {
 
-  @Mock
-  private RestTemplate restTemplate;
+  @Mock private RestTemplate restTemplate;
 
-  @InjectMocks
-  private MLProxyController controller;
+  @InjectMocks private MLProxyController controller;
 
   private static final String ML_SERVICE_URL = "http://localhost:8001";
 
@@ -59,13 +56,11 @@ class MLProxyControllerTest {
     // Arrange
     String url = ML_SERVICE_URL + "/health";
     when(restTemplate.getForEntity(url, String.class))
-      .thenThrow(new RestClientException("Connection refused"));
+        .thenThrow(new RestClientException("Connection refused"));
 
     // Act & Assert
-    ResponseStatusException exception = assertThrows(
-      ResponseStatusException.class,
-      () -> controller.health()
-    );
+    ResponseStatusException exception =
+        assertThrows(ResponseStatusException.class, () -> controller.health());
 
     assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
     assertEquals("ML service unavailable", exception.getReason());
@@ -96,13 +91,11 @@ class MLProxyControllerTest {
     // Arrange
     String url = ML_SERVICE_URL + "/validate-token";
     when(restTemplate.getForEntity(url, String.class))
-      .thenThrow(new RestClientException("Service unavailable"));
+        .thenThrow(new RestClientException("Service unavailable"));
 
     // Act & Assert
-    ResponseStatusException exception = assertThrows(
-      ResponseStatusException.class,
-      () -> controller.validateToken()
-    );
+    ResponseStatusException exception =
+        assertThrows(ResponseStatusException.class, () -> controller.validateToken());
 
     assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
     assertEquals("ML service unavailable", exception.getReason());
@@ -117,9 +110,9 @@ class MLProxyControllerTest {
     String requestBody = "{\"prompt\":\"test prompt\"}";
     String responseBody = "{\"optimized\":\"optimized prompt\"}";
     ResponseEntity<String> mockResponse = ResponseEntity.ok(responseBody);
-    
+
     when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     // Act
     ResponseEntity<String> response = controller.optimize(requestBody);
@@ -137,15 +130,13 @@ class MLProxyControllerTest {
     // Arrange
     String url = ML_SERVICE_URL + "/optimize";
     String requestBody = "{\"prompt\":\"test prompt\"}";
-    
+
     when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
-      .thenThrow(new RestClientException("Service unavailable"));
+        .thenThrow(new RestClientException("Service unavailable"));
 
     // Act & Assert
-    ResponseStatusException exception = assertThrows(
-      ResponseStatusException.class,
-      () -> controller.optimize(requestBody)
-    );
+    ResponseStatusException exception =
+        assertThrows(ResponseStatusException.class, () -> controller.optimize(requestBody));
 
     assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
     assertEquals("ML service unavailable", exception.getReason());
@@ -159,9 +150,9 @@ class MLProxyControllerTest {
     String url = ML_SERVICE_URL + "/optimize";
     String invalidRequestBody = "invalid json";
     ResponseEntity<String> mockResponse = ResponseEntity.badRequest().body("Invalid request");
-    
+
     when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(String.class)))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     // Act
     ResponseEntity<String> response = controller.optimize(invalidRequestBody);
