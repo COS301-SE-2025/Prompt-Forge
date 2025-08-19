@@ -324,6 +324,7 @@ public class PromptService {
   public Page<PromptWithSourceDTO> getAuthoredAndPurchasedPromptsByFilter(
       UUID userId, String tagName, String filter, Pageable pageable) throws RuntimeException {
     UUID tagId = null;
+
     if (tagName != null) {
       tagId = tagService.getTagIdByName(tagName);
     }

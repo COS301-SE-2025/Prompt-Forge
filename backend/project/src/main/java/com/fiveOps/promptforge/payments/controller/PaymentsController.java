@@ -38,7 +38,7 @@ public class PaymentsController {
   private final BankDetailsService bankDetailsService;
 
   @PostMapping("/initialize")
-  public ResponseEntity<APIResponse> checkoutCart(
+  public ResponseEntity<APIResponse> initializePayment(
       @RequestBody InitializePaymentRequestDTO request, Authentication authentication) {
     try {
       String userEmail = authentication.getName();
