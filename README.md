@@ -103,10 +103,10 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
 </details>
 
+---
 
 <details>
   <summary><strong>📑 Appendix</strong></summary>
-#### 📎 Appendix
 
 | Appendix Item            | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
