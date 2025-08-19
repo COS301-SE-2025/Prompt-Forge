@@ -36,7 +36,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ promptId, onReviewsCha
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      console.log("Fetching reviews...");
+      // console.log("Fetching reviews...");
       const data = await promptService.getPromptReviews(promptId);
       const validReviews = data.filter(review => review?.id); 
       setReviews(validReviews);

@@ -56,14 +56,14 @@ export default function LoginPage() {
     }
 
     try {
-      console.log("🔍 Attempting login with:", { email: loginEmail });
+      // console.log("Attempting login with:", { email: loginEmail });
       
       const result = await authService.login({ 
         email: loginEmail, 
         password: loginPassword 
       });
       
-      console.log("🔍 Login result:", result);
+      // console.log("Login result:", result);
       
       if (result?.message === "Login successful") {
         // Store user data from response
@@ -72,8 +72,8 @@ export default function LoginPage() {
         if (result.email) localStorage.setItem("userEmail", result.email);
         
         setError("");
-        console.log("✅ Login successful, navigating to dashboard");
-        navigate("/home"); // ✅ Navigate to dashboard to test
+        // console.log("Login successful, navigating to dashboard");
+        navigate("/home"); // Navigate to dashboard to test
       } else {
         console.warn("Unexpected login result:", result);
         setError("Login failed");
@@ -124,7 +124,7 @@ export default function LoginPage() {
         confirmPassword: confirmPassword,
       });
 
-      console.log("Signup result:", signupResult);
+      // console.log("Signup result:", signupResult);
 
       // Check if signup was successful
       if (signupResult?.message === "Signup successful" || 
@@ -139,7 +139,7 @@ export default function LoginPage() {
             password: signupPassword 
           });
 
-          console.log("Auto-login result:", loginResult);
+          // console.log("Auto-login result:", loginResult);
 
           if (loginResult?.message === "Login successful") {
             // Store user data from login response
