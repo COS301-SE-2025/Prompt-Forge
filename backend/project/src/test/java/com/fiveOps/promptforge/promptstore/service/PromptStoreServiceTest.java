@@ -24,7 +24,8 @@ import com.fiveOps.promptforge.prompts.model.Tag;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.prompts.service.TagService;
 import com.fiveOps.promptforge.promptstore.dto.PromptWithTagsDTO;
-import com.fiveOps.promptforge.promptstore.dto.ReviewProjection;
+import com.fiveOps.promptforge.promptstore.exception.PurchaseException;
+import com.fiveOps.promptforge.promptstore.model.PromptPurchase;
 import com.fiveOps.promptforge.promptstore.model.PromptReview;
 import com.fiveOps.promptforge.promptstore.repository.PromptPurchaseRepository;
 import com.fiveOps.promptforge.promptstore.repository.PromptReviewRepository;
@@ -59,18 +60,95 @@ class PromptStoreServiceReviewTest {
   }
 
   @Test
-  void getReviewsForPrompt_ShouldReturnPageOfReviews() {
+  void purchasePrompt_ShouldCreatePurchaseWhenValid() {
     // Arrange
-    Pageable pageable = mock(Pageable.class);
-    when(reviewRepository.findReviewsWithUsernameByPromptId(testPromptId, pageable))
-        .thenReturn(mock(Page.class));
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    Prompt prompt = new Prompt();
+    prompt.setPrice(10.0);
+
+    when(promptService.getPromptById(promptId)).thenReturn(prompt);
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(false);
+    when(purchaseRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
     // Act
-    Page<ReviewProjection> result = promptStoreService.getReviewsForPrompt(testPromptId, pageable);
+    PromptPurchase result = promptStoreService.purchasePrompt(promptId, userId);
 
     // Assert
     assertNotNull(result);
-    verify(reviewRepository).findReviewsWithUsernameByPromptId(testPromptId, pageable);
+    assertEquals(promptId, result.getPromptId());
+    assertEquals(userId, result.getUserId());
+    assertEquals(10.0, result.getPricePaid());
+    assertEquals("public", result.getVisibility());
+    verify(purchaseRepository).save(any());
+  }
+
+  @Test
+  void purchasePrompt_ShouldThrowWhenAlreadyPurchased() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptService.getPromptById(promptId)).thenReturn(new Prompt());
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(true);
+
+    // Act & Assert
+    assertThrows(
+        PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
+    verify(purchaseRepository, never()).save(any());
+  }
+
+  @Test
+  void purchasePrompt_ShouldThrowWhenPromptNotFound() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptService.getPromptById(promptId)).thenReturn(null);
+
+    // Act & Assert
+    assertThrows(
+        PurchaseException.class, () -> promptStoreService.purchasePrompt(promptId, userId));
+    verify(purchaseRepository, never()).save(any());
+  }
+
+  @Test
+  void isOwned_ShouldReturnTrueWhenUserIsAuthor() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptStoreRepository.existsByIdAndAuthorId(promptId, userId)).thenReturn(true);
+
+    // Act & Assert
+    assertTrue(promptStoreService.isOwned(userId, promptId));
+    verify(purchaseRepository, never()).existsByPromptIdAndUserId(any(), any());
+  }
+
+  @Test
+  void isOwned_ShouldReturnTrueWhenUserPurchased() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptStoreRepository.existsByIdAndAuthorId(promptId, userId)).thenReturn(false);
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(true);
+
+    // Act & Assert
+    assertTrue(promptStoreService.isOwned(userId, promptId));
+  }
+
+  @Test
+  void isOwned_ShouldReturnFalseWhenNotAuthorOrPurchaser() {
+    // Arrange
+    UUID promptId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(promptStoreRepository.existsByIdAndAuthorId(promptId, userId)).thenReturn(false);
+    when(purchaseRepository.existsByPromptIdAndUserId(promptId, userId)).thenReturn(false);
+
+    // Act & Assert
+    assertFalse(promptStoreService.isOwned(userId, promptId));
   }
 
   @Test
@@ -316,18 +394,19 @@ class PromptStoreServiceReviewTest {
 
   // @Test
   // void getPublicPromptsByAuthor_ShouldReturnPublicOnly() {
-  //   Prompt publicPrompt = mock(Prompt.class);
-  //   when(publicPrompt.getVisibility()).thenReturn("public");
-  //   when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(publicPrompt));
-  //   assertEquals(List.of(publicPrompt), promptStoreService.getPublicPromptsByAuthor(testUserId));
+  // Prompt publicPrompt = mock(Prompt.class);
+  // when(publicPrompt.getVisibility()).thenReturn("public");
+  // when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(publicPrompt));
+  // assertEquals(List.of(publicPrompt),
+  // promptStoreService.getPublicPromptsByAuthor(testUserId));
   // }
 
   // @Test
   // void getPublicPromptsByAuthor_ShouldReturnEmptyIfNoPublic() {
-  //   Prompt privatePrompt = mock(Prompt.class);
-  //   when(privatePrompt.getVisibility()).thenReturn("private");
-  //   when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(privatePrompt));
-  //   assertTrue(promptStoreService.getPublicPromptsByAuthor(testUserId).isEmpty());
+  // Prompt privatePrompt = mock(Prompt.class);
+  // when(privatePrompt.getVisibility()).thenReturn("private");
+  // when(promptService.getPromptsByAuthor(testUserId)).thenReturn(List.of(privatePrompt));
+  // assertTrue(promptStoreService.getPublicPromptsByAuthor(testUserId).isEmpty());
   // }
 
   @Test

@@ -118,7 +118,7 @@ class ProfileService {
 
       throw new Error(apiResponse.message)
     } catch (error) {
-      console.log("error", error);
+      console.error("error", error);
 
       throw error
     }
@@ -135,7 +135,7 @@ class ProfileService {
 
       throw new Error(response.message)
     } catch (error) {
-      console.log("error", error);
+      console.error("error", error);
 
       throw error
     }
@@ -152,7 +152,7 @@ class ProfileService {
 
       throw new Error(response.message)
     } catch (error) {
-      console.log("error", error);
+      console.error("error", error);
 
       throw error
     }
