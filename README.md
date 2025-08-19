@@ -64,12 +64,12 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 | Document                  | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
-| System Architecture        | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| System Architecture        | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | August 2025     |
 | Deployent Diagram            | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Architectural Diagram  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
-| Project Board            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
-| Slides  | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
-| Demo 3 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+| Architectural Diagram  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | August 2025     |
+| Project Board            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | August 2025     |
+| Slides  | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | August 2025     |
+| Demo 3 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | August 2025     |
 
 ---
 
@@ -101,123 +101,18 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
 | System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
 | Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
+</details>
 
+
+<details>
+  <summary><strong>📑 Appendix</strong></summary>
 #### 📎 Appendix
 
 | Appendix Item            | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
-| Demo 2 Slides            | [View Slides](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)      | June 2025    |
-| Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
+| Appendix                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | August 2025    |
 
 </details>
-
----
-
-## 👨‍💻 Team Members
-
-<div align="center">
-
-| Name                | Student Number | 
-|---------------------|----------------|
-| Katlego Mositi      | 22658395       |
-| Paballo Diyase      | 23528142       |
-| Boitumelo Mtsatse   | 23684365       |
-| Navendran Naidoo    | 21512494       |
-| Rethabile Bore      | 23772141       |
-
-</div>
-
-
-<p align="center">
-  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
-</p>
-
----
-
-## 📑 Demo 1 Documentation Links
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
-| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
-| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
-
----
-
-## 📑 Demo 2 Documentation Links
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
-| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
-| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
-
-### 📎 Appendix
-
-| Appendix Item            | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Demo 2 Slides            | [View Slides](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)      | June 2025    |
-| Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
-
----
-
-## 👨‍💻 Team Members
-
-<div align="center">
-
-| Name                | Student Number | 
-|---------------------|----------------|
-| Katlego Mositi      | 22658395       |
-| Paballo Diyase      | 23528142       |
-| Boitumelo Mtsatse   | 23684365       |
-| Navendran Naidoo    | 21512494       |
-| Rethabile Bore      | 23772141       |
-
-</div>
-
-
-<p align="center">
-  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
-</p>
-
----
-
-## 📑 Demo 1 Documentation Links
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
-| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
-| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
-
----
-
-## 📑 Demo 2 Documentation Links
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
-| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
-| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
-
-### 📎 Appendix
-
-| Appendix Item            | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Demo 2 Slides            | [View Slides](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)      | June 2025    |
-| Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
 
 ---
 
