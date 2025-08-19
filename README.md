@@ -64,11 +64,11 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 | Document                  | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
-| System Architecture        | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | August 2025     |
-| Deployent Diagram            | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Architectural Diagram  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | August 2025     |
-| Project Board            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | August 2025     |
-| Slides  | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | August 2025     |
+| System Architecture        | [View System Architecture](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | August 2025     |
+| Deployent Diagram            | [View Deployent Diagram](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
+| Architectural Diagram  | [View Architectural Diagram](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | August 2025     |
+| SRS Document           | [View SRS Document](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | August 2025     |
+| Slides  | [View Slides](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | August 2025     |
 | Demo 3 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | August 2025     |
 
 ---
@@ -110,7 +110,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 | Appendix Item            | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
-| Appendix                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | August 2025    |
+| Appendix                | [View Appendix](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | August 2025    |
 
 </details>
 
