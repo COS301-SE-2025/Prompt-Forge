@@ -132,19 +132,19 @@ class PromptAnalyticsControllerTest {
         .andExpect(jsonPath("$").isEmpty());
   }
 
-//   @Test
-//   void testEmptyFeaturedPrompts() throws Exception {
-//     PromptAnalyticsService service = Mockito.mock(PromptAnalyticsService.class);
-//     when(service.getFeaturedPrompts()).thenReturn(List.of());
+  //   @Test
+  //   void testEmptyFeaturedPrompts() throws Exception {
+  //     PromptAnalyticsService service = Mockito.mock(PromptAnalyticsService.class);
+  //     when(service.getFeaturedPrompts()).thenReturn(List.of());
 
-//     PromptAnalyticsController controller = new PromptAnalyticsController(service);
-//     MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+  //     PromptAnalyticsController controller = new PromptAnalyticsController(service);
+  //     MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-//     mockMvc
-//         .perform(get("/api/analytics/featured").accept(MediaType.APPLICATION_JSON))
-//         .andExpect(status().isOk())
-//         .andExpect(jsonPath("$").isEmpty());
-//   }
+  //     mockMvc
+  //         .perform(get("/api/analytics/featured").accept(MediaType.APPLICATION_JSON))
+  //         .andExpect(status().isOk())
+  //         .andExpect(jsonPath("$").isEmpty());
+  //   }
 
   @Test
   void testEmptyTopRankingPrompts() throws Exception {

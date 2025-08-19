@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -128,9 +127,8 @@ class CartItemServiceTest {
 
   @Test
   void isPromptAddedToCart_ShouldReturnTrue() {
-    List<Object[]> mockResult = Collections.singletonList(new Object[]{"mock-id"});
-    when(cartItemRepository.findByUserIdAndPromptId(userId, promptId))
-        .thenReturn(mockResult);
+    List<Object[]> mockResult = Collections.singletonList(new Object[] {"mock-id"});
+    when(cartItemRepository.findByUserIdAndPromptId(userId, promptId)).thenReturn(mockResult);
     assertTrue(service.isPromptAddedToCart(userId, promptId));
   }
 
@@ -140,13 +138,14 @@ class CartItemServiceTest {
     CartItemDTO dto = mock(CartItemDTO.class);
     when(dto.getPromptId()).thenReturn(promptId);
     List<CartItemDTO> prompts = Collections.singletonList(dto);
-    
+
     when(userService.getUserIdByEmail(email)).thenReturn(userId);
-    when(promptStoreService.purchasePrompt(promptId, userId)).thenReturn(mock(PromptPurchase.class));
+    when(promptStoreService.purchasePrompt(promptId, userId))
+        .thenReturn(mock(PromptPurchase.class));
     doNothing().when(cartItemRepository).deletebyUserID(userId);
 
     assertDoesNotThrow(() -> service.purchase(email, prompts));
-    
+
     verify(promptStoreService).purchasePrompt(promptId, userId);
     verify(cartItemRepository).deletebyUserID(userId);
   }
@@ -155,9 +154,8 @@ class CartItemServiceTest {
   void purchase_ShouldThrowWhenUserNotFound() {
     String email = "nonexistent@example.com";
     List<CartItemDTO> prompts = Collections.singletonList(mock(CartItemDTO.class));
-    
-    when(userService.getUserIdByEmail(email))
-        .thenThrow(new RuntimeException("User not found"));
+
+    when(userService.getUserIdByEmail(email)).thenThrow(new RuntimeException("User not found"));
 
     assertThrows(RuntimeException.class, () -> service.purchase(email, prompts));
   }
@@ -168,12 +166,13 @@ class CartItemServiceTest {
     CartItemDTO dto = mock(CartItemDTO.class);
     when(dto.getPromptId()).thenReturn(promptId);
     List<CartItemDTO> prompts = Collections.singletonList(dto);
-    
+
     when(userService.getUserIdByEmail(email)).thenReturn(userId);
     when(promptStoreService.purchasePrompt(promptId, userId))
         .thenThrow(new RuntimeException("Purchase failed"));
 
-    Exception exception = assertThrows(RuntimeException.class, () -> service.purchase(email, prompts));
+    Exception exception =
+        assertThrows(RuntimeException.class, () -> service.purchase(email, prompts));
     assertEquals("Purchase failed", exception.getMessage());
   }
 }

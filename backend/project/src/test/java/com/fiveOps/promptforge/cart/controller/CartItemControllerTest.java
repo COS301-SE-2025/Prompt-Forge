@@ -23,7 +23,6 @@ import org.springframework.security.core.Authentication;
 import com.fiveOps.promptforge.cart.dto.APIResponse;
 import com.fiveOps.promptforge.cart.dto.CartCheckoutRequest;
 import com.fiveOps.promptforge.cart.dto.CartItemDTO;
-
 import com.fiveOps.promptforge.cart.dto.CartItemProjection;
 import com.fiveOps.promptforge.cart.dto.CartItemRequest;
 import com.fiveOps.promptforge.cart.service.CartItemService;
@@ -164,10 +163,7 @@ class CartItemControllerTest {
   @Test
   void checkoutCart_WithMultiplePrompts_ShouldReturnOk() throws Exception {
     CartCheckoutRequest request = mock(CartCheckoutRequest.class);
-    List<CartItemDTO> prompts = List.of(
-        mock(CartItemDTO.class),
-        mock(CartItemDTO.class)
-    );
+    List<CartItemDTO> prompts = List.of(mock(CartItemDTO.class), mock(CartItemDTO.class));
     when(request.getPrompts()).thenReturn(prompts);
     when(authentication.getName()).thenReturn("user@example.com");
 
@@ -190,7 +186,8 @@ class CartItemControllerTest {
 
     String errorMessage = "Purchase failed: Insufficient funds";
     doThrow(new Exception(errorMessage))
-        .when(cartItemService).purchase("user@example.com", prompts);
+        .when(cartItemService)
+        .purchase("user@example.com", prompts);
 
     ResponseEntity<APIResponse> response = controller.checkoutCart(request, authentication);
 

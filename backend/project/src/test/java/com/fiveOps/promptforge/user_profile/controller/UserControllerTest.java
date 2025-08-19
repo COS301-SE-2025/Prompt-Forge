@@ -89,7 +89,6 @@ class UserControllerTest {
     when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
   }
 
-
   // ============== Get all Users ======================
 
   @Test
@@ -108,7 +107,6 @@ class UserControllerTest {
     verify(userService).getAllUsers();
   }
 
-
   // ============== Get User ======================
 
   @Test
@@ -125,7 +123,6 @@ class UserControllerTest {
     assertEquals(testEmail, result.getEmail());
     verify(userService).getUserById(testUserId);
   }
-
 
   // ============== Search users ======================
 
@@ -145,7 +142,6 @@ class UserControllerTest {
     assertEquals(testUserId, result.get(0).getUserId());
     verify(userService).searchUsers(query);
   }
-
 
   // ============== Update User ======================
 
@@ -177,7 +173,6 @@ class UserControllerTest {
     verify(userService).deleteUser(testUserId);
   }
 
-
   // ============== Get current user ======================
 
   @Test
@@ -205,12 +200,11 @@ class UserControllerTest {
     when(request.getCookies()).thenReturn(cookies);
 
     // Act & Assert
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-        () -> userController.getCurrentUser(request));
+    ResponseStatusException exception =
+        assertThrows(ResponseStatusException.class, () -> userController.getCurrentUser(request));
     assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
     assertEquals("Authentication token not found", exception.getReason());
   }
-
 
   // ============== Get full current user ======================
 
@@ -231,7 +225,6 @@ class UserControllerTest {
     verify(userService).getUserByEmail(testEmail);
   }
 
-
   // ============== Get current user ID ======================
 
   @Test
@@ -248,7 +241,6 @@ class UserControllerTest {
     assertEquals(testUserId, result.get("userId"));
     verify(userService).getUserIdByEmail(testEmail);
   }
-
 
   // ============== Update current user ======================
 
@@ -267,19 +259,20 @@ class UserControllerTest {
     verify(userService).updateUserByEmail(testEmail, testUpdateDto);
   }
 
-  
   // ============== Upload profile picture ======================
 
   @Test
   void uploadProfilePicture_ShouldReturnSuccessResponse() {
     // Arrange
     setupAuthenticatedRequest();
-    MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
     String imageUrl = "https://example.com/uploaded-image.jpg";
     when(userService.saveProfilePicture(testEmail, file)).thenReturn(imageUrl);
 
     // Act
-    ResponseEntity<Map<String, String>> response = userController.uploadProfilePicture(file, request);
+    ResponseEntity<Map<String, String>> response =
+        userController.uploadProfilePicture(file, request);
 
     // Assert
     assertNotNull(response);
@@ -294,18 +287,19 @@ class UserControllerTest {
   void uploadProfilePicture_ServiceException_ShouldThrowException() {
     // Arrange
     setupAuthenticatedRequest();
-    MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
+    MockMultipartFile file =
+        new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
     when(userService.saveProfilePicture(testEmail, file))
         .thenThrow(new RuntimeException("Upload failed"));
 
     // Act & Assert
-    ResponseStatusException exception = assertThrows(
-        ResponseStatusException.class,
-        () -> userController.uploadProfilePicture(file, request));
+    ResponseStatusException exception =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> userController.uploadProfilePicture(file, request));
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
     assertEquals("Failed to upload profile picture", exception.getReason());
   }
-
 
   // ============== Delete Profile Picture ======================
 
@@ -326,7 +320,6 @@ class UserControllerTest {
     verify(userService).deleteProfilePicture(testEmail);
   }
 
-
   // ============== Change Password ======================
 
   @Test
@@ -335,7 +328,8 @@ class UserControllerTest {
     setupAuthenticatedRequest();
     String currentPassword = "currentPassword";
     String newPassword = "newPassword";
-    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    Map<String, String> body =
+        Map.of("currentPassword", currentPassword, "newPassword", newPassword);
     when(userService.findByEmail(testEmail)).thenReturn(testUser);
     when(userService.matchesPassword(currentPassword, "encodedPassword")).thenReturn(true);
     when(userService.encodePassword(newPassword)).thenReturn("newEncodedPassword");
@@ -361,7 +355,8 @@ class UserControllerTest {
     setupAuthenticatedRequest();
     String currentPassword = "currentPassword";
     String newPassword = "newPassword";
-    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    Map<String, String> body =
+        Map.of("currentPassword", currentPassword, "newPassword", newPassword);
     when(userService.findByEmail(testEmail)).thenReturn(null);
 
     // Act
@@ -384,10 +379,10 @@ class UserControllerTest {
     setupAuthenticatedRequest();
     String currentPassword = "wrongPassword";
     String newPassword = "newPassword";
-    Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+    Map<String, String> body =
+        Map.of("currentPassword", currentPassword, "newPassword", newPassword);
     when(userService.findByEmail(testEmail)).thenReturn(testUser);
-    when(userService.matchesPassword(currentPassword, "encodedPassword"))
-        .thenReturn(false);
+    when(userService.matchesPassword(currentPassword, "encodedPassword")).thenReturn(false);
 
     // Act
     ResponseEntity<?> response = userController.changePassword(request, body);
@@ -403,7 +398,6 @@ class UserControllerTest {
     verify(userService, never()).save(any(User.class));
   }
 
-  
   // ============== Forgot Password ======================
 
   @Test
@@ -447,7 +441,6 @@ class UserControllerTest {
     verify(userService, never()).save(any(User.class));
     verify(mailService, never()).sendMail(anyString(), anyString(), anyString());
   }
-
 
   // ============== Reset password ======================
 
@@ -494,7 +487,6 @@ class UserControllerTest {
     verify(userService, never()).encodePassword(anyString());
     verify(userService, never()).save(any(User.class));
   }
-
 
   // ============== Get dashboard card data ======================
 
@@ -564,7 +556,6 @@ class UserControllerTest {
     assertEquals(0, ((List<?>) cardData.get("badges")).size());
   }
 
-  
   // ============== Get followers ======================
 
   @Test
@@ -584,7 +575,6 @@ class UserControllerTest {
     verify(userService).getFollowersByEmail(testEmail);
   }
 
-  
   // ============== Get following ======================
 
   @Test
@@ -603,6 +593,4 @@ class UserControllerTest {
     assertEquals(testUserId, result.get(0).getUserId());
     verify(userService).getFollowingByEmail(testEmail);
   }
-  
-  
 }

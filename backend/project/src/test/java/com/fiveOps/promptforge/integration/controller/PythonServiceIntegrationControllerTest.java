@@ -11,10 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -57,11 +57,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> aiService = (Map<String, Object>) body.get("aiService");
     assertNotNull(aiService);
@@ -85,11 +85,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("error", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> aiService = (Map<String, Object>) body.get("aiService");
     assertNotNull(aiService);
@@ -115,11 +115,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> mlService = (Map<String, Object>) body.get("mlService");
     assertNotNull(mlService);
@@ -143,11 +143,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("error", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> mlService = (Map<String, Object>) body.get("mlService");
     assertNotNull(mlService);
@@ -163,7 +163,7 @@ class PythonServiceIntegrationControllerTest {
     // Arrange
     Map<String, Object> aiResponse = Map.of("status", "healthy", "service", "ai");
     Map<String, Object> mlResponse = Map.of("status", "healthy", "service", "ml");
-    
+
     ResponseEntity<Object> aiMockResponse = ResponseEntity.ok(aiResponse);
     ResponseEntity<Object> mlMockResponse = ResponseEntity.ok(mlResponse);
 
@@ -178,22 +178,22 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertNotNull(body.get("timestamp"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> services = (Map<String, Object>) body.get("services");
     assertNotNull(services);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> aiService = (Map<String, Object>) services.get("aiService");
     assertNotNull(aiService);
     assertEquals("healthy", aiService.get("status"));
     assertEquals(200, aiService.get("statusCode"));
     assertEquals(aiResponse, aiService.get("response"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> mlService = (Map<String, Object>) services.get("mlService");
     assertNotNull(mlService);
@@ -223,20 +223,20 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> services = (Map<String, Object>) body.get("services");
     assertNotNull(services);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> aiService = (Map<String, Object>) services.get("aiService");
     assertNotNull(aiService);
     assertEquals("unhealthy", aiService.get("status"));
     assertEquals("AI service down", aiService.get("error"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> mlService = (Map<String, Object>) services.get("mlService");
     assertNotNull(mlService);
@@ -266,12 +266,12 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
     assertEquals(expectedResponse, body.get("classification"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
     assertNotNull(requestBody);
@@ -299,11 +299,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
     assertNotNull(requestBody);
@@ -329,7 +329,7 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("error", body.get("status"));
@@ -344,15 +344,15 @@ class PythonServiceIntegrationControllerTest {
   @DisplayName("Test ML optimization - success")
   void testMlOptimize_Success() {
     // Arrange
-    Map<String, Object> request = Map.of(
-        "original_prompt", "make a website",
-        "context", "web development",
-        "user_level", "beginner"
-    );
-    Map<String, Object> expectedResponse = Map.of(
-        "optimized_prompt", "Create a responsive website using HTML, CSS, and JavaScript",
-        "improvements", "Added specific technologies and responsive design"
-    );
+    Map<String, Object> request =
+        Map.of(
+            "original_prompt", "make a website",
+            "context", "web development",
+            "user_level", "beginner");
+    Map<String, Object> expectedResponse =
+        Map.of(
+            "optimized_prompt", "Create a responsive website using HTML, CSS, and JavaScript",
+            "improvements", "Added specific technologies and responsive design");
     ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
 
     when(restTemplate.postForEntity(
@@ -365,12 +365,12 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
     assertEquals(expectedResponse, body.get("optimization"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
     assertNotNull(requestBody);
@@ -387,10 +387,10 @@ class PythonServiceIntegrationControllerTest {
   void testMlOptimize_WithDefaultValues() {
     // Arrange
     Map<String, Object> request = new HashMap<>();
-    Map<String, Object> expectedResponse = Map.of(
-        "optimized_prompt", "Create a website using modern web technologies",
-        "improvements", "Enhanced clarity and specificity"
-    );
+    Map<String, Object> expectedResponse =
+        Map.of(
+            "optimized_prompt", "Create a website using modern web technologies",
+            "improvements", "Enhanced clarity and specificity");
     ResponseEntity<Object> mockResponse = ResponseEntity.ok(expectedResponse);
 
     when(restTemplate.postForEntity(
@@ -403,11 +403,11 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("success", body.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> requestBody = (Map<String, Object>) body.get("request");
     assertNotNull(requestBody);
@@ -423,10 +423,10 @@ class PythonServiceIntegrationControllerTest {
   @DisplayName("Test ML optimization - failure")
   void testMlOptimize_Failure() {
     // Arrange
-    Map<String, Object> request = Map.of(
-        "original_prompt", "make a website",
-        "context", "web development"
-    );
+    Map<String, Object> request =
+        Map.of(
+            "original_prompt", "make a website",
+            "context", "web development");
 
     when(restTemplate.postForEntity(
             eq(ML_SERVICE_URL + "/optimize"), any(HttpEntity.class), eq(Object.class)))
@@ -438,7 +438,7 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals("error", body.get("status"));
@@ -453,18 +453,18 @@ class PythonServiceIntegrationControllerTest {
   @DisplayName("Test full workflow - both steps successful")
   void testFullWorkflow_BothStepsSuccessful() {
     // Arrange
-    Map<String, Object> request = Map.of(
-        "prompt", "Create a React component for user authentication",
-        "context", "Frontend development",
-        "user_level", "intermediate"
-    );
-    
+    Map<String, Object> request =
+        Map.of(
+            "prompt", "Create a React component for user authentication",
+            "context", "Frontend development",
+            "user_level", "intermediate");
+
     Map<String, Object> classificationResponse = Map.of("category", "frontend", "confidence", 0.9);
-    Map<String, Object> optimizationResponse = Map.of(
-        "optimized_prompt", "Create a React authentication component with proper validation",
-        "improvements", "Added validation and security considerations"
-    );
-    
+    Map<String, Object> optimizationResponse =
+        Map.of(
+            "optimized_prompt", "Create a React authentication component with proper validation",
+            "improvements", "Added validation and security considerations");
+
     ResponseEntity<Object> classificationMockResponse = ResponseEntity.ok(classificationResponse);
     ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
 
@@ -481,22 +481,22 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
     assertEquals(request, body.get("originalRequest"));
     assertNotNull(body.get("timestamp"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
     assertNotNull(workflow);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
     assertNotNull(step1);
     assertEquals("success", step1.get("status"));
     assertEquals(classificationResponse, step1.get("response"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
     assertNotNull(step2);
@@ -513,16 +513,16 @@ class PythonServiceIntegrationControllerTest {
   @DisplayName("Test full workflow - classification fails, optimization succeeds")
   void testFullWorkflow_ClassificationFails_OptimizationSucceeds() {
     // Arrange
-    Map<String, Object> request = Map.of(
-        "prompt", "Create a React component for user authentication",
-        "context", "Frontend development"
-    );
-    
-    Map<String, Object> optimizationResponse = Map.of(
-        "optimized_prompt", "Create a React authentication component",
-        "improvements", "Enhanced clarity"
-    );
-    
+    Map<String, Object> request =
+        Map.of(
+            "prompt", "Create a React component for user authentication",
+            "context", "Frontend development");
+
+    Map<String, Object> optimizationResponse =
+        Map.of(
+            "optimized_prompt", "Create a React authentication component",
+            "improvements", "Enhanced clarity");
+
     ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
 
     when(restTemplate.postForEntity(
@@ -538,20 +538,20 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
     assertNotNull(workflow);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
     assertNotNull(step1);
     assertEquals("error", step1.get("status"));
     assertEquals("Classification service down", step1.get("error"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
     assertNotNull(step2);
@@ -569,13 +569,13 @@ class PythonServiceIntegrationControllerTest {
   void testFullWorkflow_WithDefaultValues() {
     // Arrange
     Map<String, Object> request = new HashMap<>();
-    
+
     Map<String, Object> classificationResponse = Map.of("category", "general", "confidence", 0.7);
-    Map<String, Object> optimizationResponse = Map.of(
-        "optimized_prompt", "Create a React component for user authentication",
-        "improvements", "Added specific framework and functionality"
-    );
-    
+    Map<String, Object> optimizationResponse =
+        Map.of(
+            "optimized_prompt", "Create a React component for user authentication",
+            "improvements", "Added specific framework and functionality");
+
     ResponseEntity<Object> classificationMockResponse = ResponseEntity.ok(classificationResponse);
     ResponseEntity<Object> optimizationMockResponse = ResponseEntity.ok(optimizationResponse);
 
@@ -592,19 +592,19 @@ class PythonServiceIntegrationControllerTest {
     // Assert
     assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
-    
+
     Map<String, Object> body = result.getBody();
     assertNotNull(body);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> workflow = (Map<String, Object>) body.get("workflow");
     assertNotNull(workflow);
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step1 = (Map<String, Object>) workflow.get("step1_classification");
     assertNotNull(step1);
     assertEquals("success", step1.get("status"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> step2 = (Map<String, Object>) workflow.get("step2_optimization");
     assertNotNull(step2);
