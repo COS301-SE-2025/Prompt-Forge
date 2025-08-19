@@ -60,6 +60,80 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
+## 📑 Demo 3 Documentation Links
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| System Architecture        | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| Deployent Diagram            | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
+| Architectural Diagram  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
+| Project Board            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
+| Slides  | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
+| Demo 3 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+
+---
+
+
+<details>
+  <summary><strong>📑 Demo 1 Documentation Links</strong></summary>
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
+| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
+| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+
+</details>
+
+---
+
+<details>
+  <summary><strong>📑 Demo 2 Documentation Links</strong></summary>
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
+| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
+| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
+
+#### 📎 Appendix
+
+| Appendix Item            | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Demo 2 Slides            | [View Slides](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)      | June 2025    |
+| Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
+
+</details>
+
+---
+
+## 👨‍💻 Team Members
+
+<div align="center">
+
+| Name                | Student Number | 
+|---------------------|----------------|
+| Katlego Mositi      | 22658395       |
+| Paballo Diyase      | 23528142       |
+| Boitumelo Mtsatse   | 23684365       |
+| Navendran Naidoo    | 21512494       |
+| Rethabile Bore      | 23772141       |
+
+</div>
+
+
+<p align="center">
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
+</p>
+
+---
+
 ## 📑 Demo 1 Documentation Links
 
 | Document                  | Link                                                    | Last Updated |
@@ -92,53 +166,58 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
 
 ---
-### ✅ Planned Demo 3 Features
 
-- 🧠 **Prompt Testing Ground**
-  - Multiple LLM integration
-  - Image Uploads
-  - Compare prompt results across different models
-  - Real-time feedback and scoring
+## 👨‍💻 Team Members
 
-- 🧪 **Prompt Builder**
-  - Templates for Building Prompts
-  - Profiles for different users
-  - Recommend AI Models based on profile
-  - Build your prompt based on a basic idea
-  - AI-powered prompt suggestions
-  - Category recommendations for new prompts
+<div align="center">
 
-- 🔁 **Deployment**
-  - Deployment on [https://prompt-forge.co.za/](https://prompt-forge.co.za/)
-  - AWS Free Tier & Local Dev support
-  - CI/CD pipeline with automated deployment
+| Name                | Student Number | 
+|---------------------|----------------|
+| Katlego Mositi      | 22658395       |
+| Paballo Diyase      | 23528142       |
+| Boitumelo Mtsatse   | 23684365       |
+| Navendran Naidoo    | 21512494       |
+| Rethabile Bore      | 23772141       |
 
-- 📊 **Prompt Performance Metrics**
-  - Usage statistics
-  - Rating analytics
-  - Performance comparisons
-  - Visual dashboards with charts and graphs
+</div>
 
-- 🤖 **AI Suggestions**
-  - Build a Model for prompt suggestions
-  - Apply suggestions to prompt in Testing Ground
-  - Automated improvement recommendations
 
-- 🏷️ **AI Prompt Categorization**
-  - Build a Model for prompt categorization
-  - Model will provide suggested categories for new prompts
+<p align="center">
+  <img src="./assests/5iveOps.jpg" alt="5iveOps Team" width="500"/>
+</p>
 
-- 🛠️ **Architecture & Quality**
-  - Integrated architectural diagram (3+ patterns)
-  - Deployment model & diagram
-  - Service contracts documented
-  - Automated unit & integration tests
-  - Quantified quality requirements
+---
 
-- 👥 **Team & Project Management**
-  - Individual member profiles
-  - Scrum board/project management links
-  - Demo video and documentation links
+## 📑 Demo 1 Documentation Links
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
+| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
+| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+
+---
+
+## 📑 Demo 2 Documentation Links
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
+| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
+| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
+
+### 📎 Appendix
+
+| Appendix Item            | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Demo 2 Slides            | [View Slides](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)      | June 2025    |
+| Appendix Demo 1                | [View Test Plan](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | June 2025    |
 
 ---
 
@@ -221,11 +300,11 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 📋 Demo 3 Checklist (Due: 20 August 2025)
 
-- [ ] **Core Implementation**
-  - [ ] 80%+ of system completed (Beta phase)
-  - [ ] Major components integrated
-  - [ ] Remaining components specified
-- [ ] **Architecture**
+- [X] **Core Implementation**
+  - [X] 80%+ of system completed (Beta phase)
+  - [X] Major components integrated
+  - [X] Remaining components specified
+- [X] **Architecture**
   - [X] Architectural diagram (3+ patterns)
   - [X] Deployment model & diagram
   - [X] Service contracts documented
@@ -233,18 +312,18 @@ We use a **GitFlow** branching strategy to organize our development:
   - [X] Automated unit & integration tests
   - [X] CI/CD pipeline working
   - [X] Quantified quality requirements
-- [ ] **Documentation**
-  - [ ] SRS v3 (functional, non-functional, architecture)
+- [X] **Documentation**
+  - [X] SRS v3 (functional, non-functional, architecture)
   - [X] Coding standards
-  - [ ] User manual (updated)
+  - [X] User manual (updated)
   - [X] Technical installation manual
-  - [ ] Project management links (scrum board)
+  - [X] Project management links (scrum board)
   - [X] Individual profiles
-- [ ] **Demo Preparation**
-  - [ ] Time management rehearsed
-  - [ ] Slides and diagrams updated
-  - [ ] All members presenting
-  - [ ] Links ready for markers
+- [X] **Demo Preparation**
+  - [X] Time management rehearsed
+  - [X] Slides and diagrams updated
+  - [X] All members presenting
+  - [X] Links ready for markers
 ---
 
 ## 👥 Meet 5iveOps
