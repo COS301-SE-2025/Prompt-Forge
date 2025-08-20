@@ -64,8 +64,8 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 | Document                     | Link                                                                                                         | Last Updated   |
 |------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
-| System Architecture          | [View System Architecture](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link) | August 2025    |
-| Service Contract             | [View Service Contract](https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=drive_link)                | August 2025    |
+| System Architecture          | [View System Architecture](https://drive.google.com/file/d/1mVVcVclobKORRtTm4vgns3pQy0ypbRHj/view?usp=drive_link) | August 2025    |
+| Service Contract             | [View Service Contract](https://drive.google.com/file/d/12bRdWPDinuQXJMcPl0oR8tOpZjQP7juK/view?usp=drive_link)                | August 2025    |
 | Architectural Diagram        | [View Architectural Diagram](https://drive.google.com/file/d/1f75Qed8NT2zd7IEiwRZ0BLovlcyVFLby/view?usp=drive_link) | August 2025    |
 | Coding Standards             | [View Coding Standards](https://drive.google.com/file/d/1FjncreWg3cTUy3LXy2OnGI6shrZpOBZk/view?usp=drive_link)                | August 2025    |
 | User Manual                  | [View User Manual](https://drive.google.com/file/d/1p0vjn4-18oTdBc_W3wHoSq76oI0dCS6P/view?usp=drive_link)                     | August 2025    |
