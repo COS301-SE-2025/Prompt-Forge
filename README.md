@@ -34,7 +34,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ## 🔗 Project Links
 
-- 🔖 [SRS Document](https://drive.google.com/file/d/1MzNRdNrnuJSb2zFWhGzk9HNghr1E9Z6h/view?usp=drive_link)
+- 🔖 [SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)
 - 📋 [GitHub Project Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)
 
 ---
@@ -73,7 +73,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Technical Installation Guide | [View Technical Installation Guide](https://drive.google.com/file/d/1VzBdXQvPTnEs7fomJMeuyx9dov0WLoQn/view?usp=drive_link)      | August 2025    |
 | Slides                       | [View Slides](https://drive.google.com/file/d/1uYp0r5ZEM67UIkEVqGXXwlktBRdEJYSu/view?usp=drive_link)              | August 2025    |
 | Demo 3 Video                 | [Watch Video](https://youtu.be/eiQ9EBDL4Es)                                                                    | August 2025    |
-| SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)        | August 2025    |
+| SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)        | August 2025    |
 
 ---
 
