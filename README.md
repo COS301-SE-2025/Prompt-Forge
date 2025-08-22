@@ -34,7 +34,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ## 🔗 Project Links
 
-- 🔖 [SRS Document](https://drive.google.com/file/d/1MzNRdNrnuJSb2zFWhGzk9HNghr1E9Z6h/view?usp=drive_link)
+- 🔖 [SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)
 - 📋 [GitHub Project Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)
 
 ---
@@ -62,14 +62,18 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ## 📑 Demo 3 Documentation Links
 
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| System Architecture        | [View System Architecture](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | August 2025     |
-| Deployent Diagram            | [View Deployent Diagram](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Architectural Diagram  | [View Architectural Diagram](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | August 2025     |
-| SRS Document           | [View SRS Document](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | August 2025     |
-| Slides  | [View Slides](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | August 2025     |
-| Demo 3 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | August 2025     |
+| Document                     | Link                                                                                                         | Last Updated   |
+|------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
+| System Architecture          | [View System Architecture](https://drive.google.com/file/d/1mVVcVclobKORRtTm4vgns3pQy0ypbRHj/view?usp=drive_link) | August 2025    |
+| Service Contract             | [View Service Contract](https://drive.google.com/file/d/12bRdWPDinuQXJMcPl0oR8tOpZjQP7juK/view?usp=drive_link)                | August 2025    |
+| Architectural Diagram        | [View Architectural Diagram](https://drive.google.com/file/d/1f75Qed8NT2zd7IEiwRZ0BLovlcyVFLby/view?usp=drive_link) | August 2025    |
+| Coding Standards             | [View Coding Standards](https://drive.google.com/file/d/1FjncreWg3cTUy3LXy2OnGI6shrZpOBZk/view?usp=drive_link)                | August 2025    |
+| User Manual                  | [View User Manual](https://drive.google.com/file/d/1p0vjn4-18oTdBc_W3wHoSq76oI0dCS6P/view?usp=drive_link)                     | August 2025    |
+| Deployment Manual            | [View Deployment Manual](https://drive.google.com/file/d/1tE-ffppAZep6CFKIbv_AHWBjHAzveStu/view?usp=drive_link)                | August 2025    |
+| Technical Installation Guide | [View Technical Installation Guide](https://drive.google.com/file/d/1VzBdXQvPTnEs7fomJMeuyx9dov0WLoQn/view?usp=drive_link)      | August 2025    |
+| Slides                       | [View Slides](https://drive.google.com/file/d/1uYp0r5ZEM67UIkEVqGXXwlktBRdEJYSu/view?usp=drive_link)              | August 2025    |
+| Demo 3 Video                 | [Watch Video](https://youtu.be/eiQ9EBDL4Es)                                                                    | August 2025    |
+| SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)        | August 2025    |
 
 ---
 
@@ -110,7 +114,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 | Appendix Item            | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
-| Appendix                | [View Appendix](https://drive.google.com/file/d/1EVVOzDp_AOAKz-For9RpdThf7d722sgX/view?usp=sharing)    | August 2025    |
+| Appendix                | [View Appendix](https://drive.google.com/file/d/1GHtu2mfsAqhjOYbVY8Q4wxDpdwhy5O2D/view?usp=sharing)    | August 2025    |
 
 </details>
 
