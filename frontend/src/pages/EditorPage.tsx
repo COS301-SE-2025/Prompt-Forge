@@ -130,6 +130,8 @@ export default function EditorPage() {
     batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
   });
 
+  const isAnyLoading = isLoading || isLoadingRating || isLoadingSuggestion || typingEffect.isTyping;
+
   const getStorageKey = (prompt: string, view: ViewType) =>
   `promptforge:${prompt.trim()}:${view}`;
 
@@ -177,14 +179,20 @@ useEffect(() => {
 
   // When promptText changes, clear responses if prompt is different
   useEffect(() => {
-    if (promptText !== lastTestedPrompt) {
-      setAiResponse("AI response to your prompt here...");
-      setRatingResponse("");
-      setSuggestionResponse("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [promptText]);
+  if (promptText !== lastTestedPrompt) {
+    setAiResponse("AI response to your prompt here...");
+    setRatingResponse("");
+    setSuggestionResponse("");
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [promptText]);
 
+useEffect(() => {
+  if (isAnyLoading) {
+    setModelsCollapsed(true);
+  }
+  // Do NOT auto-expand when loading ends
+}, [isAnyLoading]);
   // Define available models with their capabilities
   const aiModels = [
     {
