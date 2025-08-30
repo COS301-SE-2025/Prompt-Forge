@@ -49,6 +49,14 @@ export default function EditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
+  // Animation state for page load
+  const [pageLoaded, setPageLoaded] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPageLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   const handlePageChange = (page: number) => {
   // Save current response before switching
   const promptKey = promptText.trim();
@@ -777,7 +785,7 @@ const fallbackToWorkingModel = async () => {
   }
 
   const handleReset = () => {
-    setPromptText(defaultPrompt)
+    setPromptText("")
     typingEffect.clear(); //NEW: Clear typing effect
     setAiResponse("AI response to your prompt here...")
     setRatingResponse("")
@@ -913,53 +921,75 @@ const fallbackToWorkingModel = async () => {
   }
 
   // Component for rendering model cards with glow effects
-  const ModelCard = ({ model, index }: { model: any, index: number }) => (
-    <Card
-      key={index}
-      className={`p-2 lg:p-3 transition-all duration-300 cursor-pointer group hover:scale-[1.02] relative ${
-        selectedModel === index 
-          ? `${model.selectedBg} shadow-lg ${model.glowColor.replace('hover:', '')}`
-          : `${model.cardBg} ${model.glowColor}`
-      }`}
-      onClick={() => handleModelSelect(index)}
-    >
-      {selectedModel === index && (
-        <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+  const ModelCard = ({ model, index: cardIndex }: { model: any, index: number }) => {
+    // Determine if this card is the selected model
+    const isSelected = selectedModel === cardIndex;
+    const isFirstModel = cardIndex === 0;
+    const isLastModel = cardIndex === aiModels.length - 1;
+
+    return (
+      <Card
+        key={cardIndex}
+        className={`p-2 lg:p-3 transition-all duration-300 cursor-pointer group hover:scale-[1.02] relative ${
+          isSelected 
+            ? `${model.selectedBg} shadow-lg ${model.glowColor.replace('hover:', '')}`
+            : `${model.cardBg} ${model.glowColor}`
+        }`}
+        onClick={() => handleModelSelect(cardIndex)}
+      >
+        {isSelected && (
+          <div className="absolute top-1 right-1 lg:top-2 lg:right-2">
+            <div
+              className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+            >
+              <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+            </div>
+          </div>
+        )}
+        <div className="flex items-start space-x-2">
           <div
-            className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full ${model.iconBg} flex items-center justify-center`}
+            className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
           >
-            <Check className="h-2 w-2 lg:h-3 lg:w-3 text-white" />
+            {model.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
+              {model.name}
+            </h4>
+            <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
+              {model.description}
+            </p>
+            {model.supportsImages && (
+              <div className="mt-1">
+                <span className="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                  📷 Supports Images
+                </span>
+              </div>
+            )}
           </div>
         </div>
-      )}
-      <div className="flex items-start space-x-2">
-        <div
-          className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg ${model.iconBg} flex items-center justify-center text-white text-sm lg:text-base shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0`}
-        >
-          {model.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className={`text-xs lg:text-sm font-semibold ${model.textColor} mb-1 truncate`}>
-            {model.name}
-          </h4>
-          <p className="text-xs text-muted-foreground leading-tight line-clamp-2">
-            {model.description}
-          </p>
-          {model.supportsImages && (
-            <div className="mt-1">
-              <span className="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                📷 Supports Images
-              </span>
+
+        {/* NEW: Tooltip for model availability */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {!model.available && (
+            <div className="bg-red-500 text-white text-xs rounded py-1 px-2 shadow-md">
+              Unavailable
             </div>
           )}
         </div>
-      </div>
-    </Card>
-  )
+      </Card>
+    )
+  }
 
   // Update the Save button (remove the complex state management):
   return (
-    <div className="flex-1 flex flex-col w-full h-full bg-background">
+    <div
+      className={`
+        flex-1 flex flex-col w-full h-full bg-background transition-all duration-700
+        ${pageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"}
+      `}
+      style={{ willChange: "opacity, transform" }}
+    >
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-0">
         {/* Left Panel - Prompt Editor */}
         <div className="bg-background border-r border-border p-3 lg:p-4 flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
