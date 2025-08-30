@@ -99,13 +99,13 @@ void main(){
 `
 
 export default function Silk({
-  hueShift = 0,
+  hueShift = 10,
   noiseIntensity = 0,
   scanlineIntensity = 0,
   speed = 0.5,
-  scanlineFrequency = 3.2,
-  warpAmount = 2,
-  resolutionScale = 1,
+  scanlineFrequency = 4,
+  warpAmount = 3.9,
+  resolutionScale = 1.4,
   style,
   className,
 }: SilkProps) {

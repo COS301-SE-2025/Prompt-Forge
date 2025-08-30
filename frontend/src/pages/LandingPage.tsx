@@ -108,7 +108,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section ref={heroRef} className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <Silk speed={2} />
+          <Silk speed={1} />
         </div>
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32">
           <div
@@ -440,7 +440,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section ref={ctaRef} className="py-16 sm:py-20 relative overflow-hidden">
         <div className="absolute inset-0">
-          <Silk speed={2} />
+          <Silk speed={1} />
         </div>
         <div
           className={`relative container mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-1000 ${
