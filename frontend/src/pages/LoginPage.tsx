@@ -217,7 +217,7 @@ export default function LoginPage() {
         {/* Left Silk/Brand Section */}
         <div className="relative w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center order-1 lg:order-1 min-h-[300px] lg:min-h-screen overflow-hidden">
           <div className="absolute inset-0">
-            <Silk speed={2} />
+            <Silk speed={1} />
           </div>
           <div className="relative z-10 max-w-sm sm:max-w-md mx-auto">
     <div className="mb-4 sm:mb-6 flex justify-center">
