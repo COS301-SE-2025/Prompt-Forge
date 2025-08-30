@@ -14,6 +14,7 @@ type SilkProps = {
   resolutionScale?: number
   style?: React.CSSProperties
   className?: string
+  bgColor?: [number, number, number]
 }
 
 const vertex = `
@@ -32,6 +33,7 @@ uniform float uNoise;
 uniform float uScan;
 uniform float uScanFreq;
 uniform float uWarp;
+uniform vec3 uBgColor;
 #define iTime uTime
 #define iResolution uResolution
 
@@ -79,7 +81,7 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
     // Punchy green blend
     vec3 accent = vec3(0.243, 0.733, 0.619); // #3ebb9e
     vec3 mid = vec3(0.090, 0.251, 0.216);    // #174037
-    vec3 bg = vec3(0.0078, 0.031, 0.090);    // #020817
+    vec3 bg = uBgColor;                      // dynamic background
     float s = (color.x + color.y + color.z) / 3.0;
     // Use s^1.5 for more punch/saturation
     float punch = pow(s, 1.5);
@@ -108,6 +110,7 @@ export default function Silk({
   resolutionScale = 1.4,
   style,
   className,
+  bgColor = [0.137, 0.161, 0.212], // default dark
 }: SilkProps) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -133,6 +136,7 @@ export default function Silk({
         uScan: { value: scanlineIntensity },
         uScanFreq: { value: scanlineFrequency },
         uWarp: { value: warpAmount },
+        uBgColor: { value: bgColor },
       },
     })
 
@@ -159,6 +163,7 @@ export default function Silk({
       program.uniforms.uScan.value = scanlineIntensity
       program.uniforms.uScanFreq.value = scanlineFrequency
       program.uniforms.uWarp.value = warpAmount
+      program.uniforms.uBgColor.value = bgColor
       renderer.render({ scene: mesh })
       frame = requestAnimationFrame(loop)
     }
@@ -177,6 +182,7 @@ export default function Silk({
     scanlineFrequency,
     warpAmount,
     resolutionScale,
+    bgColor,
   ])
   return (
     <canvas
