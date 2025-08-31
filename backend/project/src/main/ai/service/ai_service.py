@@ -181,6 +181,17 @@ async def classify_prompt(request: PromptRequest):
         )
     
     result = app.state.classifier.predict(request.text)
+    # Filter categories and scores by score >= 0.6
+    filtered = [(cat, score) for cat, score in zip(result['categories'], result['scores']) if score >= 0.6]
+    if filtered:
+        result['categories'] = [cat for cat, _ in filtered]
+        result['scores'] = [score for _, score in filtered]
+        result['confidence'] = result['scores'][0] if result['scores'] else 0.0
+    else:
+        # If no categories meet threshold, return empty lists and confidence 0.0
+        result['categories'] = []
+        result['scores'] = []
+        result['confidence'] = 0.0
     return CategoryResponse(**result)
 
 @app.get("/categories")
