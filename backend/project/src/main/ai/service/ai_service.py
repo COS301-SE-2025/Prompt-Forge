@@ -18,18 +18,19 @@ logger = logging.getLogger(__name__)
 
 
 PREDEFINED_CATEGORIES = [
-"Development",
+"Web Development",
 "Creative",
 "Research",
 "Education",
 "Business",
 "Marketing",
 "Legal",
-"Healthcare",
+"Health",
 "Customer Support",
 "eCommerce",
 "Prompt Engineering",
-"Science"
+"Science",
+"General"
 ]
 
 class ZeroShotClassifier:
@@ -114,7 +115,7 @@ class ZeroShotClassifier:
             
             if not filtered_results:
                 # Default to general knowledge if no good matches
-                filtered_results = [("general knowledge", 0.5)]
+                filtered_results = [("General", 0.5)]
             
             return {
                 "categories": [label for label, _ in filtered_results],
@@ -126,7 +127,7 @@ class ZeroShotClassifier:
         except Exception as e:
             logger.error(f"Semantic similarity fallback failed: {str(e)}")
             return {
-                "categories": ["general knowledge"],
+                "categories": ["General"],
                 "scores": [0.5],
                 "confidence": 0.5,
                 "method": "default-fallback"
@@ -174,7 +175,7 @@ async def classify_prompt(request: PromptRequest):
     if not hasattr(app.state, 'classifier'):
         logger.error("Model not loaded when processing request")
         return CategoryResponse(
-            categories=["general knowledge"],
+            categories=["General"],
             scores=[0.5],
             confidence=0.5,
             method="error-fallback"
@@ -188,10 +189,10 @@ async def classify_prompt(request: PromptRequest):
         result['scores'] = [score for _, score in filtered]
         result['confidence'] = result['scores'][0] if result['scores'] else 0.0
     else:
-        # If no categories meet threshold, return empty lists and confidence 0.0
-        result['categories'] = []
-        result['scores'] = []
-        result['confidence'] = 0.0
+        # If no categories meet threshold, fallback to General category
+        result['categories'] = ["General"]
+        result['scores'] = [0.6]
+        result['confidence'] = 0.6
     return CategoryResponse(**result)
 
 @app.get("/categories")
