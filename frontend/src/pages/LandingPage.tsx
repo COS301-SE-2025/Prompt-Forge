@@ -19,11 +19,34 @@ import {
 import { useState, useEffect } from "react"
 import { useTheme } from "../components/theme-provider"
 import { Link } from "react-router-dom"
+import Silk from "@/components/Silk"
+import { useInView } from "react-intersection-observer"
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme()
   const [typedText, setTypedText] = useState("")
+  const [typedText2, setTypedText2] = useState("")
   const fullText = "Forge the Future of"
+  const fullText2 = "AI Interactions"
+
+  // Silk background color for light/dark mode
+  const silkBg =
+    theme === "light"
+      ? [1, 1, 1] as [number, number, number]
+      : [0.0078, 0.031, 0.090] as [number, number, number]
+
+  // For the bottom CTA section
+  const silkCtaBg =
+    theme === "light"
+      ? [1, 1, 1] as [number, number, number]
+      : [0.0078, 0.031, 0.090] as [number, number, number]
+
+  // Intersection observers for each section
+  const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  const { ref: problemRef, inView: problemInView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  const { ref: howItWorksRef, inView: howItWorksInView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  const { ref: ctaRef, inView: ctaInView } = useInView({ triggerOnce: true, threshold: 0.2 })
 
   useEffect(() => {
     let index = 0
@@ -33,40 +56,49 @@ export default function LandingPage() {
         index++
       } else {
         clearInterval(timer)
+          let index2 = 0
+          const timer2 = setInterval(() => {
+            if (index2 <= fullText2.length) {
+              setTypedText2(fullText2.slice(0, index2))
+              index2++
+            } else {
+              clearInterval(timer2)
+            }
+          }, 60)
       }
-    }, 150)
+    }, 60)
 
     return () => clearInterval(timer)
   }, [])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${theme === "light" ? "text-black" : "text-white"}`}>
       {/* Navigation */}
-      <nav className="border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown">
+      <nav className={`border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
                 <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8 text-[#3ebb9e]" />
               </div>
-              <span className="text-lg sm:text-2xl font-bold text-[#0C201B] dark:text-white">PROMPT FORGE</span>
+              <span className={`text-lg sm:text-2xl font-bold ${theme === "light" ? "text-[#0C201B]" : "text-white"}`}>PROMPT FORGE</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a
                 href="#features"
-                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className={`text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105 ${theme === "light" ? "text-black" : "text-white"}`}
               >
                 Features
               </a>
               <a
                 href="#how-it-works"
-                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className={`text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105 ${theme === "light" ? "text-black" : "text-white"}`}
               >
                 How It Works
               </a>
               <Link
                 to="/help"
-                className="text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105"
+                className={`text-md font-medium hover:text-[#3ebb9e] transition-all duration-300 hover:scale-105 ${theme === "light" ? "text-black" : "text-white"}`}
               >
                 Help & FAQ
               </Link>
@@ -97,30 +129,33 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 animate-gradient"
-          style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
-            backgroundSize: "400% 400%",
-          }}
-        />
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
-          <div className="text-center max-w-4xl mx-auto">
+      <section ref={heroRef} className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Silk speed={1} bgColor={silkBg} />
+        </div>
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32">
+          <div
+            className={`text-center max-w-4xl mx-auto transition-all duration-1000 ${
+              heroInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+            }`}
+          >
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6">
-              <Badge className="bg-[FFFFFF]/10 text-[#FFFFFF] hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center">
+              <Badge className={`bg-[FFFFFF]/10 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"} hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center`}>
                 The Future of AI Prompt Engineering
               </Badge>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#FFFFFF] mb-6 leading-tight">
+            <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}>
               <span className="inline-block min-h-[1.2em]">
                 {typedText}
-                <span className="animate-blink">|</span>
-              </span>{" "}
+                {!typedText2 && <span className="animate-blink">|</span>}
+              </span>
               <br />
-              <span className="text-[#45c1a4]">AI Interactions</span>
+              <span className="inline-block min-h-[1.2em] text-[#45c1a4]">
+                {typedText2}
+                {typedText2 && <span className="animate-blink">|</span>}
+              </span>
             </h1>
-            <p className="text-lg sm:text-xl text-[#FFFFFF]/80 mb-8 max-w-2xl mx-auto leading-relaxed px-4">
+            <p className={`text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed px-4 ${theme === "light" ? "text-black/80" : "text-[#FFFFFF]/80"}`}>
               The world's first comprehensive marketplace for AI prompts. Discover, test, compare, and master
               high-quality prompts to unlock your AI's full potential.
             </p>
@@ -135,30 +170,35 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <a
-                href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto border-white text-[#FFFFFF] hover:bg-[#00674f]/10 px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300"
+                  className={`w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300
+                    ${theme === "light"
+                      ? "border-black text-black hover:bg-black/10"
+                      : "border-white text-white hover:bg-[#00674f]/10"}
+                  `}
                 >
                   Watch Demo
                 </Button>
               </a>
             </div>
-            <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm text-[#FFFFFF]/60 px-4">
+            <div className={`mt-8 sm:mt-12 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm px-4
+              ${theme === "light" ? "text-black/60" : "text-[#FFFFFF]/60"}`}>
               <div className="flex items-center">
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-[#FFFFFF] animate-tick" />
+                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
                 No Credit Card Required
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-[#FFFFFF] animate-tick animation-delay-200" />
+                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-200 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
                 Free Testing Environment
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-[#FFFFFF] animate-tick animation-delay-400" />
+                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-400 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
                 Community Driven
               </div>
             </div>
@@ -168,11 +208,15 @@ export default function LandingPage() {
           <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <a
               href="#features"
-              className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation"
+              className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation
+                ${theme === "light"
+                  ? "bg-black/10 hover:bg-black/20 active:bg-black/30"
+                  : "bg-white/10 hover:bg-white/20 active:bg-white/30"}
+              `}
               aria-label="Scroll down to features"
             >
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white"
+                className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${theme === "light" ? "text-black" : "text-white"}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,10 +234,16 @@ export default function LandingPage() {
       </section>
 
       {/* Problem Statement */}
-      <section className="py-16 sm:py-20 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={problemRef} className="py-16 sm:py-20 bg-muted/30">
+        <div
+          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
+            problemInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">The Challenge Every AI User Faces</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
+              The Challenge Every AI User Faces
+            </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               Creating effective AI prompts is an art and science. Poor prompts lead to mediocre results, while great
               prompts unlock extraordinary AI capabilities.
@@ -232,11 +282,17 @@ export default function LandingPage() {
       </section>
 
       {/* Solution Overview */}
-      <section id="features" className="py-16 sm:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={featuresRef} id="features" className="py-16 sm:py-20">
+        <div
+          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
+            featuresInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
           <div className="text-center mb-12 sm:mb-16">
             <Badge className="mb-4 bg-[#3ebb9e]/0 text-[#00674f] text-base sm:text-lg">Our Solution</Badge>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">Everything You Need for Prompt Excellence</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
+              Everything You Need for Prompt Excellence
+            </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               Prompt Forge provides a comprehensive ecosystem for prompt engineering, from discovery to optimization.
             </p>
@@ -362,8 +418,12 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 sm:py-20 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={howItWorksRef} id="how-it-works" className="py-16 sm:py-20 bg-muted/30">
+        <div
+          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
+            howItWorksInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
           <div className="text-center mb-12 sm:mb-16 animate-fadeInUp">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">How Prompt Forge Works</h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
@@ -413,19 +473,23 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 sm:py-20 relative overflow-hidden">
+      <section ref={ctaRef} className="py-16 sm:py-20 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Silk speed={1} bgColor={silkCtaBg} />
+        </div>
         <div
-          className="absolute inset-0 animate-gradient"
-          style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
-            backgroundSize: "400% 400%",
-          }}
-        />
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6 animate-fadeInUp">
+          className={`relative container mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-1000 ${
+            ctaInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 animate-fadeInUp ${
+            theme === "light" ? "text-black" : "text-white"
+          }`}>
             Ready to Transform Your AI Experience?
           </h2>
-          <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto animate-fadeInUp animation-delay-200 px-4">
+          <p className={`text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto animate-fadeInUp animation-delay-200 px-4 ${
+            theme === "light" ? "text-black/90" : "text-white/90"
+          }`}>
             Join thousands of prompt engineers, creators, and AI enthusiasts who are already forging the future of AI
             interactions.
           </p>
@@ -433,21 +497,25 @@ export default function LandingPage() {
             <Link to="/login">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-white text-[#00674f] hover:bg-gray-100 px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300"
+                className={`w-full sm:w-auto bg-white ${theme === "light" ? "text-[#00674f] hover:bg-gray-100" : "text-[#00674f] hover:bg-gray-100"} px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300`}
               >
                 Start Free Today
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-bounce-horizontal" />
               </Button>
             </Link>
             <a
-              href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+              href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
               target="_blank"
               rel="noopener noreferrer"
             >
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto border-white text-white hover:bg-white/10 px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300"
+                className={`w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300
+                  ${theme === "light"
+                    ? "border-black text-black hover:bg-black/10"
+                    : "border-white text-white hover:bg-white/10"}
+                `}
               >
                 Watch Demo
               </Button>
@@ -472,7 +540,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
                   <a
-                    href="https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view"
+                    href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"

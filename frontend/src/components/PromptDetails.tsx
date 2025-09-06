@@ -32,6 +32,7 @@ import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
 import httpClient from "../services/httpClient"
 import { CategoryColors } from "@/Models/Prompt"
+import IdObfuscator from "@/utils/idObfuscator"
 
 export const PromptDetails = () => {
   const { id } = useParams<{ id: string }>()
@@ -97,12 +98,14 @@ export const PromptDetails = () => {
         setLoading(true)
         setError(null)
 
-        const promptData = await promptService.getPromptById(id!)
+        // Decode the hidden ID to get the actual UUID
+        const actualId = IdObfuscator.reveal(id!)
+        const promptData = await promptService.getPromptById(actualId)
         setUserOwnsPrompt(promptData.ownership)
         setUserAddedToCart(promptData.addedToCart)
         setPrompt(promptData)
 
-        const reviewsData = await promptService.getPromptReviews(id!)
+        const reviewsData = await promptService.getPromptReviews(actualId)
         setReviews(reviewsData)
 
         const checkAuthAndGetUserId = async () => {
