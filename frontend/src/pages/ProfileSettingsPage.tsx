@@ -90,7 +90,10 @@ export default function ProfileSettingsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
-        <p>Loading profile...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
       </div>
     )
   }
