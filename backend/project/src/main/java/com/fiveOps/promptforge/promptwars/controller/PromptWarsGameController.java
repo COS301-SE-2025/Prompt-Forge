@@ -5,8 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -123,9 +125,12 @@ public class PromptWarsGameController {
   }
 
   @GetMapping("/active")
-  public ResponseEntity<List<Game>> getActiveGames() {
+  public ResponseEntity<List<Game>> getActiveGames(
+      @RequestHeader("X-User-Id") String userIdHeader) {
     try {
-      return ResponseEntity.ok(List.of());
+      java.util.UUID userId = java.util.UUID.fromString(userIdHeader);
+      List<Game> activeGames = gameService.getActiveGames(userId);
+      return ResponseEntity.ok(activeGames);
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
@@ -138,6 +143,23 @@ public class PromptWarsGameController {
       return ResponseEntity.ok().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
+    }
+  }
+
+  // Cancel the user's active game
+  @DeleteMapping("/active")
+  public ResponseEntity<?> cancelActiveGame(@RequestHeader("X-User-Id") String userIdHeader) {
+    try {
+      java.util.UUID userId = java.util.UUID.fromString(userIdHeader);
+      boolean cancelled = gameService.cancelActiveGameForUser(userId);
+      if (cancelled) {
+        return ResponseEntity.ok("Active game cancelled");
+      } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active game found for user");
+      }
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Failed to cancel active game: " + e.getMessage());
     }
   }
 }
