@@ -25,6 +25,8 @@ export default function Header() {
     { name: "My Prompts", href: "/my-prompts" },
     { name: "Marketplace", href: "/marketplace" },
     { name: "Community", href: "/community" },
+    { name: "Social Hub", href: "/social", shortName: "Social" },
+    { name: "Prompt Wars", href: "/war", shortName: "Wars" },
   ]
 
   const handleLogout = async () => {
