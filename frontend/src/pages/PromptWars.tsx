@@ -20,9 +20,13 @@ import {
   Crown,
   Loader2,
   AlertCircle,
+  Shield,
+  Target,
+  Flame,
+  Sparkles,
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { promptWarsGameAPI, GameResponse, GameStateDetails, PromptSubmission } from "../services/promptWarsGameAPI"
 import { promptWarsWebSocket, GameUpdate } from "../services/promptWarsWebSocket"
 
@@ -35,10 +39,11 @@ interface ChatMessage {
   timestamp: Date
 }
 
+// Helper function to generate unique IDs (move outside component)
+let idCounter = 0
+const generateUniqueId = () => `${Date.now()}-${++idCounter}`
+
 export default function PromptWarsPage() {
-  // Helper function to generate unique IDs
-  let idCounter = 0;
-  const generateUniqueId = () => `${Date.now()}-${++idCounter}`
   
   // Helper function to show user-friendly error messages
   const getErrorMessage = (error: any): string => {
@@ -81,8 +86,9 @@ export default function PromptWarsPage() {
     return 'An unexpected error occurred. Please try again.'
   }
 
-  const [searchParams] = useSearchParams()
-  const gameId = searchParams.get('gameId')
+  // Get gameId from URL params (for /prompt-wars/game/:gameId)
+  const params = useParams();
+  const gameId = params.gameId;
   const isMultiplayerGame = !!gameId
   
   // Game data from backend
@@ -104,14 +110,14 @@ export default function PromptWarsPage() {
   const [ratingExplanation, setRatingExplanation] = useState("")
   const [isLoadingRating, setIsLoadingRating] = useState(false)
   const [winner, setWinner] = useState<"player" | "opponent" | "tie" | null>(null)
-  const [opponentName, setOpponentName] = useState("Opponent")
+  const [opponentName, setOpponentName] = useState("Real Player")
 
   // UI state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: generateUniqueId(),
       user: "System",
-      message: "Welcome to Prompt Wars! Get ready to battle!",
+      message: "⚔️ Welcome to the Arena! Prepare for battle!",
       timestamp: new Date(),
     },
   ])
@@ -398,11 +404,11 @@ export default function PromptWarsPage() {
 
   const generateDemoScenario = () => {
     const scenarios = [
-      "Create a prompt that generates a compelling product description for a revolutionary smart home device.",
-      "Design a prompt that produces an engaging blog post about sustainable living tips.",
-      "Craft a prompt that generates a creative story opening with an unexpected twist.",
-      "Create a prompt that produces a professional email template for customer service.",
-      "Design a prompt that generates educational content about emerging technologies."
+      "You're a time traveler who accidentally changed history. Write a prompt to help an AI figure out what went wrong and how to fix it.",
+      "An alien species has just made contact with Earth, but they only communicate through colors and emotions. Create a prompt for an AI to help establish meaningful communication.",
+      "You've discovered that your dreams are actually glimpses into parallel universes. Design a prompt for an AI to help you navigate and understand these alternate realities.",
+      "A mysterious digital virus is turning all text into poetry. Craft a prompt for an AI to help decode important messages while the world speaks in verse.",
+      "You're the last librarian in a world where books are becoming sentient. Write a prompt to help an AI negotiate peace between humans and literature.",
     ]
     return scenarios[Math.floor(Math.random() * scenarios.length)]
   }
@@ -445,7 +451,7 @@ export default function PromptWarsPage() {
           {
             id: generateUniqueId(),
             user: "System",
-            message: "Battle scenario generated! Review it and start writing.",
+            message: "🎯 Battle scenario generated! Study it carefully...",
             timestamp: new Date(),
           },
         ])
@@ -502,7 +508,7 @@ export default function PromptWarsPage() {
         {
           id: generateUniqueId(),
           user: "System",
-          message: "⏰ Writing phase started! You have 2 minutes to craft your prompt.",
+          message: "⏰ Battle commenced! You have 2 minutes to craft your ultimate prompt!",
           timestamp: new Date(),
         },
       ])
@@ -539,14 +545,14 @@ export default function PromptWarsPage() {
     } else {
       // Demo mode
       setGameState("rating")
-      setOpponentPrompt("Create a smart home device that predicts user needs through behavioral analysis and environmental sensors, offering proactive suggestions for comfort, security, and energy efficiency.")
+      setOpponentPrompt("You are an advanced AI time-travel consultant. Analyze the following temporal anomaly data, identify the specific historical event that was altered, calculate the ripple effects across the timeline, and provide a detailed step-by-step restoration plan that minimizes paradoxes while ensuring the original timeline is preserved.")
       setShowOpponentPrompt(true)
       setChatMessages(prev => [
         ...prev,
         {
           id: generateUniqueId(),
           user: "System",
-          message: "📝 Prompts submitted! Now rate your opponent's creativity.",
+          message: "📝 Prompts submitted! Time to judge your opponent's work...",
           timestamp: new Date(),
         },
       ])
@@ -578,16 +584,16 @@ export default function PromptWarsPage() {
       // Demo mode
       setIsLoadingRating(true)
       setTimeout(() => {
-        setOpponentRating(Math.floor(Math.random() * 3) + 7)
+        setOpponentRating(Math.floor(Math.random() * 3) + 7) // 7-9 range
         setGameState("results")
-        setWinner(myRating > 7 ? "player" : "opponent")
+        setWinner(myRating > 7 ? "player" : myRating === 7 ? "tie" : "opponent")
         setIsLoadingRating(false)
         setChatMessages(prev => [
           ...prev,
           {
             id: generateUniqueId(),
             user: "System",
-            message: "🏆 Battle complete! Check out the results.",
+            message: "🏆 Battle concluded! The results are in!",
             timestamp: new Date(),
           },
         ])
@@ -634,108 +640,169 @@ export default function PromptWarsPage() {
       {
         id: generateUniqueId(),
         user: "System",
-        message: "🔄 Ready for another battle!",
+        message: "🔄 Arena reset! Ready for another epic battle?",
         timestamp: new Date(),
       },
     ])
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-            <Swords className="h-8 w-8 text-yellow-400" />
-            {isMultiplayerGame ? "🔥" : "⚡"} Prompt Wars
-            <Swords className="h-8 w-8 text-yellow-400" />
-          </h1>
-          <p className="text-blue-200 text-lg">
-            {isMultiplayerGame ? `vs ${opponentName}` : "AI-Powered Prompt Battle Arena"}
-          </p>
-          {loading && (
-            <div className="flex items-center justify-center gap-2 text-blue-200 mt-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading...
-            </div>
-          )}
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-[#40ffaa]/10 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-[#4079ff]/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#40ffaa]/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-[#4079ff]/5 rounded-full blur-xl animate-pulse delay-3000"></div>
+      </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-2 text-red-200">
-            <AlertCircle className="h-5 w-5" />
-            {error}
-            <Button 
-              onClick={() => setError(null)}
-              variant="ghost" 
-              size="sm"
-              className="ml-auto text-red-200 hover:text-white"
-            >
-              ×
-            </Button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Game Status Panel */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gray-800/50 border-gray-700 p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-400" />
-                Battle Status
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400 mb-1">
-                    {isMultiplayerGame ? "Live Match" : "Practice Mode"}
-                  </div>
-                  {isMultiplayerGame && gameId && (
-                    <div className="text-sm text-gray-400">
-                      ID: {gameId.slice(0, 8)}...
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-gray-700 pt-4">
-                  <div className="text-sm text-gray-400 mb-2">Current Phase</div>
-                  <div className="text-lg font-semibold text-white capitalize">
-                    {gameState === "waiting" ? (isMultiplayerGame ? "Waiting for opponent to join the battle..." : "Ready to battle") : gameState}
-                  </div>
-                </div>
-
-                {gameState === "writing" && (
-                  <div className="border-t border-gray-700 pt-4">
-                    <div className="text-sm text-gray-400 mb-2">Time Remaining</div>
-                    <div className="text-2xl font-bold text-red-400 flex items-center gap-2">
-                      <Timer className="h-5 w-5" />
-                      {formatTime(timeLeft)}
-                    </div>
-                  </div>
-                )}
-
-                <div className="border-t border-gray-700 pt-4">
-                  <div className="text-sm text-gray-400 mb-2">Players</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <span className="text-white">You</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                      <span className="text-white">{opponentName}</span>
-                    </div>
-                  </div>
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Epic Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center gap-4 mb-4">
+              <div className="relative">
+                <Swords className="h-12 w-12 text-[#40ffaa] animate-pulse" />
+                <div className="absolute inset-0 h-12 w-12 text-[#40ffaa] opacity-20">
+                  <Swords className="h-12 w-12" />
                 </div>
               </div>
-            </Card>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-[#40ffaa] via-white to-[#4079ff] bg-clip-text text-transparent">
+                PROMPT WARS
+              </h1>
+              <div className="relative">
+                <Swords className="h-12 w-12 text-[#4079ff] animate-pulse" />
+                <div className="absolute inset-0 h-12 w-12 text-[#4079ff] opacity-20">
+                  <Swords className="h-12 w-12" />
+                </div>
+              </div>
+            </div>
+            <p className="text-xl text-slate-300 font-medium">
+              {isMultiplayerGame ? `🔥 LIVE BATTLE vs ${opponentName}` : "⚡ AI-Powered Combat Arena"}
+            </p>
+            {loading && (
+              <div className="flex items-center justify-center gap-2 text-[#40ffaa] mt-3">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="font-semibold">Initializing Battle Systems...</span>
+              </div>
+            )}
           </div>
 
-          {/* Main Game Area */}
-          <div className="lg:col-span-2">
-            <Card className="bg-gray-800/50 border-gray-700 p-6 min-h-[600px]">
-              {/* Debug Controls - Remove in production */}
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 mx-auto max-w-2xl">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                  <span className="text-red-200 flex-1">{error}</span>
+                  <Button
+                    onClick={() => setError(null)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-300 hover:text-white hover:bg-red-500/20 h-8 w-8 p-0"
+                  >
+                    ×
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            {/* Battle Status Panel */}
+            <div className="xl:col-span-3">
+              <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-gradient-to-br from-[#40ffaa] to-[#4079ff] rounded-lg">
+                      <Shield className="h-6 w-6 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">Battle Status</h2>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Game Mode */}
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 border border-[#40ffaa]/30 rounded-full mb-2">
+                        <Sparkles className="h-4 w-4 text-[#40ffaa]" />
+                        <span className="text-sm font-semibold text-white">
+                          {isMultiplayerGame ? "LIVE MATCH" : "TRAINING MODE"}
+                        </span>
+                      </div>
+                      {isMultiplayerGame && typeof gameId === "string" && gameId && (
+                        <div className="text-xs text-slate-400 font-mono">ID: {gameId.slice(0, 8)}...</div>
+                      )}
+                    </div>
+
+                    {/* Current Phase */}
+                    <div className="bg-slate-700/30 rounded-lg p-4">
+                      <div className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Current Phase
+                      </div>
+                      <div className="text-lg font-bold text-white capitalize flex items-center gap-2">
+                        {gameState === "waiting" && <Zap className="h-5 w-5 text-[#40ffaa]" />}
+                        {gameState === "scenario" && <Eye className="h-5 w-5 text-[#4079ff]" />}
+                        {gameState === "writing" && <Timer className="h-5 w-5 text-yellow-400" />}
+                        {gameState === "rating" && <Star className="h-5 w-5 text-purple-400" />}
+                        {(gameState === "results" || gameState === "finished") && (
+                          <Trophy className="h-5 w-5 text-[#40ffaa]" />
+                        )}
+                        {gameState === "waiting"
+                          ? isMultiplayerGame
+                            ? "Awaiting Challenger"
+                            : "Ready to Battle"
+                          : gameState}
+                      </div>
+                    </div>
+
+                    {/* Timer */}
+                    {gameState === "writing" && (
+                      <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-4">
+                        <div className="text-sm text-red-300 mb-2 flex items-center gap-2">
+                          <Flame className="h-4 w-4" />
+                          Time Remaining
+                        </div>
+                        <div
+                          className={`text-3xl font-black flex items-center gap-2 ${
+                            timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-orange-400"
+                          }`}
+                        >
+                          <Timer className="h-6 w-6" />
+                          {formatTime(timeLeft)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Players */}
+                    <div className="bg-slate-700/30 rounded-lg p-4">
+                      <div className="text-sm text-slate-400 mb-3 flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Combatants
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-[#40ffaa] rounded-full animate-pulse"></div>
+                          <span className="text-white font-semibold">You</span>
+                          <div className="ml-auto text-xs text-[#40ffaa] font-semibold">READY</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-[#4079ff] rounded-full animate-pulse"></div>
+                          <span className="text-white font-semibold">{opponentName}</span>
+                          <div className="ml-auto text-xs text-[#4079ff] font-semibold">READY</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Main Battle Arena */}
+            <div className="xl:col-span-6">
+              <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm min-h-[400px]">
+                <div className="p-8">
+              {/* Debug Controls - Remove in production
               {process.env.NODE_ENV === 'development' && (
                 <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-lg">
                   <h4 className="text-yellow-400 font-semibold mb-2">Debug Controls</h4>
@@ -757,37 +824,39 @@ export default function PromptWarsPage() {
                     </span>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {gameState === "waiting" && (
-                <div className="text-center">
+                <div className="text-center h-full flex flex-col justify-center">
                   <div className="mb-8">
-                    <div className="text-6xl mb-4">⚔️</div>
-                    <h2 className="text-2xl font-bold text-white mb-4">
-                      {isMultiplayerGame ? "Waiting for Battle" : "Ready for Battle"}
+                    <div className="relative inline-block mb-6">
+                      <div className="text-8xl mb-4">⚔️</div>
+                      <div className="absolute inset-0 text-8xl animate-ping opacity-20">⚔️</div>
+                    </div>
+                    <h2 className="text-3xl font-black text-white mb-4">
+                      {isMultiplayerGame ? "AWAITING CHALLENGER" : "ENTER THE ARENA"}
                     </h2>
-                    <p className="text-gray-300 mb-6">
-                      {isMultiplayerGame 
-                        ? "Waiting for your opponent to join and both players to be ready..."
-                        : "Test your prompt crafting skills against AI opponents in epic battles of creativity and strategy."
-                      }
+                    <p className="text-slate-300 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+                      {isMultiplayerGame
+                        ? "Your opponent is preparing for battle. Both warriors must be ready before the arena opens..."
+                        : "Step into the ultimate prompt crafting battleground. Face AI opponents in epic battles of creativity, strategy, and wit."}
                     </p>
                   </div>
-                  
+
                   <Button
                     onClick={startNewBattle}
                     disabled={loading || isLoadingScenario}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+                    className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#40ffaa]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   >
                     {loading || isLoadingScenario ? (
                       <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        {isMultiplayerGame ? "Starting Battle..." : "Generating Scenario..."}
+                        <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+                        {isMultiplayerGame ? "INITIATING BATTLE..." : "GENERATING SCENARIO..."}
                       </>
                     ) : (
                       <>
-                        <Zap className="h-5 w-5 mr-2" />
-                        {isMultiplayerGame ? "Start Live Battle" : "Start New Battle"}
+                        <Zap className="h-6 w-6 mr-3" />
+                        {isMultiplayerGame ? "BEGIN LIVE BATTLE" : "START NEW BATTLE"}
                       </>
                     )}
                   </Button>
@@ -795,33 +864,49 @@ export default function PromptWarsPage() {
               )}
 
               {gameState === "scenario" && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Play className="h-6 w-6 text-green-400" />
-                    Battle Scenario
-                  </h2>
-                  
-                  <div className="bg-gray-700/50 rounded-lg p-6 mb-6">
-                    <p className="text-gray-200 text-lg leading-relaxed">
-                      {scenario}
-                    </p>
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                      <Target className="h-8 w-8 text-[#4079ff]" />
+                      BATTLE SCENARIO
+                    </h2>
+                    <p className="text-slate-400">Study your mission carefully, warrior</p>
                   </div>
-                  
+
+                  <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-8">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="p-3 bg-[#4079ff]/20 rounded-lg">
+                        <Eye className="h-6 w-6 text-[#4079ff]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-4">Your Mission</h3>
+                        <p className="text-slate-200 text-lg leading-relaxed">{scenario}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="text-center">
+                    <div className="bg-slate-700/30 rounded-lg p-4 mb-6">
+                      <p className="text-sm text-slate-400 mb-2">⚠️ Battle Instructions</p>
+                      <p className="text-slate-300">
+                        You'll have 2 minutes to craft the perfect prompt. Make it creative, specific, and
+                        strategically effective!
+                      </p>
+                    </div>
                     <Button
                       onClick={proceedToWriting}
                       disabled={isLoadingScenario}
-                      className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-6 py-2"
+                      className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl"
                     >
                       {isLoadingScenario ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                           Loading...
                         </>
                       ) : (
                         <>
-                          <Zap className="h-4 w-4 mr-2" />
-                          Start Writing Phase
+                          <Play className="h-5 w-5 mr-2" />
+                          COMMENCE BATTLE
                         </>
                       )}
                     </Button>
@@ -830,49 +915,63 @@ export default function PromptWarsPage() {
               )}
 
               {gameState === "writing" && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Timer className="h-6 w-6 text-yellow-400" />
-                    Writing Phase
-                    <span className="text-lg text-yellow-400 ml-auto">
-                      {formatTime(timeLeft)}
-                    </span>
-                  </h2>
-                  
-                  <div className="bg-gray-700/50 rounded-lg p-4 mb-4">
-                    <p className="text-gray-300 text-sm mb-2">Scenario:</p>
-                    <p className="text-gray-200">
-                      {scenario}
-                    </p>
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                      <Timer className="h-8 w-8 text-yellow-400" />
+                      CRAFTING PHASE
+                      <div
+                        className={`text-2xl font-black ml-4 ${
+                          timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-yellow-400"
+                        }`}
+                      >
+                        {formatTime(timeLeft)}
+                      </div>
+                    </h2>
+                    <p className="text-slate-400">Channel your creativity into the ultimate prompt</p>
                   </div>
-                  
-                  <div className="mb-6">
-                    <label className="block text-white font-medium mb-2">
-                      Your Prompt
-                    </label>
+
+                  {/* Scenario Reminder */}
+                  <div className="bg-[#4079ff]/10 border border-[#4079ff]/30 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Target className="h-5 w-5 text-[#4079ff] mt-1 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Mission Briefing</h4>
+                        <p className="text-sm text-slate-300">{scenario}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Prompt Input */}
+                  <div className="space-y-4">
+                    <label className="block text-white font-bold text-lg">🎯 Your Battle Prompt</label>
                     <textarea
                       value={myPrompt}
                       onChange={(e) => setMyPrompt(e.target.value)}
-                      placeholder="Craft your battle-winning prompt here..."
-                      className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Forge your legendary prompt here... Make it count, warrior!"
+                      className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#40ffaa] focus:border-transparent resize-none text-lg custom-scrollbar"
                     />
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">💡 Tip: Be specific, creative, and consider edge cases</span>
+                      <span className="text-slate-400">{myPrompt.length} characters</span>
+                    </div>
                   </div>
-                  
+
                   <div className="text-center">
                     <Button
                       onClick={submitPrompt}
                       disabled={loading || !myPrompt.trim() || timeLeft === 0}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-2"
+                      className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                           Submitting...
                         </>
                       ) : (
                         <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Submit Prompt
+                          <Send className="h-5 w-5 mr-2" />
+                          SUBMIT PROMPT
                         </>
                       )}
                     </Button>
@@ -881,74 +980,98 @@ export default function PromptWarsPage() {
               )}
 
               {gameState === "rating" && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                    <Star className="h-6 w-6 text-yellow-400" />
-                    Rating Phase
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                      <Star className="h-8 w-8 text-purple-400" />
+                      JUDGMENT PHASE
+                    </h2>
+                    <p className="text-slate-400">Evaluate your opponent's strategy</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Your Prompt */}
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-green-400 mb-2">Your Prompt</h3>
-                      <p className="text-gray-200 text-sm">{myPrompt}</p>
+                    <div className="bg-gradient-to-br from-[#40ffaa]/10 to-emerald-500/10 border border-[#40ffaa]/30 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-[#40ffaa] mb-4 flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Your Prompt
+                      </h3>
+                      <div className="bg-slate-700/50 rounded-lg p-4">
+                        <p className="text-slate-200 text-sm leading-relaxed">{myPrompt}</p>
+                      </div>
                     </div>
-                    
+
                     {/* Opponent's Prompt */}
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Opponent's Prompt</h3>
-                      {showOpponentPrompt ? (
-                        <p className="text-gray-200 text-sm">{opponentPrompt}</p>
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <EyeOff className="h-4 w-4" />
-                          Hidden until rated
-                        </div>
-                      )}
+                    <div className="bg-gradient-to-br from-[#4079ff]/10 to-blue-500/10 border border-[#4079ff]/30 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-[#4079ff] mb-4 flex items-center gap-2">
+                        <Swords className="h-5 w-5" />
+                        Opponent's Prompt
+                      </h3>
+                      <div className="bg-slate-700/50 rounded-lg p-4">
+                        {showOpponentPrompt ? (
+                          <p className="text-slate-200 text-sm leading-relaxed">{opponentPrompt}</p>
+                        ) : (
+                          <div className="flex items-center gap-2 text-slate-400">
+                            <EyeOff className="h-4 w-4" />
+                            Revealed after rating
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
+
                   {showOpponentPrompt && (
-                    <div className="mb-6">
-                      <label className="block text-white font-medium mb-2">
-                        Rate Opponent's Prompt (1-10)
-                      </label>
-                      <div className="flex gap-2 mb-4">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                          <Button
-                            key={rating}
-                            onClick={() => setMyRating(rating)}
-                            variant={myRating === rating ? "default" : "outline"}
-                            size="sm"
-                            className={myRating === rating ? "bg-yellow-500 text-black" : ""}
-                          >
-                            {rating}
-                          </Button>
-                        ))}
+                    <div className="bg-slate-700/30 rounded-xl p-6 space-y-6">
+                      <div>
+                        <label className="block text-white font-bold text-lg mb-4">
+                          ⭐ Rate Your Opponent's Prompt (1-10)
+                        </label>
+                        <div className="flex gap-2 mb-4 justify-center">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                            <Button
+                              key={rating}
+                              onClick={() => setMyRating(rating)}
+                              variant={myRating === rating ? "default" : "outline"}
+                              size="sm"
+                              className={`w-12 h-12 text-lg font-bold ${
+                                myRating === rating
+                                  ? "bg-gradient-to-r from-[#40ffaa] to-emerald-500 text-white border-0"
+                                  : "border-slate-600 text-slate-300 hover:border-[#40ffaa] hover:text-white"
+                              }`}
+                            >
+                              {rating}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
-                      
-                      <textarea
-                        value={ratingExplanation}
-                        onChange={(e) => setRatingExplanation(e.target.value)}
-                        placeholder="Explain your rating (optional)"
-                        className="w-full h-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      
-                      <div className="text-center mt-4">
+
+                      <div>
+                        <label className="block text-white font-semibold mb-2">
+                          💭 Explain Your Rating (Optional)
+                        </label>
+                        <textarea
+                          value={ratingExplanation}
+                          onChange={(e) => setRatingExplanation(e.target.value)}
+                          placeholder="Share your thoughts on their strategy..."
+                          className="w-full h-24 px-4 py-3 bg-muted border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#40ffaa] focus:border-transparent resize-none"
+                        />
+                      </div>
+
+                      <div className="text-center">
                         <Button
                           onClick={submitRating}
                           disabled={loading || myRating === 0 || isLoadingRating}
-                          className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-6 py-2"
+                          className="bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-bold rounded-xl"
                         >
                           {loading || isLoadingRating ? (
                             <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Submitting Rating...
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                              Submitting Judgment...
                             </>
                           ) : (
                             <>
-                              <Star className="h-4 w-4 mr-2" />
-                              Submit Rating
+                              <Star className="h-5 w-5 mr-2" />
+                              SUBMIT RATING
                             </>
                           )}
                         </Button>
@@ -959,167 +1082,200 @@ export default function PromptWarsPage() {
               )}
 
               {(gameState === "results" || gameState === "finished") && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                    <Trophy className="h-6 w-6 text-yellow-400" />
-                    Battle Results
-                  </h2>
-                  
-                  <div className="text-center mb-6">
-                    <div className="text-4xl mb-4">
-                      {winner === "player" ? "🏆" : winner === "opponent" ? "😔" : "🤝"}
+                <div className="space-y-8">
+                  <div className="text-center">
+                    <div className="text-8xl mb-4">
+                      {winner === "player" ? "🏆" : winner === "opponent" ? "⚔️" : "🤝"}
                     </div>
-                    <div className="text-2xl font-bold text-white mb-2">
-                      {winner === "player" 
-                        ? "Victory!" 
-                        : winner === "opponent" 
-                        ? "Defeat" 
-                        : "It's a Tie!"}
-                    </div>
-                    <p className="text-gray-300">
-                      {winner === "player" 
-                        ? "Your prompt was superior! Well crafted." 
-                        : winner === "opponent" 
-                        ? "Your opponent's prompt was better this time." 
-                        : "Both prompts were equally impressive!"}
+                    <h2 className="text-4xl font-black mb-4">
+                      <span
+                        className={`bg-gradient-to-r bg-clip-text text-transparent ${
+                          winner === "player"
+                            ? "from-[#40ffaa] to-emerald-400"
+                            : winner === "opponent"
+                              ? "from-red-400 to-orange-400"
+                              : "from-[#4079ff] to-purple-400"
+                        }`}
+                      >
+                        {winner === "player" ? "VICTORY!" : winner === "opponent" ? "DEFEAT" : "DRAW!"}
+                      </span>
+                    </h2>
+                    <p className="text-slate-300 text-lg">
+                      {winner === "player"
+                        ? "Your prompt mastery has triumphed! Legendary craftsmanship!"
+                        : winner === "opponent"
+                          ? "A worthy opponent has bested you. Train harder, warrior!"
+                          : "Both warriors showed equal skill! An honorable draw!"}
                     </p>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-green-400 mb-2">Your Score</h3>
-                      <div className="text-3xl font-bold text-white mb-2">{opponentRating}/10</div>
-                      <p className="text-sm text-gray-300">Opponent's Rating</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div
+                      className={`rounded-xl p-6 ${
+                        winner === "player"
+                          ? "bg-gradient-to-br from-[#40ffaa]/20 to-emerald-500/20 border border-[#40ffaa]/40"
+                          : "bg-slate-700/30 border border-slate-600/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">Your Score</h3>
+                        {winner === "player" && <Crown className="h-6 w-6 text-[#40ffaa]" />}
+                      </div>
+                      <div className="text-4xl font-black text-white mb-2">{opponentRating}/10</div>
+                      <div className="flex mb-2">
+                        {[...Array(10)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < opponentRating ? "text-[#40ffaa] fill-[#40ffaa]" : "text-slate-600"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-slate-400">Opponent's Rating</p>
                     </div>
-                    
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Opponent's Score</h3>
-                      <div className="text-3xl font-bold text-white mb-2">{myRating}/10</div>
-                      <p className="text-sm text-gray-300">Your Rating</p>
+
+                    <div
+                      className={`rounded-xl p-6 ${
+                        winner === "opponent"
+                          ? "bg-gradient-to-br from-[#4079ff]/20 to-blue-500/20 border border-[#4079ff]/40"
+                          : "bg-slate-700/30 border border-slate-600/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">Opponent's Score</h3>
+                        {winner === "opponent" && <Crown className="h-6 w-6 text-[#4079ff]" />}
+                      </div>
+                      <div className="text-4xl font-black text-white mb-2">{myRating}/10</div>
+                      <div className="flex mb-2">
+                        {[...Array(10)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < myRating ? "text-[#4079ff] fill-[#4079ff]" : "text-slate-600"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-slate-400">Your Rating</p>
                     </div>
                   </div>
-                  
+
                   <div className="text-center space-y-4">
-                    <div className="flex justify-center space-x-4">
-                      <Button
-                        onClick={resetBattle}
-                        className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-6 py-2"
-                      >
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        New Battle
-                      </Button>
-                      
-                      {isMultiplayerGame && (
-                        <Button
-                          onClick={() => window.location.href = '/social'}
-                          variant="outline"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-2"
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          Back to Social
-                        </Button>
-                      )}
-                    </div>
-                    
+                    <Button
+                      onClick={resetBattle}
+                      className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#40ffaa]/80 hover:to-[#4079ff]/80 text-white px-8 py-3 text-lg font-bold rounded-xl mr-4"
+                    >
+                      <RotateCcw className="h-5 w-5 mr-2" />
+                      NEW BATTLE
+                    </Button>
+
                     {isMultiplayerGame && (
-                      <p className="text-sm text-gray-400">
-                        The game will be automatically cleaned up when both players leave.
-                      </p>
+                      <Button
+                        onClick={() => (window.location.href = "/social")}
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white px-6 py-3 text-lg font-semibold rounded-xl"
+                      >
+                        <Users className="h-5 w-5 mr-2" />
+                        Return to Arena
+                      </Button>
                     )}
                   </div>
                 </div>
               )}
-            </Card>
-          </div>
+                </div>
+              </Card>
+            </div>
 
-          {/* Chat Panel */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gray-800/50 border-gray-700 p-4 h-[600px] flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-blue-400" />
-                  Battle Chat
-                </h2>
-                <Button
-                  onClick={() => setShowChat(!showChat)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                >
-                  {showChat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-              
-              {showChat && (
-                <>
-                  <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-                    {chatMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`p-2 rounded-lg text-sm ${
-                          message.user === "System"
-                            ? "bg-blue-900/50 text-blue-200"
-                            : message.user === "You"
-                            ? "bg-green-900/50 text-green-200 ml-4"
-                            : "bg-gray-700/50 text-gray-200 mr-4"
-                        }`}
-                      >
-                        <div className="font-medium text-xs opacity-70 mb-1">
-                          {message.user}
-                        </div>
-                        <div>{message.message}</div>
-                      </div>
-                    ))}
-                    <div ref={chatEndRef} />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
-                      placeholder="Type a message..."
-                      className="flex-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    />
+            {/* Battle Chat */}
+            <div className="xl:col-span-3">
+              <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm min-h-[200px] max-h-[70vh] flex flex-col custom-scrollbar">
+                <div className="p-4 border-b border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5 text-[#40ffaa]" />
+                      Battle Chat
+                    </h2>
                     <Button
-                      onClick={sendChatMessage}
+                      onClick={() => setShowChat(!showChat)}
+                      variant="ghost"
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="text-slate-400 hover:text-white hover:bg-slate-700/50"
                     >
-                      <Send className="h-4 w-4" />
+                      {showChat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                </>
-              )}
-            </Card>
+                </div>
+
+                {showChat && (
+                  <>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[40vh] custom-scrollbar">
+                      {chatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`p-3 rounded-lg text-sm ${
+                            message.user === "System"
+                              ? "bg-gradient-to-r from-[#4079ff]/20 to-green-500/20 border border-[#4079ff]/30 text-white"
+                              : message.user === "You"
+                                ? "bg-gradient-to-r from-[#40ffaa]/20 to-emerald-500/20 border border-[#40ffaa]/30 text-[#40ffaa] ml-4"
+                                : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-4"
+                          }`}
+                        >
+                          <div className="font-semibold text-xs opacity-80 mb-1">{message.user}</div>
+                          <div className="font-medium">{message.message}</div>
+                        </div>
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    <div className="p-4 border-t border-slate-700/50 custom-scrollbar">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                          placeholder="Send a battle cry..."
+                          className="flex-1 bg-muted/20 border-slate-600 text-white placeholder-slate-400 focus:ring-[#40ffaa] focus:border-[#40ffaa]"
+                        />
+                        <Button
+                          onClick={sendChatMessage}
+                          size="sm"
+                          className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-4"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </Card>
+            </div>
           </div>
-        </div>
-        
-        {/* Floating End Game Button - Only show during active gameplay */}
-        {isMultiplayerGame && (gameState === "writing" || gameState === "rating") && (
-          <div className="fixed bottom-6 left-6 z-50">
-            <Button
-              onClick={() => {
-                const confirmLeave = window.confirm(
-                  "Are you sure you want to end this game? This will forfeit the battle and return you to the social page."
-                );
-                if (confirmLeave) {
-                  // Leave the game room
-                  if (gameId) {
-                    promptWarsWebSocket.leaveGameRoom(gameId);
+
+          {/* Floating End Game Button */}
+          {isMultiplayerGame && (gameState === "writing" || gameState === "rating") && (
+            <div className="fixed bottom-6 left-6 z-50">
+              <Button
+                onClick={() => {
+                  const confirmLeave = window.confirm(
+                    "Are you sure you want to forfeit this battle? This will end the game and return you to the social arena.",
+                  )
+                  if (confirmLeave) {
+                    if (gameId) {
+                      promptWarsWebSocket.leaveGameRoom(gameId);
+                    }
+                    window.location.href = "/social"
                   }
-                  // Navigate back to social page
-                  window.location.href = '/social';
-                }
-              }}
-              variant="outline"
-              className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white bg-gray-900/90 backdrop-blur-sm"
-            >
-              <AlertCircle className="h-4 w-4 mr-2" />
-              End Game
-            </Button>
-          </div>
-        )}
+                }}
+                variant="outline"
+                className="border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white bg-slate-900/90 backdrop-blur-sm border-2 font-semibold"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Forfeit Battle
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

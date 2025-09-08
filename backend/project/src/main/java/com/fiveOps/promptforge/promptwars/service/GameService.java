@@ -191,4 +191,19 @@ public class GameService {
 
     return gameRepository.save(game);
   }
+
+  public boolean cancelActiveGameForUser(UUID userId) {
+    List<Game> activeGames =
+        gameRepository.findActiveGamesByPlayer(userId, GameState.FINISHED, GameState.CANCELLED);
+    if (activeGames == null || activeGames.isEmpty()) {
+      return false;
+    }
+    // Cancel all active games for this user (usually should be only one)
+    for (Game game : activeGames) {
+      game.cancel();
+      gameRepository.save(game);
+      // Optionally notify other player(s) via WebSocket
+    }
+    return true;
+  }
 }

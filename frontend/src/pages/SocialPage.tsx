@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -6,333 +6,11 @@ import { Input } from "@/components/ui/Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { PromptCard } from "../components/PromptCard";
 import { Users, UserPlus, UserMinus, Star, Swords, Search, Timer, Trophy, X, Bell, Zap, Loader2 } from "lucide-react";
-import { API_BASE_URL } from '../config/api';
-
-// Types
-interface SocialUser {
-  userId: string;
-  username: string;
-  email?: string;
-  profilePictureUrl?: string;
-  bio?: string;
-  followers: string[] | number;
-  following: string[] | number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  role: string;
-  badges?: string[];
-  prompts?: Prompt[];
-  totalPrompts?: number;
-  averageRating?: number;
-  isOnline?: boolean;
-  isPopular?: boolean;
-  isFollowing?: boolean;
-}
-
-interface Prompt {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  tags: string[];
-  price: number;
-  authorId: string;
-  authorName?: string;
-  createdAt: string;
-  rating?: number;
-  totalRatings?: number;
-}
-
-interface PaginatedResponse<T> {
-  content: T[];
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
-}
-
-interface Challenge {
-  id: string;
-  challengerId: string;
-  challengerName: string;
-  challengerAvatar?: string;
-  opponentId: string;
-  opponentName?: string;
-  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
-  message?: string;
-  createdAt: Date;
-  expiresAt: Date;
-}
-
-interface GameNotification {
-  gameId: string;
-  opponentName: string;
-  type: 'GAME_STARTING' | 'GAME_FOUND';
-}
+import { UserCard } from "../components/UserCard";
+import { ChallengeAPI, SocialAPI, PromptAPI, SocialUser, Prompt, PaginatedResponse, Challenge, API_BASE_URL, cancelActiveGame } from "../services/socialService";
 
 // WebSocket connection
 let socket: any = null;
-
-// API Service Classes
-class ChallengeAPI {
-  private static getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    
-    if (!userId) {
-      console.warn('No userId found in localStorage');
-    }
-    
-    console.log('Challenge API headers:', { token: !!token, userId });
-    
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-      'X-User-Id': userId || '',
-    };
-  }
-
-  static async sendChallenge(opponentId: string, message?: string): Promise<Challenge> {
-    const response = await fetch(`${API_BASE_URL}/prompt-wars/challenges/send`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({ opponentId, message })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to send challenge');
-    }
-    
-    return response.json();
-  }
-  
-  static async acceptChallenge(challengeId: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/prompt-wars/challenges/${challengeId}/accept`, {
-      method: 'POST',
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Accept challenge failed:', response.status, errorText);
-      throw new Error(`Failed to accept challenge: ${errorText}`);
-    }
-    
-    return response.json();
-  }
-  
-  static async declineChallenge(challengeId: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/prompt-wars/challenges/${challengeId}/decline`, {
-      method: 'POST',
-      headers: this.getAuthHeaders()
-    });
-  }
-  
-  static async getUserChallenges(): Promise<Challenge[]> {
-    const response = await fetch(`${API_BASE_URL}/prompt-wars/challenges/my-challenges`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-}
-
-class SocialAPI {
-  private static getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
-  
-  static async getUsers(): Promise<SocialUser[]> {
-    const response = await fetch(`${API_BASE_URL}/user`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
-    
-    return response.json();
-  }
-  
-  static async getUserById(userId: string): Promise<SocialUser> {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch user');
-    }
-    
-    return response.json();
-  }
-  
-  static async getFollowing(): Promise<SocialUser[]> {
-    const response = await fetch(`${API_BASE_URL}/user/me/following`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-  
-  static async getFollowers(): Promise<SocialUser[]> {
-    const response = await fetch(`${API_BASE_URL}/user/me/followers`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-  
-  static async followUser(userId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}/follow`, {
-      method: 'POST',
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to follow user');
-    }
-  }
-  
-  static async unfollowUser(userId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}/follow`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to unfollow user');
-    }
-  }
-  
-  static async searchUsers(query: string): Promise<SocialUser[]> {
-    const response = await fetch(`${API_BASE_URL}/user/search?query=${encodeURIComponent(query)}`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-
-  // Paginated API methods
-  static async getUsersPaginated(page: number, size: number, search?: string): Promise<PaginatedResponse<SocialUser>> {
-    let url = `${API_BASE_URL}/user/paginated?page=${page}&size=${size}`;
-    
-    if (search?.trim()) {
-      url += `&search=${encodeURIComponent(search.trim())}`;
-    }
-    
-    const response = await fetch(url, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return {
-        content: [],
-        totalPages: 0,
-        totalElements: 0,
-        size: size,
-        number: page
-      };
-    }
-    
-    return response.json();
-  }
-
-  static async getFollowingPaginated(page: number, size: number): Promise<PaginatedResponse<SocialUser>> {
-    const url = `${API_BASE_URL}/user/me/following/paginated?page=${page}&size=${size}`;
-    
-    const response = await fetch(url, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return {
-        content: [],
-        totalPages: 0,
-        totalElements: 0,
-        size: size,
-        number: page
-      };
-    }
-    
-    return response.json();
-  }
-
-  static async getFollowersPaginated(page: number, size: number): Promise<PaginatedResponse<SocialUser>> {
-    const url = `${API_BASE_URL}/user/me/followers/paginated?page=${page}&size=${size}`;
-    
-    const response = await fetch(url, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return {
-        content: [],
-        totalPages: 0,
-        totalElements: 0,
-        size: size,
-        number: page
-      };
-    }
-    
-    return response.json();
-  }
-}
-
-class PromptAPI {
-  private static getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
-  
-  static async getPromptsByAuthor(authorId: string): Promise<Prompt[]> {
-    const response = await fetch(`${API_BASE_URL}/prompts/author/${authorId}`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-  
-  static async getAllPrompts(): Promise<Prompt[]> {
-    const response = await fetch(`${API_BASE_URL}/prompts`, {
-      headers: this.getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      return [];
-    }
-    
-    return response.json();
-  }
-}
 
 export default function SocialPage() {
   const [search, setSearch] = useState("");
@@ -354,6 +32,8 @@ export default function SocialPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<SocialUser | null>(null);
   const [allPrompts, setAllPrompts] = useState<Prompt[]>([]);
+  const [activeGameError, setActiveGameError] = useState<string | null>(null);
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState<{[key: string]: number}>({
@@ -374,19 +54,42 @@ export default function SocialPage() {
 
   const USERS_PER_PAGE = 12;
 
+  // Add state to track failed avatars
+  const [failedAvatars, setFailedAvatars] = useState<{[id: string]: boolean}>({});
+
   // Helper function to show user-friendly error messages
   const getErrorMessage = (error: any): string => {
-    if (typeof error === 'string') {
-      return error
-    }
-    
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase()
-      
-      // Transform backend errors to user-friendly messages
-      if (message.includes('already in an active game')) {
-        return 'You are currently in another battle. Please finish your current battle before starting a new one.'
+    // Handle array error responses (e.g. ["Already have a pending challenge with this user"])
+    if (Array.isArray(error) && error.length > 0) {
+      const msg = (typeof error[0] === 'string' ? error[0] : '').toLowerCase();
+      if (msg.includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
       }
+      return error[0];
+    }
+    if (typeof error === 'string') {
+      // If the error is a plain text response that looks like JSON parse error, show the string directly
+      if (error.startsWith('Unexpected token')) {
+        return 'An error occurred. Please try again.';
+      }
+      if (error.toLowerCase().includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
+      }
+      if (error.toLowerCase().includes('already in an active game')) {
+        setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+      }
+      return error;
+    }
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      if (message.includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
+      }
+      if (message.includes('already in an active game')) {
+        setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+        return 'You are currently in another battle. Please finish your current battle before starting a new one.';
+      }
+      // Transform backend errors to user-friendly messages
       if (message.includes('player is already in an active game')) {
         return 'This player is currently in another battle. Please try challenging them later.'
       }
@@ -504,13 +207,13 @@ export default function SocialPage() {
         if (activeTab !== 'challenges') {
           // Show a more prominent notification
           const notification = document.createElement('div');
-          notification.className = 'fixed top-4 right-4 bg-[#3ebb9e] text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+          notification.className = 'fixed bottom-4 right-4 bg-[#3ebb9e]/80 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm backdrop-blur-lg';
           notification.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
                 <h4 class="font-bold">New Challenge!</h4>
                 <p class="text-sm">${data.challenge.challengerName} wants to battle!</p>
-                <button class="text-xs underline mt-1" onclick="this.parentElement.parentElement.parentElement.remove(); window.location.hash = 'challenges'">
+                <button class="text-xs underline mt-1" id="view-challenge-btn">
                   View Challenge →
                 </button>
               </div>
@@ -518,7 +221,17 @@ export default function SocialPage() {
             </div>
           `;
           document.body.appendChild(notification);
-          
+          // Add click handler for the button to go to the match (same logic as Accept)
+          setTimeout(() => {
+            const btn = document.getElementById('view-challenge-btn');
+            if (btn) {
+              btn.onclick = () => {
+                notification.remove();
+                window.location.hash = 'challenges';
+                window.location.reload();
+              };
+            }
+          }, 100);
           // Auto remove after 5 seconds
           setTimeout(() => {
             if (notification.parentElement) {
@@ -783,157 +496,67 @@ export default function SocialPage() {
     }
   };
 
-  const UserCard = ({ user }: { user: SocialUser }) => (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
-      <div className="p-4 flex-1">
-        <div className="flex items-start space-x-4 mb-4">
-          <div className="relative">
-            <img
-              className="w-12 h-12 rounded-full object-cover border-2 border-border group-hover:border-[#3ebb9e]/50 transition-colors duration-300"
-              src={user.profilePictureUrl || "/placeholder-user.jpg"}
-              alt={user.username}
-            />
-            {user.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
-              <h3 className="font-semibold truncate group-hover:text-[#3ebb9e] transition-colors duration-300">{user.username}</h3>
-              {user.isPopular && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
-              {user.isOnline && (
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
-                  Online
-                </span>
-              )}
-            </div>
-            
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{user.bio || "No bio available"}</p>
-            
-            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-              <div className="flex items-center">
-                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                <span>{user.averageRating || 0}</span>
-              </div>
-              <span>•</span>
-              <span>{user.totalPrompts || 0} prompts</span>
-              <span>•</span>
-              <span>{Array.isArray(user.followers) ? user.followers.length : user.followers} followers</span>
-            </div>
-          </div>
-        </div>
-        
-        {user.prompts && user.prompts.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <h4 className="text-sm font-medium mb-2">Recent Prompts</h4>
-            <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-              {user.prompts.slice(0, 2).map((prompt) => (
-                <div key={prompt.id} className="text-xs bg-muted p-2 rounded-md group-hover:bg-[#3ebb9e]/5 transition-colors duration-300">
-                  <div className="font-medium group-hover:text-[#3ebb9e] transition-colors duration-300">{prompt.title}</div>
-                  <div className="text-muted-foreground truncate">{prompt.description}</div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-[#3ebb9e] font-medium">${prompt.price}</span>
-                    <div className="flex items-center">
-                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400 mr-1" />
-                      <span className="text-yellow-600">{prompt.rating || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="border-t border-border p-3 bg-gradient-to-r from-transparent to-transparent group-hover:from-[#3ebb9e]/5 group-hover:to-[#3ebb9e]/10 transition-all duration-300">
-        <div className="flex space-x-2">
-          <Button
-            size="sm"
-            variant={user.isFollowing ? "outline" : "default"}
-            className={`flex-1 ${
-              user.isFollowing 
-                ? "hover:border-[#3ebb9e] hover:text-[#3ebb9e]" 
-                : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-            } transition-colors duration-300`}
-            onClick={() => handleFollow(user.userId, user.isFollowing || false)}
-          >
-            {user.isFollowing ? "Unfollow" : "Follow"}
-          </Button>
-          
-          {/* Challenge button - Always show for followed users */}
-          {user.isFollowing && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                if (user.isOnline) {
-                  setSelectedOpponent(user);
-                  setShowChallengeModal(true);
-                } else {
-                  showNotification(`${user.username} is currently offline. Try again when they're online!`);
-                }
-              }}
-              className={`transition-all duration-300 ${
-                user.isOnline 
-                  ? "bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25" 
-                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
-              }`}
-              title={user.isOnline ? "Challenge to Prompt Wars" : "User is offline"}
-            >
-              {user.isOnline ? (
-                <>
-                  <Swords className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-300" />
-                  Challenge
-                </>
-              ) : (
-                <>
-                  <Timer className="h-4 w-4 mr-1" />
-                  Offline
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
+  const handleCancelActiveGame = async () => {
+    try {
+      await cancelActiveGame();
+      setActiveGameError(null);
+      showNotification('Your active game has been cancelled.');
+    } catch (err: any) {
+      setActiveGameError('Failed to cancel active game: ' + (err?.message || 'Unknown error'));
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading social data...</p>
-        </div>
-      </div>
-    );
-  }
+  // Check for active game on mount and when switching to challenges tab
+  const checkActiveGame = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const response = await fetch(`${API_BASE_URL}/prompt-wars/games/active`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+          'X-User-Id': userId || '',
+        },
+      });
+      if (response.ok) {
+        const games = await response.json();
+        if (Array.isArray(games) && games.length > 0) {
+          setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+          setActiveGameId(games[0].id || null);
+        } else {
+          setActiveGameError(null);
+          setActiveGameId(null);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium mb-2">Error Loading Social Hub</h3>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button 
-            onClick={loadInitialData}
-            className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Check for active game when switching to challenges tab
+  useEffect(() => {
+    if (activeTab === 'challenges') {
+      checkActiveGame();
+    }
+  }, [activeTab, checkActiveGame]);
+
+  // Helper to resolve avatar URL
+  const getAvatarUrl = (avatar: string | undefined | null) => {
+    if (!avatar) return "/placeholder-user.jpg";
+    if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
+    // If backend returns a relative path, prefix with API_BASE_URL (without /api)
+    if (avatar.startsWith("/")) return API_BASE_URL.replace(/\/api$/, "") + avatar;
+    return avatar;
+  };
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
+      {/* Fallback error UI if something goes wrong */}
+      {error && (
+        <div className="p-4 bg-red-100 text-red-800 border border-red-300 rounded mb-4">
+          {error}
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 lg:p-6">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -1046,7 +669,14 @@ export default function SocialPage() {
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
                   {users.map((user) => (
-                    <UserCard key={user.userId} user={user} />
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
                   ))}
                 </div>
                 
@@ -1128,7 +758,14 @@ export default function SocialPage() {
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
                   {following.map((user) => (
-                    <UserCard key={user.userId} user={user} />
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
                   ))}
                 </div>
                 
@@ -1206,7 +843,14 @@ export default function SocialPage() {
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
                   {followers.map((user) => (
-                    <UserCard key={user.userId} user={user} />
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
                   ))}
                 </div>
                 
@@ -1273,6 +917,25 @@ export default function SocialPage() {
 
           {/* Challenges Tab */}
           <TabsContent value="challenges" className="space-y-6">
+            {/* Cancel Active Game Banner inside Challenges tab */}
+            {activeGameError && (
+              <div className="my-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
+                <p className="mb-2 text-yellow-800">{activeGameError}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleCancelActiveGame} className="bg-red-500 text-white hover:bg-red-600">
+                    Cancel Active Game
+                  </Button>
+                  {activeGameId && (
+                    <Button
+                      onClick={() => window.location.href = `/prompt-wars/game/${activeGameId}`}
+                      className="bg-[#3ebb9e] text-white hover:bg-[#00674f]"
+                    >
+                      Return to Ongoing Match
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
             {(() => {
               const currentUserId = localStorage.getItem('userId');
               const receivedChallenges = challenges.filter(c => c.opponentId === currentUserId);
@@ -1314,11 +977,18 @@ export default function SocialPage() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
                                 <div className="relative">
-                                  <img
-                                    className="w-12 h-12 rounded-full object-cover border-2 border-border"
-                                    src={challenge.challengerAvatar || "/placeholder-user.jpg"}
-                                    alt={challenge.challengerName}
-                                  />
+                                  {challenge.challengerAvatar ? (
+                                    <img
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                                      src={getAvatarUrl(challenge.challengerAvatar)}
+                                      alt={challenge.challengerName}
+                                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 border-2 border-border">
+                                      <Swords className="h-7 w-7 text-[#3ebb9e]" />
+                                    </div>
+                                  )}
                                   {challenge.status === 'PENDING' && (
                                     <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                       !
@@ -1408,11 +1078,18 @@ export default function SocialPage() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
                                 <div className="relative">
-                                  <img
-                                    className="w-12 h-12 rounded-full object-cover border-2 border-border"
-                                    src="/placeholder-user.jpg"
-                                    alt={challenge.opponentName || 'Opponent'}
-                                  />
+                                  {challenge.challengerAvatar && !failedAvatars[challenge.id] ? (
+                                    <img
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                                      src={getAvatarUrl(challenge.challengerAvatar)}
+                                      alt={challenge.challengerName}
+                                      onError={() => setFailedAvatars(prev => ({ ...prev, [challenge.id]: true }))}
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 border-2 border-border">
+                                      <Swords className="h-7 w-7 text-[#3ebb9e]" />
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <h3 className="font-semibold">
@@ -1426,7 +1103,6 @@ export default function SocialPage() {
                                   </p>
                                 </div>
                               </div>
-                              
                               <div className="flex flex-col space-y-2">
                                 <span className={`px-3 py-1 text-xs rounded-full text-center ${
                                   challenge.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
@@ -1449,93 +1125,76 @@ export default function SocialPage() {
                 </>
               );
             })()}
-            
-            {challenges.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Trophy className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No challenges yet</h3>
-                <p className="text-gray-500 mb-4">Challenge friends to prompt wars to see them here!</p>
-                <Button
-                  onClick={() => setActiveTab('discover')}
-                  className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Find People to Challenge
-                </Button>
-              </div>
-            )}
           </TabsContent>
         </Tabs>
+        </div>
+      </div>
 
-        {/* Challenge Modal */}
-        {showChallengeModal && selectedOpponent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center">
-                  <div className="bg-[#3ebb9e]/10 p-2 rounded-full mr-3">
-                    <Swords className="h-5 w-5 text-[#3ebb9e]" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">Challenge {selectedOpponent.username}</h2>
-                    <p className="text-sm text-muted-foreground">Invite them to a Prompt Wars battle!</p>
-                  </div>
+      {/* Challenge Modal */}
+      {showChallengeModal && selectedOpponent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <div className="bg-[#3ebb9e]/10 p-2 rounded-full mr-3">
+                  <Swords className="h-5 w-5 text-[#3ebb9e]" />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowChallengeModal(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div>
+                  <h2 className="text-xl font-bold">Challenge {selectedOpponent.username}</h2>
+                  <p className="text-sm text-muted-foreground">Invite them to a Prompt Wars battle!</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChallengeModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">How Prompt Wars Works:</h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• You'll both get the same scenario to respond to</li>
+                  <li>• Write the best prompt in 2 minutes</li>
+                  <li>• AI judge will evaluate and declare the winner</li>
+                </ul>
               </div>
               
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-1">How Prompt Wars Works:</h4>
-                  <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• You'll both get the same scenario to respond to</li>
-                    <li>• Write the best prompt in 2 minutes</li>
-                    <li>• AI judge will evaluate and declare the winner</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Challenge Message (Optional)
-                  </label>
-                  <textarea
-                    className="w-full p-3 border border-border rounded-md bg-muted"
-                    rows={3}
-                    placeholder="Add a trash-talking message or friendly invite..."
-                    value={challengeMessage}
-                    onChange={(e) => setChallengeMessage(e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex space-x-3">
-                  <Button
-                    onClick={handleSendChallenge}
-                    className="flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-                  >
-                    <Swords className="h-4 w-4 mr-2" />
-                    Send Challenge
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowChallengeModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Challenge Message (Optional)
+                </label>
+                <textarea
+                  className="w-full p-3 border border-border rounded-md bg-muted"
+                  rows={3}
+                  placeholder="Add a trash-talking message or friendly invite..."
+                  value={challengeMessage}
+                  onChange={(e) => setChallengeMessage(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button
+                  onClick={handleSendChallenge}
+                  className="flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                >
+                  <Swords className="h-4 w-4 mr-2" />
+                  Send Challenge
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowChallengeModal(false)}
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           </div>
-        )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
