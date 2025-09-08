@@ -71,6 +71,7 @@ public class AuthController {
       responseBody.put("userId", user.getUserId().toString());
       responseBody.put("username", user.getUsername());
       responseBody.put("email", user.getEmail());
+      responseBody.put("token", token); // Include token in response for localStorage storage
 
       ResponseCookie cookie =
           ResponseCookie.from("token", token)
@@ -150,6 +151,7 @@ public class AuthController {
       responseBody.put("userId", user.getUserId().toString());
       responseBody.put("username", user.getUsername());
       responseBody.put("email", user.getEmail());
+      responseBody.put("token", token); // Include token in response for localStorage storage
 
       ResponseCookie cookie =
           ResponseCookie.from("token", token)
