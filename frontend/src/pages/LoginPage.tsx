@@ -70,6 +70,7 @@ export default function LoginPage() {
         if (result.username) localStorage.setItem("username", result.username);
         if (result.userId) localStorage.setItem("userId", result.userId);
         if (result.email) localStorage.setItem("userEmail", result.email);
+        if (result.token) localStorage.setItem("token", result.token); // Store JWT token
         
         setError("");
         // console.log("Login successful, navigating to dashboard");
@@ -373,6 +374,7 @@ export default function LoginPage() {
                                   if (result.username) localStorage.setItem("username", result.username);
                                   if (result.userId) localStorage.setItem("userId", result.userId);
                                   if (result.email) localStorage.setItem("userEmail", result.email);
+                                  if (result.token) localStorage.setItem("token", result.token); // Store JWT token
                                   setError("");
                                   navigate("/home");
                                 } else {
@@ -533,6 +535,7 @@ export default function LoginPage() {
                                   if (result.username) localStorage.setItem("username", result.username);
                                   if (result.userId) localStorage.setItem("userId", result.userId);
                                   if (result.email) localStorage.setItem("userEmail", result.email);
+                                  if (result.token) localStorage.setItem("token", result.token); // Store JWT token
                                   setError("");
                                   navigate("/home");
                                 } else {
