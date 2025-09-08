@@ -2,23 +2,32 @@ import { cn } from "@/lib/utils";
 import { PayoutCard } from "@/Models/Payout"
 import { Wifi } from 'lucide-react'
 
-
-
 type BankCardProps = {
   payoutCard: PayoutCard,
   className?: string;
   color?: string;
 }
 
+export default function BankCard({ payoutCard, className = "", color = "black" }: BankCardProps) {
+  // Define complete class names so Tailwind includes them in the build
+  const colorClasses = {
+    red: "bg-gradient-to-br from-slate-900 via-red-900 to-slate-800",
+    green: "bg-gradient-to-br from-slate-900 via-green-900 to-slate-800",
+    blue: "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800",
+    purple: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800",
+    yellow: "bg-gradient-to-br from-slate-900 via-yellow-900 to-slate-800",
+    black: "bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800",
+  } as const;
 
-export default function BankCard({ payoutCard, className = "", color="black" }: BankCardProps) {
-  // let color = getCardColor(payoutCard.bank.name.toLowerCase())
-  
+  // Get the background class based on color, fallback to black
+  const backgroundClass = colorClasses[color as keyof typeof colorClasses] || colorClasses.black;
+
   return (
     <div>
       {/* Card Front */}
       <div className={cn(
-        `relative overflow-hidden w-90 h-56 max-w-sm min-w-[280px] aspect-[1.6/1] bg-gradient-to-br from-slate-900 via-`+color+`-900 to-slate-800 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 text-white flex flex-col justify-between pb-8`,
+        `relative overflow-hidden w-90 h-56 max-w-sm min-w-[280px] aspect-[1.6/1] rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 text-white flex flex-col justify-between pb-8`,
+        backgroundClass,
         className
       )}>
         <div className="absolute inset-0 opacity-10">
@@ -43,7 +52,6 @@ export default function BankCard({ payoutCard, className = "", color="black" }: 
           {/* Contactless Payment Icon */}
           <Wifi className="w-4 h-4 sm:w-5 sm:h-5 rotate-90 opacity-60" />
         </div>
-
         {/* Middle Section - Account Number */}
         <div className="text-center">
           <div className="text-2xl sm:text-2xl font-mono tracking-wider break-all">
@@ -53,7 +61,6 @@ export default function BankCard({ payoutCard, className = "", color="black" }: 
             Account Number
           </div>
         </div>
-
         {/* Bottom Section */}
         <div className="flex justify-between items-end gap-2">
           <div className="flex-1 min-w-0">
@@ -64,7 +71,6 @@ export default function BankCard({ payoutCard, className = "", color="black" }: 
               Card Holder
             </div>
           </div>
-
           {/* Card Network Logo */}
           <div className="flex-shrink-0">
             <div className="w-8 h-5 sm:w-10 sm:h-6 bg-white rounded flex items-center justify-center">

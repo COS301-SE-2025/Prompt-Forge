@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
 import { Switch } from "../components/ui/Switch"
 import { Textarea } from "../components/ui/Textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select"
-import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2 } from "lucide-react"
+import { Camera, Check, Save, Trash, Upload, X, CreditCard, Trash2, Plus } from "lucide-react"
 import { profileService } from "../services/profileServices"
 import PaymentOverlay from "@/components/PaymentOverlay"
 import { BankIdentifier, PayoutCard } from "@/Models/Payout"
@@ -35,6 +35,8 @@ export default function ProfileSettingsPage() {
   //bank details
   const [payoutDetails, setPayoutDetails] = useState<PayoutCard | null>(null)
   const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
+  const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
+  const [isEditPaymentOpen, setIsEditPaymentOpen] = useState(false)
 
   // password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -88,7 +90,10 @@ export default function ProfileSettingsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
-        <p>Loading profile...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
       </div>
     )
   }
@@ -441,7 +446,7 @@ export default function ProfileSettingsPage() {
                         <h3 className="font-medium">Delete Account</h3>
                         <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                       </div>
-                      <Button variant="destructive">Delete Account</Button>
+                      <Button className="min-h-fit" variant="destructive">Delete Account</Button>
                     </div>
                   </div>
                 </Card>
@@ -501,78 +506,101 @@ export default function ProfileSettingsPage() {
 
             <TabsContent value="billing">
               <div className="grid gap-6">
-                <Card className="p-0 bg-muted">
-                  <div className="bg-muted p-4 flex justify-between items-center">
-                    <h2 className="text-lg font-medium mb-4 w-fit mb-0"><CreditCard className="inline mr-2" /> Payment Methods</h2>
+                <Card className="p-0 bg-transparent">
+                  <div className="bg-muted p-4 flex justify-between items-center rounded-t-lg">
+                    <h2 className="text-lg font-medium w-fit mb-0">
+                      <CreditCard className="inline mr-2" /> Payment Methods
+                    </h2>
                   </div>
-                  {
-                    payoutDetails !== null ?
-                      <div className="space-y-4 bg-muted">
-                        <div className="p-4 rounded-md flex justify-between items-center bg-muted">
-                          <div className="flex items-center">
-                            <BankCard payoutCard={payoutDetails} color={getCardColor(payoutDetails?.bank.name.toLowerCase())}/>
+                  {payoutDetails !== null ? (
+                    <div className="space-y-4 bg-transparent rounded-b-lg">
+                      <div className="p-4 rounded-b-md bg-muted">
+                        {/* Mobile Layout */}
+                        <div className="block sm:hidden space-y-4">
+                          <div className="flex justify-center">
+                            <BankCard
+                              payoutCard={payoutDetails}
+                              color={getCardColor(payoutDetails?.bank.name.toLowerCase())}
+                            />
                           </div>
-                          <div className="flex gap-2">
-                            <PaymentOverlay process="edit" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                              <Trash2 className="h-9 w-5" />
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              onClick={() => setIsEditPaymentOpen(true)}
+                              className="bg-[#3ebb9e] hover:bg-[#00674f] text-white w-full"
+                            >
+                              Edit Payment Method
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-200 w-full"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Payment Method
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Desktop Layout */}
+                        <div className="hidden sm:grid sm:grid-cols-2 sm:gap-4 sm:items-center">
+                          <div className="flex items-center">
+                            <BankCard
+                              payoutCard={payoutDetails}
+                              color={getCardColor(payoutDetails?.bank.name.toLowerCase())}
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              onClick={() => setIsEditPaymentOpen(true)}
+                              variant="outline"
+                              size="sm"
+                              className="bg-muted hover:bg-muted/80"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-200"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="hidden lg:inline ml-2">Delete</span>
                             </Button>
                           </div>
                         </div>
                       </div>
-                      :
-                      <div className="mt-4 bg-muted p-4">
-                        <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
-                      </div>
-                  }
+                    </div>
+                  ) : (
+                    <div className="bg-muted p-4">
+                      <Button
+                        onClick={() => setIsAddPaymentOpen(true)}
+                        className="bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Payment Method
+                      </Button>
+                    </div>
+                  )}
                 </Card>
 
-                {/* <Card className="p-6 bg-muted">
-                  <h2 className="text-lg font-medium mb-4">Billing History</h2>
+                {/* Payment Overlays */}
+                <PaymentOverlay
+                  process="add"
+                  bankList={bankList}
+                  currentPayoutCard={null}
+                  setPaymentCard={setPayoutDetails}
+                  isOpen={isAddPaymentOpen}
+                  onOpenChange={setIsAddPaymentOpen}
+                />
 
-                  <div className="space-y-4 bg-muted">
-                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
-                      <div>
-                        <p className="font-medium">Pro Plan - Monthly</p>
-                        <p className="text-xs text-muted-foreground">May 15, 2025</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">$19.99</p>
-                        <Button variant="link" size="sm" className="h-auto p-0">
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
-                      <div>
-                        <p className="font-medium">Pro Plan - Monthly</p>
-                        <p className="text-xs text-muted-foreground">April 15, 2025</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">$19.99</p>
-                        <Button variant="link" size="sm" className="h-auto p-0">
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center py-3 border-b border-border bg-muted">
-                      <div>
-                        <p className="font-medium">Pro Plan - Monthly</p>
-                        <p className="text-xs text-muted-foreground">March 15, 2025</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">$19.99</p>
-                        <Button variant="link" size="sm" className="h-auto p-0">
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-center bg-muted">
-                    <Button variant="link">View All Invoices</Button>
-                  </div>
-                </Card> */}
+                <PaymentOverlay
+                  process="edit"
+                  bankList={bankList}
+                  currentPayoutCard={payoutDetails}
+                  setPaymentCard={setPayoutDetails}
+                  isOpen={isEditPaymentOpen}
+                  onOpenChange={setIsEditPaymentOpen}
+                />
               </div>
             </TabsContent>
           </Tabs>
