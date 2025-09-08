@@ -111,7 +111,7 @@ export default function MyPromptsPage() {
         }
 
         //Fetch prompts using JWT authentication (cookies)
-        // console.log("Fetching prompts for authorId:", authorId)
+        console.log("Fetching prompts for authorId:", authorId)
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
@@ -173,7 +173,7 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate, userProfile, currentPage])
+  }, [isAuthenticated, navigate, userProfile])
 
 
   useEffect(() => {
@@ -204,95 +204,6 @@ export default function MyPromptsPage() {
     }
     fetchRatings()
   }, [myPrompts])
-
-    //TODO: create a global fetchMyPrompts function for reuse (the one below is literally the same as the other)
-    const fetchMyPrompts = async () => {
-      if (!isAuthenticated) {
-        setLoading(false)
-        return
-      }
-      setLoading(true)
-      try {
-        let authorId: string | null = null
-
-        if (userProfile?.userId) {
-          authorId = userProfile.userId
-
-          // console.log("Using authorId from profile:", authorId)
-        }
-        else { //Fallback: get from localStorage if profile not loaded yet
-          authorId = localStorage.getItem('userId')
-          // console.log("Using authorId from localStorage:", authorId)
-        }
-
-        if (!authorId) {
-          // console.log("No authorId available, using empty prompts")
-
-          setMyPrompts([])
-          // setFilteredPrompts([])
-          setLoading(false)
-          return
-        }
-
-        //Fetch prompts using JWT authentication (cookies)
-        // console.log("Fetching prompts for authorId:", authorId)
-
-        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
-        setTotalPages(userPromptsPage.totalPages);
-        setPromptCount(userPromptsPage.totalElements)
-
-        let prompts = userPromptsPage.content
-
-        if (!Array.isArray(prompts)) prompts = []
-
-        // Map backend fields to frontend MyPrompt interface
-        const mappedPrompts: MyPrompt[] = await Promise.all(
-          prompts.map(async (p: any) => {
-            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
-            return {
-              id: p.id,
-              title: p.title,
-              description: p.description || "",
-              content: p.content || "",
-              category: "General", // Default, backend does not provide
-              tags: (p.tagNames || []).filter((t: string, i: number, arr: string[]) => t !== "all" && arr.indexOf(t) === i),
-              createdAt: p.createdAt,
-              updatedAt: p.publishedAt || p.createdAt,
-              rating: averageRating || 0, // Default, backend does not provide
-              uses: p.usageCount,   // Default, backend does not provide
-              featured: p.featured || false,
-              price: p.price || 0,
-              isPrivate: p.visibility === "private",
-              isFavorite: false, // Default, backend does not provide
-              authorName: p.authorName || userProfile?.username || "You",
-              source: p.source,
-              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
-              publishedAt: p.publishedAt // Add this
-            }
-          })
-        )
-        setMyPrompts(mappedPrompts)
-        // setFilteredPrompts(mappedPrompts)
-
-        const tagNamesString = localStorage.getItem("tagNames");
-        let tags = ["all"]
-        if (tagNamesString != null) {
-          tags = [...tags, ...JSON.parse(tagNamesString)];
-        }
-        else {
-          //TODO: fetch tags from API
-        }
-        setAvailableCategories(tags)
-
-      } catch (error) {
-
-        console.error("Error fetching prompts:", error)
-
-        setMyPrompts([])
-      } finally {
-        setLoading(false)
-      }
-    }
 
   const filters = [
     { value: "all", label: "All" },
