@@ -40,7 +40,11 @@ public class SecurityConfig {
                         "/swagger-ui.html",
                         "/api/auth/**",
                         "/public/**",
-                        "/api/user/**",
+                        "/api/user/paginated",
+                        "/api/user/me/followers/paginated",
+                        "/api/user/me/following/paginated",
+                        "/api/user/*/follow",
+                        "/api/user/*/follow-status",
                         "/api/test/**",
                         "/api/editor/**",
                         "/api/comparison/**",
@@ -49,7 +53,9 @@ public class SecurityConfig {
                         "/api/prompts/**",
                         "/api/store/prompts/**",
                         "/api/cart/**",
-                        "/api/ml/**")
+                        "/api/ml/**",
+                        "/api/prompt-wars/**",
+                        "/ws/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
