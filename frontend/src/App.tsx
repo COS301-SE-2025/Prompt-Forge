@@ -25,7 +25,7 @@ import OptimizerPage from "./pages/OptimizerPage"
 
 function App() {
   const location = useLocation()
-  const hideHeaderRoutes = ['/','/login','/help', '/war']
+    const hideHeaderRoutes = ['/','/login','/help', '/war','/register','/forgot-password','/login/','/optimizer']
 
   return (
     <div className="min-h-screen w-full flex flex-col">
