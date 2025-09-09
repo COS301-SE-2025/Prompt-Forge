@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
+import Silk from "@/components/Silk"
 import { BrainCircuit, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { AuthService } from "@/services/authService";
 import { GoogleLogin } from '@react-oauth/google';
+import { useTheme } from "../components/theme-provider"; // <-- Add this
 
 export default function LoginPage() {
+  const { theme } = useTheme(); // <-- Add this
   const authService = new AuthService();
   const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
@@ -34,6 +37,12 @@ export default function LoginPage() {
     hasSpecialChar: false
   });
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+
+  const [rightLoaded, setRightLoaded] = useState(false)
+
+  useEffect(() => {
+    setTimeout(() => setRightLoaded(true), 300)
+  }, [])
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
@@ -70,6 +79,7 @@ export default function LoginPage() {
         if (result.username) localStorage.setItem("username", result.username);
         if (result.userId) localStorage.setItem("userId", result.userId);
         if (result.email) localStorage.setItem("userEmail", result.email);
+        if (result.token) localStorage.setItem("token", result.token); // Store JWT token
         
         setError("");
         // console.log("Login successful, navigating to dashboard");
@@ -204,49 +214,61 @@ export default function LoginPage() {
     return <>{children}</>;
   };
 
+  // Silk background color for light/dark mode
+  const silkBg =
+    theme === "light"
+      ? [1, 1, 1] as [number, number, number]
+      : [0.0078, 0.031, 0.090] as [number, number, number]
+
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className={`min-h-screen flex flex-col ${theme === "light" ? "bg-white text-black" : "bg-muted/30 text-white"}`}>
       <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left Side - Brand Section */}
-        <div
-          className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center animate-gradient order-1 lg:order-1 min-h-[300px] lg:min-h-screen"
-          style={{
-            backgroundImage: `linear-gradient(-45deg, #3ebb9e, #174037, #020817)`,
-            backgroundSize: "400% 400%",
-          }}
-        >
-          <div className="max-w-sm sm:max-w-md mx-auto">
+        {/* Left Silk/Brand Section */}
+        <div className="relative w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center order-1 lg:order-1 min-h-[300px] lg:min-h-screen overflow-hidden">
+          <div className="absolute inset-0">
+            <Silk speed={1} bgColor={silkBg} /> {/* <-- Pass bgColor */}
+          </div>
+          <div className="relative z-10 max-w-sm sm:max-w-md mx-auto">
             <div className="mb-4 sm:mb-6 flex justify-center">
               <div className="bg-[#00876e]/10 p-3 sm:p-4 rounded-full">
-                <BrainCircuit className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white dark:text-white" />
+                <BrainCircuit className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${theme === "light" ? "text-black" : "text-white"}`} />
               </div>
             </div>
 
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-wider mb-2 text-white">
+            <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-wider mb-2 ${theme === "light" ? "text-black" : "text-white"}`}>
               Prompt Forge
             </h1>
-            <p className="text-xs sm:text-sm text-white/70 uppercase tracking-widest mb-6 sm:mb-8">
+            <p className={`text-xs sm:text-sm ${theme === "light" ? "text-black/70" : "text-white/70"} uppercase tracking-widest mb-6 sm:mb-8`}>
               Forge the future
             </p>
 
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-white leading-tight">
+            <h2 className={`text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 leading-tight ${theme === "light" ? "text-black" : "text-white"}`}>
               Discover, Test & Master <br className="hidden sm:block" /> 
               <span className="sm:hidden">& </span>AI Prompts
             </h2>
 
-            <p className="text-xs sm:text-sm lg:text-base text-white/80 mb-4 sm:mb-6 leading-relaxed px-2">
+            <p className={`text-xs sm:text-sm lg:text-base ${theme === "light" ? "text-black/80" : "text-white/80"} mb-4 sm:mb-6 leading-relaxed px-2`}>
               The marketplace for high-quality, tested AI prompts. 
               <br className="hidden sm:block" />
               <span className="sm:hidden"> </span>Buy, sell, test, and compare prompts to maximize 
-              <br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>your AI potential.
+              <br className="hidden sm:block" />your AI potential.
             </p>
           </div>
         </div>
 
-        {/* Right Side - Form Section */}
-        <div className="w-full lg:w-1/2 bg-background p-4 sm:p-6 lg:p-8 flex items-center justify-center order-2 lg:order-2 min-h-[500px] lg:min-h-screen">
-          <Card className="w-full max-w-sm sm:max-w-md lg:max-w-lg shadow-lg">
+        {/* Right Login Section */}
+        <div
+          className="w-full lg:w-1/2 flex flex-col justify-center items-center p-4 sm:p-8 lg:p-16 order-2 lg:order-2 min-h-[300px] lg:min-h-screen relative"
+        >
+          {/* Muted translucent background */}
+          <div className="absolute inset-0 pointer-events-none z-0" />
+          <Card
+            className={`w-full max-w-sm sm:max-w-md lg:max-w-lg shadow-lg z-10 transition-all duration-700 ${
+              rightLoaded
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-16"
+            }`}
+          >
             <div className="p-4 sm:p-6 lg:p-8">
               {showForgotPassword ? (
                 <div className="space-y-4">
@@ -373,6 +395,7 @@ export default function LoginPage() {
                                   if (result.username) localStorage.setItem("username", result.username);
                                   if (result.userId) localStorage.setItem("userId", result.userId);
                                   if (result.email) localStorage.setItem("userEmail", result.email);
+                                  if (result.token) localStorage.setItem("token", result.token); // Store JWT token
                                   setError("");
                                   navigate("/home");
                                 } else {
@@ -533,6 +556,7 @@ export default function LoginPage() {
                                   if (result.username) localStorage.setItem("username", result.username);
                                   if (result.userId) localStorage.setItem("userId", result.userId);
                                   if (result.email) localStorage.setItem("userEmail", result.email);
+                                  if (result.token) localStorage.setItem("token", result.token); // Store JWT token
                                   setError("");
                                   navigate("/home");
                                 } else {

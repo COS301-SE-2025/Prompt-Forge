@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/Card"
 import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, FileText, HelpCircle } from "lucide-react"
@@ -7,6 +8,18 @@ import InteractiveBackground from "@/components/InteractiveBackground"
 import GradientText from "@/components/GradientText"
 
 export default function HomePage() {
+  const [leftLoaded, setLeftLoaded] = useState(false)
+  const [cardsLoaded, setCardsLoaded] = useState(false)
+
+  useEffect(() => {
+    const leftTimer = setTimeout(() => setLeftLoaded(true), 150)
+    const cardsTimer = setTimeout(() => setCardsLoaded(true), 300)
+    return () => {
+      clearTimeout(leftTimer)
+      clearTimeout(cardsTimer)
+    }
+  }, [])
+
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background relative overflow-hidden">
       {/* Interactive Background Effects */}
@@ -15,9 +28,13 @@ export default function HomePage() {
       <div className="flex-1 flex items-center justify-center p-2 sm:p-3 md:p-6 relative z-10">
         <div className="w-full max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full items-center">
-            {/* Left side - Text content and robot image */}
-            <div className="flex flex-col justify-center space-y-3 sm:space-y-4 lg:space-y-6 order-1 lg:order-1">
-              {/* Text content - Always at top */}
+            {/* Left side - Text content and robot image, animate together */}
+            <div
+              className={`flex flex-col justify-center space-y-3 sm:space-y-4 lg:space-y-6 order-1 lg:order-1 transition-all duration-700 ${
+                leftLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+              }`}
+            >
+              {/* Text content */}
               <div className="pt-4 sm:pt-8 lg:pt-12">
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-foreground mb-2 sm:mb-3 lg:mb-4 leading-tight">
                   Optimize your AI prompts
@@ -33,7 +50,6 @@ export default function HomePage() {
                     Prompt Forge
                   </GradientText>
                 </h1>
-
                 <p className="text-muted-foreground text-xs sm:text-sm lg:text-base mb-3 sm:mb-4 lg:mb-6 leading-relaxed">
                   Write it. Test it. Refine it. Repeat.
                   <br className="hidden sm:block" />A creative playground for building and perfecting AI prompts.
@@ -41,8 +57,7 @@ export default function HomePage() {
                   Because smarter prompts mean smarter AI.
                 </p>
               </div>
-
-              {/* Robot Image - Now shows on all screen sizes, smaller on mobile */}
+              {/* Robot Image */}
               <div className="flex justify-center lg:justify-start">
                 <div className="w-32 h-32 sm:w-52 sm:h-52 lg:w-80 lg:h-80 relative">
                   <img
@@ -54,8 +69,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right side - Feature cards grid - 2 columns on mobile */}
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 lg:gap-3 h-fit order-2 lg:order-2">
+            {/* Right side - Feature cards grid */}
+            <div
+              className={`grid grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 lg:gap-3 h-fit order-2 lg:order-2 transition-all duration-700 ${
+                cardsLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+              }`}
+            >
               {/* Prompt Marketplace */}
               <Link to="/marketplace" className="col-span-1">
                 <Card className="bg-indigo-500/20 border-indigo-500/30 p-2 sm:p-3 lg:p-4 hover:bg-indigo-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 backdrop-blur-sm">
@@ -151,16 +170,16 @@ export default function HomePage() {
                   </p>
                 </Card>
               </Link>
-
             </div>
           </div>
         </div>
       </div>
 
-      {/* Help Button - Responsive sizing */}
+      {/* Help Button */}
       <Link
         to="/help"
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-[#3ebb9e] hover:bg-[#2ea688] text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-50 backdrop-blur-sm"
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-[#3ebb9e] hover:bg-[#2ea688] text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-lg transition-all duration-700 hover:scale-110 z-50 backdrop-blur-sm
+        ${cardsLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
         title="Help & Support"
       >
         <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />

@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
@@ -38,6 +39,7 @@ class UserControllerTest {
   @Mock private JwtUtil jwtUtil;
   @Mock private MailService mailService;
   @Mock private HttpServletRequest request;
+  @Mock private Authentication authentication;
 
   @InjectMocks private UserController userController;
 
@@ -87,6 +89,7 @@ class UserControllerTest {
     cookies[0] = new Cookie("token", testToken);
     when(request.getCookies()).thenReturn(cookies);
     when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
+    when(authentication.getName()).thenReturn(testEmail);
   }
 
   // ============== Get all Users ======================
@@ -566,7 +569,7 @@ class UserControllerTest {
     when(userService.getFollowersByEmail(testEmail)).thenReturn(followers);
 
     // Act
-    List<UserDto> result = userController.getFollowers(request);
+    List<UserDto> result = userController.getFollowers(authentication, request);
 
     // Assert
     assertNotNull(result);
@@ -585,7 +588,7 @@ class UserControllerTest {
     when(userService.getFollowingByEmail(testEmail)).thenReturn(following);
 
     // Act
-    List<UserDto> result = userController.getFollowing(request);
+    List<UserDto> result = userController.getFollowing(authentication, request);
 
     // Assert
     assertNotNull(result);

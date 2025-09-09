@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -133,16 +134,133 @@ public class UserController {
     return userService.searchUsers(query);
   }
 
+  // Paginated endpoints for social features
+  @GetMapping("/paginated")
+  public ResponseEntity<Map<String, Object>> getUsersPaginated(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size,
+      @RequestParam(required = false) String search) {
+
+    org.springframework.data.domain.Page<UserDto> usersPage =
+        userService.getUsersPaginated(page, size, search);
+
+    Map<String, Object> response =
+        Map.of(
+            "content", usersPage.getContent(),
+            "totalPages", usersPage.getTotalPages(),
+            "totalElements", usersPage.getTotalElements(),
+            "size", usersPage.getSize(),
+            "number", usersPage.getNumber());
+
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping("/me/followers")
-  public List<UserDto> getFollowers(HttpServletRequest request) {
-    String email = extractEmailFromCookie(request);
+  public List<UserDto> getFollowers(Authentication authentication, HttpServletRequest request) {
+    String email;
+
+    // Try Authentication first, then fall back to cookies
+    if (authentication != null
+        && authentication.getName() != null
+        && !authentication.getName().trim().isEmpty()) {
+      email = authentication.getName();
+    } else {
+      email = extractEmailFromCookie(request);
+    }
+
     return userService.getFollowersByEmail(email);
   }
 
+  @GetMapping("/me/followers/paginated")
+  public ResponseEntity<Map<String, Object>> getFollowersPaginated(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size,
+      Authentication authentication,
+      HttpServletRequest request) {
+
+    try {
+      String email;
+
+      // Try Authentication first, then fall back to cookies
+      if (authentication != null
+          && authentication.getName() != null
+          && !authentication.getName().trim().isEmpty()) {
+        email = authentication.getName();
+      } else {
+        email = extractEmailFromCookie(request);
+      }
+
+      org.springframework.data.domain.Page<UserDto> followersPage =
+          userService.getFollowersPaginated(email, page, size);
+
+      Map<String, Object> response =
+          Map.of(
+              "content", followersPage.getContent(),
+              "totalPages", followersPage.getTotalPages(),
+              "totalElements", followersPage.getTotalElements(),
+              "size", followersPage.getSize(),
+              "number", followersPage.getNumber());
+
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      LOGGER.error("Error getting followers paginated: ", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to get followers", "error", e.getMessage()));
+    }
+  }
+
   @GetMapping("/me/following")
-  public List<UserDto> getFollowing(HttpServletRequest request) {
-    String email = extractEmailFromCookie(request);
+  public List<UserDto> getFollowing(Authentication authentication, HttpServletRequest request) {
+    String email;
+
+    // Try Authentication first, then fall back to cookies
+    if (authentication != null
+        && authentication.getName() != null
+        && !authentication.getName().trim().isEmpty()) {
+      email = authentication.getName();
+    } else {
+      email = extractEmailFromCookie(request);
+    }
+
     return userService.getFollowingByEmail(email);
+  }
+
+  @GetMapping("/me/following/paginated")
+  public ResponseEntity<Map<String, Object>> getFollowingPaginated(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size,
+      Authentication authentication,
+      HttpServletRequest request) {
+
+    try {
+      String email;
+
+      // Try Authentication first, then fall back to cookies
+      if (authentication != null
+          && authentication.getName() != null
+          && !authentication.getName().trim().isEmpty()) {
+        email = authentication.getName();
+      } else {
+        email = extractEmailFromCookie(request);
+      }
+
+      org.springframework.data.domain.Page<UserDto> followingPage =
+          userService.getFollowingPaginated(email, page, size);
+
+      Map<String, Object> response =
+          Map.of(
+              "content", followingPage.getContent(),
+              "totalPages", followingPage.getTotalPages(),
+              "totalElements", followingPage.getTotalElements(),
+              "size", followingPage.getSize(),
+              "number", followingPage.getNumber());
+
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      LOGGER.error("Error getting following paginated: ", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to get following", "error", e.getMessage()));
+    }
   }
 
   @GetMapping("/me/card")
@@ -228,5 +346,87 @@ public class UserController {
     user.setPasswordHash(userService.encodePassword(newPassword));
     userService.save(user);
     return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+  }
+
+  // Follow/Unfollow endpoints
+  @PostMapping("/{targetUserId}/follow")
+  public ResponseEntity<Map<String, Object>> followUser(
+      @PathVariable UUID targetUserId, Authentication authentication, HttpServletRequest request) {
+    try {
+      String email;
+
+      // Try Authentication first, then fall back to cookies
+      if (authentication != null
+          && authentication.getName() != null
+          && !authentication.getName().trim().isEmpty()) {
+        email = authentication.getName();
+      } else {
+        email = extractEmailFromCookie(request);
+      }
+
+      UUID currentUserId = userService.getUserIdByEmail(email);
+      userService.followUser(currentUserId, targetUserId);
+
+      return ResponseEntity.ok(
+          Map.of("message", "Successfully followed user", "isFollowing", true));
+    } catch (Exception e) {
+      LOGGER.error("Error following user: ", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to follow user", "error", e.getMessage()));
+    }
+  }
+
+  @DeleteMapping("/{targetUserId}/follow")
+  public ResponseEntity<Map<String, Object>> unfollowUser(
+      @PathVariable UUID targetUserId, Authentication authentication, HttpServletRequest request) {
+    try {
+      String email;
+
+      // Try Authentication first, then fall back to cookies
+      if (authentication != null
+          && authentication.getName() != null
+          && !authentication.getName().trim().isEmpty()) {
+        email = authentication.getName();
+      } else {
+        email = extractEmailFromCookie(request);
+      }
+
+      UUID currentUserId = userService.getUserIdByEmail(email);
+      userService.unfollowUser(currentUserId, targetUserId);
+
+      return ResponseEntity.ok(
+          Map.of("message", "Successfully unfollowed user", "isFollowing", false));
+    } catch (Exception e) {
+      LOGGER.error("Error unfollowing user: ", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to unfollow user", "error", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/{targetUserId}/follow-status")
+  public ResponseEntity<Map<String, Object>> getFollowStatus(
+      @PathVariable UUID targetUserId, Authentication authentication, HttpServletRequest request) {
+    try {
+      String email;
+
+      // Try Authentication first, then fall back to cookies
+      if (authentication != null
+          && authentication.getName() != null
+          && !authentication.getName().trim().isEmpty()) {
+        email = authentication.getName();
+      } else {
+        email = extractEmailFromCookie(request);
+      }
+
+      UUID currentUserId = userService.getUserIdByEmail(email);
+
+      boolean isFollowing = userService.isFollowing(currentUserId, targetUserId);
+
+      return ResponseEntity.ok(Map.of("isFollowing", isFollowing));
+    } catch (Exception e) {
+      LOGGER.error("Error checking follow status: ", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to check follow status", "error", e.getMessage()));
+    }
   }
 }

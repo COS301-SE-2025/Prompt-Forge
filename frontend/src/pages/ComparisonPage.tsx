@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config/api';
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Save, HelpCircle, Copy, RotateCcw, Play, Star, X, ArrowLeftRight, ChevronUp, ChevronDown, Settings } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTypingEffect } from "@/hooks/useTypingEffect";
 import { StreamingDisplay } from "@/components/StreamingDisplay";
@@ -21,7 +21,7 @@ When writing a prompt, always follow these guidelines:
 4. [If your prompt involves a specific topic or style, mention it explicitly and 
 explain how the response should be adapted to fit.]`
 
-export default function ComparisonsPage() {
+export default function ComparisonPage() {
   const navigate = useNavigate()
   const [promptTextA, setPromptTextA] = useState("")
   const [promptTextB, setPromptTextB] = useState("")
@@ -340,8 +340,8 @@ Please provide:
   }
 
   const handleReset = () => {
-    setPromptTextA(defaultPrompt)
-    setPromptTextB(defaultPrompt)
+    setPromptTextA("")
+    setPromptTextB("")
     setAiResponseA("AI response to prompt A will appear here...")
     setAiResponseB("AI response to prompt B will appear here...")
     setRatingResponse("")
@@ -412,8 +412,27 @@ Please provide:
     })
   }
 
+  // Page transition effects
+  const [pageLoaded, setPageLoaded] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPageLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Compute the style for animation
+  const animationStyle = pageLoaded
+    ? { opacity: 1, transform: "scale(1)" }
+    : { opacity: 0, transform: "scale(0.95)" }
+
   return (
-    <div className="flex-1 flex flex-col w-full h-[calc(100vh-64px)] bg-background">
+    <div
+      className="flex-1 flex flex-col w-full h-[calc(100vh-64px)] bg-background transition-all duration-700"
+      style={{
+        ...animationStyle,
+        willChange: "opacity, transform",
+      }}
+    >
       <div className="flex-1 flex min-h-0">
         {/* Main Content Area */}
         <div className={`flex-1 flex flex-col transition-all duration-300 ${
