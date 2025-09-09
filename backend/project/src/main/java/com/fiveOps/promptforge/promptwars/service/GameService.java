@@ -96,8 +96,12 @@ public class GameService {
   }
 
   // Prompt Wars specific methods
-  public Game generateScenario(UUID gameId) {
+  public synchronized Game generateScenario(UUID gameId) {
     Game game = getGame(gameId);
+
+    System.out.println("Generating scenario for game: " + gameId);
+    System.out.println("Current game state: " + game.getGameState());
+    System.out.println("Current scenario: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
 
     if (game.getGameState() != GameState.WAITING) {
       throw new IllegalArgumentException("Game is not in waiting state");
@@ -105,13 +109,18 @@ public class GameService {
 
     // Only generate scenario if not already set
     if (game.getScenario() == null || game.getScenario().trim().isEmpty()) {
+      System.out.println("No scenario exists, generating new one...");
       // Generate scenario using OpenRouter AI
       String scenario = generateAIScenario();
       game.setScenario(scenario);
+      System.out.println("New scenario generated: " + scenario.substring(0, Math.min(50, scenario.length())) + "...");
+    } else {
+      System.out.println("Scenario already exists, using existing one");
     }
 
     game.setGameState(GameState.WRITING);
     Game savedGame = gameRepository.save(game);
+    System.out.println("Game saved with scenario. Final scenario: " + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
 
     // Send real-time notifications to both players
     Map<String, Object> gameUpdate = new HashMap<>();
