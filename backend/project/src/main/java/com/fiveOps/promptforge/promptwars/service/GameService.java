@@ -150,25 +150,15 @@ public class GameService {
                   "role",
                   "user",
                   "content",
-                  "Generate a creative and engaging scenario for a prompt writing competition. "
-                      + "The scenario should be:\n"
-                      + "1. Specific enough to guide prompt creation\n"
-                      + "2. Open-ended enough to allow creativity\n"
-                      + "3. Interesting and fun to work with\n"
-                      + "4. Suitable for AI prompt engineering\n\n"
-                      + "Please provide just the scenario description in 2-3 sentences, "
-                      + "nothing else.\n\n"
-                      + "Examples of good scenarios:\n"
-                      + "- \"You're a time traveler who accidentally changed history. "
-                      + "Write a prompt to help an AI figure out what went wrong "
-                      + "and how to fix it.\"\n"
-                      + "- \"An alien species has just made contact with Earth, but they only "
-                      + "communicate through colors and emotions. Create a prompt for an AI "
-                      + "to help establish meaningful communication.\"\n"
-                      + "- \"You've discovered that your dreams are actually glimpses into "
-                      + "parallel universes. Design a prompt for an AI to help you navigate "
-                      + "and understand these alternate realities.\"\n\n"
-                      + "Generate a new, unique scenario:"));
+                  "Create a fun, creative scenario for a prompt battle! Make it:"
+                      + "\n• Exciting and imaginative"
+                      + "\n• Clear and easy to understand" 
+                      + "\n• Perfect for AI prompt writing"
+                      + "\n\nJust give me ONE short scenario (1-2 sentences max). Examples:"
+                      + "\n'🚀 You're designing an AI assistant for Mars colonists who speak in emoji. Write the perfect prompt!'"
+                      + "\n'🎭 Create a prompt for an AI that helps shy people become confident public speakers in 30 days.'"
+                      + "\n'🌟 Design a prompt for an AI chef that creates meals based on your current mood and the weather.'"
+                      + "\n\nNow create something totally new and exciting:"));
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -198,17 +188,16 @@ public class GameService {
 
   private String getFallbackScenario() {
     String[] scenarios = {
-      "Write a story about a time traveler who discovers they can only travel to moments of "
-          + "great personal regret.",
-      "Describe a world where emotions are visible as colors that surround people.",
-      "Tell the story of the last bookstore on Earth.",
-      "Write about a character who can hear the thoughts of inanimate objects.",
-      "Describe a society where people age backwards.",
-      "Write about a person who wakes up with a superpower they desperately don't want.",
-      "Tell the story of a museum night guard who discovers the exhibits come alive.",
-      "Write about a world where lies become physical objects.",
-      "Describe a character who can taste colors and see sounds.",
-      "Write about the day gravity stopped working.",
+      "🎨 Create a prompt for an AI that designs custom tattoos based on people's life stories.",
+      "🎪 Design a prompt for an AI carnival game master that creates personalized mini-games.",
+      "🌙 Write a prompt for an AI dream interpreter that helps people understand their nightmares.",
+      "🎵 Create a prompt for an AI DJ that reads the room's mood and plays perfect songs.",
+      "🏠 Design a prompt for an AI interior decorator that works with impossible budgets.",
+      "🍳 Write a prompt for an AI chef that only cooks with ingredients found in hotel mini-bars.",
+      "📱 Create a prompt for an AI that writes breakup texts that somehow make people feel better.",
+      "🎭 Design a prompt for an AI acting coach for people who are afraid of their own shadow.",
+      "🎮 Write a prompt for an AI that creates board games for families who never agree on anything.",
+      "🚗 Create a prompt for an AI GPS that gives directions using only movie quotes.",
     };
     return scenarios[(int) (Math.random() * scenarios.length)];
   }
