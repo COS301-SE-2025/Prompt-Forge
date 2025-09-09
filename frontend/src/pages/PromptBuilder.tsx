@@ -27,7 +27,7 @@ import {
   Filter,
   HelpCircle
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 interface Persona {
@@ -280,6 +280,8 @@ export default function PromptBuilderPage() {
   const [profilesCollapsed, setProfilesCollapsed] = useState(false); // For collapsible profiles
   const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
   const [showHelpModal, setShowHelpModal] = useState(false)
+  const [pageLoaded, setPageLoaded] = useState(false)
+
   const streamingService = new StreamingService();
   const navigate = useNavigate();
   
@@ -287,6 +289,11 @@ export default function PromptBuilderPage() {
     speed: typingSpeed, 
     batchSize: typingSpeed < 20 ? 3 : typingSpeed < 50 ? 2 : 1 
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPageLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const showNotification = (type: "success" | "error", title: string, message: string) => {
     const color = type === "success" ? "green" : "red"
@@ -500,7 +507,12 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
   }
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full bg-background">
+    <div
+      className={`flex-1 flex flex-col w-full h-full bg-background transition-all duration-700 ${
+        pageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+      }`}
+      style={{ willChange: "opacity, transform" }}
+    >
       <div className="flex-1 p-3 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Mobile Layout */}
