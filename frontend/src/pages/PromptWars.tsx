@@ -110,7 +110,7 @@ export default function PromptWarsPage() {
   const [ratingExplanation, setRatingExplanation] = useState("")
   const [isLoadingRating, setIsLoadingRating] = useState(false)
   const [winner, setWinner] = useState<"player" | "opponent" | "tie" | null>(null)
-  const [opponentName, setOpponentName] = useState("Real Player")
+  const [opponentName, setOpponentName] = useState("Player 2")
 
   // UI state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -153,7 +153,7 @@ export default function PromptWarsPage() {
         },
       ])
       
-      setOpponentName("Real Player")
+      setOpponentName("Player 2")
     }
 
     return () => {
@@ -650,9 +650,9 @@ export default function PromptWarsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#40ffaa]/10 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-[#3ebb9e]/10 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-[#4079ff]/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#40ffaa]/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#3ebb9e]/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
         <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-[#4079ff]/5 rounded-full blur-xl animate-pulse delay-3000"></div>
       </div>
 
@@ -662,12 +662,12 @@ export default function PromptWarsPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center gap-4 mb-4">
               <div className="relative">
-                <Swords className="h-12 w-12 text-[#40ffaa] animate-pulse" />
-                <div className="absolute inset-0 h-12 w-12 text-[#40ffaa] opacity-20">
+                <Swords className="h-12 w-12 text-[#3ebb9e] animate-pulse" />
+                <div className="absolute inset-0 h-12 w-12 text-[#3ebb9e] opacity-20">
                   <Swords className="h-12 w-12" />
                 </div>
               </div>
-              <h1 className="text-5xl font-black bg-gradient-to-r from-[#40ffaa] via-white to-[#4079ff] bg-clip-text text-transparent">
+              <h1 className="text-5xl font-black bg-gradient-to-r from-[#3ebb9e] via-white to-[#4079ff] bg-clip-text text-transparent">
                 PROMPT WARS
               </h1>
               <div className="relative">
@@ -681,7 +681,7 @@ export default function PromptWarsPage() {
               {isMultiplayerGame ? `🔥 LIVE BATTLE vs ${opponentName}` : "⚡ AI-Powered Combat Arena"}
             </p>
             {loading && (
-              <div className="flex items-center justify-center gap-2 text-[#40ffaa] mt-3">
+              <div className="flex items-center justify-center gap-2 text-[#3ebb9e] mt-3">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="font-semibold">Initializing Battle Systems...</span>
               </div>
@@ -714,7 +714,7 @@ export default function PromptWarsPage() {
               <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-gradient-to-br from-[#40ffaa] to-[#4079ff] rounded-lg">
+                    <div className="p-2 bg-gradient-to-br from-[#3ebb9e] to-[#4079ff] rounded-lg">
                       <Shield className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-xl font-bold text-white">Battle Status</h2>
@@ -723,8 +723,8 @@ export default function PromptWarsPage() {
                   <div className="space-y-6">
                     {/* Game Mode */}
                     <div className="text-center">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 border border-[#40ffaa]/30 rounded-full mb-2">
-                        <Sparkles className="h-4 w-4 text-[#40ffaa]" />
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 border border-[#3ebb9e]/30 rounded-full mb-2">
+                        <Sparkles className="h-4 w-4 text-[#3ebb9e]" />
                         <span className="text-sm font-semibold text-white">
                           {isMultiplayerGame ? "LIVE MATCH" : "TRAINING MODE"}
                         </span>
@@ -741,12 +741,12 @@ export default function PromptWarsPage() {
                         Current Phase
                       </div>
                       <div className="text-lg font-bold text-white capitalize flex items-center gap-2">
-                        {gameState === "waiting" && <Zap className="h-5 w-5 text-[#40ffaa]" />}
+                        {gameState === "waiting" && <Zap className="h-5 w-5 text-[#3ebb9e]" />}
                         {gameState === "scenario" && <Eye className="h-5 w-5 text-[#4079ff]" />}
                         {gameState === "writing" && <Timer className="h-5 w-5 text-yellow-400" />}
                         {gameState === "rating" && <Star className="h-5 w-5 text-purple-400" />}
                         {(gameState === "results" || gameState === "finished") && (
-                          <Trophy className="h-5 w-5 text-[#40ffaa]" />
+                          <Trophy className="h-5 w-5 text-[#3ebb9e]" />
                         )}
                         {gameState === "waiting"
                           ? isMultiplayerGame
@@ -782,9 +782,9 @@ export default function PromptWarsPage() {
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-[#40ffaa] rounded-full animate-pulse"></div>
+                          <div className="w-3 h-3 bg-[#3ebb9e] rounded-full animate-pulse"></div>
                           <span className="text-white font-semibold">You</span>
-                          <div className="ml-auto text-xs text-[#40ffaa] font-semibold">READY</div>
+                          <div className="ml-auto text-xs text-[#3ebb9e] font-semibold">READY</div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-[#4079ff] rounded-full animate-pulse"></div>
@@ -846,7 +846,7 @@ export default function PromptWarsPage() {
                   <Button
                     onClick={startNewBattle}
                     disabled={loading || isLoadingScenario}
-                    className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#40ffaa]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   >
                     {loading || isLoadingScenario ? (
                       <>
@@ -896,7 +896,7 @@ export default function PromptWarsPage() {
                     <Button
                       onClick={proceedToWriting}
                       disabled={isLoadingScenario}
-                      className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl"
+                      className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl"
                     >
                       {isLoadingScenario ? (
                         <>
@@ -949,7 +949,7 @@ export default function PromptWarsPage() {
                       value={myPrompt}
                       onChange={(e) => setMyPrompt(e.target.value)}
                       placeholder="Forge your legendary prompt here... Make it count, warrior!"
-                      className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#40ffaa] focus:border-transparent resize-none text-lg custom-scrollbar"
+                      className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none text-lg custom-scrollbar"
                     />
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-400">💡 Tip: Be specific, creative, and consider edge cases</span>
@@ -961,7 +961,7 @@ export default function PromptWarsPage() {
                     <Button
                       onClick={submitPrompt}
                       disabled={loading || !myPrompt.trim() || timeLeft === 0}
-                      className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
+                      className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
                     >
                       {loading ? (
                         <>
@@ -991,8 +991,8 @@ export default function PromptWarsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Your Prompt */}
-                    <div className="bg-gradient-to-br from-[#40ffaa]/10 to-emerald-500/10 border border-[#40ffaa]/30 rounded-xl p-6">
-                      <h3 className="text-lg font-bold text-[#40ffaa] mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-[#3ebb9e]/10 to-emerald-500/10 border border-[#3ebb9e]/30 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-[#3ebb9e] mb-4 flex items-center gap-2">
                         <Shield className="h-5 w-5" />
                         Your Prompt
                       </h3>
@@ -1035,8 +1035,8 @@ export default function PromptWarsPage() {
                               size="sm"
                               className={`w-12 h-12 text-lg font-bold ${
                                 myRating === rating
-                                  ? "bg-gradient-to-r from-[#40ffaa] to-emerald-500 text-white border-0"
-                                  : "border-slate-600 text-slate-300 hover:border-[#40ffaa] hover:text-white"
+                                  ? "bg-gradient-to-r from-[#3ebb9e] to-emerald-500 text-white border-0"
+                                  : "border-slate-600 text-slate-300 hover:border-[#3ebb9e] hover:text-white"
                               }`}
                             >
                               {rating}
@@ -1053,7 +1053,7 @@ export default function PromptWarsPage() {
                           value={ratingExplanation}
                           onChange={(e) => setRatingExplanation(e.target.value)}
                           placeholder="Share your thoughts on their strategy..."
-                          className="w-full h-24 px-4 py-3 bg-muted border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#40ffaa] focus:border-transparent resize-none"
+                          className="w-full h-24 px-4 py-3 bg-muted border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none"
                         />
                       </div>
 
@@ -1091,7 +1091,7 @@ export default function PromptWarsPage() {
                       <span
                         className={`bg-gradient-to-r bg-clip-text text-transparent ${
                           winner === "player"
-                            ? "from-[#40ffaa] to-emerald-400"
+                            ? "from-[#3ebb9e] to-emerald-400"
                             : winner === "opponent"
                               ? "from-red-400 to-orange-400"
                               : "from-[#4079ff] to-purple-400"
@@ -1113,13 +1113,13 @@ export default function PromptWarsPage() {
                     <div
                       className={`rounded-xl p-6 ${
                         winner === "player"
-                          ? "bg-gradient-to-br from-[#40ffaa]/20 to-emerald-500/20 border border-[#40ffaa]/40"
+                          ? "bg-gradient-to-br from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/40"
                           : "bg-slate-700/30 border border-slate-600/50"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-white">Your Score</h3>
-                        {winner === "player" && <Crown className="h-6 w-6 text-[#40ffaa]" />}
+                        {winner === "player" && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
                       </div>
                       <div className="text-4xl font-black text-white mb-2">{opponentRating}/10</div>
                       <div className="flex mb-2">
@@ -1127,7 +1127,7 @@ export default function PromptWarsPage() {
                           <Star
                             key={i}
                             className={`h-4 w-4 ${
-                              i < opponentRating ? "text-[#40ffaa] fill-[#40ffaa]" : "text-slate-600"
+                              i < opponentRating ? "text-[#3ebb9e] fill-[#3ebb9e]" : "text-slate-600"
                             }`}
                           />
                         ))}
@@ -1164,7 +1164,7 @@ export default function PromptWarsPage() {
                   <div className="text-center space-y-4">
                     <Button
                       onClick={resetBattle}
-                      className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#40ffaa]/80 hover:to-[#4079ff]/80 text-white px-8 py-3 text-lg font-bold rounded-xl mr-4"
+                      className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-8 py-3 text-lg font-bold rounded-xl mr-4"
                     >
                       <RotateCcw className="h-5 w-5 mr-2" />
                       NEW BATTLE
@@ -1193,7 +1193,7 @@ export default function PromptWarsPage() {
                 <div className="p-4 border-b border-slate-700/50">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <MessageCircle className="h-5 w-5 text-[#40ffaa]" />
+                      <MessageCircle className="h-5 w-5 text-[#3ebb9e]" />
                       Battle Chat
                     </h2>
                     <Button
@@ -1214,11 +1214,13 @@ export default function PromptWarsPage() {
                         <div
                           key={message.id}
                           className={`p-3 rounded-lg text-sm ${
-                            message.user === "System"
-                              ? "bg-gradient-to-r from-[#4079ff]/20 to-green-500/20 border border-[#4079ff]/30 text-white"
-                              : message.user === "You"
-                                ? "bg-gradient-to-r from-[#40ffaa]/20 to-emerald-500/20 border border-[#40ffaa]/30 text-[#40ffaa] ml-4"
-                                : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-4"
+                           message.user === "System"
+                            ? "bg-gradient-to-r from-[#4079ff]/20 to-green-500/20 border border-[#4079ff]/30 text-white"
+                            : message.user === "You"
+                              ? "bg-gradient-to-r from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/30 text-[#3ebb9e] ml-4"
+                            : message.user === "Player 2"
+                              ? "bg-gradient-to-r from-pink-500/20 to-yellow-400/20 border border-pink-400/30 text-pink-300 mr-4"
+                              : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-4"
                           }`}
                         >
                           <div className="font-semibold text-xs opacity-80 mb-1">{message.user}</div>
@@ -1235,12 +1237,12 @@ export default function PromptWarsPage() {
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
                           placeholder="Send a battle cry..."
-                          className="flex-1 bg-muted/20 border-slate-600 text-white placeholder-slate-400 focus:ring-[#40ffaa] focus:border-[#40ffaa]"
+                          className="flex-1 bg-muted/20 border-slate-600 text-white placeholder-slate-400 focus:ring-[#3ebb9e] focus:border-[#3ebb9e]"
                         />
                         <Button
                           onClick={sendChatMessage}
                           size="sm"
-                          className="bg-gradient-to-r from-[#40ffaa] to-emerald-500 hover:from-[#40ffaa]/80 hover:to-emerald-500/80 text-white px-4"
+                          className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-4"
                         >
                           <Send className="h-4 w-4" />
                         </Button>
@@ -1253,25 +1255,20 @@ export default function PromptWarsPage() {
           </div>
 
           {/* Floating End Game Button */}
-          {isMultiplayerGame && (gameState === "writing" || gameState === "rating") && (
+          {isMultiplayerGame && (
             <div className="fixed bottom-6 left-6 z-50">
               <Button
                 onClick={() => {
-                  const confirmLeave = window.confirm(
-                    "Are you sure you want to forfeit this battle? This will end the game and return you to the social arena.",
-                  )
-                  if (confirmLeave) {
-                    if (gameId) {
-                      promptWarsWebSocket.leaveGameRoom(gameId);
-                    }
-                    window.location.href = "/social"
+                  if (gameId) {
+                    promptWarsWebSocket.leaveGameRoom(gameId);
                   }
+                  window.location.href = "/social";
                 }}
                 variant="outline"
                 className="border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white bg-slate-900/90 backdrop-blur-sm border-2 font-semibold"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
-                Forfeit Battle
+                Back to Social
               </Button>
             </div>
           )}

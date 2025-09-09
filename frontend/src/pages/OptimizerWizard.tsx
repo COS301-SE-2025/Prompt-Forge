@@ -428,8 +428,8 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
-                <BarChart className="h-6 w-6 text-[#4079ff] dark:text-[#40ffaa]" />
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
+                <BarChart className="h-6 w-6 text-[#4079ff] dark:text-[#3ebb9e]" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Prompt Analysis & Baseline</h2>
@@ -449,7 +449,7 @@ export default function OptimizerWizard() {
                   value={wizardData.originalPrompt}
                   onChange={(e) => updateWizardData("originalPrompt", e.target.value)}
                   placeholder="Write a marketing email for our new product launch. Make it engaging and persuasive."
-                  className="min-h-[120px] mt-2 bg-muted focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors"
+                  className="min-h-[120px] mt-2 bg-muted focus:border-[#3ebb9e] dark:focus:border-[#4079ff] transition-colors"
                 />
               </div>
 
@@ -494,7 +494,7 @@ export default function OptimizerWizard() {
                 <Button
                   onClick={analyzePrompt}
                   disabled={isLoading || serviceStatus !== "online"}
-                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {isLoading ? (
                     <>
@@ -527,13 +527,13 @@ export default function OptimizerWizard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <Card className="p-6 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border">
                   <div className="flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-[#4079ff] dark:text-[#40ffaa]" />
+                    <BarChart3 className="h-5 w-5 text-[#4079ff] dark:text-[#3ebb9e]" />
                     <h3 className="font-semibold">Performance Metrics</h3>
                   </div>
                   <div className="space-y-4">
                     {[
                       { label: "Clarity", value: wizardData.analysisResults.clarity, color: "bg-[#4079ff]" },
-                      { label: "Specificity", value: wizardData.analysisResults.specificity, color: "bg-[#40ffaa]" },
+                      { label: "Specificity", value: wizardData.analysisResults.specificity, color: "bg-[#3ebb9e]" },
                       { label: "Structure", value: wizardData.analysisResults.structure, color: "bg-yellow-500" },
                       { label: "Context", value: wizardData.analysisResults.context, color: "bg-purple-500" },
                     ].map((metric) => (
@@ -573,8 +573,8 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
-                <Target className="h-6 w-6 text-[#40ffaa] dark:text-[#4079ff]" />
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
+                <Target className="h-6 w-6 text-[#3ebb9e] dark:text-[#4079ff]" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Define Your Goals</h2>
@@ -714,7 +714,7 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
                 <Layout className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
@@ -755,7 +755,7 @@ export default function OptimizerWizard() {
 
                   <Button
                     onClick={generateStructuredPrompt}
-                    className="w-full mt-6 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="w-full mt-6 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
                     Generate Structured Prompt
@@ -805,7 +805,7 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
                 <Globe className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
@@ -939,8 +939,8 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
-                <TestTube className="h-6 w-6 text-[#4079ff] dark:text-[#40ffaa]" />
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
+                <TestTube className="h-6 w-6 text-[#4079ff] dark:text-[#3ebb9e]" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Test & Validate</h2>
@@ -979,7 +979,7 @@ export default function OptimizerWizard() {
                   <Button
                     onClick={testPrompt}
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="w-full bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     {isLoading ? (
                       <>
@@ -1004,7 +1004,7 @@ export default function OptimizerWizard() {
                       {
                         label: "Relevance",
                         value: wizardData.testing.performanceMetrics.relevance,
-                        color: "bg-[#40ffaa]",
+                        color: "bg-[#3ebb9e]",
                         description: "How well the output matches the request",
                       },
                       {
@@ -1062,7 +1062,7 @@ export default function OptimizerWizard() {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
@@ -1106,7 +1106,7 @@ export default function OptimizerWizard() {
                   <Button
                     onClick={() => handleCopyPrompt(wizardData.finalPrompt || wizardData.structure.structuredPrompt)}
                     variant="outline"
-                    className="border-[#40ffaa] dark:border-[#4079ff] hover:bg-muted dark:hover:bg-muted/50"
+                    className="border-[#3ebb9e] dark:border-[#4079ff] hover:bg-muted dark:hover:bg-muted/50"
                   >
                     {copiedId ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -1172,7 +1172,7 @@ export default function OptimizerWizard() {
                   <div className="pt-4 border-t">
                     <Button
                       onClick={saveOptimizedPrompt}
-                      className="w-full bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="w-full bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                       size="lg"
                     >
                       <Save className="h-4 w-4 mr-2" />
@@ -1194,7 +1194,7 @@ export default function OptimizerWizard() {
     <div className="min-h-screen w-full bg-gradient-to-br from-bg-muted via-[#232936] to-[#232936]">
       {/* Header with original color scheme */}
       <div className="relative overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#40ffaa]/10 via-[#4079ff]/10 to-[#40ffaa]/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#3ebb9e]/10 via-[#4079ff]/10 to-[#3ebb9e]/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between w-full">
             {/* Spacer on far left for symmetry */}
@@ -1203,15 +1203,15 @@ export default function OptimizerWizard() {
             <div className="flex-1 flex flex-col items-center">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <div className="relative">
-                  <Sparkles className="h-8 w-8 text-[#40ffaa] dark:text-[#4079ff] animate-pulse" />
+                  <Sparkles className="h-8 w-8 text-[#3ebb9e] dark:text-[#4079ff] animate-pulse" />
                   <Star
-                    className="absolute -top-1 -right-1 h-3 w-3 text-[#40ffaa] dark:text-[#4079ff] animate-pulse"
+                    className="absolute -top-1 -right-1 h-3 w-3 text-[#3ebb9e] dark:text-[#4079ff] animate-pulse"
                     style={{
-                      filter: "drop-shadow(0 0 6px #40ffaa)",
+                      filter: "drop-shadow(0 0 6px #3ebb9e)",
                     }}
                   />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent tracking-tight whitespace-nowrap">
+                <h1 className="text-2xl sm:text-3xl font-medium bg-gradient-to-r from-[#3ebb9e] via-[#4079ff] to-[#3ebb9e] bg-clip-text text-transparent tracking-tight whitespace-nowrap">
                   Prompt Optimizer Wizard
                 </h1>
               </div>
@@ -1260,9 +1260,9 @@ export default function OptimizerWizard() {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                         isCompleted
-                          ? "bg-[#40ffaa] text-white"
+                          ? "bg-[#3ebb9e] text-white"
                           : isActive
-                            ? "bg-gradient-to-r from-[#40ffaa] to-[#4079ff] text-white ring-4 ring-[#40ffaa]/20 dark:ring-[#4079ff]/20"
+                            ? "bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] text-white ring-4 ring-[#3ebb9e]/20 dark:ring-[#4079ff]/20"
                             : "bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
                       }`}
                     >
@@ -1272,9 +1272,9 @@ export default function OptimizerWizard() {
                       <div
                         className={`text-sm font-medium ${
                           isActive
-                            ? "text-[#4079ff] dark:text-[#40ffaa]"
+                            ? "text-[#4079ff] dark:text-[#3ebb9e]"
                             : isCompleted
-                              ? "text-[#40ffaa] dark:text-[#4079ff]"
+                              ? "text-[#3ebb9e] dark:text-[#4079ff]"
                               : "text-gray-500 dark:text-gray-400"
                         }`}
                       >
@@ -1286,7 +1286,7 @@ export default function OptimizerWizard() {
                   {index < WIZARD_STEPS.length - 1 && (
                     <div
                       className={`flex-1 h-0.5 mx-4 transition-all duration-300 ${
-                        step.id < currentStep ? "bg-[#40ffaa]" : "bg-gray-200 dark:bg-gray-600"
+                        step.id < currentStep ? "bg-[#3ebb9e]" : "bg-gray-200 dark:bg-gray-600"
                       }`}
                     />
                   )}
@@ -1309,7 +1309,7 @@ export default function OptimizerWizard() {
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa] hover:bg-[#40ffaa]/10 dark:hover:bg-[#4079ff]/10 bg-transparent"
+            className="flex items-center gap-2 border-[#3ebb9e] dark:border-[#4079ff] text-[#4079ff] dark:text-[#3ebb9e] hover:bg-[#3ebb9e]/10 dark:hover:bg-[#4079ff]/10 bg-transparent"
           >
             <ArrowLeft className="h-4 w-4" />
             Previous
@@ -1322,7 +1322,7 @@ export default function OptimizerWizard() {
           <Button
             onClick={nextStep}
             disabled={currentStep === WIZARD_STEPS.length}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
           >
             Next
             <ArrowRight className="h-4 w-4" />
@@ -1351,7 +1351,7 @@ export default function OptimizerWizard() {
               {/* How to Use Section */}
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
-                  <BookOpen className="h-5 w-5 mr-2 text-[#40ffaa]" />
+                  <BookOpen className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                   How to Use the Optimizer Wizard
                 </h3>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
@@ -1373,7 +1373,7 @@ export default function OptimizerWizard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     {
-                      icon: <Target className="h-5 w-5 text-[#40ffaa]" />,
+                      icon: <Target className="h-5 w-5 text-[#3ebb9e]" />,
                       title: "Be Specific",
                       description: "Replace vague terms with precise requirements",
                       details: "Instead of 'write something good', specify format, length, tone, and target audience. The more specific you are, the better the AI can understand and fulfill your request."
@@ -1385,7 +1385,7 @@ export default function OptimizerWizard() {
                       details: "Mentioning your target audience (beginners, experts, children, professionals) helps the AI adjust complexity, tone, and examples appropriately."
                     },
                     {
-                      icon: <FileText className="h-5 w-5 text-[#40ffaa]" />,
+                      icon: <FileText className="h-5 w-5 text-[#3ebb9e]" />,
                       title: "Structure Your Request",
                       description: "Use numbered lists or clear sections",
                       details: "Break complex requests into numbered points or sections. This helps the AI understand priorities and ensures all requirements are addressed."
@@ -1429,7 +1429,7 @@ export default function OptimizerWizard() {
               {/* Before/After Examples */}
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
-                  <BarChart3 className="h-5 w-5 mr-2 text-[#40ffaa]" />
+                  <BarChart3 className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                   Before & After Examples
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1506,7 +1506,7 @@ export default function OptimizerWizard() {
                   <Button
                     variant="outline"
                     onClick={() => setShowAllExamples(!showAllExamples)}
-                    className="border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa] hover:bg-[#40ffaa]/10 dark:hover:bg-[#4079ff]/10"
+                    className="border-[#3ebb9e] dark:border-[#4079ff] text-[#4079ff] dark:text-[#3ebb9e] hover:bg-[#3ebb9e]/10 dark:hover:bg-[#4079ff]/10"
                   >
                     {showAllExamples ? "Show Less" : "Show 2 More Examples"}
                     <ChevronDown
@@ -1519,14 +1519,14 @@ export default function OptimizerWizard() {
               {/* Wizard Steps Guide */}
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
-                  <Settings className="h-5 w-5 mr-2 text-[#40ffaa]" />
+                  <Settings className="h-5 w-5 mr-2 text-[#3ebb9e]" />
                   Step-by-Step Guide
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {WIZARD_STEPS.map((step, index) => (
                     <Card key={step.id} className="p-4 bg-card/60">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#40ffaa] to-[#4079ff] text-white flex items-center justify-center text-sm font-bold">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] text-white flex items-center justify-center text-sm font-bold">
                           {step.id}
                         </div>
                         <h4 className="font-semibold text-foreground">{step.name}</h4>
