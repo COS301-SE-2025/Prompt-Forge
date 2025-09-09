@@ -216,6 +216,15 @@ public class GameService {
   public Game submitPrompt(UUID gameId, UUID playerId, String prompt) {
     Game game = getGame(gameId);
 
+    System.out.println("Submitting prompt for player: " + playerId + " in game: " + gameId);
+    System.out.println("Game state: " + game.getGameState());
+    System.out.println(
+        "Before submission - Player1 prompt: "
+            + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "Before submission - Player2 prompt: "
+            + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+
     if (game.getGameState() != GameState.WRITING) {
       throw new IllegalArgumentException("Game is not in writing phase");
     }
@@ -229,11 +238,24 @@ public class GameService {
     }
 
     game.submitPrompt(playerId, prompt.trim());
-    System.out.println("Player " + playerId + " submitted prompt. Both submitted before save: " + game.bothPlayersSubmittedPrompts());
+
+    System.out.println(
+        "After submission - Player1 prompt: "
+            + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "After submission - Player2 prompt: "
+            + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println("Both players submitted check: " + game.bothPlayersSubmittedPrompts());
+    System.out.println(
+        "Player "
+            + playerId
+            + " submitted prompt. Both submitted before save: "
+            + game.bothPlayersSubmittedPrompts());
 
     // Save the game first to ensure database is updated
     Game savedGame = gameRepository.save(game);
-    System.out.println("Game saved. Both submitted after save: " + savedGame.bothPlayersSubmittedPrompts());
+    System.out.println(
+        "Game saved. Both submitted after save: " + savedGame.bothPlayersSubmittedPrompts());
 
     // If both players have submitted, automatically get AI rating and finish game
     if (savedGame.bothPlayersSubmittedPrompts()) {
@@ -241,7 +263,7 @@ public class GameService {
       CompletableFuture.runAsync(
           () -> {
             try {
-              performAIRating(gameId);
+              performAIRating(savedGame); // Pass the saved game object directly
             } catch (Exception e) {
               System.err.println("Error performing AI rating: " + e.getMessage());
               e.printStackTrace();
@@ -270,11 +292,18 @@ public class GameService {
     return savedGame;
   }
 
-  private void performAIRating(UUID gameId) {
-    System.out.println("Starting AI rating for game: " + gameId);
+  private void performAIRating(Game game) {
+    System.out.println("Starting AI rating for game: " + game.getId());
     try {
-      Game game = getGame(gameId);
-      System.out.println("Game state: " + game.getGameState() + ", Both submitted: " + game.bothPlayersSubmittedPrompts());
+      System.out.println(
+          "Game state: "
+              + game.getGameState()
+              + ", Both submitted: "
+              + game.bothPlayersSubmittedPrompts());
+      System.out.println(
+          "Game data - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+      System.out.println(
+          "Game data - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
       if (!game.bothPlayersSubmittedPrompts()) {
         System.out.println("Not both players submitted, aborting rating");
@@ -285,7 +314,7 @@ public class GameService {
       // Get AI rating for both prompts
       Map<String, Object> ratings =
           getAIRating(game.getScenario(), game.getPlayer1Prompt(), game.getPlayer2Prompt());
-      
+
       System.out.println("AI rating completed, processing results...");
       int player1Score = (Integer) ratings.get("player1Score");
       int player2Score = (Integer) ratings.get("player2Score");
@@ -312,7 +341,7 @@ public class GameService {
       // Send results to both players
       Map<String, Object> gameUpdate = new HashMap<>();
       gameUpdate.put("type", "GAME_FINISHED");
-      gameUpdate.put("gameId", gameId.toString());
+      gameUpdate.put("gameId", game.getId().toString());
       gameUpdate.put("gameState", "FINISHED");
       gameUpdate.put("player1Score", player1Score);
       gameUpdate.put("player2Score", player2Score);
@@ -322,49 +351,52 @@ public class GameService {
       webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
       webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
 
-      System.out.println("Sent game finished update to both players for game: " + gameId);
+      System.out.println("Sent game finished update to both players for game: " + game.getId());
 
     } catch (Exception e) {
       System.err.println("Error in performAIRating: " + e.getMessage());
       e.printStackTrace();
-      
+
       // Fallback: Use random rating to complete the game
       try {
-        Game game = getGame(gameId);
-        if (game.getGameState() != GameState.FINISHED) {
+        Game fallbackGame = getGame(game.getId());
+        if (fallbackGame.getGameState() != GameState.FINISHED) {
           Map<String, Object> fallbackRatings = getFallbackRating();
-          
+
           int player1Score = (Integer) fallbackRatings.get("player1Score");
           int player2Score = (Integer) fallbackRatings.get("player2Score");
-          
-          game.setPlayer1Score(player1Score);
-          game.setPlayer2Score(player2Score);
-          game.setRatingExplanation("AI rating service temporarily unavailable. Random scores assigned.");
-          
-          game.setPlayer1Rating(player2Score);
-          game.setPlayer2Rating(player1Score);
-          
-          UUID winner = game.calculateWinner();
-          game.setWinnerId(winner);
-          game.setGameState(GameState.FINISHED);
-          game.setEndedAt(java.time.Instant.now());
-          
-          gameRepository.save(game);
-          
+
+          fallbackGame.setPlayer1Score(player1Score);
+          fallbackGame.setPlayer2Score(player2Score);
+          fallbackGame.setRatingExplanation(
+              "AI rating service temporarily unavailable. Random scores assigned.");
+
+          fallbackGame.setPlayer1Rating(player2Score);
+          fallbackGame.setPlayer2Rating(player1Score);
+
+          UUID winner = fallbackGame.calculateWinner();
+          fallbackGame.setWinnerId(winner);
+          fallbackGame.setGameState(GameState.FINISHED);
+          fallbackGame.setEndedAt(java.time.Instant.now());
+
+          gameRepository.save(fallbackGame);
+
           // Send fallback results
           Map<String, Object> gameUpdate = new HashMap<>();
           gameUpdate.put("type", "GAME_FINISHED");
-          gameUpdate.put("gameId", gameId.toString());
+          gameUpdate.put("gameId", fallbackGame.getId().toString());
           gameUpdate.put("gameState", "FINISHED");
           gameUpdate.put("player1Score", player1Score);
           gameUpdate.put("player2Score", player2Score);
           gameUpdate.put("winnerId", winner != null ? winner.toString() : null);
-          gameUpdate.put("explanation", "AI rating service temporarily unavailable. Random scores assigned.");
-          
-          webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
-          webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
-          
-          System.out.println("Sent fallback game results to both players for game: " + gameId);
+          gameUpdate.put(
+              "explanation", "AI rating service temporarily unavailable. Random scores assigned.");
+
+          webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), gameUpdate);
+          webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), gameUpdate);
+
+          System.out.println(
+              "Sent fallback game results to both players for game: " + fallbackGame.getId());
         }
       } catch (Exception fallbackError) {
         System.err.println("Fallback rating also failed: " + fallbackError.getMessage());
@@ -374,9 +406,18 @@ public class GameService {
 
   private Map<String, Object> getAIRating(
       String scenario, String player1Prompt, String player2Prompt) {
-    System.out.println("Getting AI rating for scenario: " + scenario.substring(0, Math.min(50, scenario.length())) + "...");
-    System.out.println("Player 1 prompt: " + player1Prompt.substring(0, Math.min(50, player1Prompt.length())) + "...");
-    System.out.println("Player 2 prompt: " + player2Prompt.substring(0, Math.min(50, player2Prompt.length())) + "...");
+    System.out.println(
+        "Getting AI rating for scenario: "
+            + scenario.substring(0, Math.min(50, scenario.length()))
+            + "...");
+    System.out.println(
+        "Player 1 prompt: "
+            + player1Prompt.substring(0, Math.min(50, player1Prompt.length()))
+            + "...");
+    System.out.println(
+        "Player 2 prompt: "
+            + player2Prompt.substring(0, Math.min(50, player2Prompt.length()))
+            + "...");
     try {
       String apiKey = env.getProperty("OPENROUTER_API_KEY");
       if (apiKey == null) {
@@ -430,7 +471,8 @@ public class GameService {
         JsonNode choice = jsonNode.get("choices").get(0);
         if (choice.has("message") && choice.get("message").has("content")) {
           String result = choice.get("message").get("content").asText();
-          System.out.println("AI rating result: " + result.substring(0, Math.min(100, result.length())) + "...");
+          System.out.println(
+              "AI rating result: " + result.substring(0, Math.min(100, result.length())) + "...");
           return parseRatingResult(result);
         }
       }
@@ -546,10 +588,18 @@ public class GameService {
 
   public Game restartGame(UUID gameId) {
     Game game = getGame(gameId);
-    
+
+    System.out.println("Restarting game: " + gameId);
+    System.out.println(
+        "Before restart - Player1 prompt: "
+            + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "Before restart - Player2 prompt: "
+            + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+
     // Reset game state for a new round
-    game.setGameState(GameState.SCENARIO);
-    game.setScenario(null);
+    game.setGameState(GameState.WRITING); // Changed from SCENARIO to WRITING
+    game.setScenario(generateAIScenario()); // Generate new AI scenario instead of null
     game.setPlayer1Prompt(null);
     game.setPlayer2Prompt(null);
     game.setPlayer1Rating(null);
@@ -559,31 +609,24 @@ public class GameService {
     game.setRatingExplanation(null);
     game.setWinnerId(null);
     game.setEndedAt(null);
-    
-    gameRepository.save(game);
-    
-    // Generate new scenario automatically
-    try {
-      String newScenario = generateAIScenario();
-      game.setScenario(newScenario);
-      game.setGameState(GameState.WRITING); // Transition to writing phase immediately
-      gameRepository.save(game);
-      
-      // Notify both players of the restart and new scenario
-      Map<String, Object> gameUpdate = new HashMap<>();
-      gameUpdate.put("type", "GAME_RESTARTED");
-      gameUpdate.put("gameId", gameId.toString());
-      gameUpdate.put("gameState", "WRITING");
-      gameUpdate.put("scenario", newScenario);
-      
-      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
-      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
-      
-    } catch (Exception e) {
-      // If scenario generation fails, still restart the game
-      System.err.println("Failed to generate scenario during restart: " + e.getMessage());
-    }
-    
-    return game;
+
+    System.out.println(
+        "After reset - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "After reset - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println("New scenario: " + game.getScenario());
+    System.out.println("Game state set to: " + game.getGameState());
+
+    Game savedGame = gameRepository.save(game);
+
+    System.out.println(
+        "After save - Player1 prompt: "
+            + (savedGame.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "After save - Player2 prompt: "
+            + (savedGame.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+    System.out.println("Final game state: " + savedGame.getGameState());
+
+    return savedGame;
   }
 }
