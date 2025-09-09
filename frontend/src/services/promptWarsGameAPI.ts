@@ -9,6 +9,9 @@ export interface GameResponse {
   startedAt?: string;
   endedAt?: string;
   winnerId?: string;
+  player1Score?: number;
+  player2Score?: number;
+  ratingExplanation?: string;
   createdAt: string;
 }
 
@@ -79,6 +82,19 @@ export class PromptWarsGameAPI {
 
     if (!response.ok) {
       throw new Error(`Failed to start game: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async restartGame(gameId: string): Promise<GameResponse> {
+    const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/restart`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to restart game: ${response.statusText}`);
     }
 
     return response.json();
