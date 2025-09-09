@@ -402,15 +402,87 @@ export default function PromptWarsPage() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const generateDemoScenario = () => {
-    const scenarios = [
-      "You're a time traveler who accidentally changed history. Write a prompt to help an AI figure out what went wrong and how to fix it.",
-      "An alien species has just made contact with Earth, but they only communicate through colors and emotions. Create a prompt for an AI to help establish meaningful communication.",
-      "You've discovered that your dreams are actually glimpses into parallel universes. Design a prompt for an AI to help you navigate and understand these alternate realities.",
-      "A mysterious digital virus is turning all text into poetry. Craft a prompt for an AI to help decode important messages while the world speaks in verse.",
-      "You're the last librarian in a world where books are becoming sentient. Write a prompt to help an AI negotiate peace between humans and literature.",
-    ]
-    return scenarios[Math.floor(Math.random() * scenarios.length)]
+  const generateDemoScenario = async () => {
+    setIsLoadingScenario(true)
+    setGameState("scenario")
+
+    try {
+      const requestBody = {
+        messages: [
+          {
+            role: "user",
+            content: `Generate a creative and engaging scenario for a prompt writing competition. The scenario should be:
+            1. Specific enough to guide prompt creation
+            2. Open-ended enough to allow creativity
+            3. Interesting and fun to work with
+            4. Suitable for AI prompt engineering
+
+            Please provide just the scenario description in 2-3 sentences, nothing else.
+
+            Examples of good scenarios:
+            - "You're a time traveler who accidentally changed history. Write a prompt to help an AI figure out what went wrong and how to fix it."
+            - "An alien species has just made contact with Earth, but they only communicate through colors and emotions. Create a prompt for an AI to help establish meaningful communication."
+            - "You've discovered that your dreams are actually glimpses into parallel universes. Design a prompt for an AI to help you navigate and understand these alternate realities."
+
+            Generate a new, unique scenario:`,
+          },
+        ],
+      }
+
+      const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json()
+
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        const scenarioText = data.choices[0].message.content
+          .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
+          .replace(/\\n/g, "\n")
+          .replace(/\\/g, "")
+
+        setScenario(scenarioText)
+
+        // Add scenario to chat
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "System",
+            message: `🎯 Scenario Generated: ${scenarioText}`,
+            timestamp: new Date(),
+          },
+        ])
+      }
+    } catch (error) {
+      console.error('Failed to generate scenario:', error)
+      // Fallback scenarios
+      const scenarios = [
+        "You're a time traveler who accidentally changed history. Write a prompt to help an AI figure out what went wrong and how to fix it.",
+        "An alien species has just made contact with Earth, but they only communicate through colors and emotions. Create a prompt for an AI to help establish meaningful communication.",
+        "You've discovered that your dreams are actually glimpses into parallel universes. Design a prompt for an AI to help you navigate and understand these alternate realities.",
+        "A mysterious digital virus is turning all text into poetry. Craft a prompt for an AI to help decode important messages while the world speaks in verse.",
+        "You're the last librarian in a world where books are becoming sentient. Write a prompt to help an AI negotiate peace between humans and literature.",
+      ]
+      const fallbackScenario = scenarios[Math.floor(Math.random() * scenarios.length)]
+      setScenario(fallbackScenario)
+      
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: generateUniqueId(),
+          user: "System",
+          message: `🎯 Scenario Generated: ${fallbackScenario}`,
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setIsLoadingScenario(false)
+    }
   }
 
   const startNewBattle = async () => {
@@ -441,20 +513,8 @@ export default function PromptWarsPage() {
       }
     } else {
       // Demo mode
-      setIsLoadingScenario(true)
-      setTimeout(() => {
-        setScenario(generateDemoScenario())
-        setGameState("scenario")
-        setIsLoadingScenario(false)
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: generateUniqueId(),
-            user: "System",
-            message: "🎯 Battle scenario generated! Study it carefully...",
-            timestamp: new Date(),
-          },
-        ])
+      setTimeout(async () => {
+        await generateDemoScenario()
       }, 2000)
     }
   }
@@ -500,7 +560,8 @@ export default function PromptWarsPage() {
         setIsLoadingScenario(false)
       }
     } else if (!isMultiplayerGame) {
-      // Demo mode - set state locally
+      // Demo mode - set state locally and generate AI scenario
+      await generateDemoScenario()
       setGameState("writing")
       setTimeLeft(120)
       setChatMessages(prev => [
@@ -543,10 +604,59 @@ export default function PromptWarsPage() {
         setLoading(false)
       }
     } else {
-      // Demo mode
+      // Demo mode - Generate AI opponent prompt
       setGameState("rating")
-      setOpponentPrompt("You are an advanced AI time-travel consultant. Analyze the following temporal anomaly data, identify the specific historical event that was altered, calculate the ripple effects across the timeline, and provide a detailed step-by-step restoration plan that minimizes paradoxes while ensuring the original timeline is preserved.")
       setShowOpponentPrompt(true)
+      
+      // Generate opponent prompt using AI
+      try {
+        const requestBody = {
+          messages: [
+            {
+              role: "user",
+              content: `You are competing in a prompt writing competition. Create a high-quality prompt that addresses this scenario:
+
+"${scenario}"
+
+Your prompt should be:
+- Creative and well-crafted
+- Clearly structured
+- Effective for AI interaction
+- Competitive quality (this is for a contest)
+
+Please provide only the prompt itself, nothing else.`,
+            },
+          ],
+        }
+
+        const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        })
+
+        const data = await response.json()
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const aiOpponentPrompt = data.choices[0].message.content
+            .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
+            .replace(/\\n/g, "\n")
+            .replace(/\\/g, "")
+            .trim()
+
+          setOpponentPrompt(aiOpponentPrompt)
+        } else {
+          // Fallback opponent prompt
+          setOpponentPrompt("You are an advanced AI time-travel consultant. Analyze the following temporal anomaly data, identify the specific historical event that was altered, calculate the ripple effects across the timeline, and provide a detailed step-by-step restoration plan that minimizes paradoxes while ensuring the original timeline is preserved.")
+        }
+      } catch (error) {
+        console.error('Failed to generate opponent prompt:', error)
+        // Fallback opponent prompt
+        setOpponentPrompt("You are an advanced AI time-travel consultant. Analyze the following temporal anomaly data, identify the specific historical event that was altered, calculate the ripple effects across the timeline, and provide a detailed step-by-step restoration plan that minimizes paradoxes while ensuring the original timeline is preserved.")
+      }
+      
       setChatMessages(prev => [
         ...prev,
         {
@@ -581,13 +691,95 @@ export default function PromptWarsPage() {
         setLoading(false)
       }
     } else {
-      // Demo mode
+      // Demo mode - Use AI to rate the prompts
       setIsLoadingRating(true)
-      setTimeout(() => {
-        setOpponentRating(Math.floor(Math.random() * 3) + 7) // 7-9 range
+      
+      try {
+        const requestBody = {
+          messages: [
+            {
+              role: "user",
+              content: `You are an expert prompt engineer judging a prompt writing competition. Please rate these two prompts based on creativity, clarity, effectiveness, and how well they address the scenario.
+
+Scenario: "${scenario}"
+
+Prompt 1 (Player): "${myPrompt}"
+
+Prompt 2 (Opponent): "${opponentPrompt}"
+
+Please provide:
+1. A rating for each prompt (1-10 scale, where 10 is exceptional)
+2. Brief explanation for each rating
+3. Which prompt is better overall
+
+Format your response as:
+Rating 1: [1-10]
+Explanation 1: [brief explanation]
+Rating 2: [1-10] 
+Explanation 2: [brief explanation]
+Winner: [1 or 2 or Tie]
+Overall Analysis: [brief summary]`,
+            },
+          ],
+        }
+
+        const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        })
+
+        const data = await response.json()
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const ratingText = data.choices[0].message.content
+          
+          // Parse the AI response to extract ratings
+          const rating1Match = ratingText.match(/Rating 1:\s*(\d+)/i)
+          const rating2Match = ratingText.match(/Rating 2:\s*(\d+)/i)
+          const winnerMatch = ratingText.match(/Winner:\s*(1|2|Tie)/i)
+          
+          const myAIRating = rating1Match ? Number.parseInt(rating1Match[1]) : myRating
+          const opponentAIRating = rating2Match ? Number.parseInt(rating2Match[1]) : Math.floor(Math.random() * 3) + 7
+          
+          setOpponentRating(opponentAIRating)
+          
+          // Determine winner based on AI analysis
+          let gameWinner = "tie"
+          if (winnerMatch) {
+            const winnerResult = winnerMatch[1].toLowerCase()
+            if (winnerResult === "1") {
+              gameWinner = "player"
+            } else if (winnerResult === "2") {
+              gameWinner = "opponent"
+            }
+          } else {
+            // Fallback to numeric comparison
+            gameWinner = myAIRating > opponentAIRating ? "player" : myAIRating === opponentAIRating ? "tie" : "opponent"
+          }
+          
+          setWinner(gameWinner as "player" | "opponent" | "tie")
+          setGameState("results")
+          
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: generateUniqueId(),
+              user: "AI Judge",
+              message: `🏆 AI Analysis Complete!\n\n${ratingText}`,
+              timestamp: new Date(),
+            },
+          ])
+        }
+      } catch (error) {
+        console.error('AI rating failed, using fallback:', error)
+        // Fallback to random rating if AI fails
+        setOpponentRating(Math.floor(Math.random() * 3) + 7)
         setGameState("results")
         setWinner(myRating > 7 ? "player" : myRating === 7 ? "tie" : "opponent")
-        setIsLoadingRating(false)
+        
         setChatMessages(prev => [
           ...prev,
           {
@@ -597,7 +789,9 @@ export default function PromptWarsPage() {
             timestamp: new Date(),
           },
         ])
-      }, 3000)
+      } finally {
+        setIsLoadingRating(false)
+      }
     }
   }
 
