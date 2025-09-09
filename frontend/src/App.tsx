@@ -1,3 +1,5 @@
+"use client"
+
 import { Routes, Route, useLocation } from "react-router-dom"
 import LandingPage from "./pages/LandingPage"
 import Header from "./components/Header"
@@ -20,13 +22,14 @@ import BuilderPage from "./pages/PromptBuilder"
 import ProfilePage from "./pages/ProfilePage"
 import SocialPage from "./pages/SocialPage"
 import OptimizerPage from "./pages/OptimizerPage"
+import OptimizerWizard from "./pages/OptimizerWizard"
 import PromptWarsPage from "./pages/PromptWars"
 
 
 
 function App() {
   const location = useLocation()
-    const hideHeaderRoutes = ['/','/login','/help', '/war','/register','/forgot-password','/login/','/optimizer','/prompt-wars', '/prompt-wars/game']
+    const hideHeaderRoutes = ['/','/login','/help', '/war','/register','/forgot-password','/login/','/optimizer','/wizard','/prompt-wars', '/prompt-wars/game']
     const shouldHideHeader = hideHeaderRoutes.some(route => location.pathname === route || location.pathname.startsWith(route + '/'))
 
   return (
@@ -55,6 +58,7 @@ function App() {
           <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/social" element={<SocialPage />} />
           <Route path="/optimizer" element={<OptimizerPage />} />
+          <Route path="/wizard" element={<OptimizerWizard />} />
         </Routes>
       </main>
     </div>
