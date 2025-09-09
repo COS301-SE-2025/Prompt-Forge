@@ -97,13 +97,16 @@ public class GameService {
 
   // Prompt Wars specific methods
   public synchronized Game generateScenario(UUID gameId) {
-    Game game = getGame(gameId);
+    // Refresh the game from database to get latest state
+    Game game = gameRepository.findById(gameId)
+        .orElseThrow(() -> new RuntimeException("Game not found"));
 
     System.out.println("Generating scenario for game: " + gameId);
     System.out.println("Current game state: " + game.getGameState());
     System.out.println("Current scenario: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
 
     if (game.getGameState() != GameState.WAITING) {
+      System.out.println("Game is not in WAITING state, current state: " + game.getGameState());
       throw new IllegalArgumentException("Game is not in waiting state");
     }
 
@@ -115,7 +118,7 @@ public class GameService {
       game.setScenario(scenario);
       System.out.println("New scenario generated: " + scenario.substring(0, Math.min(50, scenario.length())) + "...");
     } else {
-      System.out.println("Scenario already exists, using existing one");
+      System.out.println("Scenario already exists, using existing one: " + game.getScenario().substring(0, Math.min(50, game.getScenario().length())) + "...");
     }
 
     game.setGameState(GameState.WRITING);
@@ -596,8 +599,8 @@ public class GameService {
             + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
     // Reset game state for a new round
-    game.setGameState(GameState.WRITING); // Changed from SCENARIO to WRITING
-    game.setScenario(generateAIScenario()); // Generate new AI scenario instead of null
+    game.setGameState(GameState.WAITING); // Set to WAITING so frontend can call generate-scenario
+    game.setScenario(null); // Clear scenario so it can be regenerated
     game.setPlayer1Prompt(null);
     game.setPlayer2Prompt(null);
     game.setPlayer1Rating(null);
@@ -612,7 +615,7 @@ public class GameService {
         "After reset - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println(
         "After reset - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println("New scenario: " + game.getScenario());
+    System.out.println("Scenario cleared for regeneration: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
     System.out.println("Game state set to: " + game.getGameState());
 
     Game savedGame = gameRepository.save(game);
@@ -624,6 +627,18 @@ public class GameService {
         "After save - Player2 prompt: "
             + (savedGame.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println("Final game state: " + savedGame.getGameState());
+    System.out.println("Ready for scenario generation: " + (savedGame.getScenario() == null ? "YES" : "NO"));
+
+    // Notify both players that the game has been restarted
+    Map<String, Object> gameUpdate = new HashMap<>();
+    gameUpdate.put("type", "GAME_RESTARTED");
+    gameUpdate.put("gameId", savedGame.getId().toString());
+    gameUpdate.put("gameState", savedGame.getGameState().toString());
+
+    webSocketService.sendGameUpdate(savedGame.getPlayer1Id(), gameUpdate);
+    webSocketService.sendGameUpdate(savedGame.getPlayer2Id(), gameUpdate);
+
+    System.out.println("Sent game restart notification to both players for game: " + savedGame.getId());
 
     return savedGame;
   }
