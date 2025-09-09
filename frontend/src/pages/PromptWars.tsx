@@ -13,6 +13,7 @@ import {
   Trophy,
   Users,
   MessageCircle,
+  MessageSquare,
   Play,
   RotateCcw,
   Zap,
@@ -106,6 +107,7 @@ export default function PromptWarsPage() {
   const [opponentPrompt, setOpponentPrompt] = useState("")
   const [showOpponentPrompt, setShowOpponentPrompt] = useState(false)
   const [myRating, setMyRating] = useState(0)
+  const [playerRating, setPlayerRating] = useState(0)
   const [opponentRating, setOpponentRating] = useState(0)
   const [ratingExplanation, setRatingExplanation] = useState("")
   const [isLoadingRating, setIsLoadingRating] = useState(false)
@@ -260,6 +262,70 @@ export default function PromptWarsPage() {
       }
     })
 
+    // Handle game finished event
+    const unsubscribeGameFinished = promptWarsWebSocket.on('GAME_FINISHED', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('Game finished:', data)
+        setGameState('finished')
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "System",
+            message: "🏁 Battle complete! AI rating completed - check the results!",
+            timestamp: new Date(),
+          },
+        ])
+        loadGameData() // Load final results with AI ratings
+      }
+    })
+
+    // Handle AI rating started event
+    const unsubscribeAIRatingStarted = promptWarsWebSocket.on('AI_RATING_STARTED', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('AI rating started:', data)
+        setGameState('rating')
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "System",
+            message: "🤖 Both prompts submitted! AI judge is evaluating your creativity...",
+            timestamp: new Date(),
+          },
+        ])
+      }
+    })
+
+    // Handle game restart event
+    const unsubscribeGameRestarted = promptWarsWebSocket.on('GAME_RESTARTED', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('Game restarted:', data)
+        setGameState(data.gameState.toLowerCase() as GameState) // Convert to lowercase
+        setScenario(data.scenario)
+        setTimeLeft(120) // Start the timer
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "System",
+            message: "🎮 New battle started! You have 2 minutes to craft your prompt!",
+            timestamp: new Date(),
+          },
+        ])
+        
+        // Reset all battle state
+        setMyPrompt("")
+        setOpponentPrompt("")
+        setShowOpponentPrompt(false)
+        setMyRating(0)
+        setPlayerRating(0)
+        setOpponentRating(0)
+        setRatingExplanation("")
+        setWinner(null)
+      }
+    })
+
     const unsubscribeChatMessage = promptWarsWebSocket.on('GAME_CHAT', (chatData: any) => {
       if (chatData.gameId === gameId) {
         console.log('Chat message received:', chatData)
@@ -314,6 +380,9 @@ export default function PromptWarsPage() {
       unsubscribePromptSubmitted()
       unsubscribePhaseChange()
       unsubscribeRatingSubmitted()
+      unsubscribeGameFinished()
+      unsubscribeAIRatingStarted()
+      unsubscribeGameRestarted()
       unsubscribeChatMessage()
       unsubscribeUserJoined()
       unsubscribeAll()
@@ -360,9 +429,34 @@ export default function PromptWarsPage() {
       
       // Load ratings if in finished state
       if (game.gameState.toLowerCase() === 'finished' || game.gameState.toLowerCase() === 'results') {
-        // These would come from the game data - you might need to add these to the backend response
         console.log('Game finished, loading final results:', game)
         setShowOpponentPrompt(true)
+        
+        // Extract ratings from the game data
+        const currentUserId = localStorage.getItem('userId')
+        
+        // Set player scores based on which player the current user is
+        if (game.player1Id === currentUserId) {
+          setPlayerRating(game.player1Score || 0)
+          setOpponentRating(game.player2Score || 0)
+        } else {
+          setPlayerRating(game.player2Score || 0) 
+          setOpponentRating(game.player1Score || 0)
+        }
+        
+        // Set winner based on winnerId
+        if (game.winnerId === currentUserId) {
+          setWinner('player')
+        } else if (game.winnerId) {
+          setWinner('opponent')
+        } else {
+          setWinner('tie')
+        }
+        
+        // Set rating explanation if available
+        if (game.ratingExplanation) {
+          setRatingExplanation(game.ratingExplanation)
+        }
       }
       
     } catch (error) {
@@ -817,13 +911,14 @@ Overall Analysis: [brief summary]`,
     }
   }
 
-  const resetBattle = () => {
+  const resetBattle = async () => {
     setGameState("waiting")
     setScenario("")
     setMyPrompt("")
     setOpponentPrompt("")
     setShowOpponentPrompt(false)
     setMyRating(0)
+    setPlayerRating(0)
     setOpponentRating(0)
     setRatingExplanation("")
     setWinner(null)
@@ -838,6 +933,33 @@ Overall Analysis: [brief summary]`,
         timestamp: new Date(),
       },
     ])
+
+    // Restart the actual game
+    if (isMultiplayerGame && gameId) {
+      // For multiplayer, restart the backend game
+      try {
+        await promptWarsGameAPI.restartGame(gameId)
+        // Don't set state here - wait for WebSocket notification
+        // The backend will send GAME_RESTARTED with the writing state
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "System",
+            message: "🎮 Restarting battle...",
+            timestamp: new Date(),
+          },
+        ])
+      } catch (error) {
+        console.error('Failed to restart game:', error)
+        setError(getErrorMessage(error))
+      }
+    } else {
+      // For demo mode, immediately start a new battle
+      setGameState("writing")
+      setTimeLeft(120)
+      await generateDemoScenario()
+    }
   }
 
   return (
@@ -1315,18 +1437,18 @@ Overall Analysis: [brief summary]`,
                         <h3 className="text-lg font-bold text-white">Your Score</h3>
                         {winner === "player" && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{opponentRating}/10</div>
+                      <div className="text-4xl font-black text-white mb-2">{playerRating}/10</div>
                       <div className="flex mb-2">
                         {[...Array(10)].map((_, i) => (
                           <Star
                             key={i}
                             className={`h-4 w-4 ${
-                              i < opponentRating ? "text-[#3ebb9e] fill-[#3ebb9e]" : "text-slate-600"
+                              i < playerRating ? "text-[#3ebb9e] fill-[#3ebb9e]" : "text-slate-600"
                             }`}
                           />
                         ))}
                       </div>
-                      <p className="text-sm text-slate-400">Opponent's Rating</p>
+                      <p className="text-sm text-slate-400">AI Score</p>
                     </div>
 
                     <div
@@ -1340,20 +1462,31 @@ Overall Analysis: [brief summary]`,
                         <h3 className="text-lg font-bold text-white">Opponent's Score</h3>
                         {winner === "opponent" && <Crown className="h-6 w-6 text-[#4079ff]" />}
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{myRating}/10</div>
+                      <div className="text-4xl font-black text-white mb-2">{opponentRating}/10</div>
                       <div className="flex mb-2">
                         {[...Array(10)].map((_, i) => (
                           <Star
                             key={i}
                             className={`h-4 w-4 ${
-                              i < myRating ? "text-[#4079ff] fill-[#4079ff]" : "text-slate-600"
+                              i < opponentRating ? "text-[#4079ff] fill-[#4079ff]" : "text-slate-600"
                             }`}
                           />
                         ))}
                       </div>
-                      <p className="text-sm text-slate-400">Your Rating</p>
+                      <p className="text-sm text-slate-400">AI Score</p>
                     </div>
                   </div>
+
+                  {/* AI Rating Explanation */}
+                  {ratingExplanation && (
+                    <div className="bg-slate-800/50 border border-slate-600/50 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
+                        AI Judge Analysis
+                      </h3>
+                      <p className="text-slate-300 leading-relaxed">{ratingExplanation}</p>
+                    </div>
+                  )}
 
                   <div className="text-center space-y-4">
                     <Button
