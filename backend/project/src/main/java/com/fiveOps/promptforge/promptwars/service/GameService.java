@@ -116,14 +116,17 @@ public class GameService {
       // Generate scenario using OpenRouter AI
       String scenario = generateAIScenario();
       game.setScenario(scenario);
-      System.out.println("New scenario generated: " + scenario.substring(0, Math.min(50, scenario.length())) + "...");
+      System.out.println("New scenario generated: " 
+          + scenario.substring(0, Math.min(50, scenario.length())) + "...");
     } else {
-      System.out.println("Scenario already exists, using existing one: " + game.getScenario().substring(0, Math.min(50, game.getScenario().length())) + "...");
+      System.out.println("Scenario already exists, using existing one: " 
+          + game.getScenario().substring(0, Math.min(50, game.getScenario().length())) + "...");
     }
 
     game.setGameState(GameState.WRITING);
     Game savedGame = gameRepository.save(game);
-    System.out.println("Game saved with scenario. Final scenario: " + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
+    System.out.println("Game saved with scenario. Final scenario: " 
+        + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
 
     // Send real-time notifications to both players
     Map<String, Object> gameUpdate = new HashMap<>();
@@ -166,10 +169,14 @@ public class GameService {
                       + "\n• Exciting and imaginative"
                       + "\n• Clear and easy to understand" 
                       + "\n• Perfect for AI prompt writing"
-                      + "\n\nJust give me ONE short scenario (1-2 sentences max). Examples:"
-                      + "\n'🚀 You're designing an AI assistant for Mars colonists who speak in emoji. Write the perfect prompt!'"
-                      + "\n'🎭 Create a prompt for an AI that helps shy people become confident public speakers in 30 days.'"
-                      + "\n'🌟 Design a prompt for an AI chef that creates meals based on your current mood and the weather.'"
+                      + "\n\nJust give me ONE short scenario (1-2 sentences max). "
+                      + "Examples:"
+                      + "\n'🚀 You're designing an AI assistant for Mars colonists who speak "
+                      + "in emoji. Write the perfect prompt!'"
+                      + "\n'🎭 Create a prompt for an AI that helps shy people become confident "
+                      + "public speakers in 30 days.'"
+                      + "\n'🌟 Design a prompt for an AI chef that creates meals based on your "
+                      + "current mood and the weather.'"
                       + "\n\nNow create something totally new and exciting:"));
       requestBody.put("messages", messages);
 
@@ -208,7 +215,8 @@ public class GameService {
       "🍳 Write a prompt for an AI chef that only cooks with ingredients found in hotel mini-bars.",
       "📱 Create a prompt for an AI that writes breakup texts that somehow make people feel better.",
       "🎭 Design a prompt for an AI acting coach for people who are afraid of their own shadow.",
-      "🎮 Write a prompt for an AI that creates board games for families who never agree on anything.",
+      "🎮 Write a prompt for an AI that creates board games for families who never "
+          + "agree on anything.",
       "🚗 Create a prompt for an AI GPS that gives directions using only movie quotes.",
     };
     return scenarios[(int) (Math.random() * scenarios.length)];
@@ -615,7 +623,8 @@ public class GameService {
         "After reset - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println(
         "After reset - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println("Scenario cleared for regeneration: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
+    System.out.println("Scenario cleared for regeneration: " 
+        + (game.getScenario() != null ? "EXISTS" : "NULL"));
     System.out.println("Game state set to: " + game.getGameState());
 
     Game savedGame = gameRepository.save(game);
@@ -627,7 +636,8 @@ public class GameService {
         "After save - Player2 prompt: "
             + (savedGame.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println("Final game state: " + savedGame.getGameState());
-    System.out.println("Ready for scenario generation: " + (savedGame.getScenario() == null ? "YES" : "NO"));
+    System.out.println("Ready for scenario generation: " 
+        + (savedGame.getScenario() == null ? "YES" : "NO"));
 
     // Notify both players that the game has been restarted
     Map<String, Object> gameUpdate = new HashMap<>();
@@ -638,7 +648,8 @@ public class GameService {
     webSocketService.sendGameUpdate(savedGame.getPlayer1Id(), gameUpdate);
     webSocketService.sendGameUpdate(savedGame.getPlayer2Id(), gameUpdate);
 
-    System.out.println("Sent game restart notification to both players for game: " + savedGame.getId());
+    System.out.println("Sent game restart notification to both players for game: " 
+        + savedGame.getId());
 
     return savedGame;
   }
