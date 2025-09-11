@@ -98,8 +98,8 @@ public class GameService {
   // Prompt Wars specific methods
   public synchronized Game generateScenario(UUID gameId) {
     // Refresh the game from database to get latest state
-    Game game = gameRepository.findById(gameId)
-        .orElseThrow(() -> new RuntimeException("Game not found"));
+    Game game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     System.out.println("Generating scenario for game: " + gameId);
     System.out.println("Current game state: " + game.getGameState());
@@ -116,17 +116,22 @@ public class GameService {
       // Generate scenario using OpenRouter AI
       String scenario = generateAIScenario();
       game.setScenario(scenario);
-      System.out.println("New scenario generated: " 
-          + scenario.substring(0, Math.min(50, scenario.length())) + "...");
+      System.out.println(
+          "New scenario generated: "
+              + scenario.substring(0, Math.min(50, scenario.length()))
+              + "...");
     } else {
-      System.out.println("Scenario already exists, using existing one: " 
-          + game.getScenario().substring(0, Math.min(50, game.getScenario().length())) + "...");
+      System.out.println(
+          "Scenario already exists, using existing one: "
+              + game.getScenario().substring(0, Math.min(50, game.getScenario().length()))
+              + "...");
     }
 
     game.setGameState(GameState.WRITING);
     Game savedGame = gameRepository.save(game);
-    System.out.println("Game saved with scenario. Final scenario: " 
-        + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "Game saved with scenario. Final scenario: "
+            + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
 
     // Send real-time notifications to both players
     Map<String, Object> gameUpdate = new HashMap<>();
@@ -167,7 +172,7 @@ public class GameService {
                   "content",
                   "Create a fun, creative scenario for a prompt battle! Make it:"
                       + "\n• Exciting and imaginative"
-                      + "\n• Clear and easy to understand" 
+                      + "\n• Clear and easy to understand"
                       + "\n• Perfect for AI prompt writing"
                       + "\n\nJust give me ONE short scenario (1-2 sentences max). "
                       + "Examples:"
@@ -623,8 +628,8 @@ public class GameService {
         "After reset - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println(
         "After reset - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println("Scenario cleared for regeneration: " 
-        + (game.getScenario() != null ? "EXISTS" : "NULL"));
+    System.out.println(
+        "Scenario cleared for regeneration: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
     System.out.println("Game state set to: " + game.getGameState());
 
     Game savedGame = gameRepository.save(game);
@@ -636,8 +641,8 @@ public class GameService {
         "After save - Player2 prompt: "
             + (savedGame.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
     System.out.println("Final game state: " + savedGame.getGameState());
-    System.out.println("Ready for scenario generation: " 
-        + (savedGame.getScenario() == null ? "YES" : "NO"));
+    System.out.println(
+        "Ready for scenario generation: " + (savedGame.getScenario() == null ? "YES" : "NO"));
 
     // Notify both players that the game has been restarted
     Map<String, Object> gameUpdate = new HashMap<>();
@@ -648,8 +653,8 @@ public class GameService {
     webSocketService.sendGameUpdate(savedGame.getPlayer1Id(), gameUpdate);
     webSocketService.sendGameUpdate(savedGame.getPlayer2Id(), gameUpdate);
 
-    System.out.println("Sent game restart notification to both players for game: " 
-        + savedGame.getId());
+    System.out.println(
+        "Sent game restart notification to both players for game: " + savedGame.getId());
 
     return savedGame;
   }
