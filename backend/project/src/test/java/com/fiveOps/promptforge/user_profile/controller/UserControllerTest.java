@@ -83,12 +83,16 @@ class UserControllerTest {
     testUser.setPasswordHash("encodedPassword");
   }
 
-  // Helper method to setup authenticated request
+  // Helper method to setup authenticated request with cookies
   private void setupAuthenticatedRequest() {
     Cookie[] cookies = new Cookie[1];
     cookies[0] = new Cookie("token", testToken);
     when(request.getCookies()).thenReturn(cookies);
     when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
+  }
+
+  // Helper method to setup authentication object
+  private void setupAuthentication() {
     when(authentication.getName()).thenReturn(testEmail);
   }
 
@@ -564,7 +568,7 @@ class UserControllerTest {
   @Test
   void getFollowers_ShouldReturnFollowersList() {
     // Arrange
-    setupAuthenticatedRequest();
+    setupAuthentication();
     List<UserDto> followers = Arrays.asList(testUserDto);
     when(userService.getFollowersByEmail(testEmail)).thenReturn(followers);
 
@@ -583,7 +587,7 @@ class UserControllerTest {
   @Test
   void getFollowing_ShouldReturnFollowingList() {
     // Arrange
-    setupAuthenticatedRequest();
+    setupAuthentication();
     List<UserDto> following = Arrays.asList(testUserDto);
     when(userService.getFollowingByEmail(testEmail)).thenReturn(following);
 
