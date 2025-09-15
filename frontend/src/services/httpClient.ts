@@ -19,12 +19,15 @@ class HttpClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    // Don't add Authorization header - rely on HTTP-only cookies
-    // The browser will automatically include cookies with credentials: 'include'
+    // Add Authorization header if token exists in localStorage
+    const token = localStorage.getItem('token');
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
 
     const config: RequestInit = {
       headers,
-      credentials: 'include', // This is the key - ensures cookies are sent
+      credentials: 'include', // Still include cookies for WebSocket compatibility
       ...options,
     };
 

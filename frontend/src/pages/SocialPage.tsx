@@ -1,317 +1,1200 @@
-"use client"
+import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { PromptCard } from "../components/PromptCard";
+import { Users, UserPlus, UserMinus, Star, Swords, Search, Timer, Trophy, X, Bell, Zap, Loader2 } from "lucide-react";
+import { UserCard } from "../components/UserCard";
+import { ChallengeAPI, SocialAPI, PromptAPI, SocialUser, Prompt, PaginatedResponse, Challenge, API_BASE_URL, cancelActiveGame } from "../services/socialService";
 
-import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config/api';
-import { useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/Button"
-import { Card } from "@/components/ui/Card"
-import { Input } from "@/components/ui/Input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
-import { Search, User, UserPlus, UserMinus, Star, TrendingUp, Users } from "lucide-react"
-
-interface SocialUser {
-  id: string
-  username: string
-  profilePicture?: string
-  bio?: string
-  followers: number
-  following: number
-  totalPrompts: number
-  averageRating: number
-  isFollowing: boolean
-  isPopular: boolean
-  joinedAt: string
-}
+// WebSocket connection
+let socket: any = null;
 
 export default function SocialPage() {
-  const navigate = useNavigate()
-  const [users, setUsers] = useState<SocialUser[]>([])
-  const [filteredUsers, setFilteredUsers] = useState<SocialUser[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("discover")
-  const [followingUsers, setFollowingUsers] = useState<SocialUser[]>([])
-  const [followingLoading, setFollowingLoading] = useState(false)
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("discover");
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [selectedOpponent, setSelectedOpponent] = useState<SocialUser | null>(null);
+  const [users, setUsers] = useState<SocialUser[]>([]);
+  const [following, setFollowing] = useState<SocialUser[]>([]);
+  const [followers, setFollowers] = useState<SocialUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tabLoading, setTabLoading] = useState<{[key: string]: boolean}>({
+    discover: false,
+    following: false,
+    followers: false
+  });
+  const [challengeMessage, setChallengeMessage] = useState("");
+  const [challengeLoading, setChallengeLoading] = useState<{[key: string]: boolean}>({});
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<SocialUser | null>(null);
+  const [allPrompts, setAllPrompts] = useState<Prompt[]>([]);
+  const [activeGameError, setActiveGameError] = useState<string | null>(null);
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<{[key: string]: number}>({
+    discover: 1,
+    following: 1,
+    followers: 1
+  });
+  const [totalPages, setTotalPages] = useState<{[key: string]: number}>({
+    discover: 1,
+    following: 1,
+    followers: 1
+  });
+  const [totalElements, setTotalElements] = useState<{[key: string]: number}>({
+    discover: 0,
+    following: 0,
+    followers: 0
+  });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/discover`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        })
+  const USERS_PER_PAGE = 12;
 
-        if (response.ok) {
-          const data = await response.json()
-          setUsers(data || [])
-          setFilteredUsers(data || [])
-        }
-      } catch (err) {
-        console.error("Failed to fetch users:", err)
-      } finally {
-        setLoading(false)
+  // Add state to track failed avatars
+  const [failedAvatars, setFailedAvatars] = useState<{[id: string]: boolean}>({});
+
+  // Helper function to show user-friendly error messages
+  const getErrorMessage = (error: any): string => {
+    // Handle array error responses (e.g. ["Already have a pending challenge with this user"])
+    if (Array.isArray(error) && error.length > 0) {
+      const msg = (typeof error[0] === 'string' ? error[0] : '').toLowerCase();
+      if (msg.includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
       }
+      return error[0];
     }
-
-    fetchUsers()
-  }, [])
-
-  useEffect(() => {
-    const fetchFollowing = async () => {
-      if (activeTab !== "following") return
-
-      setFollowingLoading(true)
-      try {
-        const currentUserId = localStorage.getItem("userId")
-        const response = await fetch(`${API_BASE_URL}/users/${currentUserId}/following`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          setFollowingUsers(data || [])
-        }
-      } catch (err) {
-        console.error("Failed to fetch following:", err)
-      } finally {
-        setFollowingLoading(false)
+    if (typeof error === 'string') {
+      // If the error is a plain text response that looks like JSON parse error, show the string directly
+      if (error.startsWith('Unexpected token')) {
+        return 'An error occurred. Please try again.';
       }
+      if (error.toLowerCase().includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
+      }
+      if (error.toLowerCase().includes('already in an active game')) {
+        setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+      }
+      return error;
     }
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      if (message.includes('already have a pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.';
+      }
+      if (message.includes('already in an active game')) {
+        setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+        return 'You are currently in another battle. Please finish your current battle before starting a new one.';
+      }
+      // Transform backend errors to user-friendly messages
+      if (message.includes('player is already in an active game')) {
+        return 'This player is currently in another battle. Please try challenging them later.'
+      }
+      if (message.includes('users you follow')) {
+        return 'You can only challenge users you follow. Please follow this user first.'
+      }
+      if (message.includes('currently offline')) {
+        return 'This user is currently offline. Please try again when they are online.'
+      }
+      if (message.includes('pending challenge')) {
+        return 'You already have a pending challenge with this user. Please wait for them to respond.'
+      }
+      if (message.includes('not found')) {
+        return 'The requested battle could not be found. It may have been cancelled or completed.'
+      }
+      if (message.includes('unauthorized')) {
+        return 'You are not authorized to perform this action.'
+      }
+      if (message.includes('network') || message.includes('fetch')) {
+        return 'Connection error. Please check your internet connection and try again.'
+      }
+      
+      return error.message
+    }
+    
+    return 'An unexpected error occurred. Please try again.'
+  }
 
-    fetchFollowing()
-  }, [activeTab])
-
+  // Initialize WebSocket connection
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredUsers(users)
-      return
-    }
+    initializeWebSocket();
+    loadInitialData();
+    
+    // Handle URL hash for direct navigation to challenges
+    const handleHashChange = () => {
+      if (window.location.hash === '#challenges') {
+        setActiveTab('challenges');
+        window.location.hash = ''; // Clear the hash
+      }
+    };
+    
+    handleHashChange(); // Check on mount
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      if (socket && socket.readyState === 1) { // 1 = OPEN
+        socket.close();
+      }
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
-    const filtered = users.filter(
-      (user) =>
-        user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.bio?.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    setFilteredUsers(filtered)
-  }, [searchQuery, users])
+  const initializeWebSocket = () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      
+      if (!userId) {
+        console.warn('No user ID found, skipping WebSocket connection');
+        return;
+      }
+
+      // Create simple WebSocket connection to our custom handler
+      const baseUrl = API_BASE_URL.replace('/api', '').replace('http://', 'ws://').replace('https://', 'wss://');
+      const wsUrl = `${baseUrl}/api/simple-ws?userId=${userId}`;
+      
+      console.log('Connecting to WebSocket:', wsUrl);
+      
+      socket = new (window as any).WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log('WebSocket connected');
+        // Wait a moment before sending to ensure connection is fully established
+        setTimeout(() => {
+          socket?.send(JSON.stringify({
+            type: 'USER_CONNECT',
+            userId: userId
+          }));
+        }, 100);
+      };
+
+      socket.onmessage = (event: any) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Received WebSocket message:', data);
+          handleWebSocketMessage(data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      socket.onclose = () => {
+        console.log('WebSocket disconnected');
+        // Attempt to reconnect after 5 seconds
+        setTimeout(initializeWebSocket, 5000);
+      };
+
+      socket.onerror = (error: any) => {
+        console.error('WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+    }
+  };
+
+  const handleWebSocketMessage = (data: any) => {
+    console.log('Handling WebSocket message:', data);
+    
+    switch (data.type) {
+      case 'CHALLENGE_RECEIVED':
+        // Add new challenge to the list
+        setChallenges(prev => [data.challenge, ...prev]);
+        showNotification(`Challenge received from ${data.challenge.challengerName}`);
+        
+        // Automatically switch to challenges tab if user is not already there
+        if (activeTab !== 'challenges') {
+          // Show a more prominent notification
+          const notification = document.createElement('div');
+          notification.className = 'fixed bottom-4 right-4 bg-[#3ebb9e]/80 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm backdrop-blur-lg';
+          notification.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-bold">New Challenge!</h4>
+                <p class="text-sm">${data.challenge.challengerName} wants to battle!</p>
+                <button class="text-xs underline mt-1" id="view-challenge-btn">
+                  View Challenge →
+                </button>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white">×</button>
+            </div>
+          `;
+          document.body.appendChild(notification);
+          // Add click handler for the button to go to the match (same logic as Accept)
+          setTimeout(() => {
+            const btn = document.getElementById('view-challenge-btn');
+            if (btn) {
+              btn.onclick = () => {
+                notification.remove();
+                window.location.hash = 'challenges';
+                window.location.reload();
+              };
+            }
+          }, 100);
+          // Auto remove after 5 seconds
+          setTimeout(() => {
+            if (notification.parentElement) {
+              notification.remove();
+            }
+          }, 5000);
+        }
+        break;
+        
+      case 'CHALLENGE_DECLINED':
+        // Update challenge status in the list
+        setChallenges(prev => prev.map(c => 
+          c.id === data.challengeId ? { ...c, status: 'DECLINED' } : c
+        ));
+        showNotification('Your challenge was declined');
+        break;
+        
+      case 'CHALLENGE_EXPIRED':
+        // Remove expired challenge from the list
+        setChallenges(prev => prev.filter(c => c.id !== data.challengeId));
+        showNotification('Challenge expired');
+        break;
+        
+      case 'GAME_STARTING':
+        // Redirect both players to the game
+        showNotification(`Game starting between ${data.challengerName} and ${data.opponentName}!`);
+        window.location.href = `/prompt-wars/game/${data.gameId}`;
+        break;
+        
+      case 'GAME_UPDATE':
+        showNotification(data.message || 'Game updated');
+        break;
+        
+      default:
+        console.log('Unhandled message type:', data.type);
+    }
+  };
+
+  const showNotification = (message: string) => {
+    // You can implement a toast notification here
+    console.log('Notification:', message);
+  };
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load initial page for discover tab
+      await loadPageData('discover', 1);
+      
+      // Load challenges
+      const challengesData = await ChallengeAPI.getUserChallenges().catch(() => []);
+      setChallenges(challengesData);
+      
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+      setError('Failed to load data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPageData = async (tab: string, page: number) => {
+    try {
+      setTabLoading(prev => ({ ...prev, [tab]: true }));
+      
+      switch (tab) {
+        case 'discover': {
+          const usersResponse = await SocialAPI.getUsersPaginated(page - 1, USERS_PER_PAGE, search);
+          // Add online status simulation and ensure isFollowing is properly set
+          const usersWithOnlineStatus = (usersResponse.content || []).map(user => ({
+            ...user,
+            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
+            isFollowing: user.isFollowing || false // Ensure this field exists
+          }));
+          setUsers(usersWithOnlineStatus);
+          setTotalPages(prev => ({ ...prev, discover: usersResponse.totalPages || 1 }));
+          setTotalElements(prev => ({ ...prev, discover: usersResponse.totalElements || 0 }));
+          setCurrentPage(prev => ({ ...prev, discover: page }));
+          break;
+        }
+          
+        case 'following': {
+          const followingResponse = await SocialAPI.getFollowingPaginated(page - 1, USERS_PER_PAGE);
+          // Add online status simulation - users in following are already being followed
+          const followingWithOnlineStatus = (followingResponse.content || []).map(user => ({
+            ...user,
+            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
+            isFollowing: true // All users in following tab are being followed
+          }));
+          setFollowing(followingWithOnlineStatus);
+          setTotalPages(prev => ({ ...prev, following: followingResponse.totalPages || 1 }));
+          setTotalElements(prev => ({ ...prev, following: followingResponse.totalElements || 0 }));
+          setCurrentPage(prev => ({ ...prev, following: page }));
+          break;
+        }
+          
+        case 'followers': {
+          const followersResponse = await SocialAPI.getFollowersPaginated(page - 1, USERS_PER_PAGE);
+          // Add online status simulation and check if we follow them back
+          const followersWithOnlineStatus = (followersResponse.content || []).map(user => ({
+            ...user,
+            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
+            isFollowing: user.isFollowing || false // Check if we follow them back
+          }));
+          setFollowers(followersWithOnlineStatus);
+          setTotalPages(prev => ({ ...prev, followers: followersResponse.totalPages || 1 }));
+          setTotalElements(prev => ({ ...prev, followers: followersResponse.totalElements || 0 }));
+          setCurrentPage(prev => ({ ...prev, followers: page }));
+          break;
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to load ${tab} data:`, error);
+      setError(`Failed to load ${tab}. Please try again.`);
+    } finally {
+      setTabLoading(prev => ({ ...prev, [tab]: false }));
+    }
+  };
+
+  const calculateAverageRating = (prompts: Prompt[]): number => {
+    if (prompts.length === 0) return 0;
+    const totalRating = prompts.reduce((sum, prompt) => sum + (prompt.rating || 0), 0);
+    return Math.round((totalRating / prompts.length) * 10) / 10;
+  };
+
+  // Handle tab changes
+  useEffect(() => {
+    loadPageData(activeTab, currentPage[activeTab] || 1);
+  }, [activeTab]);
+
+  // Handle search changes with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeTab === 'discover') {
+        loadPageData('discover', 1);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [search]);
+
+  const changePage = (tab: string, pageNumber: number) => {
+    loadPageData(tab, pageNumber);
+  };
+
+  const handleSendChallenge = async () => {
+    if (!selectedOpponent) return;
+    
+    try {
+      await ChallengeAPI.sendChallenge(
+        selectedOpponent.userId,
+        challengeMessage || undefined
+      );
+      
+      setShowChallengeModal(false);
+      setChallengeMessage("");
+      setSelectedOpponent(null);
+      showNotification(`Challenge sent to ${selectedOpponent.username}!`);
+      
+      // Reload challenges
+      const updatedChallenges = await ChallengeAPI.getUserChallenges();
+      setChallenges(updatedChallenges);
+    } catch (error) {
+      console.error('Failed to send challenge:', error);
+      setError(getErrorMessage(error));
+    }
+  };
+
+  const handleAcceptChallenge = async (challengeId: string) => {
+    setChallengeLoading(prev => ({ ...prev, [challengeId]: true }));
+    try {
+      console.log('Accepting challenge:', challengeId);
+      const gameData = await ChallengeAPI.acceptChallenge(challengeId);
+      console.log('Game created:', gameData);
+      
+      // Update challenge status in local state
+      setChallenges(prev => prev.map(c => 
+        c.id === challengeId ? { ...c, status: 'ACCEPTED' as const } : c
+      ));
+      
+      showNotification('Challenge accepted! Starting game...');
+      
+      // Navigate to the war page with game ID
+      if (gameData && gameData.id) {
+        console.log('Navigating to game:', gameData.id);
+        window.location.href = `/war?gameId=${gameData.id}`;
+      } else {
+        console.log('No game ID, navigating to war page');
+        // Fallback - just go to war page
+        window.location.href = `/war`;
+      }
+    } catch (error) {
+      console.error('Failed to accept challenge:', error);
+      setError(`Failed to accept challenge: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setChallengeLoading(prev => ({ ...prev, [challengeId]: false }));
+    }
+  };
+
+  const handleDeclineChallenge = async (challengeId: string) => {
+    setChallengeLoading(prev => ({ ...prev, [challengeId]: true }));
+    try {
+      console.log('Declining challenge:', challengeId);
+      await ChallengeAPI.declineChallenge(challengeId);
+      
+      // Update challenge status in local state
+      setChallenges(prev => prev.map(c => 
+        c.id === challengeId ? { ...c, status: 'DECLINED' as const } : c
+      ));
+      
+      showNotification('Challenge declined');
+    } catch (error) {
+      console.error('Failed to decline challenge:', error);
+      setError('Failed to decline challenge. Please try again.');
+    } finally {
+      setChallengeLoading(prev => ({ ...prev, [challengeId]: false }));
+    }
+  };
 
   const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
     try {
-      const endpoint = isCurrentlyFollowing ? "unfollow" : "follow"
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      })
+      if (isCurrentlyFollowing) {
+        await SocialAPI.unfollowUser(userId);
+      } else {
+        await SocialAPI.followUser(userId);
+      }
 
+      // Update the user's following status in local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.userId === userId 
+            ? { 
+                ...user, 
+                isFollowing: !isCurrentlyFollowing,
+                followers: Array.isArray(user.followers) 
+                  ? (isCurrentlyFollowing 
+                      ? user.followers.filter(f => f !== currentUser?.userId)
+                      : [...user.followers, currentUser?.userId || ''])
+                  : (typeof user.followers === 'number' 
+                      ? (isCurrentlyFollowing ? user.followers - 1 : user.followers + 1)
+                      : 0)
+              } 
+            : user
+        )
+      );
+      
+      // Refresh following list if we're currently on the following tab
+      if (activeTab === 'following') {
+        changePage('following', currentPage.following);
+      }
+      
+      showNotification(
+        isCurrentlyFollowing 
+          ? `Unfollowed ${users.find(u => u.userId === userId)?.username}` 
+          : `Following ${users.find(u => u.userId === userId)?.username}`
+      );
+    } catch (error) {
+      console.error('Failed to follow/unfollow user:', error);
+      setError('Failed to update follow status. Please try again.');
+    }
+  };
+
+  const handleCancelActiveGame = async () => {
+    try {
+      await cancelActiveGame();
+      setActiveGameError(null);
+      showNotification('Your active game has been cancelled.');
+    } catch (err: any) {
+      setActiveGameError('Failed to cancel active game: ' + (err?.message || 'Unknown error'));
+    }
+  };
+
+  // Check for active game on mount and when switching to challenges tab
+  const checkActiveGame = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const response = await fetch(`${API_BASE_URL}/prompt-wars/games/active`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+          'X-User-Id': userId || '',
+        },
+      });
       if (response.ok) {
-        // Update users list
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId
-              ? {
-                  ...user,
-                  isFollowing: !isCurrentlyFollowing,
-                  followers: isCurrentlyFollowing ? user.followers - 1 : user.followers + 1,
-                }
-              : user,
-          ),
-        )
-
-        // Update filtered users
-        setFilteredUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId
-              ? {
-                  ...user,
-                  isFollowing: !isCurrentlyFollowing,
-                  followers: isCurrentlyFollowing ? user.followers - 1 : user.followers + 1,
-                }
-              : user,
-          ),
-        )
-
-        // Update following users if needed
-        if (isCurrentlyFollowing) {
-          setFollowingUsers((prev) => prev.filter((user) => user.id !== userId))
+        const games = await response.json();
+        if (Array.isArray(games) && games.length > 0) {
+          setActiveGameError('You are currently in another battle. Please finish or cancel your current battle before starting a new one.');
+          setActiveGameId(games[0].id || null);
+        } else {
+          setActiveGameError(null);
+          setActiveGameId(null);
         }
       }
-    } catch (err) {
-      console.error("Failed to follow/unfollow:", err)
+    } catch (e) {
+      // ignore
     }
-  }
+  }, []);
 
-  const UserCard = ({ user }: { user: SocialUser }) => (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start space-x-4">
-        <img
-          src={user.profilePicture || "/placeholder.svg?height=60&width=60"}
-          alt={user.username}
-          className="w-15 h-15 rounded-full object-cover cursor-pointer"
-          onClick={() => navigate(`/profile/${user.id}`)}
-        />
+  // Check for active game when switching to challenges tab
+  useEffect(() => {
+    if (activeTab === 'challenges') {
+      checkActiveGame();
+    }
+  }, [activeTab, checkActiveGame]);
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <h3
-              className="font-semibold text-lg cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile/${user.id}`)}
-            >
-              {user.username}
-              {user.isPopular && <Star className="h-4 w-4 text-yellow-400 ml-1 inline" />}
-            </h3>
-
-            <Button
-              size="sm"
-              onClick={() => handleFollow(user.id, user.isFollowing)}
-              className={
-                user.isFollowing
-                  ? "bg-muted text-foreground hover:bg-red-500 hover:text-white"
-                  : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-              }
-            >
-              {user.isFollowing ? <UserMinus className="h-4 w-4 mr-1" /> : <UserPlus className="h-4 w-4 mr-1" />}
-              {user.isFollowing ? "Unfollow" : "Follow"}
-            </Button>
-          </div>
-
-          {user.bio && <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{user.bio}</p>}
-
-          <div className="grid grid-cols-4 gap-2 text-center text-sm">
-            <div>
-              <div className="font-semibold">{user.totalPrompts}</div>
-              <div className="text-xs text-muted-foreground">Prompts</div>
-            </div>
-            <div>
-              <div className="font-semibold flex items-center justify-center">
-                <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                {user.averageRating.toFixed(1)}
-              </div>
-              <div className="text-xs text-muted-foreground">Rating</div>
-            </div>
-            <div>
-              <div className="font-semibold">{user.followers}</div>
-              <div className="text-xs text-muted-foreground">Followers</div>
-            </div>
-            <div>
-              <div className="font-semibold">{user.following}</div>
-              <div className="text-xs text-muted-foreground">Following</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
-  )
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading users...</p>
-        </div>
-      </div>
-    )
-  }
+  // Helper to resolve avatar URL
+  const getAvatarUrl = (avatar: string | undefined | null) => {
+    if (!avatar) return "/placeholder-user.jpg";
+    if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
+    // If backend returns a relative path, prefix with API_BASE_URL (without /api)
+    if (avatar.startsWith("/")) return API_BASE_URL.replace(/\/api$/, "") + avatar;
+    return avatar;
+  };
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full bg-background">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Discover Users</h1>
-          <p className="text-muted-foreground">Connect with other prompt engineers and creators</p>
+    <div className="flex-1 flex flex-col w-full min-h-screen overflow-hidden">
+      {/* Fallback error UI if something goes wrong */}
+      {error && (
+        <div className="p-4 bg-red-100 text-red-800 border border-red-300 rounded mb-4">
+          {error}
         </div>
-
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
-            <Input
-              placeholder="       Search users..."
-              className="bg-muted border-muted pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery === "" && (
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            )}
+      )}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 lg:p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
+            <div className="mb-3 sm:mb-0">
+              <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Social Hub</h1>
+              <p className="text-sm text-muted-foreground">Connect, follow, and challenge other prompt creators</p>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Prompt Wars Navigation */}
+              <Link to="/war">
+                <Button 
+                  variant="outline"
+                  className="bg-gradient-to-r from-[#3ebb9e]/10 to-[#2ea688]/10 hover:from-[#3ebb9e]/20 hover:to-[#2ea688]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] transition-all duration-300"
+                >
+                  <Swords className="h-4 w-4 mr-2" />
+                  Prompt Wars
+                </Button>
+              </Link>
+              
+              {/* Challenge Notifications */}
+              {challenges.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('challenges')}
+                  className="relative p-2 hover:bg-[#3ebb9e]/10 rounded-lg transition-colors duration-300"
+                  title={`${challenges.filter(c => c.status === 'PENDING').length} pending challenges`}
+                >
+                  <Bell className="h-6 w-6 text-[#3ebb9e]" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {challenges.filter(c => c.status === 'PENDING').length}
+                  </span>
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="discover" className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Discover
-            </TabsTrigger>
-            <TabsTrigger value="popular" className="flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Popular
-            </TabsTrigger>
-            <TabsTrigger value="following" className="flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              Following
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="discover">
-            <div className="space-y-4">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => <UserCard key={user.id} user={user} />)
-              ) : (
-                <div className="text-center py-12">
-                  <div className="text-muted-foreground mb-4">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">No Users Found</h3>
-                    <p>Try adjusting your search terms</p>
-                  </div>
+          {/* Search Bar */}
+          <div className="mb-6 sm:mb-8">
+            <div className="relative">
+              <Input
+                placeholder="        Search users, prompts, or topics..."
+                className="bg-muted border-muted pl-8 sm:pl-10 text-sm sm:text-base h-9 sm:h-10"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {!search && (
+                <div className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2">
+                  <Search className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </div>
               )}
             </div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="popular">
-            <div className="space-y-4">
-              {filteredUsers
-                .filter((user) => user.isPopular)
-                .sort((a, b) => b.followers - a.followers)
-                .map((user) => (
-                  <UserCard key={user.id} user={user} />
-                ))}
-            </div>
-          </TabsContent>
+          {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+        }} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="discover" className="flex items-center space-x-2">
+              <Search className="h-4 w-4" />
+              <span>Discover</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="following" 
+              className="flex items-center space-x-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Following ({following.length})</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="followers" 
+              className="flex items-center space-x-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Followers ({followers.length})</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="challenges" 
+              className={`flex items-center space-x-2 relative ${
+                challenges.filter(c => c.status === 'PENDING').length > 0 
+                  ? 'bg-red-50 text-red-700 border-red-200 animate-pulse' 
+                  : ''
+              }`}
+            >
+              <Trophy className="h-4 w-4" />
+              <span>Challenges ({challenges.length})</span>
+              {challenges.filter(c => c.status === 'PENDING').length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {challenges.filter(c => c.status === 'PENDING').length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-          <TabsContent value="following">
-            {followingLoading ? (
+          {/* Discover Tab */}
+          <TabsContent value="discover" className="space-y-6">
+            {tabLoading.discover && (
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Loading following...</p>
-                </div>
-              </div>
-            ) : followingUsers.length > 0 ? (
-              <div className="space-y-4">
-                {followingUsers.map((user) => (
-                  <UserCard key={user.id} user={user} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">Not Following Anyone</h3>
-                  <p>Start following users to see them here</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading users...</p>
                 </div>
               </div>
             )}
+            
+            {!tabLoading.discover && (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
+                  {users.map((user) => (
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
+                  ))}
+                </div>
+                
+                {users.length === 0 && (
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="text-muted-foreground mb-4">
+                      <Users className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                      <h3 className="text-base sm:text-lg font-medium mb-2">No users found</h3>
+                      <p className="text-sm sm:text-base px-4">Try adjusting your search terms.</p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Pagination for Discover */}
+            {!tabLoading.discover && totalPages.discover > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePage('discover', Math.max(1, currentPage.discover - 1))}
+                  disabled={currentPage.discover === 1}
+                >
+                  Previous
+                </Button>
+
+                {Array.from({ length: Math.min(totalPages.discover, 5) }).map((_, i) => {
+                  let pageNumber;
+                  if (totalPages.discover <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.discover <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.discover >= totalPages.discover - 2) {
+                    pageNumber = totalPages.discover - 4 + i;
+                  } else {
+                    pageNumber = currentPage.discover - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage.discover === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      className={`min-w-[2.5rem] ${
+                        currentPage.discover === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
+                      onClick={() => changePage('discover', pageNumber)}
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 sm:h-9 sm:px-3"
+                  onClick={() => changePage('discover', Math.min(totalPages.discover, currentPage.discover + 1))}
+                  disabled={currentPage.discover === totalPages.discover}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">Next</span>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Following Tab */}
+          <TabsContent value="following" className="space-y-6">
+            {tabLoading.following && (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-[#3ebb9e]" />
+                <span className="ml-2 text-gray-600">Loading following...</span>
+              </div>
+            )}
+            
+            {!tabLoading.following && (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
+                  {following.map((user) => (
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
+                  ))}
+                </div>
+                
+                {following.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No following yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">Start following creators to see their content here.</p>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Pagination for Following */}
+            {!tabLoading.following && totalPages.following > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePage('following', Math.max(1, currentPage.following - 1))}
+                  disabled={currentPage.following === 1}
+                >
+                  Previous
+                </Button>
+
+                {Array.from({ length: Math.min(totalPages.following, 5) }).map((_, i) => {
+                  let pageNumber;
+                  if (totalPages.following <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.following <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.following >= totalPages.following - 2) {
+                    pageNumber = totalPages.following - 4 + i;
+                  } else {
+                    pageNumber = currentPage.following - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage.following === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      className={`min-w-[2.5rem] ${
+                        currentPage.following === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
+                      onClick={() => changePage('following', pageNumber)}
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePage('following', Math.min(totalPages.following, currentPage.following + 1))}
+                  disabled={currentPage.following === totalPages.following}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Followers Tab */}
+          <TabsContent value="followers" className="space-y-6">
+            {tabLoading.followers && (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-[#3ebb9e]" />
+                <span className="ml-2 text-gray-600">Loading followers...</span>
+              </div>
+            )}
+            
+            {!tabLoading.followers && (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
+                  {followers.map((user) => (
+                    <UserCard
+                      key={user.userId}
+                      user={user}
+                      handleFollow={handleFollow}
+                      setSelectedOpponent={setSelectedOpponent}
+                      setShowChallengeModal={setShowChallengeModal}
+                      showNotification={showNotification}
+                    />
+                  ))}
+                </div>
+                
+                {followers.length === 0 && (
+                  <div className="text-center py-12">
+                    <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No followers yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">Create great prompts to attract followers.</p>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Pagination for Followers */}
+            {!tabLoading.followers && totalPages.followers > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePage('followers', Math.max(1, currentPage.followers - 1))}
+                  disabled={currentPage.followers === 1}
+                >
+                  Previous
+                </Button>
+
+                {Array.from({ length: Math.min(totalPages.followers, 5) }).map((_, i) => {
+                  let pageNumber;
+                  if (totalPages.followers <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.followers <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage.followers >= totalPages.followers - 2) {
+                    pageNumber = totalPages.followers - 4 + i;
+                  } else {
+                    pageNumber = currentPage.followers - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage.followers === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      className={`min-w-[2.5rem] ${
+                        currentPage.followers === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
+                      onClick={() => changePage('followers', pageNumber)}
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePage('followers', Math.min(totalPages.followers, currentPage.followers + 1))}
+                  disabled={currentPage.followers === totalPages.followers}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Challenges Tab */}
+          <TabsContent value="challenges" className="space-y-6">
+            {/* Cancel Active Game Banner inside Challenges tab */}
+            {activeGameError && (
+              <div className="my-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
+                <p className="mb-2 text-yellow-800">{activeGameError}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleCancelActiveGame} className="bg-red-500 text-white hover:bg-red-600">
+                    Cancel Active Game
+                  </Button>
+                  {activeGameId && (
+                    <Button
+                      onClick={() => window.location.href = `/prompt-wars/game/${activeGameId}`}
+                      className="bg-[#3ebb9e] text-white hover:bg-[#00674f]"
+                    >
+                      Return to Ongoing Match
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            {(() => {
+              const currentUserId = localStorage.getItem('userId');
+              const receivedChallenges = challenges.filter(c => c.opponentId === currentUserId);
+              const sentChallenges = challenges.filter(c => c.challengerId === currentUserId);
+              const pendingReceived = receivedChallenges.filter(c => c.status === 'PENDING');
+              
+              return (
+                <>
+                  {pendingReceived.length > 0 && (
+                    <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center">
+                        <div className="bg-red-100 p-2 rounded-full mr-3">
+                          <Bell className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-red-800">
+                            {pendingReceived.length} Pending Challenge(s)
+                          </h3>
+                          <p className="text-sm text-red-600">Accept or decline the challenges below to take action!</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Received Challenges Section */}
+                  {receivedChallenges.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center">
+                        <Trophy className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                        Received Challenges ({receivedChallenges.length})
+                      </h3>
+                      <div className="grid gap-4">
+                        {receivedChallenges.map((challenge) => (
+                          <Card key={challenge.id} className={`p-4 transition-all duration-300 ${
+                            challenge.status === 'PENDING' 
+                              ? 'border-[#3ebb9e] bg-gradient-to-r from-[#3ebb9e]/5 to-[#3ebb9e]/10 shadow-lg' 
+                              : 'border-border'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <div className="relative">
+                                  {challenge.challengerAvatar ? (
+                                    <img
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                                      src={getAvatarUrl(challenge.challengerAvatar)}
+                                      alt={challenge.challengerName}
+                                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 border-2 border-border">
+                                      <Swords className="h-7 w-7 text-[#3ebb9e]" />
+                                    </div>
+                                  )}
+                                  {challenge.status === 'PENDING' && (
+                                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                      !
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold flex items-center">
+                                    {challenge.challengerName}
+                                    {challenge.status === 'PENDING' && (
+                                      <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                                        Waiting for Response
+                                      </span>
+                                    )}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {challenge.message || "Challenge to a prompt war!"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(challenge.createdAt).toLocaleDateString()} at {new Date(challenge.createdAt).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-col space-y-2">
+                                {challenge.status === 'PENDING' && (
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => handleAcceptChallenge(challenge.id)}
+                                      disabled={challengeLoading[challenge.id]}
+                                      className="bg-[#3ebb9e] hover:bg-[#00674f] text-white min-w-[80px]"
+                                    >
+                                      {challengeLoading[challenge.id] ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                      ) : (
+                                        <Swords className="h-4 w-4 mr-1" />
+                                      )}
+                                      {challengeLoading[challenge.id] ? 'Starting...' : 'Accept'}
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      onClick={() => handleDeclineChallenge(challenge.id)}
+                                      disabled={challengeLoading[challenge.id]}
+                                      className="min-w-[80px] border-red-200 text-red-600 hover:bg-red-50"
+                                    >
+                                      {challengeLoading[challenge.id] ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                      ) : (
+                                        <X className="h-4 w-4 mr-1" />
+                                      )}
+                                      {challengeLoading[challenge.id] ? 'Processing...' : 'Decline'}
+                                    </Button>
+                                  </div>
+                                )}
+                                
+                                <span className={`px-3 py-1 text-xs rounded-full text-center ${
+                                  challenge.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                  challenge.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                                  challenge.status === 'DECLINED' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {challenge.status === 'PENDING' ? '⏳ Pending' :
+                                   challenge.status === 'ACCEPTED' ? '✅ Accepted' :
+                                   challenge.status === 'DECLINED' ? '❌ Declined' :
+                                   challenge.status}
+                                </span>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Sent Challenges Section */}
+                  {sentChallenges.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center">
+                        <Swords className="h-5 w-5 mr-2 text-blue-500" />
+                        Sent Challenges ({sentChallenges.length})
+                      </h3>
+                      <div className="grid gap-4">
+                        {sentChallenges.map((challenge) => (
+                          <Card key={challenge.id} className="p-4 border-border">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <div className="relative">
+                                  {challenge.challengerAvatar && !failedAvatars[challenge.id] ? (
+                                    <img
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                                      src={getAvatarUrl(challenge.challengerAvatar)}
+                                      alt={challenge.challengerName}
+                                      onError={() => setFailedAvatars(prev => ({ ...prev, [challenge.id]: true }))}
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#3ebb9e]/10 border-2 border-border">
+                                      <Swords className="h-7 w-7 text-[#3ebb9e]" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold">
+                                    Challenged {challenge.opponentName || 'Player'}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {challenge.message || "Challenge to a prompt war!"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(challenge.createdAt).toLocaleDateString()} at {new Date(challenge.createdAt).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col space-y-2">
+                                <span className={`px-3 py-1 text-xs rounded-full text-center ${
+                                  challenge.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                  challenge.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                                  challenge.status === 'DECLINED' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {challenge.status === 'PENDING' ? '⏳ Waiting for response' :
+                                   challenge.status === 'ACCEPTED' ? '✅ Accepted' :
+                                   challenge.status === 'DECLINED' ? '❌ Declined' :
+                                   challenge.status}
+                                </span>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
+
+      {/* Challenge Modal */}
+      {showChallengeModal && selectedOpponent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <div className="bg-[#3ebb9e]/10 p-2 rounded-full mr-3">
+                  <Swords className="h-5 w-5 text-[#3ebb9e]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Challenge {selectedOpponent.username}</h2>
+                  <p className="text-sm text-muted-foreground">Invite them to a Prompt Wars battle!</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChallengeModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">How Prompt Wars Works:</h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• You'll both get the same scenario to respond to</li>
+                  <li>• Write the best prompt in 2 minutes</li>
+                  <li>• AI judge will evaluate and declare the winner</li>
+                </ul>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Challenge Message (Optional)
+                </label>
+                <textarea
+                  className="w-full p-3 border border-border rounded-md bg-muted"
+                  rows={3}
+                  placeholder="Add a trash-talking message or friendly invite..."
+                  value={challengeMessage}
+                  onChange={(e) => setChallengeMessage(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button
+                  onClick={handleSendChallenge}
+                  className="flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                >
+                  <Swords className="h-4 w-4 mr-2" />
+                  Send Challenge
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowChallengeModal(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

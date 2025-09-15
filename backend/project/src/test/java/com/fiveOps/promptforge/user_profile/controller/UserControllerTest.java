@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
@@ -38,6 +39,7 @@ class UserControllerTest {
   @Mock private JwtUtil jwtUtil;
   @Mock private MailService mailService;
   @Mock private HttpServletRequest request;
+  @Mock private Authentication authentication;
 
   @InjectMocks private UserController userController;
 
@@ -81,12 +83,17 @@ class UserControllerTest {
     testUser.setPasswordHash("encodedPassword");
   }
 
-  // Helper method to setup authenticated request
+  // Helper method to setup authenticated request with cookies
   private void setupAuthenticatedRequest() {
     Cookie[] cookies = new Cookie[1];
     cookies[0] = new Cookie("token", testToken);
     when(request.getCookies()).thenReturn(cookies);
     when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
+  }
+
+  // Helper method to setup authentication object
+  private void setupAuthentication() {
+    when(authentication.getName()).thenReturn(testEmail);
   }
 
   // ============== Get all Users ======================
@@ -561,12 +568,12 @@ class UserControllerTest {
   @Test
   void getFollowers_ShouldReturnFollowersList() {
     // Arrange
-    setupAuthenticatedRequest();
+    setupAuthentication();
     List<UserDto> followers = Arrays.asList(testUserDto);
     when(userService.getFollowersByEmail(testEmail)).thenReturn(followers);
 
     // Act
-    List<UserDto> result = userController.getFollowers(request);
+    List<UserDto> result = userController.getFollowers(authentication, request);
 
     // Assert
     assertNotNull(result);
@@ -580,12 +587,12 @@ class UserControllerTest {
   @Test
   void getFollowing_ShouldReturnFollowingList() {
     // Arrange
-    setupAuthenticatedRequest();
+    setupAuthentication();
     List<UserDto> following = Arrays.asList(testUserDto);
     when(userService.getFollowingByEmail(testEmail)).thenReturn(following);
 
     // Act
-    List<UserDto> result = userController.getFollowing(request);
+    List<UserDto> result = userController.getFollowing(authentication, request);
 
     // Assert
     assertNotNull(result);
