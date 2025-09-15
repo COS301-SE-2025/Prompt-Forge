@@ -51,6 +51,17 @@ public class PromptWarsGameController {
     }
   }
 
+  @PostMapping("/{gameId}/restart")
+  public ResponseEntity<Game> restartGame(@PathVariable String gameId) {
+    try {
+      UUID id = UUID.fromString(gameId);
+      Game game = gameService.restartGame(id);
+      return ResponseEntity.ok(game);
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
   @PostMapping("/{gameId}/generate-scenario")
   public ResponseEntity<Map<String, String>> generateScenario(@PathVariable String gameId) {
     try {
