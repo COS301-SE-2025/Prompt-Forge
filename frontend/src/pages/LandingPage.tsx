@@ -24,10 +24,10 @@ import { useInView } from "react-intersection-observer"
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme()
-  const [typedText, setTypedText] = useState("")
-  const [typedText2, setTypedText2] = useState("")
-  const fullText = "Forge the Future of"
-  const fullText2 = "AI Interactions"
+  // const [typedText, setTypedText] = useState("")
+  // const [typedText2, setTypedText2] = useState("")
+  // const fullText = "Forge the Future of"
+  // const fullText2 = "AI Interactions"
 
   // Silk background color for light/dark mode
   const silkBg =
@@ -48,28 +48,29 @@ export default function LandingPage() {
   const { ref: howItWorksRef, inView: howItWorksInView } = useInView({ triggerOnce: true, threshold: 0.2 })
   const { ref: ctaRef, inView: ctaInView } = useInView({ triggerOnce: true, threshold: 0.2 })
 
-  useEffect(() => {
-    let index = 0
-    const timer = setInterval(() => {
-      if (index <= fullText.length) {
-        setTypedText(fullText.slice(0, index))
-        index++
-      } else {
-        clearInterval(timer)
-          let index2 = 0
-          const timer2 = setInterval(() => {
-            if (index2 <= fullText2.length) {
-              setTypedText2(fullText2.slice(0, index2))
-              index2++
-            } else {
-              clearInterval(timer2)
-            }
-          }, 60)
-      }
-    }, 60)
+  // Comment out typing effect for better performance
+  // useEffect(() => {
+  //   let index = 0
+  //   const timer = setInterval(() => {
+  //     if (index <= fullText.length) {
+  //       setTypedText(fullText.slice(0, index))
+  //       index++
+  //     } else {
+  //       clearInterval(timer)
+  //         let index2 = 0
+  //         const timer2 = setInterval(() => {
+  //           if (index2 <= fullText2.length) {
+  //             setTypedText2(fullText2.slice(0, index2))
+  //             index2++
+  //           } else {
+  //             clearInterval(timer2)
+  //           }
+  //         }, 60)
+  //     }
+  //   }, 60)
 
-    return () => clearInterval(timer)
-  }, [])
+  //   return () => clearInterval(timer)
+  // }, [])
 
   return (
     <div className={`min-h-screen bg-background ${theme === "light" ? "text-black" : "text-white"}`}>
@@ -135,9 +136,7 @@ export default function LandingPage() {
         </div>
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32">
           <div
-            className={`text-center max-w-4xl mx-auto transition-all duration-1000 ${
-              heroInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-            }`}
+            className={`text-center max-w-4xl mx-auto transition-all duration-1000`}
           >
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6">
               <Badge className={`bg-[FFFFFF]/10 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"} hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center`}>
@@ -146,13 +145,11 @@ export default function LandingPage() {
             </div>
             <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}>
               <span className="inline-block min-h-[1.2em]">
-                {typedText}
-                {!typedText2 && <span className="animate-blink">|</span>}
+                Forge the Future of
               </span>
               <br />
-              <span className="inline-block min-h-[1.2em] text-[#45c1a4]">
-                {typedText2}
-                {typedText2 && <span className="animate-blink">|</span>}
+              <span className="inline-block min-h-[1.2em] text-[#45c1a4] drop-shadow-[0_0_25px_rgba(69,193,164,0.6)] ">
+                AI Interactions
               </span>
             </h1>
             <p className={`text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed px-4 ${theme === "light" ? "text-black/80" : "text-[#FFFFFF]/80"}`}>
