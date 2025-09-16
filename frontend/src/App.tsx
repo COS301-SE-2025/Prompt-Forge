@@ -1,3 +1,5 @@
+"use client"
+
 import { Routes, Route, useLocation } from "react-router-dom"
 import LandingPage from "./pages/LandingPage"
 import Header from "./components/Header"
@@ -20,16 +22,19 @@ import BuilderPage from "./pages/PromptBuilder"
 import ProfilePage from "./pages/ProfilePage"
 import SocialPage from "./pages/SocialPage"
 import OptimizerPage from "./pages/OptimizerPage"
+import OptimizerWizard from "./pages/OptimizerWizard"
+import PromptWarsPage from "./pages/PromptWars"
 
 
 
 function App() {
   const location = useLocation()
-  const hideHeaderRoutes = ['/','/login','/help', '/war']
+    const hideHeaderRoutes = ['/','/login','/help', '/war','/register','/forgot-password','/login/','/optimizer','/wizard','/prompt-wars', '/prompt-wars/game']
+    const shouldHideHeader = hideHeaderRoutes.some(route => location.pathname === route || location.pathname.startsWith(route + '/'))
 
   return (
     <div className="min-h-screen w-full flex flex-col">
-      {!hideHeaderRoutes.includes(location.pathname) && <Header />}
+      {!shouldHideHeader && <Header />}
       <main className="flex-1 w-full flex flex-col">
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -48,10 +53,12 @@ function App() {
           <Route path="/comparison" element={<ComparisonPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/war" element={<WarPage />} />
+          <Route path="/prompt-wars/game/:gameId" element={<PromptWarsPage />} />
           <Route path="/builder" element={<BuilderPage />} />
           <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/social" element={<SocialPage />} />
           <Route path="/optimizer" element={<OptimizerPage />} />
+          <Route path="/wizard" element={<OptimizerWizard />} />
         </Routes>
       </main>
     </div>
