@@ -1216,7 +1216,7 @@ export default function SocialPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm">Reverse Prompt Battle</h4>
-                        <p className="text-xs text-gray-600">Guess which prompt generated the AI output (A-E)</p>
+                        <p className="text-xs text-gray-600">Guess which prompt generated the AI output (A-D)</p>
                       </div>
                     </div>
                   </div>
