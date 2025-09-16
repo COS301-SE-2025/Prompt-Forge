@@ -54,6 +54,7 @@ export interface Challenge {
   opponentName?: string;
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
   message?: string;
+  gameType?: 'PROMPT_CREATION' | 'REVERSE_PROMPT';
   createdAt: Date;
   expiresAt: Date;
 }
@@ -69,11 +70,15 @@ export class ChallengeAPI {
     };
   }
 
-  static async sendChallenge(opponentId: string, message?: string): Promise<Challenge> {
+  static async sendChallenge(opponentId: string, message?: string, gameType?: 'PROMPT_CREATION' | 'REVERSE_PROMPT'): Promise<Challenge> {
     const response = await fetch(`${API_BASE_URL}/prompt-wars/challenges/send`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ opponentId, message })
+      body: JSON.stringify({ 
+        opponentId, 
+        message,
+        gameType: gameType || 'PROMPT_CREATION'
+      })
     });
     if (!response.ok) {
       const error = await response.json();
