@@ -28,6 +28,7 @@ export default function SocialPage() {
     followers: false
   });
   const [challengeMessage, setChallengeMessage] = useState("");
+  const [selectedGameType, setSelectedGameType] = useState<'PROMPT_CREATION' | 'REVERSE_PROMPT'>('PROMPT_CREATION');
   const [challengeLoading, setChallengeLoading] = useState<{[key: string]: boolean}>({});
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<SocialUser | null>(null);
@@ -385,12 +386,14 @@ export default function SocialPage() {
     try {
       await ChallengeAPI.sendChallenge(
         selectedOpponent.userId,
-        challengeMessage || undefined
+        challengeMessage || undefined,
+        selectedGameType
       );
       
       setShowChallengeModal(false);
       setChallengeMessage("");
       setSelectedOpponent(null);
+      setSelectedGameType('PROMPT_CREATION'); // Reset to default
       showNotification(`Challenge sent to ${selectedOpponent.username}!`);
       
       // Reload challenges
@@ -1007,6 +1010,15 @@ export default function SocialPage() {
                                   <p className="text-sm text-gray-600">
                                     {challenge.message || "Challenge to a prompt war!"}
                                   </p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className={`px-2 py-1 text-xs rounded-full ${
+                                      challenge.gameType === 'REVERSE_PROMPT' 
+                                        ? 'bg-purple-100 text-purple-800' 
+                                        : 'bg-blue-100 text-blue-800'
+                                    }`}>
+                                      {challenge.gameType === 'REVERSE_PROMPT' ? '🔄 Reverse Battle' : '✏️ Classic Battle'}
+                                    </span>
+                                  </div>
                                   <p className="text-xs text-gray-500">
                                     {new Date(challenge.createdAt).toLocaleDateString()} at {new Date(challenge.createdAt).toLocaleTimeString()}
                                   </p>
@@ -1154,12 +1166,87 @@ export default function SocialPage() {
             </div>
             
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <h4 className="text-sm font-semibold text-blue-800 mb-1">How Prompt Wars Works:</h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                  <li>• You'll both get the same scenario to respond to</li>
-                  <li>• Write the best prompt in 2 minutes</li>
-                  <li>• AI judge will evaluate and declare the winner</li>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium mb-2">
+                  Choose Battle Type
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedGameType === 'PROMPT_CREATION' 
+                        ? 'border-[#3ebb9e] bg-[#3ebb9e]/5' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedGameType('PROMPT_CREATION')}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        selectedGameType === 'PROMPT_CREATION' 
+                          ? 'border-[#3ebb9e] bg-[#3ebb9e]' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedGameType === 'PROMPT_CREATION' && (
+                          <div className="w-full h-full bg-white rounded-full scale-50"></div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm">Classic Prompt Battle</h4>
+                        <p className="text-xs text-gray-600">Write the best prompt for a given scenario</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedGameType === 'REVERSE_PROMPT' 
+                        ? 'border-[#3ebb9e] bg-[#3ebb9e]/5' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedGameType('REVERSE_PROMPT')}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        selectedGameType === 'REVERSE_PROMPT' 
+                          ? 'border-[#3ebb9e] bg-[#3ebb9e]' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedGameType === 'REVERSE_PROMPT' && (
+                          <div className="w-full h-full bg-white rounded-full scale-50"></div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm">Reverse Prompt Battle</h4>
+                        <p className="text-xs text-gray-600">Guess which prompt generated the AI output (A-E)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`border rounded-lg p-3 mb-4 ${
+                selectedGameType === 'PROMPT_CREATION' ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'
+              }`}>
+                <h4 className={`text-sm font-semibold mb-1 ${
+                  selectedGameType === 'PROMPT_CREATION' ? 'text-blue-800' : 'text-purple-800'
+                }`}>
+                  {selectedGameType === 'PROMPT_CREATION' ? 'Classic Battle Rules:' : 'Reverse Battle Rules:'}
+                </h4>
+                <ul className={`text-xs space-y-1 ${
+                  selectedGameType === 'PROMPT_CREATION' ? 'text-blue-700' : 'text-purple-700'
+                }`}>
+                  {selectedGameType === 'PROMPT_CREATION' ? (
+                    <>
+                      <li>• You'll both get the same scenario to respond to</li>
+                      <li>• Write the best prompt in 2 minutes</li>
+                      <li>• AI judge will evaluate and declare the winner</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• You'll see an AI output and 5 prompt options (A-E)</li>
+                      <li>• Pick which prompt generated that output</li>
+                      <li>• First player to get 5 correct answers wins!</li>
+                    </>
+                  )}
                 </ul>
               </div>
               
