@@ -114,15 +114,12 @@ interface WizardData {
     constraints: string[]
     requirements: string[]
     additionalContext: string
-  }
-  testing: {
-    testResults: any[]
-    selectedModel: string
-    performanceMetrics: {
-      relevance: number
-      coherence: number
-      completeness: number
-    }
+    contextEnhancedPrompt?: string
+    contextExplanation?: string
+    contextScore?: number
+    contextImprovements?: string[]
+    enhancementType?: string
+    usedAI?: boolean
   }
   finalPrompt: string
 }
@@ -158,13 +155,6 @@ const WIZARD_STEPS = [
   },
   {
     id: 5,
-    name: "Testing",
-    icon: TestTube,
-    description: "Validate performance",
-    color: "from-indigo-500 to-purple-500",
-  },
-  {
-    id: 6,
     name: "Review",
     icon: CheckCircle,
     description: "Finalize and save",
@@ -237,15 +227,6 @@ export default function OptimizerWizard() {
       constraints: [],
       requirements: [],
       additionalContext: "",
-    },
-    testing: {
-      testResults: [],
-      selectedModel: "gpt-4",
-      performanceMetrics: {
-        relevance: 0,
-        coherence: 0,
-        completeness: 0,
-      },
     },
     finalPrompt: "",
   })
@@ -434,27 +415,6 @@ export default function OptimizerWizard() {
     showNotification("success", "Structure Generated", "Your prompt structure has been optimized!")
   }
 
-  const testPrompt = async () => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      const mockResults = {
-        relevance: Math.floor(Math.random() * 20) + 75,
-        coherence: Math.floor(Math.random() * 15) + 80,
-        completeness: Math.floor(Math.random() * 25) + 70,
-      }
-
-      updateWizardData("testing", { performanceMetrics: mockResults })
-      showNotification("success", "Testing Complete", "Your prompt has been tested successfully!")
-    } catch (error) {
-      console.error("Testing failed:", error)
-      showNotification("error", "Testing Failed", "Unable to test prompt. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleCopyPrompt = async (prompt: string) => {
     try {
       await navigator.clipboard.writeText(prompt)
@@ -544,6 +504,270 @@ export default function OptimizerWizard() {
     }
   }
 
+  // Add new function for AI-powered goal optimization:
+  const optimizeWithGoals = async () => {
+    if (!wizardData.originalPrompt.trim()) {
+      showNotification("error", "No prompt provided", "Please complete Step 1 first")
+      return
+    }
+
+    // Check if goals are defined
+    const hasGoals = Object.values(wizardData.goals).some(value => 
+      typeof value === 'string' && value.trim() !== ''
+    )
+
+    if (!hasGoals) {
+      showNotification("error", "No goals defined", "Please specify at least one goal in Step 2")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/ml/optimize-with-goals', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          text: wizardData.originalPrompt,
+          goals: {
+            primaryObjective: wizardData.goals.primaryObjective,
+            targetAudience: wizardData.goals.targetAudience,
+            outputFormat: wizardData.goals.outputFormat,
+            tone: wizardData.goals.tone,
+            length: wizardData.goals.length,
+            complexity: wizardData.goals.complexity
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      // Update wizard data with goal optimization results
+      updateWizardData("goalOptimization", {
+        optimizedPrompt: result.optimized_prompt,
+        improvementExplanation: result.improvement_explanation,
+        goalAlignmentScore: result.goal_alignment_score,
+        predictedMetrics: result.predicted_metrics,
+        keyChanges: result.key_changes,
+        usedAI: result.used_ai
+      })
+
+      // Update final prompt
+      updateWizardData("finalPrompt", result.optimized_prompt)
+
+      const message = result.used_ai 
+        ? `AI goal optimization complete! Alignment score: ${result.goal_alignment_score}%`
+        : `Rule-based goal optimization applied! Score: ${result.goal_alignment_score}%`
+        
+      showNotification("success", "Goal Optimization Complete", message)
+    } catch (error) {
+      console.error("Goal optimization failed:", error)
+      showNotification("error", "Goal Optimization Failed", "Unable to optimize with goals. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Add new function for AI-powered context optimization:
+  const optimizeWithContext = async () => {
+    if (!wizardData.originalPrompt.trim()) {
+      showNotification("error", "No prompt provided", "Please complete Step 1 first")
+      return
+    }
+
+    // Check if any context information is provided
+    const hasContext = wizardData.context.domain || 
+                      wizardData.context.useCase || 
+                      wizardData.context.additionalContext ||
+                      wizardData.context.requirements.length > 0
+
+    if (!hasContext) {
+      showNotification("error", "No context provided", "Please add some context information in Step 4")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/ml/optimize-with-context', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          text: wizardData.finalPrompt || wizardData.structureOptimization.structuredPrompt || wizardData.goalOptimization.optimizedPrompt || wizardData.originalPrompt,
+          context_options: {
+            domain: wizardData.context.domain,
+            useCase: wizardData.context.useCase,
+            additionalContext: wizardData.context.additionalContext,
+            requirements: wizardData.context.requirements
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      // Update wizard data with context optimization results
+      updateWizardData("context", {
+        ...wizardData.context,
+        contextEnhancedPrompt: result.context_enhanced_prompt,
+        contextExplanation: result.context_explanation,
+        contextScore: result.context_score,
+        contextImprovements: result.context_improvements,
+        enhancementType: result.enhancement_type,
+        usedAI: result.used_ai
+      })
+
+      // Update final prompt
+      updateWizardData("finalPrompt", result.context_enhanced_prompt)
+
+      const message = result.used_ai 
+        ? `AI context optimization complete! Context score: ${result.context_score}%`
+        : `Rule-based context applied! Score: ${result.context_score}%`
+        
+      showNotification("success", "Context Optimization Complete", message)
+    } catch (error) {
+      console.error("Context optimization failed:", error)
+      showNotification("error", "Context Optimization Failed", "Unable to optimize context. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Add comprehensive optimization function that combines all steps:
+  const generateComprehensiveOptimization = async () => {
+    if (!wizardData.originalPrompt.trim()) {
+      showNotification("error", "No prompt provided", "Please enter a prompt in Step 1")
+      return
+    }
+
+    setIsLoading(true)
+    let currentPrompt = wizardData.originalPrompt
+
+    try {
+      // Step 1: Goals optimization (if goals are provided)
+      const hasGoals = Object.values(wizardData.goals).some(value => 
+        typeof value === 'string' && value.trim() !== ''
+      )
+
+      if (hasGoals) {
+        showNotification("success", "Processing", "Applying goal-based optimization...")
+        
+        const goalResponse = await fetch('/api/ml/optimize-with-goals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: currentPrompt,
+            goals: wizardData.goals
+          })
+        })
+
+        if (goalResponse.ok) {
+          const goalResult = await goalResponse.json()
+          currentPrompt = goalResult.optimized_prompt
+          updateWizardData("goalOptimization", {
+            optimizedPrompt: goalResult.optimized_prompt,
+            improvementExplanation: goalResult.improvement_explanation,
+            goalAlignmentScore: goalResult.goal_alignment_score,
+            predictedMetrics: goalResult.predicted_metrics,
+            keyChanges: goalResult.key_changes,
+            usedAI: goalResult.used_ai
+          })
+        }
+      }
+
+      // Step 2: Structure optimization (if structure options are selected)
+      const hasStructureOptions = Object.values(wizardData.structure).some(value => 
+        typeof value === 'boolean' && value === true
+      )
+
+      if (hasStructureOptions) {
+        showNotification("success", "Processing", "Applying structure optimization...")
+        
+        const structureResponse = await fetch('/api/ml/optimize-with-structure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: currentPrompt,
+            structure_options: {
+              hasIntroduction: wizardData.structure.hasIntroduction,
+              usesBulletPoints: wizardData.structure.usesBulletPoints,
+              usesNumberedList: wizardData.structure.usesNumberedList,
+              hasExamples: wizardData.structure.hasExamples,
+              hasConclusion: wizardData.structure.hasConclusion
+            }
+          })
+        })
+
+        if (structureResponse.ok) {
+          const structureResult = await structureResponse.json()
+          currentPrompt = structureResult.structured_prompt
+          updateWizardData("structureOptimization", {
+            structuredPrompt: structureResult.structured_prompt,
+            structureExplanation: structureResult.structure_explanation,
+            structureScore: structureResult.structure_score,
+            structuralImprovements: structureResult.structural_improvements,
+            organizationType: structureResult.organization_type,
+            usedAI: structureResult.used_ai
+          })
+        }
+      }
+
+      // Step 3: Context optimization (if context is provided)
+      const hasContext = wizardData.context.domain || 
+                        wizardData.context.useCase || 
+                        wizardData.context.additionalContext ||
+                        wizardData.context.requirements.length > 0
+
+      if (hasContext) {
+        showNotification("success", "Processing", "Applying context enhancement...")
+        
+        const contextResponse = await fetch('/api/ml/optimize-with-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: currentPrompt,
+            context_options: {
+              domain: wizardData.context.domain,
+              useCase: wizardData.context.useCase,
+              additionalContext: wizardData.context.additionalContext,
+              requirements: wizardData.context.requirements
+            }
+          })
+        })
+
+        if (contextResponse.ok) {
+          const contextResult = await contextResponse.json()
+          currentPrompt = contextResult.context_enhanced_prompt
+        }
+      }
+
+      // Update final prompt
+      updateWizardData("finalPrompt", currentPrompt)
+      
+      showNotification("success", "Optimization Complete", "Your prompt has been fully optimized with AI!")
+      
+      // Auto-advance to review step
+      setCurrentStep(5)
+
+    } catch (error) {
+      console.error("Comprehensive optimization failed:", error)
+      showNotification("error", "Optimization Failed", "Unable to complete full optimization. Please try individual steps.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1: // Analysis
@@ -561,7 +785,7 @@ export default function OptimizerWizard() {
               </p>
             </div>
 
-            <Card className="p-8 bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/50 border border-[#3ebb9e]/20 shadow-lg">
+            <Card className="p-8 bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/50 border border-[#3ebb9e]/20 shadow-lg custom-scrollbar">
               <div className="space-y-6">
                 <div>
                   <Label htmlFor="prompt-input" className="text-lg font-semibold mb-4 block">
@@ -867,6 +1091,68 @@ export default function OptimizerWizard() {
                 </div>
               </Card>
             </div>
+
+            {/* Add AI Goal Optimization Section */}
+            {Object.values(wizardData.goals).some(value => typeof value === 'string' && value.trim() !== '') && (
+              <div className="mt-8">
+                <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Brain className="h-6 w-6 text-green-600" />
+                    <div>
+                      <h3 className="text-xl font-bold">AI Goal Optimization</h3>
+                      <p className="text-muted-foreground">Let AI optimize your prompt based on your goals</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={optimizeWithGoals}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-emerald-500 hover:to-green-500 text-white font-semibold text-lg py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {isLoading ? (
+                      <>
+                        <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                        AI Optimizing with Goals...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Generate Goal-Optimized Prompt
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Show Goal Optimization Results */}
+                  {wizardData.goalOptimization.optimizedPrompt && (
+                    <div className="mt-6 space-y-4">
+                      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <h4 className="font-semibold text-green-800 dark:text-green-200">
+                            Goal-Optimized Prompt (Score: {wizardData.goalOptimization.goalAlignmentScore}%)
+                          </h4>
+                        </div>
+                        <p className="text-sm font-mono text-green-700 dark:text-green-300 whitespace-pre-wrap">
+                          {wizardData.goalOptimization.optimizedPrompt}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Key Improvements:</h4>
+                        <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                          {wizardData.goalOptimization.keyChanges.map((change, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              {change}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </div>
         )
 
@@ -987,149 +1273,103 @@ export default function OptimizerWizard() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={optimizeWithStructure}
-                  disabled={isLoading || !Object.values(wizardData.structure).some(v => typeof v === 'boolean' && v)}
-                  className="w-full mt-6 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-orange-500 hover:to-yellow-500 text-white font-semibold text-lg py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                      AI Optimizing Structure...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 mr-2" />
-                      Generate AI-Structured Prompt
-                    </>
-                  )}
-                </Button>
+                {/* AI Structure Optimization Button */}
+                {Object.values(wizardData.structure).some(value => typeof value === 'boolean' && value === true) && (
+                  <div className="mt-6">
+                    <Button
+                      onClick={optimizeWithStructure}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold text-lg py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                          AI Optimizing Structure...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-5 w-5 mr-2" />
+                          Generate AI-Structured Prompt
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </Card>
 
               {/* Right Column - Structure Results */}
-              <div className="space-y-6">
+              <Card className="p-8 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center gap-3 mb-6">
+                  <Layout className="h-6 w-6 text-purple-600" />
+                  <div>
+                    <h3 className="text-xl font-bold">Structure Preview</h3>
+                    <p className="text-muted-foreground">Your optimized structure</p>
+                  </div>
+                </div>
+
                 {wizardData.structureOptimization.structuredPrompt ? (
-                  <>
-                    {/* Structure Score */}
-                    <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
-                      <div className="flex items-center gap-3 mb-4">
-                        <TrendingUp className="h-5 w-5 text-purple-600" />
-                        <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200">
-                          Structure Score
-                        </h3>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700 max-h-96 overflow-y-auto">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <h4 className="font-semibold text-purple-800 dark:text-purple-200">
+                          AI-Structured Prompt (Score: {wizardData.structureOptimization.structureScore}%)
+                        </h4>
                       </div>
-                      
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                          {wizardData.structureOptimization.structureScore}%
-                        </div>
-                        <div className="flex-1">
-                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                            <div 
-                              className="bg-purple-500 h-3 rounded-full transition-all duration-500"
-                              style={{ width: `${wizardData.structureOptimization.structureScore}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <Badge className={`${
-                          wizardData.structureOptimization.structureScore >= 80 ? 'bg-green-100 text-green-800' :
-                          wizardData.structureOptimization.structureScore >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {wizardData.structureOptimization.usedAI ? 'AI-Structured' : 'Rule-Based'}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-sm text-purple-700 dark:text-purple-300">
-                        {wizardData.structureOptimization.structureExplanation}
-                      </p>
-                    </Card>
+                      <pre className="text-sm font-mono text-purple-700 dark:text-purple-300 whitespace-pre-wrap">
+                        {wizardData.structureOptimization.structuredPrompt}
+                      </pre>
+                    </div>
 
-                    {/* Structured Prompt Display */}
-                    <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Layout className="h-5 w-5 text-green-600" />
-                        <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                          AI-Structured Prompt
-                        </h3>
+                    {wizardData.structureOptimization.structuralImprovements.length > 0 && (
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                        <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Structural Improvements:</h4>
+                        <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                          {wizardData.structureOptimization.structuralImprovements.map((improvement, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              {improvement}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 mb-4">
-                        <p className="text-sm font-mono text-green-700 dark:text-green-300 whitespace-pre-wrap">
-                          {wizardData.structureOptimization.structuredPrompt}
-                        </p>
-                      </div>
+                    )}
 
-                      <Button
-                        onClick={() => handleCopyPrompt(wizardData.structureOptimization.structuredPrompt)}
-                        variant="outline"
-                        className="w-full border-2 border-green-300 text-green-700 hover:bg-green-100"
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Structured Prompt
-                      </Button>
-                    </Card>
-
-                    {/* Structural Improvements */}
-                    <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Wand2 className="h-5 w-5 text-blue-600" />
-                        <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                          Structural Improvements Applied
-                        </h3>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {wizardData.structureOptimization.structuralImprovements.map((improvement, index) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
-                            <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{improvement}</span>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Organization Type:</strong> {wizardData.structureOptimization.organizationType}
-                        </p>
-                      </div>
-                    </Card>
-                  </>
+                    <Button
+                      onClick={() => handleCopyPrompt(wizardData.structureOptimization.structuredPrompt)}
+                      variant="outline"
+                      className="w-full border-purple-300 text-purple-600 hover:bg-purple-50"
+                    >
+                      {copiedId ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Structured Prompt
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 ) : (
-                  <>
-                    {/* Before Comparison */}
-                    <Card className="p-6 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/50 dark:to-pink-950/50 border border-red-200 dark:border-red-800">
-                      <div className="flex items-center gap-3 mb-4">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                        <h4 className="font-bold text-red-700 dark:text-red-400">Before (Current Structure)</h4>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-red-200 dark:border-red-700">
-                        <p className="text-sm font-mono text-red-600 dark:text-red-400">
-                          {wizardData.originalPrompt || "Your original prompt will appear here"}
-                        </p>
-                      </div>
-                      <Badge className="mt-3 bg-red-100 text-red-800 border-red-300">
-                        Structure Score: {wizardData.analysisResults.structure}%
-                      </Badge>
-                    </Card>
-
-                    <Card className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 border border-gray-200 dark:border-gray-700">
-                      <div className="text-center py-8">
-                        <Layout className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-muted-foreground mb-2">AI Structure Optimization</h3>
-                        <p className="text-muted-foreground">
-                          Select structural improvements and click "Generate AI-Structured Prompt" to see intelligent organization powered by Qwen
-                        </p>
-                      </div>
-                    </Card>
-                  </>
+                  <div className="text-center py-12">
+                    <Layout className="h-16 w-16 text-purple-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-purple-600 dark:text-purple-400 mb-2">
+                      Select Structure Options
+                    </h4>
+                    <p className="text-purple-500 dark:text-purple-400">
+                      Choose structural improvements from the left panel to see your optimized prompt here.
+                    </p>
+                  </div>
                 )}
-              </div>
+              </Card>
             </div>
           </div>
         )
 
-      case 4: // Context (Simplified)
+      case 4: // Context
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
@@ -1137,251 +1377,199 @@ export default function OptimizerWizard() {
                 <Globe className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] bg-clip-text text-transparent">
-                Add Context
+                Add Context & Background
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Provide background information to help the AI understand your specific needs better.
-              </p>
-            </div>
-
-            <div className="max-w-4xl mx-auto">
-              <Card className="p-8 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 border border-indigo-200 dark:border-indigo-800">
-                <div className="space-y-8">
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <Brain className="h-6 w-6 text-indigo-600" />
-                      <div>
-                        <h3 className="text-xl font-bold">Background Information</h3>
-                        <p className="text-muted-foreground">Help us understand your situation</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <Label className="text-base font-medium mb-3 block">Industry/Domain</Label>
-                        <Select
-                          value={wizardData.context.domain}
-                          onValueChange={(value) => updateWizardData("context", { domain: value })}
-                        >
-                          <SelectTrigger className="bg-white dark:bg-gray-800 border-2 border-indigo-200 dark:border-indigo-700 focus:border-indigo-400 h-12 text-base">
-                            <SelectValue placeholder="Select your industry (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="technology">Technology</SelectItem>
-                            <SelectItem value="healthcare">Healthcare</SelectItem>
-                            <SelectItem value="finance">Finance</SelectItem>
-                            <SelectItem value="education">Education</SelectItem>
-                            <SelectItem value="marketing">Marketing</SelectItem>
-                            <SelectItem value="retail">Retail</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label className="text-base font-medium mb-3 block">Specific Use Case</Label>
-                        <Input
-                          value={wizardData.context.useCase}
-                          onChange={(e) => updateWizardData("context", { useCase: e.target.value })}
-                          placeholder="e.g., Product launch email, Blog post"
-                          className="bg-white dark:bg-gray-800 border-2 border-indigo-200 dark:border-indigo-700 focus:border-indigo-400 h-12 text-base"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <FileText className="h-5 w-5 text-indigo-600" />
-                      <div>
-                        <h4 className="text-lg font-bold">Additional Context</h4>
-                        <p className="text-muted-foreground">Any other details that might help</p>
-                      </div>
-                    </div>
-                    <Textarea
-                      value={wizardData.context.additionalContext}
-                      onChange={(e) => updateWizardData("context", { additionalContext: e.target.value })}
-                      placeholder="Optional: Company details, special requirements, constraints, or any other context that might help generate better results..."
-                      className="min-h-[120px] bg-white dark:bg-gray-800 border-2 border-indigo-200 dark:border-indigo-700 focus:border-indigo-400 text-base resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <CheckCircle className="h-5 w-5 text-indigo-600" />
-                      <div>
-                        <h4 className="text-lg font-bold">Common Requirements</h4>
-                        <p className="text-muted-foreground">Check any that apply to your needs</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        "Include a call-to-action",
-                        "Mention specific features",
-                        "Keep under 200 words",
-                        "Make it SEO-friendly",
-                        "Include contact information",
-                        "Add social proof/testimonials",
-                      ].map((requirement) => (
-                        <div
-                          key={requirement}
-                          className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-indigo-700 hover:shadow-sm transition-all"
-                        >
-                          <Checkbox
-                            id={requirement}
-                            checked={wizardData.context.requirements.includes(requirement)}
-                            onCheckedChange={(checked) => {
-                              const requirements = checked
-                                ? [...wizardData.context.requirements, requirement]
-                                : wizardData.context.requirements.filter((r) => r !== requirement)
-                              updateWizardData("context", { requirements })
-                            }}
-                          />
-                          <Label htmlFor={requirement} className="text-sm cursor-pointer">
-                            {requirement}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        )
-
-      case 5: // Testing
-        return (
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mb-4">
-                <TestTube className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] bg-clip-text text-transparent">
-                Test Your Prompt
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Let's validate your optimized prompt and see how it performs with AI models.
+                Provide context to help AI understand your specific situation and requirements better.
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="p-8 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/50 dark:to-blue-950/50 border border-cyan-200 dark:border-cyan-800">
+              {/* Left Column - Context Input */}
+              <Card className="p-8 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/50 dark:to-red-950/50 border border-orange-200 dark:border-orange-800">
                 <div className="flex items-center gap-3 mb-6">
-                  <Rocket className="h-6 w-6 text-cyan-600" />
+                  <Globe className="h-6 w-6 text-orange-600" />
                   <div>
-                    <h3 className="text-xl font-bold">Your Optimized Prompt</h3>
-                    <p className="text-muted-foreground">Ready for testing</p>
+                    <h3 className="text-xl font-bold">Context Information</h3>
+                    <p className="text-muted-foreground">Help AI understand your situation</p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg mb-6 border border-cyan-200 dark:border-cyan-700">
-                  <p className="text-sm font-mono whitespace-pre-wrap">
-                    {wizardData.finalPrompt || wizardData.structure.structuredPrompt || wizardData.originalPrompt}
-                  </p>
-                </div>
-
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <Label className="text-base font-medium mb-3 block">Test with AI Model</Label>
+                    <Label className="text-base font-medium mb-3 block">Industry/Domain</Label>
                     <Select
-                      value={wizardData.testing.selectedModel}
-                      onValueChange={(value) => updateWizardData("testing", { selectedModel: value })}
+                      value={wizardData.context.domain}
+                      onValueChange={(value) => updateWizardData("context", { domain: value })}
                     >
-                      <SelectTrigger className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 focus:border-cyan-400 h-12 text-base">
-                        <SelectValue />
+                      <SelectTrigger className="bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 h-12 text-base">
+                        <SelectValue placeholder="Select your industry" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="gpt-4">GPT-4 (Recommended)</SelectItem>
-                        <SelectItem value="gpt-3.5">GPT-3.5 Turbo</SelectItem>
-                        <SelectItem value="claude">Claude</SelectItem>
-                        <SelectItem value="gemini">Gemini Pro</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="marketing">Marketing</SelectItem>
+                        <SelectItem value="retail">Retail</SelectItem>
+                        <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                        <SelectItem value="legal">Legal</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <Button
-                    onClick={testPrompt}
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold text-lg py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    {isLoading ? (
-                      <>
-                        <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                        Testing Your Prompt...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-5 w-5 mr-2" />
-                        Run Performance Test
-                      </>
-                    )}
-                  </Button>
+                  <div>
+                    <Label className="text-base font-medium mb-3 block">Specific Use Case</Label>
+                    <Input
+                      value={wizardData.context.useCase}
+                      onChange={(e) => updateWizardData("context", { useCase: e.target.value })}
+                      placeholder="e.g., Product launch email, Technical documentation, Training material"
+                      className="bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 h-12 text-base"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-medium mb-3 block">Additional Context</Label>
+                    <Textarea
+                      value={wizardData.context.additionalContext}
+                      onChange={(e) => updateWizardData("context", { additionalContext: e.target.value })}
+                      placeholder="Provide any additional background information, constraints, or specific requirements..."
+                      className="min-h-[120px] bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-medium mb-3 block">Special Requirements</Label>
+                    <div className="space-y-2">
+                      {wizardData.context.requirements.map((req, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={req}
+                            onChange={(e) => {
+                              const newReqs = [...wizardData.context.requirements]
+                              newReqs[index] = e.target.value
+                              updateWizardData("context", { requirements: newReqs })
+                            }}
+                            placeholder="Enter a requirement"
+                            className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newReqs = wizardData.context.requirements.filter((_, i) => i !== index)
+                              updateWizardData("context", { requirements: newReqs })
+                            }}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const newReqs = [...wizardData.context.requirements, ""]
+                          updateWizardData("context", { requirements: newReqs })
+                        }}
+                        className="w-full border-orange-300 text-orange-600 hover:bg-orange-50"
+                      >
+                        + Add Requirement
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* AI Context Optimization Button */}
+                  {(wizardData.context.domain || wizardData.context.useCase || wizardData.context.additionalContext || wizardData.context.requirements.length > 0) && (
+                    <div className="mt-6">
+                      <Button
+                        onClick={optimizeWithContext}
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-red-500 hover:to-orange-500 text-white font-semibold text-lg py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        {isLoading ? (
+                          <>
+                            <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                            AI Enhancing Context...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-5 w-5 mr-2" />
+                            Generate Context-Enhanced Prompt
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
 
-              <Card className="p-8 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 border border-emerald-200 dark:border-emerald-800">
+              {/* Right Column - Context Preview */}
+              <Card className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-3 mb-6">
-                  <BarChart3 className="h-6 w-6 text-emerald-600" />
+                  <Eye className="h-6 w-6 text-blue-600" />
                   <div>
-                    <h3 className="text-xl font-bold">Performance Results</h3>
-                    <p className="text-muted-foreground">How your prompt performs</p>
+                    <h3 className="text-xl font-bold">Context Preview</h3>
+                    <p className="text-muted-foreground">Your enhanced prompt</p>
                   </div>
                 </div>
 
-                {wizardData.testing.performanceMetrics.relevance > 0 ? (
-                  <div className="space-y-6">
-                    {[
-                      {
-                        label: "Relevance",
-                        value: wizardData.testing.performanceMetrics.relevance,
-                        color: "bg-[#3ebb9e]",
-                        description: "How well it matches your request",
-                      },
-                      {
-                        label: "Coherence",
-                        value: wizardData.testing.performanceMetrics.coherence,
-                        color: "bg-blue-500",
-                        description: "Logical flow and consistency",
-                      },
-                      {
-                        label: "Completeness",
-                        value: wizardData.testing.performanceMetrics.completeness,
-                        color: "bg-purple-500",
-                        description: "Coverage of all requirements",
-                      },
-                    ].map((metric) => (
-                      <div key={metric.label} className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="font-semibold">{metric.label}</span>
-                            <p className="text-xs text-muted-foreground">{metric.description}</p>
-                          </div>
-                          <span className="font-bold text-xl text-[#3ebb9e]">{metric.value}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                          <div
-                            className={`h-3 rounded-full ${metric.color} transition-all duration-1000 ease-out`}
-                            style={{ width: `${metric.value}%` }}
-                          />
-                        </div>
+                {wizardData.context.contextEnhancedPrompt ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 max-h-96 overflow-y-auto">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200">
+                          Context-Enhanced Prompt (Score: {wizardData.context.contextScore || 0}%)
+                        </h4>
                       </div>
-                    ))}
-
-                    <div className="mt-8 p-6 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-3 mb-3">
-                        <CheckCircle className="h-6 w-6 text-green-600" />
-                        <span className="font-bold text-green-800 dark:text-green-200 text-lg">Excellent Results!</span>
-                      </div>
-                      <p className="text-green-700 dark:text-green-300">
-                        Your optimized prompt is performing very well across all metrics. Ready to save and use it!
-                      </p>
+                      <pre className="text-sm font-mono text-blue-700 dark:text-blue-300 whitespace-pre-wrap">
+                        {wizardData.context.contextEnhancedPrompt}
+                      </pre>
                     </div>
+
+                    {wizardData.context.contextImprovements && wizardData.context.contextImprovements.length > 0 && (
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                        <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Context Improvements:</h4>
+                        <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                          {wizardData.context.contextImprovements.map((improvement, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              {improvement}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={() => handleCopyPrompt(wizardData.context.contextEnhancedPrompt || "")}
+                      variant="outline"
+                      className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                    >
+                      {copiedId ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Enhanced Prompt
+                        </>
+                      )}
+                    </Button>
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <TestTube className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground text-lg">Click "Run Performance Test" to see results</p>
+                    <Globe className="h-16 w-16 text-blue-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
+                      Add Context Information
+                    </h4>
+                    <p className="text-blue-500 dark:text-blue-400">
+                      Fill in context details on the left to see your enhanced prompt here.
+                    </p>
                   </div>
                 )}
               </Card>
@@ -1389,7 +1577,7 @@ export default function OptimizerWizard() {
           </div>
         )
 
-      case 6: // Review
+      case 5: // Review
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
@@ -1397,65 +1585,72 @@ export default function OptimizerWizard() {
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] bg-clip-text text-transparent">
-                Review & Save
+                Review & Finalize
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Your prompt has been successfully optimized! Review the improvements and save your work.
+                Review your optimized prompt and save it to your editor when you're satisfied with the results.
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800">
+              <Card className="p-8 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 border border-emerald-200 dark:border-emerald-800 custom-scrollbar">
                 <div className="flex items-center gap-3 mb-6">
-                  <Eye className="h-6 w-6 text-blue-600" />
+                  <Rocket className="h-6 w-6 text-emerald-600" />
                   <div>
-                    <h3 className="text-xl font-bold">Before & After Comparison</h3>
-                    <p className="text-muted-foreground">See the transformation</p>
+                    <h3 className="text-xl font-bold">Your Optimized Prompt</h3>
+                    <p className="text-muted-foreground">Final result ready to use</p>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <XCircle className="h-5 w-5 text-red-500" />
-                      <h4 className="font-semibold text-red-600 dark:text-red-400">Original Prompt</h4>
+                <div className="space-y-4">
+                  <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-emerald-200 dark:border-emerald-700 max-h-96 overflow-y-auto">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Star className="h-5 w-5 text-emerald-500" />
+                      <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">Final Optimized Prompt</h4>
                     </div>
-                    <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-lg border border-red-200 dark:border-red-800">
-                      <p className="text-sm font-mono text-red-700 dark:text-red-300">{wizardData.originalPrompt}</p>
-                    </div>
+                    <pre className="text-sm font-mono text-emerald-700 dark:text-emerald-300 whitespace-pre-wrap leading-relaxed">
+                      {wizardData.finalPrompt || wizardData.originalPrompt}
+                    </pre>
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      <h4 className="font-semibold text-green-600 dark:text-green-400">Optimized Prompt</h4>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                      <p className="text-sm font-mono text-green-700 dark:text-green-300 whitespace-pre-wrap">
-                        {wizardData.finalPrompt || wizardData.structure.structuredPrompt}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => handleCopyPrompt(wizardData.finalPrompt || wizardData.originalPrompt)}
+                      variant="outline"
+                      className="flex-1 border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                    >
+                      {copiedId ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Prompt
+                        </>
+                      )}
+                    </Button>
 
-                <div className="flex gap-3 mt-6">
-                  <Button
-                    onClick={() => handleCopyPrompt(wizardData.finalPrompt || wizardData.structure.structuredPrompt)}
-                    variant="outline"
-                    className="flex-1 border-2 border-[#3ebb9e] text-[#3ebb9e] hover:bg-[#3ebb9e] hover:text-white font-semibold py-3 rounded-lg transition-all duration-300"
-                  >
-                    {copiedId ? (
-                      <>
-                        <Check className="h-4 w-4 mr-2" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Prompt
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      onClick={generateComprehensiveOptimization}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Optimizing...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-2" />
+                          Full AI Optimization
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
@@ -1708,105 +1903,283 @@ export default function OptimizerWizard() {
         </div>
       </div>
 
-      {/* Help Modal */}
+      {/* Help Modal - Updated to match EditorPage styling */}
       {showHelpModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
-          <div className="bg-white dark:bg-gray-900 border border-[#3ebb9e] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] p-6 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <BookOpen className="h-6 w-6" />
-                Prompt Optimization Guide
-              </h2>
+          <div className="bg-background border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Prompt Optimizer Guide</h2>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowHelpModal(false)}
-                className="h-10 w-10 hover:bg-white/20 text-white rounded-xl"
+                className="h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
                 aria-label="Close help modal"
               >
-                <X className="h-6 w-6" />
+                <span className="text-lg">✕</span>
               </Button>
             </div>
 
-            <div className="p-8 space-y-8">
-              {/* Quick Start Guide */}
+            <div className="p-6 space-y-8">
+              {/* Getting Started */}
               <section>
-                <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
-                  <Rocket className="h-6 w-6 text-[#3ebb9e]" />
-                  Quick Start Guide
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Getting Started
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">1.</span>
+                    <p>Enter your prompt in Step 1 (Analysis) and click "Analyze My Prompt"</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">2.</span>
+                    <p>Define your goals and audience in Step 2 (Goals)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">3.</span>
+                    <p>Choose structural improvements in Step 3 (Structure)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">4.</span>
+                    <p>Add context and background in Step 4 (Context)</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#3ebb9e]">5.</span>
+                    <p>Review and save your optimized prompt in Step 5 (Review)</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Five Optimization Steps */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  Five Optimization Steps
+                </h3>
+                <div className="space-y-4">
                   {WIZARD_STEPS.map((step, index) => (
-                    <Card
-                      key={step.id}
-                      className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 hover:border-[#3ebb9e] transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div
-                          className={`w-10 h-10 rounded-full bg-gradient-to-r ${step.color} text-white flex items-center justify-center text-sm font-bold`}
-                        >
+                    <div key={step.id} className="bg-card border border-border rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <div className={`w-8 h-8 bg-gradient-to-r ${step.color} text-white rounded-lg flex items-center justify-center text-sm font-bold mr-3`}>
                           {step.id}
                         </div>
-                        <div>
-                          <h4 className="font-bold text-foreground">{step.name}</h4>
-                          <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </div>
+                        <h4 className="text-base font-bold text-foreground">{step.name}</h4>
                       </div>
-                    </Card>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {step.id === 1 && "Analyze your current prompt with AI-powered metrics for clarity, specificity, structure, and context."}
+                        {step.id === 2 && "Define your primary objective, target audience, output format, tone, and complexity level."}
+                        {step.id === 3 && "Choose from AI-powered structural improvements like introductions, bullet points, examples, and conclusions."}
+                        {step.id === 4 && "Add industry context, use cases, background information, and specific requirements."}
+                        {step.id === 5 && "Review your optimized prompt, see improvement summary, and save to your editor."}
+                      </p>
+                      <div className="bg-muted/30 p-2 rounded text-xs font-medium text-muted-foreground">
+                        {step.id === 1 && "Perfect for: Understanding prompt quality, identifying weaknesses"}
+                        {step.id === 2 && "Perfect for: Clarifying purpose, defining audience, setting tone"}
+                        {step.id === 3 && "Perfect for: Organization, readability, logical flow"}
+                        {step.id === 4 && "Perfect for: Domain expertise, situational awareness, constraints"}
+                        {step.id === 5 && "Perfect for: Final review, comparison, implementation"}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </section>
 
-              {/* Pro Tips */}
+              {/* AI-Powered Features */}
               <section>
-                <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
-                  <Lightbulb className="h-6 w-6 text-[#4079ff]" />
-                  Pro Tips for Better Prompts
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <span className="text-xl mr-3">🤖</span>
+                  AI-Powered Features
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    {
-                      icon: <Target className="h-6 w-6 text-[#3ebb9e]" />,
-                      title: "Be Specific",
-                      description: "The more details you provide, the better results you'll get",
-                      example:
-                        "Instead of 'write an email', try 'write a professional welcome email for new customers'",
-                    },
-                    {
-                      icon: <Users className="h-6 w-6 text-[#4079ff]" />,
-                      title: "Define Your Audience",
-                      description: "Always specify who the content is for",
-                      example: "For beginners, experts, professionals, students, etc.",
-                    },
-                    {
-                      icon: <FileText className="h-6 w-6 text-[#3ebb9e]" />,
-                      title: "Structure Matters",
-                      description: "Use clear organization and formatting",
-                      example: "Break complex requests into numbered steps or bullet points",
-                    },
-                    {
-                      icon: <Brain className="h-6 w-6 text-[#4079ff]" />,
-                      title: "Provide Context",
-                      description: "Share relevant background information",
-                      example: "Mention your industry, company size, or special requirements",
-                    },
-                  ].map((tip, index) => (
-                    <Card
-                      key={index}
-                      className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 border border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm">{tip.icon}</div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-foreground mb-2">{tip.title}</h4>
-                          <p className="text-muted-foreground mb-3">{tip.description}</p>
-                          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
-                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{tip.example}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">📊</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Real-time Analysis</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Get instant feedback on clarity, specificity, structure, and context scores.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">🎯</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Goal-Based Optimization</h4>
+                      <p className="text-xs text-muted-foreground">
+                        AI aligns your prompt with specific objectives and target audiences.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">🏗️</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Structure Enhancement</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Intelligent restructuring with introductions, examples, and conclusions.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">🌐</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Context Integration</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Add domain-specific knowledge and situational background automatically.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-muted/20 rounded-lg">
+                    <span className="text-xl flex-shrink-0">🔄</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">Comprehensive Optimization</h4>
+                      <p className="text-xs text-muted-foreground">
+                        "Full AI Optimization" button applies all improvements in sequence.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Optimization Techniques */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <span className="text-xl mr-3">✨</span>
+                  Optimization Techniques
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-bold text-foreground">Structure Options</h4>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Add clear objective statements</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Organize with bullet points</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Add numbered steps</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Include helpful examples</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-green-500/10 rounded text-xs">
+                      <span className="text-green-500 flex-shrink-0">✓</span>
+                      <p className="text-muted-foreground">Add success criteria</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-bold text-foreground">Context Enhancement</h4>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Industry/domain specification</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Specific use case details</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Background information</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Special requirements</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-blue-500/10 rounded text-xs">
+                      <span className="text-blue-500 flex-shrink-0">💡</span>
+                      <p className="text-muted-foreground">Constraints and limitations</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Best Practices */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <span className="text-xl mr-3">🎯</span>
+                  Best Practices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <h4 className="text-sm font-bold text-green-800 dark:text-green-200 mb-3 flex items-center">
+                      <Check className="h-4 w-4 mr-2" />
+                      Do This
+                    </h4>
+                    <div className="space-y-2 text-xs text-green-700 dark:text-green-300">
+                      <p>• Start with Step 1 analysis to understand current quality</p>
+                      <p>• Use specific goals and clear target audiences</p>
+                      <p>• Select multiple structure improvements for better organization</p>
+                      <p>• Add industry context and background information</p>
+                      <p>• Review improvements summary before saving</p>
+                      <p>• Test optimized prompts in the Testing Ground</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <h4 className="text-sm font-bold text-red-800 dark:text-red-200 mb-3 flex items-center">
+                      <X className="h-4 w-4 mr-2" />
+                      Avoid This
+                    </h4>
+                    <div className="space-y-2 text-xs text-red-700 dark:text-red-300">
+                      <p>• Skipping the initial analysis step</p>
+                      <p>• Using vague or generic goal definitions</p>
+                      <p>• Ignoring structural improvement suggestions</p>
+                      <p>• Leaving context information empty</p>
+                      <p>• Not reviewing the final optimized prompt</p>
+                      <p>• Applying optimization without testing results</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Quick Tips */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <span className="text-xl mr-3">⚡</span>
+                  Quick Tips & Shortcuts
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-yellow-500/10 rounded text-xs">
+                      <span className="text-yellow-600 flex-shrink-0">⚡</span>
+                      <p className="text-muted-foreground">Use "Full AI Optimization" for comprehensive improvement</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-yellow-500/10 rounded text-xs">
+                      <span className="text-yellow-600 flex-shrink-0">⚡</span>
+                      <p className="text-muted-foreground">Copy optimized prompts at any step</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-yellow-500/10 rounded text-xs">
+                      <span className="text-yellow-600 flex-shrink-0">⚡</span>
+                      <p className="text-muted-foreground">Navigation arrows move between steps</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-yellow-500/10 rounded text-xs">
+                      <span className="text-yellow-600 flex-shrink-0">⚡</span>
+                      <p className="text-muted-foreground">Progress dots show completion status</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2 p-2 bg-purple-500/10 rounded text-xs">
+                      <span className="text-purple-600 flex-shrink-0">🔧</span>
+                      <p className="text-muted-foreground">Each step builds on the previous one</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-purple-500/10 rounded text-xs">
+                      <span className="text-purple-600 flex-shrink-0">🔧</span>
+                      <p className="text-muted-foreground">AI provides real-time improvement scores</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-purple-500/10 rounded text-xs">
+                      <span className="text-purple-600 flex-shrink-0">🔧</span>
+                      <p className="text-muted-foreground">Final prompt combines all optimizations</p>
+                    </div>
+                    <div className="flex items-start space-x-2 p-2 bg-purple-500/10 rounded text-xs">
+                      <span className="text-purple-600 flex-shrink-0">🔧</span>
+                      <p className="text-muted-foreground">Save button applies prompt to editor</p>
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>

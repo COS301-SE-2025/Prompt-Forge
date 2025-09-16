@@ -126,6 +126,38 @@ public class MLProxyController {
     }
   }
 
+  @PostMapping("/optimize-with-context")
+  public ResponseEntity<String> optimizeWithContext(@RequestBody String body) {
+    LOGGER.info("=== CONTEXT OPTIMIZATION PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/optimize-with-context";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
   private void validateRequestBody(String body) {
     if (body == null || body.trim().isEmpty()) {
       LOGGER.error("Empty or null request body");

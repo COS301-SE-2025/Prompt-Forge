@@ -13,9 +13,7 @@ import {
   Copy,
   Check,
   ArrowRight,
-  ArrowLeft,
   Target,
-  X,
   TrendingUp,
   RefreshCw,
   ChevronRight,
@@ -32,7 +30,6 @@ import {
   Brain,
   FileText,
   ChevronDown,
-  CheckCircle,
 } from "lucide-react"
 
 interface OptimizationResult {
@@ -44,17 +41,6 @@ interface OptimizationResult {
     impact: string
   }>
   source: string
-  rating?: number
-  rating_explanation?: string
-  metrics?: {
-    clarity: number
-    specificity: number
-    structure: number
-    context: number
-    overall: number
-  }
-  is_excellent?: boolean
-  improvement_potential?: string
 }
 
 export default function OptimizerPage() {
@@ -170,7 +156,7 @@ export default function OptimizerPage() {
           )
         : []
 
-      // Map to your local type including rating
+      // Map to your local type
       const mapped: OptimizationResult = {
         prompt: result.prompt ?? "",
         suggestions: filteredSuggestions.map((s: any) => ({
@@ -180,17 +166,11 @@ export default function OptimizerPage() {
           impact: s.impact,
         })),
         source: result.source ?? "",
-        rating: result.rating,  // Add rating
-        rating_explanation: result.rating_explanation,  // Add rating explanation
-        metrics: result.metrics,  // Add metrics
-        is_excellent: result.is_excellent,  // Add excellence flag
-        improvement_potential: result.improvement_potential,  // Add improvement potential
       }
 
       setOptimizationResult(mapped)
       setTimeout(() => setShowSuggestions(true), 100)
-      showNotification("success", "Optimization Complete", 
-        `Your prompt has been optimized with AI suggestions!${mapped.rating ? ` Original rating: ${mapped.rating}/10` : ''}`)
+      showNotification("success", "Optimization Complete", "Your prompt has been optimized with AI suggestions!")
     } catch (error) {
       console.error("Optimization failed:", error)
       showNotification("error", "Optimization Failed", "Unable to optimize prompt. Please try again.")
@@ -249,7 +229,7 @@ export default function OptimizerPage() {
   // Compact optimization tips for the main page
   const quickTips = [
     {
-      icon: <Target className="h-4 w-4 text-[#3ebb9e]" />,
+      icon: <Target className="h-4 w-4 text-[#40ffaa]" />,
       title: "Be Specific",
       description: "Replace vague terms with precise requirements",
     },
@@ -259,7 +239,7 @@ export default function OptimizerPage() {
       description: "Always specify who the content is for",
     },
     {
-      icon: <FileText className="h-4 w-4 text-[#3ebb9e]" />,
+      icon: <FileText className="h-4 w-4 text-[#40ffaa]" />,
       title: "Structure Request",
       description: "Use numbered lists or clear sections",
     },
@@ -273,7 +253,7 @@ export default function OptimizerPage() {
   // Detailed content for help modal
   const detailedTips = [
     {
-      icon: <Target className="h-5 w-5 text-[#3ebb9e]" />,
+      icon: <Target className="h-5 w-5 text-[#40ffaa]" />,
       title: "Be Specific",
       description: "Replace vague terms with precise requirements",
       details:
@@ -287,7 +267,7 @@ export default function OptimizerPage() {
         "Mentioning your target audience (beginners, experts, children, professionals) helps the AI adjust complexity, tone, and examples appropriately.",
     },
     {
-      icon: <FileText className="h-5 w-5 text-[#3ebb9e]" />,
+      icon: <FileText className="h-5 w-5 text-[#40ffaa]" />,
       title: "Structure Your Request",
       description: "Use numbered lists or clear sections",
       details:
@@ -337,21 +317,21 @@ export default function OptimizerPage() {
     <div className="min-h-screen bg-background">
       {/* Header - Larger and with Help button */}
       <div className="relative overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#3ebb9e]/10 via-[#4079ff]/10 to-[#3ebb9e]/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#40ffaa]/10 via-[#4079ff]/10 to-[#40ffaa]/10"></div>
         <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-7">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-[#3ebb9e] dark:text-[#4079ff] animate-pulse" />
+                <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-[#40ffaa] dark:text-[#4079ff] animate-pulse" />
                 <Star
-                  className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#3ebb9e] dark:text-[#4079ff] animate-pulse"
+                  className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#40ffaa] dark:text-[#4079ff] animate-pulse"
                   style={{
-                    filter: "drop-shadow(0 0 6px #3ebb9e)",
+                    filter: "drop-shadow(0 0 6px #40ffaa)",
                   }}
                 />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium bg-gradient-to-r from-[#3ebb9e] via-[#4079ff] to-[#3ebb9e] bg-clip-text text-transparent tracking-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent tracking-tight">
                   AI Prompt Optimizer
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
@@ -400,15 +380,6 @@ export default function OptimizerPage() {
               >
                 <HelpCircle className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/editor")}
-                className="border-gray-300 dark:border-gray-600 h-8"
-                title="Back to Editor"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -432,7 +403,7 @@ export default function OptimizerPage() {
                 value={originalPrompt}
                 onChange={(e) => setOriginalPrompt(e.target.value)}
                 placeholder="Enter your prompt here to get AI-powered optimization suggestions..."
-                className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#3ebb9e] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-white-400/50 text-sm sm:text-base"
+                className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-white-400/50 text-sm sm:text-base"
               />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 sm:mt-4 gap-2">
@@ -445,7 +416,7 @@ export default function OptimizerPage() {
                 <Button
                   onClick={handleGenerateSuggestions}
                   disabled={isGenerating || !originalPrompt.trim() || serviceStatus !== "online"}
-                  className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto text-sm sm:text-base"
+                  className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto text-sm sm:text-base"
                 >
                   {isGenerating ? (
                     <>
@@ -475,86 +446,13 @@ export default function OptimizerPage() {
                 </div>
               )}
             </Card>
-
-            {/* Show rating if available - Add this section after the Original Prompt card */}
-            {optimizationResult && optimizationResult.rating && (
-              <Card className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-blue-500 rounded-lg">
-                    <Star className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                    Original Prompt Rating
-                  </h3>
-                </div>
-                
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {optimizationResult.rating}/10
-                  </div>
-                  <div className="flex-1">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                      <div 
-                        className="bg-blue-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${(optimizationResult.rating / 10) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {optimizationResult.rating >= 8 ? "Excellent" : 
-                     optimizationResult.rating >= 6 ? "Good" : 
-                     optimizationResult.rating >= 4 ? "Fair" : "Needs Work"}
-                  </div>
-                </div>
-                
-                {optimizationResult.rating_explanation && (
-                  <p className="text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
-                    {optimizationResult.rating_explanation}
-                  </p>
-                )}
-
-                {/* Add excellence badge */}
-                {optimizationResult.is_excellent && (
-                  <div className="mt-4 p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg border border-green-300 dark:border-green-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-green-800 dark:text-green-200">Excellent Prompt!</span>
-                    </div>
-                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                      Your prompt is already well-optimized. No significant improvements needed.
-                    </p>
-                  </div>
-                )}
-                
-                {/* Improvement potential indicator */}
-                {optimizationResult.improvement_potential && (
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Improvement Potential:
-                      </span>
-                      <Badge 
-                        className={`
-                          ${optimizationResult.improvement_potential === 'Minimal' ? 'bg-green-100 text-green-800 border-green-300' : 
-                            optimizationResult.improvement_potential === 'Low to Moderate' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
-                            optimizationResult.improvement_potential === 'Moderate' ? 'bg-orange-100 text-orange-800 border-orange-300' :
-                            'bg-red-100 text-red-800 border-red-300'}
-                        `}
-                      >
-                        {optimizationResult.improvement_potential}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
           </div>
 
           {/* Suggestions Section */}
           <div className="space-y-4 sm:space-y-6 order-2">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-r from-[#4079ff]/20 to-[#3ebb9e]/20 dark:from-[#4079ff]/30 dark:to-[#3ebb9e]/30 rounded-lg">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff] dark:text-[#3ebb9e]" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-r from-[#4079ff]/20 to-[#40ffaa]/20 dark:from-[#4079ff]/30 dark:to-[#40ffaa]/30 rounded-lg">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff] dark:text-[#40ffaa]" />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-foreground dark:text-foreground">
                 AI Optimization Results
@@ -590,7 +488,7 @@ export default function OptimizerPage() {
                   <Card
                     key={suggestion.id}
                     className={`p-4 sm:p-6 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer ${
-                      selectedSuggestion === suggestion.id ? "ring-2 ring-[#4079ff] dark:ring-[#3ebb9e]" : ""
+                      selectedSuggestion === suggestion.id ? "ring-2 ring-[#4079ff] dark:ring-[#40ffaa]" : ""
                     }`}
                     style={{
                       animationDelay: `${index * 200}ms`,
@@ -602,7 +500,7 @@ export default function OptimizerPage() {
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <Badge
                           variant="secondary"
-                          className="bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 dark:from-[#3ebb9e]/30 dark:to-[#4079ff]/30 text-[#4079ff] dark:text-[#3ebb9e] text-xs shrink-0"
+                          className="bg-gradient-to-r from-[#40ffaa]/20 to-[#4079ff]/20 dark:from-[#40ffaa]/30 dark:to-[#4079ff]/30 text-[#4079ff] dark:text-[#40ffaa] text-xs shrink-0"
                         >
                           {suggestion.category}
                         </Badge>
@@ -614,7 +512,7 @@ export default function OptimizerPage() {
                         </h3>
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                        <Badge className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] text-background text-xs">
+                        <Badge className="bg-gradient-to-r from-[#40ffaa] to-[#4079ff] text-background text-xs">
                           AI Enhanced
                         </Badge>
                         <ChevronRight
@@ -662,7 +560,7 @@ export default function OptimizerPage() {
                         {/* Optimized Full Prompt */}
                         <div className="bg-muted dark:bg-muted/50 rounded-lg p-3 sm:p-4">
                           <h4 className="font-medium text-foreground dark:text-foreground mb-2 text-sm sm:text-base flex items-center">
-                            <Lightbulb className="h-4 w-4 mr-2 text-[#3ebb9e]" />
+                            <Lightbulb className="h-4 w-4 mr-2 text-[#40ffaa]" />
                             Optimized Prompt
                           </h4>
                           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -687,7 +585,7 @@ export default function OptimizerPage() {
                               e.stopPropagation()
                               handleApplySuggestion(suggestion.prompt)
                             }}
-                            className="flex-1 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
+                            className="flex-1 bg-gradient-to-r from-[#40ffaa] to-[#4079ff] hover:from-[#4079ff] hover:to-[#40ffaa] text-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
                           >
                             <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             <span className="hidden sm:inline">Apply to Editor</span>
@@ -699,7 +597,7 @@ export default function OptimizerPage() {
                               e.stopPropagation()
                               handleCopyPrompt(suggestion.prompt, suggestion.id)
                             }}
-                            className="border-[#3ebb9e] dark:border-[#4079ff] hover:bg-muted dark:hover:bg-muted/50 text-sm"
+                            className="border-[#40ffaa] dark:border-[#4079ff] hover:bg-muted dark:hover:bg-muted/50 text-sm"
                           >
                             {copiedId === suggestion.id ? (
                               <Check className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -718,7 +616,7 @@ export default function OptimizerPage() {
             {/* Empty State */}
             {!isGenerating && (!optimizationResult || suggestions.length === 0) && (
               <Card className="p-6 sm:p-8 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border text-center">
-                <Wand2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-[#4079ff] dark:text-[#3ebb9e] mx-auto mb-3 sm:mb-4" />
+                <Wand2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-[#4079ff] dark:text-[#40ffaa] mx-auto mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-medium text-foreground dark:text-foreground mb-2">
                   Ready to Optimize
                 </h3>
@@ -738,14 +636,14 @@ export default function OptimizerPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
-              <Lightbulb className="h-5 w-5 text-[#3ebb9e]" />
+              <Lightbulb className="h-5 w-5 text-[#40ffaa]" />
               Quick Optimization Tips
             </h3>
             <p className="text-sm text-muted-foreground">
               Essential tips for better prompts •{" "}
               <button
                 onClick={() => setShowHelpModal(true)}
-                className="text-[#4079ff] dark:text-[#3ebb9e] hover:underline font-medium"
+                className="text-[#4079ff] dark:text-[#40ffaa] hover:underline font-medium"
               >
                 View detailed guide
               </button>
@@ -787,7 +685,7 @@ export default function OptimizerPage() {
               {/* How to Use Section */}
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
-                  <BookOpen className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  <BookOpen className="h-5 w-5 mr-2 text-[#40ffaa]" />
                   How to Use the AI Prompt Optimizer
                 </h3>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
@@ -842,7 +740,7 @@ export default function OptimizerPage() {
               {/* Before/After Examples */}
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
-                  <BarChart3 className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  <BarChart3 className="h-5 w-5 mr-2 text-[#40ffaa]" />
                   Before & After Examples
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -896,7 +794,7 @@ export default function OptimizerPage() {
                     <Button
                       variant="outline"
                       onClick={() => setShowAllExamples(!showAllExamples)}
-                      className="border-[#3ebb9e] dark:border-[#4079ff] text-[#4079ff] dark:text-[#3ebb9e] hover:bg-[#3ebb9e]/10 dark:hover:bg-[#4079ff]/10"
+                      className="border-[#40ffaa] dark:border-[#4079ff] text-[#4079ff] dark:text-[#40ffaa] hover:bg-[#40ffaa]/10 dark:hover:bg-[#4079ff]/10"
                     >
                       {showAllExamples ? "Show Less" : `Show ${promptExamples.length - 2} More Examples`}
                       <ChevronDown
