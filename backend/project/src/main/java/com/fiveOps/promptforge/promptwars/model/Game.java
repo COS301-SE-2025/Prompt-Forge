@@ -26,6 +26,10 @@ public class Game {
   @Column(name = "game_state", nullable = false)
   private GameState gameState = GameState.WAITING;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "game_type", nullable = false)
+  private GameType gameType = GameType.PROMPT_CREATION;
+
   @Column(columnDefinition = "TEXT")
   private String scenario;
 
@@ -53,6 +57,34 @@ public class Game {
   @Column(name = "current_round")
   private Integer currentRound = 1;
 
+  // Reverse Prompt Battle specific fields
+  @Column(name = "player1_correct_answers")
+  private Integer player1CorrectAnswers = 0;
+
+  @Column(name = "player2_correct_answers")
+  private Integer player2CorrectAnswers = 0;
+
+  @Column(name = "current_question", columnDefinition = "TEXT")
+  private String currentQuestion;
+
+  @Column(name = "current_output", columnDefinition = "TEXT")
+  private String currentOutput;
+
+  @Column(name = "current_options", columnDefinition = "TEXT")
+  private String currentOptions; // JSON array of prompt options
+
+  @Column(name = "correct_answer")
+  private String correctAnswer; // A, B, C, D, or E
+
+  @Column(name = "player1_answer")
+  private String player1Answer;
+
+  @Column(name = "player2_answer")
+  private String player2Answer;
+
+  @Column(name = "question_number")
+  private Integer questionNumber = 1;
+
   @Column(name = "started_at")
   private Instant startedAt;
 
@@ -76,6 +108,14 @@ public class Game {
     this();
     this.player1Id = player1Id;
     this.player2Id = player2Id;
+  }
+
+  // Constructor with players and game type
+  public Game(UUID player1Id, UUID player2Id, GameType gameType) {
+    this();
+    this.player1Id = player1Id;
+    this.player2Id = player2Id;
+    this.gameType = gameType;
   }
 
   // Getters and Setters
@@ -215,6 +255,86 @@ public class Game {
     this.currentRound = currentRound;
   }
 
+  public GameType getGameType() {
+    return gameType;
+  }
+
+  public void setGameType(GameType gameType) {
+    this.gameType = gameType;
+  }
+
+  public Integer getPlayer1CorrectAnswers() {
+    return player1CorrectAnswers;
+  }
+
+  public void setPlayer1CorrectAnswers(Integer player1CorrectAnswers) {
+    this.player1CorrectAnswers = player1CorrectAnswers;
+  }
+
+  public Integer getPlayer2CorrectAnswers() {
+    return player2CorrectAnswers;
+  }
+
+  public void setPlayer2CorrectAnswers(Integer player2CorrectAnswers) {
+    this.player2CorrectAnswers = player2CorrectAnswers;
+  }
+
+  public String getCurrentQuestion() {
+    return currentQuestion;
+  }
+
+  public void setCurrentQuestion(String currentQuestion) {
+    this.currentQuestion = currentQuestion;
+  }
+
+  public String getCurrentOutput() {
+    return currentOutput;
+  }
+
+  public void setCurrentOutput(String currentOutput) {
+    this.currentOutput = currentOutput;
+  }
+
+  public String getCurrentOptions() {
+    return currentOptions;
+  }
+
+  public void setCurrentOptions(String currentOptions) {
+    this.currentOptions = currentOptions;
+  }
+
+  public String getCorrectAnswer() {
+    return correctAnswer;
+  }
+
+  public void setCorrectAnswer(String correctAnswer) {
+    this.correctAnswer = correctAnswer;
+  }
+
+  public String getPlayer1Answer() {
+    return player1Answer;
+  }
+
+  public void setPlayer1Answer(String player1Answer) {
+    this.player1Answer = player1Answer;
+  }
+
+  public String getPlayer2Answer() {
+    return player2Answer;
+  }
+
+  public void setPlayer2Answer(String player2Answer) {
+    this.player2Answer = player2Answer;
+  }
+
+  public Integer getQuestionNumber() {
+    return questionNumber;
+  }
+
+  public void setQuestionNumber(Integer questionNumber) {
+    this.questionNumber = questionNumber;
+  }
+
   // Utility methods
   public boolean isPlayerInGame(UUID playerId) {
     return playerId.equals(this.player1Id) || playerId.equals(this.player2Id);
@@ -301,7 +421,17 @@ public class Game {
   }
 
   public UUID calculateWinner() {
-    // Use AI scores if available (new system)
+    // For reverse prompt battles, winner is first to 5 correct answers
+    if (this.gameType == GameType.REVERSE_PROMPT) {
+      if (this.player1CorrectAnswers != null && this.player1CorrectAnswers >= 5) {
+        return this.player1Id;
+      } else if (this.player2CorrectAnswers != null && this.player2CorrectAnswers >= 5) {
+        return this.player2Id;
+      }
+      return null; // No winner yet
+    }
+
+    // Use AI scores if available (new system for prompt creation)
     if (this.player1Score != null && this.player2Score != null) {
       if (this.player1Score > this.player2Score) {
         return this.player1Id; // Player 1 has higher AI score
@@ -323,5 +453,41 @@ public class Game {
     }
 
     return null; // Tie
+  }
+
+  // Reverse Prompt Battle specific methods
+  public void submitAnswer(UUID playerId, String answer) {
+    if (playerId.equals(this.player1Id)) {
+      this.player1Answer = answer;
+    } else if (playerId.equals(this.player2Id)) {
+      this.player2Answer = answer;
+    } else {
+      throw new IllegalArgumentException("Player is not in this game");
+    }
+  }
+
+  public boolean bothPlayersAnswered() {
+    return this.player1Answer != null && this.player2Answer != null;
+  }
+
+  public void clearAnswers() {
+    this.player1Answer = null;
+    this.player2Answer = null;
+  }
+
+  public boolean isPlayer1Winner() {
+    return this.gameType == GameType.REVERSE_PROMPT
+        && this.player1CorrectAnswers != null
+        && this.player1CorrectAnswers >= 5;
+  }
+
+  public boolean isPlayer2Winner() {
+    return this.gameType == GameType.REVERSE_PROMPT
+        && this.player2CorrectAnswers != null
+        && this.player2CorrectAnswers >= 5;
+  }
+
+  public boolean hasWinner() {
+    return isPlayer1Winner() || isPlayer2Winner();
   }
 }
