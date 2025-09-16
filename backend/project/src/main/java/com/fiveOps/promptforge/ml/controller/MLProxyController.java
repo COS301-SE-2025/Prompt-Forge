@@ -192,8 +192,7 @@ public class MLProxyController {
     if (!response.getStatusCode().is2xxSuccessful()) {
       LOGGER.error("ML service returned error status: {}", response.getStatusCode());
       throw new ResponseStatusException(
-          HttpStatus.SERVICE_UNAVAILABLE,
-          "ML service returned error: " + response.getStatusCode());
+          HttpStatus.SERVICE_UNAVAILABLE, "ML service returned error: " + response.getStatusCode());
     }
 
     if (response.getBody() == null || response.getBody().trim().isEmpty()) {

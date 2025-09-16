@@ -1025,26 +1025,54 @@ export default function OptimizerWizard() {
                       onValueChange={(value) => updateWizardData("goals", { tone: value })}
                       className="space-y-3"
                     >
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
-                        <RadioGroupItem value="professional" id="professional" />
+                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                        <input
+                          type="radio"
+                          id="professional"
+                          value="professional"
+                          checked={wizardData.goals.tone === "professional"}
+                          onChange={() => updateWizardData("goals", { tone: "professional" })}
+                          className="custom-radio"
+                        />
                         <Label htmlFor="professional" className="cursor-pointer font-medium">
                           Professional
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
-                        <RadioGroupItem value="casual" id="casual" />
+                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                        <input
+                          type="radio"
+                          id="casual"
+                          value="casual"
+                          checked={wizardData.goals.tone === "casual"}
+                          onChange={() => updateWizardData("goals", { tone: "casual" })}
+                          className="custom-radio"
+                        />
                         <Label htmlFor="casual" className="cursor-pointer font-medium">
                           Casual & Friendly
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
-                        <RadioGroupItem value="friendly" id="friendly" />
+                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                        <input
+                          type="radio"
+                          id="friendly"
+                          value="friendly"
+                          checked={wizardData.goals.tone === "friendly"}
+                          onChange={() => updateWizardData("goals", { tone: "friendly" })}
+                          className="custom-radio"
+                        />
                         <Label htmlFor="friendly" className="cursor-pointer font-medium">
                           Warm & Approachable
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
-                        <RadioGroupItem value="authoritative" id="authoritative" />
+                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                        <input
+                          type="radio"
+                          id="authoritative"
+                          value="authoritative"
+                          checked={wizardData.goals.tone === "authoritative"}
+                          onChange={() => updateWizardData("goals", { tone: "authoritative" })}
+                          className="custom-radio"
+                        />
                         <Label htmlFor="authoritative" className="cursor-pointer font-medium">
                           Expert & Authoritative
                         </Label>
@@ -1182,95 +1210,100 @@ export default function OptimizerWizard() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="hasIntroduction"
-                        checked={wizardData.structure.hasIntroduction}
-                        onCheckedChange={(checked) => updateWizardData("structure", { hasIntroduction: checked })}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="hasIntroduction" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
-                          <Target className="h-4 w-4 text-[#3ebb9e]" />
-                          Add clear objective statement
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Start with what you want to achieve</p>
-                      </div>
+                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="hasIntroduction"
+                      checked={wizardData.structure.hasIntroduction}
+                      onChange={(e) => updateWizardData("structure", { hasIntroduction: e.target.checked })}
+                      className="custom-checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="hasIntroduction" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
+                        <Target className="h-4 w-4 text-[#3ebb9e]" />
+                        Add clear objective statement
+                      </Label>
+                      <p className="text-sm text-muted-foreground">Start with what you want to achieve</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="usesBulletPoints"
-                        checked={wizardData.structure.usesBulletPoints}
-                        onCheckedChange={(checked) => updateWizardData("structure", { usesBulletPoints: checked })}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="usesBulletPoints" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
-                          <Users className="h-4 w-4 text-[#3ebb9e]" />
-                          Organize with bullet points
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Make requirements easy to scan</p>
-                      </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="usesBulletPoints"
+                      checked={wizardData.structure.usesBulletPoints}
+                      onChange={(e) => updateWizardData("structure", { usesBulletPoints: e.target.checked })}
+                      className="custom-checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="usesBulletPoints" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
+                        <Users className="h-4 w-4 text-[#3ebb9e]" />
+                        Organize with bullet points
+                      </Label>
+                      <p className="text-sm text-muted-foreground">Make requirements easy to scan</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="usesNumberedList"
-                        checked={wizardData.structure.usesNumberedList}
-                        onCheckedChange={(checked) => updateWizardData("structure", { usesNumberedList: checked })}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="usesNumberedList" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
-                          <Layout className="h-4 w-4 text-[#3ebb9e]" />
-                          Add numbered steps
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Perfect for sequential instructions</p>
-                      </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="usesNumberedList"
+                      checked={wizardData.structure.usesNumberedList}
+                      onChange={(e) => updateWizardData("structure", { usesNumberedList: e.target.checked })}
+                      className="custom-checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="usesNumberedList" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
+                        <Layout className="h-4 w-4 text-[#3ebb9e]" />
+                        Add numbered steps
+                      </Label>
+                      <p className="text-sm text-muted-foreground">Perfect for sequential instructions</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="hasExamples"
-                        checked={wizardData.structure.hasExamples}
-                        onCheckedChange={(checked) => updateWizardData("structure", { hasExamples: checked })}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="hasExamples" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
-                          <Lightbulb className="h-4 w-4 text-[#3ebb9e]" />
-                          Include helpful examples
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Show what good output looks like</p>
-                      </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="hasExamples"
+                      checked={wizardData.structure.hasExamples}
+                      onChange={(e) => updateWizardData("structure", { hasExamples: e.target.checked })}
+                      className="custom-checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="hasExamples" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
+                        <Lightbulb className="h-4 w-4 text-[#3ebb9e]" />
+                        Include helpful examples
+                      </Label>
+                      <p className="text-sm text-muted-foreground">Show what good output looks like</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="hasConclusion"
-                        checked={wizardData.structure.hasConclusion}
-                        onCheckedChange={(checked) => updateWizardData("structure", { hasConclusion: checked })}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="hasConclusion" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
-                          <CheckCircle className="h-4 w-4 text-[#3ebb9e]" />
-                          Add success criteria
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Define what success looks like</p>
-                      </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="hasConclusion"
+                      checked={wizardData.structure.hasConclusion}
+                      onChange={(e) => updateWizardData("structure", { hasConclusion: e.target.checked })}
+                      className="custom-checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="hasConclusion" className="cursor-pointer font-medium flex items-center gap-2 mb-1">
+                        <CheckCircle className="h-4 w-4 text-[#3ebb9e]" />
+                        Add success criteria
+                      </Label>
+                      <p className="text-sm text-muted-foreground">Define what success looks like</p>
                     </div>
                   </div>
+                </div>
                 </div>
 
                 {/* AI Structure Optimization Button */}

@@ -91,184 +91,713 @@ class QwenClient:
         return self.model_endpoints
 
     def generate_goal_optimization(self, original_prompt: str, goals: Dict, metrics: Dict) -> Dict:
-        """Generate goal-based optimization using QwenClient"""
-        return self.qwen_client.generate_goal_optimization(original_prompt, goals, metrics)
-
-    def generate_structure_optimization(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> Dict:
-        """Generate structure-based optimization using QwenClient"""
-        return self.qwen_client.generate_structure_optimization(original_prompt, structure_options, metrics)
-
-    def generate_context_optimization(self, original_prompt: str, context_options: Dict, metrics: Dict) -> Dict:
-        """Generate context-based optimization using QwenClient"""
-        return self.qwen_client.generate_context_optimization(original_prompt, context_options, metrics)
-
-    def optimize_prompt_simple(self, text: str) -> List[Dict[str, str]]:
-        """Simple prompt optimization using Qwen models (replicates old version logic)"""
+        """Use Qwen to generate goal-based optimization"""
         
         if not self.validate_token():
-            logger.warning("Qwen not available, using fallback suggestions")
-            return self.get_fallback_suggestions(text)
+            logger.warning("Qwen not available, using fallback optimization")
+            return self.get_fallback_goal_optimization(original_prompt, goals, metrics)
         
         # Try each available model
         for model in self.model_endpoints:
             try:
-                logger.info(f"Trying model: {model}")
+                logger.info(f"Trying Qwen model: {model}")
                 
-                prompt = f"""Please analyze this prompt and provide 3 specific suggestions to improve it:
-
-Original prompt: "{text}"
-
-For each suggestion, please format your response exactly as follows:
-Suggestion: [brief description of the improvement]
-After: [the improved version of the prompt]
-Impact: [low/medium/high]
-
-Make sure each suggestion addresses a different aspect of prompt improvement such as clarity, specificity, structure, or completeness."""
-
+                optimization_prompt = self.build_qwen_optimization_prompt(original_prompt, goals, metrics)
+                
                 response = self.client.chat.completions.create(
                     model=model,
                     messages=[
-                        {"role": "user", "content": prompt}
+                        {
+                            "role": "system", 
+                            "content": "You are an expert prompt engineer. Analyze prompts and provide goal-based improvements. Always respond with valid JSON."
+                        },
+                        {"role": "user", "content": optimization_prompt}
                     ],
-                    max_tokens=800,
-                    temperature=0.7,
+                    max_tokens=1200,
+                    temperature=0.3,
                     timeout=30
                 )
                 
                 if response and response.choices and response.choices[0].message:
-                    generated = response.choices[0].message.content
+                    content = response.choices[0].message.content.strip()
                     logger.info(f"✅ Successfully got response from {model}")
                     
-                    suggestions = self.extract_suggestions(generated, text)
-                    
-                    if suggestions:
-                        return self.remove_suggestion_duplicates(suggestions)
+                    # Parse JSON response
+                    try:
+                        result = json.loads(content)
+                        return {
+                            "optimized_prompt": result.get("optimized_prompt", original_prompt),
+                            "improvement_explanation": result.get("improvement_explanation", ""),
+                            "goal_alignment_score": result.get("goal_alignment_score", 75),
+                            "predicted_metrics": result.get("predicted_metrics", {}),
+                            "key_changes": result.get("key_changes", []),
+                            "success": True
+                        }
+                    except json.JSONDecodeError:
+                        # If JSON parsing fails, try to extract manually
+                        return self.parse_qwen_response_manually(content, original_prompt)
                 
             except Exception as e:
-                logger.error(f"Error with model {model}: {e}")
+                logger.error(f"Error with Qwen model {model}: {e}")
                 continue
 
-        # If all models fail, return fallback suggestions
-        logger.warning("All models failed, returning fallback suggestions")
-        return self.get_fallback_suggestions(text)
+        # If all models fail, return fallback
+        logger.warning("All Qwen models failed, returning fallback optimization")
+        return self.get_fallback_goal_optimization(original_prompt, goals, metrics)
 
-    def get_fallback_suggestions(self, text: str) -> List[Dict[str, str]]:
-        """Enhanced rule-based suggestions when AI models fail"""
-        suggestions = []
-        text_lower = text.lower()
-        word_count = len(text.split())
+    def build_qwen_optimization_prompt(self, original_prompt: str, goals: Dict, metrics: Dict) -> str:
+        """Build optimization prompt for Qwen"""
         
-        # Rule 1: Length-based suggestions
-        if word_count < 5:
-            suggestions.append({
-                "suggestion": "Expand with more specific details and context",
-                "before": text,
-                "after": f"Please provide a comprehensive explanation of {text}, including specific examples, key concepts, and practical applications",
-                "impact": "high"
-            })
-        elif word_count > 50:
-            suggestions.append({
-                "suggestion": "Make your prompt more concise and focused",
-                "before": text,
-                "after": f"Concisely explain {' '.join(text.split()[:10])} with key points",
-                "impact": "medium"
-            })
+        prompt = f"""You are a prompt engineering expert. Optimize the given prompt based on user goals and current metrics.
+
+ORIGINAL PROMPT:
+"{original_prompt}"
+
+CURRENT PERFORMANCE METRICS (0-100):
+- Clarity: {metrics.get('clarity', 0)}%
+- Specificity: {metrics.get('specificity', 0)}%
+- Structure: {metrics.get('structure', 0)}%
+- Context: {metrics.get('context', 0)}%
+- Overall: {metrics.get('overall', 0)}%
+
+USER GOALS:
+- Primary Objective: {goals.get('primaryObjective', 'Not specified')}
+- Target Audience: {goals.get('targetAudience', 'Not specified')}
+- Output Format: {goals.get('outputFormat', 'Not specified')}
+- Tone: {goals.get('tone', 'Not specified')}
+- Length: {goals.get('length', 'Not specified')}
+- Complexity: {goals.get('complexity', 'Not specified')}
+
+TASK:
+1. Analyze the prompt's weaknesses based on the metrics
+2. Align the prompt with the user's specific goals
+3. Create an improved version that addresses both issues
+4. Predict how metrics will improve
+
+Respond with ONLY valid JSON in this exact format:
+{{
+  "optimized_prompt": "The fully improved prompt text here",
+  "improvement_explanation": "Clear explanation of what was improved and why",
+  "goal_alignment_score": 85,
+  "predicted_metrics": {{ 
+    "clarity": 90,
+    "specificity": 85,
+    "structure": 88,
+    "context": 82
+  }},
+  "key_changes": [
+    "Added specific target audience requirements",
+    "Clarified output format expectations",
+    "Enhanced context with relevant background"
+  ]
+}}"""
         
-        # Rule 2: Structure-based suggestions
-        if not any(char in text for char in ["?", ":", "."]):
-            suggestions.append({
-                "suggestion": "Add clear structure with questions or instructions",
-                "before": text,
-                "after": f"{text}. Please explain: 1) What this means, 2) How it works, 3) Why it's important",
-                "impact": "high"
-            })
+        return prompt
+
+    def parse_qwen_response_manually(self, content: str, original_prompt: str, metrics: Dict = None) -> Dict:
+        """Manually parse Qwen response if JSON fails"""
         
-        # Rule 3: Specificity suggestions
-        vague_words = ["help", "explain", "tell me", "about", "something", "thing"]
-        if any(word in text_lower for word in vague_words):
-            suggestions.append({
-                "suggestion": "Replace vague terms with specific requirements",
-                "before": text,
-                "after": f"{text}. Please provide step-by-step instructions with concrete examples and expected outcomes",
-                "impact": "high"
-            })
+        if metrics is None:
+            metrics = {"clarity": 50, "specificity": 50, "structure": 50, "context": 50}
         
-        # Ensure we have at least one suggestion
-        if not suggestions:
-            suggestions.append({
-                "suggestion": "Your prompt is well-structured. Consider adding specific constraints or examples",
-                "before": text,
-                "after": f"{text}. Please include relevant examples and any specific constraints or requirements",
-                "impact": "low"
-            })
+        # Try to extract optimized prompt
+        optimized_prompt = original_prompt
+        if "optimized_prompt" in content.lower():
+            # Look for text after "optimized_prompt"
+            parts = content.split('"optimized_prompt"')
+            if len(parts) > 1:
+                # Extract text between quotes
+                after_colon = parts[1].split(':', 1)
+                if len(after_colon) > 1:
+                    quote_parts = after_colon[1].split('"')
+                    if len(quote_parts) > 1:
+                        optimized_prompt = quote_parts[1].strip()
         
-        return suggestions[:3]
-
-    def extract_suggestions(self, generated: str, original: str) -> List[Dict[str, str]]:
-        """Extract suggestions from the generated text"""
-        if not generated or generated.strip() == "":
-            return self.get_fallback_suggestions(original)
-            
-        lines = generated.strip().split("\n")
-        current = {"suggestion": "", "before": original, "after": "", "impact": ""}
-        suggestions = []
-
-        for line in lines:
-            line = line.strip()
-            if line.lower().startswith("suggestion:"):
-                current["suggestion"] = line.split(":", 1)[-1].strip()
-            elif line.lower().startswith("after:"):
-                current["after"] = line.split(":", 1)[-1].strip()
-            elif line.lower().startswith("impact:"):
-                current["impact"] = line.split(":", 1)[-1].strip().lower()
-                # When we find an impact, save the current suggestion if complete
-                if all(current.values()):
-                    suggestions.append(current.copy())
-                    current = {"suggestion": "", "before": original, "after": "", "impact": ""}
-
-        # Also check for patterns without exact formatting
-        if not suggestions:
-            # Try to extract suggestions using different patterns
-            parts = generated.split("\n\n")
-            for part in parts:
-                if len(part.strip()) > 20:  # Reasonable length for a suggestion
-                    suggestions.append({
-                        "suggestion": "AI-generated improvement suggestion",
-                        "before": original,
-                        "after": part.strip(),
-                        "impact": "medium"
-                    })
-
-        if not suggestions:
-            return self.get_fallback_suggestions(original)
-
-        return suggestions[:3]
-
-    def remove_suggestion_duplicates(self, suggestions: List[Dict[str, str]], threshold: float = 0.8) -> List[Dict[str, str]]:
-        """Remove duplicate suggestions using semantic similarity"""
-        if len(suggestions) <= 1:
-            return suggestions
-
-        try:
-            from sentence_transformers import SentenceTransformer, util
-            embedder = SentenceTransformer("all-MiniLM-L6-v2")
-            
-            texts = [s["after"] for s in suggestions]
-            embeddings = embedder.encode(texts, convert_to_tensor=True)
-            kept, seen = [], set()
-
-            for i, s in enumerate(suggestions):
-                if i in seen:
+        # Extract key changes
+        key_changes = []
+        if "key_changes" in content.lower():
+            lines = content.split('\n')
+            in_changes = False
+            for line in lines:
+                if "key_changes" in line.lower():
+                    in_changes = True
                     continue
-                similar = util.pytorch_cos_sim(embeddings[i], embeddings)[0]
-                for j, score in enumerate(similar):
-                    if score > threshold:
-                        seen.add(j)
-                kept.append(s)
-            return kept[:3]
+                if in_changes and (line.strip().startswith('-') or line.strip().startswith('"')):
+                    change = line.strip().lstrip('- "').rstrip('",')
+                    if change:
+                        key_changes.append(change)
+                elif in_changes and ']' in line:
+                    break
+        
+        return {
+            "optimized_prompt": optimized_prompt,
+            "improvement_explanation": "Qwen-generated optimization with goal alignment",
+            "goal_alignment_score": 80,
+            "predicted_metrics": {
+                "clarity": min(100, metrics.get('clarity', 0) + 15),
+                "specificity": min(100, metrics.get('specificity', 0) + 20),
+                "structure": min(100, metrics.get('structure', 0) + 18),
+                "context": min(100, metrics.get('context', 0) + 22)
+            },
+            "key_changes": key_changes if key_changes else ["Applied Qwen-based optimization"],
+            "success": True
+        }
+
+    def get_fallback_goal_optimization(self, original_prompt: str, goals: Dict, metrics: Dict) -> Dict:
+        """Fallback optimization when Qwen is not available"""
+        
+        optimized_prompt = original_prompt
+        key_changes = []
+        
+        # Add goal-specific improvements
+        if goals.get('primaryObjective'):
+            optimized_prompt = f"**Objective:** {goals['primaryObjective']}\n\n{optimized_prompt}"
+            key_changes.append("Added clear objective statement")
+        
+        if goals.get('targetAudience'):
+            optimized_prompt = f"**Target Audience:** {goals['targetAudience']}\n\n{optimized_prompt}"
+            key_changes.append("Specified target audience")
+        
+        if goals.get('outputFormat'):
+            optimized_prompt += f"\n\n**Format:** Please provide the response as {goals['outputFormat'].lower()}."
+            key_changes.append("Clarified output format")
+        
+        if goals.get('tone'):
+            optimized_prompt += f"\n\n**Tone:** Use a {goals['tone'].lower()} tone throughout."
+            key_changes.append("Specified tone requirements")
+        
+        if goals.get('length'):
+            optimized_prompt += f"\n\n**Length:** Aim for {goals['length'].lower()} length."
+            key_changes.append("Added length guidelines")
+        
+        # Add improvements based on low metrics
+        if metrics.get('clarity', 0) < 70:
+            optimized_prompt += "\n\n**Instructions:** Please be clear and specific in your response."
+            key_changes.append("Enhanced clarity requirements")
+        
+        if metrics.get('context', 0) < 60:
+            optimized_prompt += "\n\n**Context:** Consider the background and purpose when crafting your response."
+            key_changes.append("Added context requirements")
+        
+        return {
+            "optimized_prompt": optimized_prompt,
+            "improvement_explanation": "Applied rule-based improvements focusing on goal alignment and metric enhancement.",
+            "goal_alignment_score": min(85, 60 + len(key_changes) * 5),
+            "predicted_metrics": {
+                "clarity": min(100, metrics.get('clarity', 0) + 15),
+                "specificity": min(100, metrics.get('specificity', 0) + 20),
+                "structure": min(100, metrics.get('structure', 0) + 25),
+                "context": min(100, metrics.get('context', 0) + 18)
+            },
+            "key_changes": key_changes,
+            "success": False  # Indicates fallback was used
+        }
+
+    def generate_structure_optimization(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> Dict:
+        """Use Qwen to generate structure-based optimization"""
+        
+        if not self.validate_token():
+            logger.warning("Qwen not available, using fallback structure optimization")
+            return self.get_fallback_structure_optimization(original_prompt, structure_options, metrics)
+        
+        # Try each available model
+        for model in self.model_endpoints:
+            try:
+                logger.info(f"Trying Qwen model: {model}")
+                
+                structure_prompt = self.build_qwen_structure_prompt(original_prompt, structure_options, metrics)
+                
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "You are an expert prompt engineer specializing in prompt structure and organization. Analyze prompts and provide structural improvements. Always respond with valid JSON in the exact format requested."
+                        },
+                        {"role": "user", "content": structure_prompt}
+                    ],
+                    max_tokens=1500,
+                    temperature=0.1,
+                    timeout=45
+                )
+                
+                if response and response.choices and response.choices[0].message:
+                    content = response.choices[0].message.content.strip()
+                    logger.info(f"✅ Successfully got response from {model}")
+                    
+                    # Try to extract JSON from response
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        json_content = json_match.group()
+                        
+                        try:
+                            result = json.loads(json_content)
+                            return {
+                                "structured_prompt": result.get("structured_prompt", original_prompt),
+                                "structure_explanation": result.get("structure_explanation", "Applied structural improvements"),
+                                "structure_score": result.get("structure_score", 75),
+                                "structural_improvements": result.get("structural_improvements", []),
+                                "organization_type": result.get("organization_type", "improved"),
+                                "success": True
+                            }
+                        except json.JSONDecodeError:
+                            logger.error("JSON parsing failed, using manual parsing")
+                            return self.parse_structure_response_manually(content, original_prompt, structure_options, metrics)
+                    else:
+                        logger.warning("No JSON found in response")
+                        return self.parse_structure_response_manually(content, original_prompt, structure_options, metrics)
+                
+            except Exception as e:
+                logger.error(f"Error with Qwen model {model}: {e}")
+                continue
+
+        # If all models fail, return fallback
+        logger.warning("All Qwen models failed for structure optimization")
+        return self.get_fallback_structure_optimization(original_prompt, structure_options, metrics)
+
+    def build_qwen_structure_prompt(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> str:
+        """Build structure optimization prompt for Qwen"""
+        
+        enabled_options = [key for key, value in structure_options.items() if value and key != 'structuredPrompt']
+        structure_descriptions = []
+        
+        for option in enabled_options:
+            if option == "hasIntroduction":
+                structure_descriptions.append("hasIntroduction: Add clear objective and purpose statement")
+            elif option == "usesBulletPoints":
+                structure_descriptions.append("usesBulletPoints: Organize content with bullet points")
+            elif option == "usesNumberedList":
+                structure_descriptions.append("usesNumberedList: Create numbered steps or sequence")
+            elif option == "hasExamples":
+                structure_descriptions.append("hasExamples: Include concrete examples and demonstrations")
+            elif option == "hasConclusion":
+                structure_descriptions.append("hasConclusion: Add success criteria and quality standards")
+        
+        prompt = f"""You are an expert prompt structure architect. Transform this prompt into a well-organized, clearly structured version.
+
+ORIGINAL PROMPT:
+"{original_prompt}"
+
+CURRENT METRICS:
+- Structure Score: {metrics.get('structure', 0)}%
+- Clarity Score: {metrics.get('clarity', 0)}%
+- Overall Score: {metrics.get('overall', 0)}%
+
+REQUIRED STRUCTURAL IMPROVEMENTS:
+{chr(10).join(structure_descriptions) if structure_descriptions else 'Apply general structural improvements'}
+
+STRUCTURE OPTIMIZATION GOALS:
+1. **ORGANIZATION**: Create clear sections with logical flow
+2. **READABILITY**: Use formatting that enhances comprehension
+3. **HIERARCHY**: Establish proper information precedence
+4. **CLARITY**: Remove ambiguity through better structure
+5. **COMPLETENESS**: Ensure all requirements are clearly presented
+
+Respond with valid JSON in this exact format:
+{{
+  "structured_prompt": "Complete restructured prompt with markdown formatting and selected improvements",
+  "structure_explanation": "Specific explanation of structural changes made and their benefits",
+  "structure_score": 85,
+  "structural_improvements": [
+    "Detailed description of each improvement applied",
+    "Specific formatting and organization changes made",
+    "Benefits of the new structure for clarity and usability"
+  ],
+  "organization_type": "descriptive name for the organization pattern used"
+}}"""
+        
+        return prompt
+
+    def parse_structure_response_manually(self, content: str, original_prompt: str, structure_options: Dict, metrics: Dict = None) -> Dict:
+        """Manually parse structure response if JSON fails"""
+        
+        if metrics is None:
+            metrics = {"structure": 50, "clarity": 50, "overall": 50}
+        
+        # Try to extract structured prompt from content
+        structured_prompt = original_prompt
+        lines = content.split('\n')
+        potential_prompt = []
+        in_prompt_section = False
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if any(keyword in line.lower() for keyword in ['structured_prompt', 'improved prompt', 'optimized']):
+                in_prompt_section = True
+                continue
+            elif in_prompt_section and line and not line.startswith('{') and not line.startswith('"'):
+                if line.startswith('##') or line.startswith('**') or line.startswith('•') or line.startswith('1.'):
+                    potential_prompt.append(line)
+        
+        if potential_prompt:
+            structured_prompt = '\n'.join(potential_prompt)
+        else:
+            structured_prompt = self.create_structured_version(original_prompt, structure_options)
+        
+        # Extract improvements based on enabled options
+        improvements = []
+        enabled_options = [key for key, value in structure_options.items() if value and key != 'structuredPrompt']
+        
+        for option in enabled_options:
+            if option == "hasIntroduction":
+                improvements.append("Added clear objective and purpose statement")
+            elif option == "usesBulletPoints":
+                improvements.append("Organized content with bullet points for better readability")
+            elif option == "usesNumberedList":
+                improvements.append("Structured content as numbered sequence")
+            elif option == "hasExamples":
+                improvements.append("Included concrete examples and demonstrations")
+            elif option == "hasConclusion":
+                improvements.append("Added success criteria and quality standards")
+        
+        # Calculate structure score
+        base_score = metrics.get('structure', 50)
+        improvement_bonus = len(improvements) * 10
+        structure_score = min(90, base_score + improvement_bonus)
+        
+        return {
+            "structured_prompt": structured_prompt,
+            "structure_explanation": f"Applied {len(improvements)} structural improvements to enhance organization and readability",
+            "structure_score": structure_score,
+            "structural_improvements": improvements,
+            "organization_type": "enhanced structure",
+            "success": True
+        }
+
+    def create_structured_version(self, original_prompt: str, structure_options: Dict) -> str:
+        """Create a structured version of the prompt based on selected options"""
+        
+        sections = []
+        
+        # Add introduction if requested
+        if structure_options.get('hasIntroduction'):
+            sections.append("## Objective")
+            sections.append("**Goal**: [Define your main objective here]")
+            sections.append("**Purpose**: [Explain what this will be used for]")
+            sections.append("**Scope**: [Specify boundaries and expectations]")
+            sections.append("")
+        
+        # Add main content section
+        sections.append("## Task Description")
+        sections.append(original_prompt)
+        sections.append("")
+        
+        # Add requirements with bullet points
+        if structure_options.get('usesBulletPoints'):
+            sections.append("## Requirements")
+            sections.append("• Provide clear and detailed responses")
+            sections.append("• Maintain professional quality standards")
+            sections.append("• Address all aspects of the request")
+            sections.append("• Use appropriate formatting and structure")
+            sections.append("")
+        
+        # Add numbered steps
+        if structure_options.get('usesNumberedList'):
+            sections.append("## Instructions")
+            sections.append("1. **Analyze**: Review the request thoroughly")
+            sections.append("2. **Plan**: Organize your approach")
+            sections.append("3. **Execute**: Provide the requested content")
+            sections.append("4. **Review**: Ensure quality and completeness")
+            sections.append("")
+        
+        # Add examples
+        if structure_options.get('hasExamples'):
+            sections.append("## Examples & Guidelines")
+            sections.append("**Good Example**: Clear, specific, well-structured content")
+            sections.append("**Quality Standards**: Accurate, relevant, and complete information")
+            sections.append("")
+        
+        # Add conclusion
+        if structure_options.get('hasConclusion'):
+            sections.append("## Success Criteria")
+            sections.append("**Quality Metrics**:")
+            sections.append("- ✓ All requirements addressed")
+            sections.append("- ✓ Clear and professional presentation")
+            sections.append("- ✓ Accurate and relevant content")
+            sections.append("- ✓ Appropriate length and detail")
+        
+        return '\n'.join(sections)
+
+    def generate_context_optimization(self, original_prompt: str, context_options: Dict, metrics: Dict) -> Dict:
+        """Use Qwen to generate context-based optimization"""
+        
+        if not self.validate_token():
+            logger.warning("Qwen not available, using fallback context optimization")
+            return self.get_fallback_context_optimization(original_prompt, context_options, metrics)
+        
+        # Try each available model
+        for model in self.model_endpoints:
+            try:
+                logger.info(f"Trying Qwen model: {model}")
+                
+                context_prompt = self.build_qwen_context_prompt(original_prompt, context_options, metrics)
+                
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "You are an expert prompt engineer specializing in context enhancement and background information integration. Analyze prompts and provide context improvements. Always respond with valid JSON in the exact format requested."
+                        },
+                        {"role": "user", "content": context_prompt}
+                    ],
+                    max_tokens=1500,
+                    temperature=0.2,
+                    timeout=45
+                )
+                
+                if response and response.choices and response.choices[0].message:
+                    content = response.choices[0].message.content.strip()
+                    logger.info(f"✅ Successfully got response from {model}")
+                    
+                    # Try to extract JSON from response
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        json_content = json_match.group()
+                        
+                        try:
+                            result = json.loads(json_content)
+                            return {
+                                "context_enhanced_prompt": result.get("context_enhanced_prompt", original_prompt),
+                                "context_explanation": result.get("context_explanation", "Applied context improvements"),
+                                "context_score": result.get("context_score", 75),
+                                "context_improvements": result.get("context_improvements", []),
+                                "enhancement_type": result.get("enhancement_type", "enhanced"),
+                                "success": True
+                            }
+                        except json.JSONDecodeError:
+                            logger.error("JSON parsing failed, using manual parsing")
+                            return self.parse_context_response_manually(content, original_prompt, context_options, metrics)
+                    else:
+                        logger.warning("No JSON found in response")
+                        return self.parse_context_response_manually(content, original_prompt, context_options, metrics)
+                
+            except Exception as e:
+                logger.error(f"Error with Qwen model {model}: {e}")
+                continue
+
+        # If all models fail, return fallback
+        logger.warning("All Qwen models failed for context optimization")
+        return self.get_fallback_context_optimization(original_prompt, context_options, metrics)
+
+    def build_qwen_context_prompt(self, original_prompt: str, context_options: Dict, metrics: Dict) -> str:
+        """Build context optimization prompt for Qwen"""
+        
+        domain = context_options.get('domain', '')
+        use_case = context_options.get('useCase', '')
+        additional_context = context_options.get('additionalContext', '')
+        requirements = context_options.get('requirements', [])
+        
+        prompt = f"""You are an expert prompt context enhancer. Transform this prompt by adding relevant background information, domain context, and situational details that will help AI models understand the request better.
+
+ORIGINAL PROMPT:
+"{original_prompt}"
+
+CURRENT METRICS:
+- Context Score: {metrics.get('context', 0)}%
+- Clarity Score: {metrics.get('clarity', 0)}%
+- Overall Score: {metrics.get('overall', 0)}%
+
+CONTEXT INFORMATION PROVIDED:
+- Domain/Industry: {domain if domain else 'Not specified'}
+- Use Case: {use_case if use_case else 'Not specified'}
+- Additional Context: {additional_context if additional_context else 'Not provided'}
+- Requirements: {', '.join(requirements) if requirements else 'None specified'}
+
+CONTEXT ENHANCEMENT GOALS:
+1. **BACKGROUND**: Add relevant industry/domain context
+2. **PURPOSE**: Clarify the intended use and goals
+3. **AUDIENCE**: Define who will use or consume the output
+4. **CONSTRAINTS**: Include relevant limitations or requirements
+5. **EXAMPLES**: Add context-specific examples when helpful
+
+Respond with valid JSON in this exact format:
+{{
+  "context_enhanced_prompt": "Complete prompt with integrated context and background information",
+  "context_explanation": "Detailed explanation of context enhancements made and their benefits",
+  "context_score": 85,
+  "context_improvements": [
+    "Added industry-specific background and terminology",
+    "Integrated use case context for better understanding",
+    "Included relevant constraints and requirements",
+    "Enhanced with domain expertise considerations"
+  ],
+  "enhancement_type": "domain-aware contextual enhancement"
+}}"""
+        
+        return prompt
+
+    def parse_context_response_manually(self, content: str, original_prompt: str, context_options: Dict, metrics: Dict = None) -> Dict:
+        """Manually parse context response if JSON fails"""
+        
+        if metrics is None:
+            metrics = {"context": 50, "clarity": 50, "overall": 50}
+        
+        # Try to extract context-enhanced prompt from content
+        enhanced_prompt = original_prompt
+        lines = content.split('\n')
+        potential_prompt = []
+        in_prompt_section = False
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if any(keyword in line.lower() for keyword in ['context_enhanced_prompt', 'enhanced prompt', 'improved']):
+                in_prompt_section = True
+                continue
+            elif in_prompt_section and line and not line.startswith('{') and not line.startswith('"'):
+                if len(potential_prompt) > 0 or line.strip():
+                    potential_prompt.append(line)
+                if any(end in line for end in ['}', '"]', 'explanation']) and len(potential_prompt) > 5:
+                    break
+        
+        if potential_prompt:
+            enhanced_prompt = '\n'.join(potential_prompt)
+        else:
+            enhanced_prompt = self.create_context_enhanced_version(original_prompt, context_options)
+        
+        # Extract improvements based on provided context
+        improvements = []
+        
+        if context_options.get('domain'):
+            improvements.append(f"Added {context_options['domain']} industry context and domain expertise")
+        if context_options.get('useCase'):
+            improvements.append(f"Integrated specific use case: {context_options['useCase']}")
+        if context_options.get('additionalContext'):
+            improvements.append("Incorporated additional background information")
+        if context_options.get('requirements'):
+            improvements.append(f"Added {len(context_options['requirements'])} specific requirements")
+        
+        if not improvements:
+            improvements = ["Applied basic context enhancement"]
+        
+        # Calculate context score
+        base_score = metrics.get('context', 50)
+        improvement_bonus = len(improvements) * 8
+        context_score = min(95, base_score + improvement_bonus + 15)
+        
+        return {
+            "context_enhanced_prompt": enhanced_prompt,
+            "context_explanation": f"Applied {len(improvements)} context enhancements to provide better background and situational understanding",
+            "context_score": context_score,
+            "context_improvements": improvements,
+            "enhancement_type": "contextual background enhancement",
+            "success": True
+        }
+
+    def create_context_enhanced_version(self, original_prompt: str, context_options: Dict) -> str:
+        """Create a context-enhanced version of the prompt"""
+        
+        sections = []
+        
+        # Add domain context if provided
+        if context_options.get('domain'):
+            domain = context_options['domain']
+            sections.append(f"**Industry Context:** This request is for the {domain} industry.")
+        
+        # Add use case context
+        if context_options.get('useCase'):
+            use_case = context_options['useCase']
+            sections.append(f"**Use Case:** {use_case}")
+        
+        # Add additional context
+        if context_options.get('additionalContext'):
+            sections.append(f"**Background:** {context_options['additionalContext']}")
+        
+        # Add the original prompt
+        sections.append(f"**Request:** {original_prompt}")
+        
+        # Add requirements
+        requirements = context_options.get('requirements', [])
+        if requirements:
+            sections.append("**Additional Requirements:**")
+            for req in requirements:
+                sections.append(f"- {req}")
+        
+        return '\n\n'.join(sections)
+
+    def get_fallback_context_optimization(self, original_prompt: str, context_options: Dict, metrics: Dict) -> Dict:
+        """Enhanced fallback context optimization when Qwen is not available"""
+        
+        try:
+            enhanced_prompt = original_prompt.strip()
+            improvements = []
+            
+            # Check what context information is available
+            has_domain = bool(context_options.get('domain'))
+            has_use_case = bool(context_options.get('useCase'))
+            has_additional_context = bool(context_options.get('additionalContext'))
+            has_requirements = bool(context_options.get('requirements'))
+            
+            # Build contextual enhancement
+            context_parts = []
+            
+            if has_domain:
+                domain = context_options['domain']
+                context_parts.append(f"**Industry Context:** This is for the {domain} sector.")
+                improvements.append(f"Added {domain} industry context and domain expertise")
+            
+            if has_use_case:
+                use_case = context_options['useCase']
+                context_parts.append(f"**Specific Use Case:** {use_case}")
+                improvements.append("Clarified the specific use case and application")
+            
+            if has_additional_context:
+                additional = context_options['additionalContext']
+                context_parts.append(f"**Background Information:** {additional}")
+                improvements.append("Integrated comprehensive background information")
+            
+            # Combine context with original prompt
+            if context_parts:
+                enhanced_prompt = '\n\n'.join(context_parts) + f"\n\n**Task:** {original_prompt}"
+            
+            # Add requirements
+            requirements = context_options.get('requirements', [])
+            if requirements:
+                req_section = "**Additional Requirements:**\n" + '\n'.join(f"- {req}" for req in requirements)
+                enhanced_prompt += f"\n\n{req_section}"
+                improvements.append(f"Added {len(requirements)} specific requirements and constraints")
+            
+            # If no context provided, add basic improvements
+            if not improvements:
+                enhanced_prompt = f"**Task:** {original_prompt}\n\n**Instructions:** Please provide a comprehensive response that considers the context and requirements."
+                improvements = ["Applied basic context structure and clarity improvements"]
+            
+            # Calculate improved context score
+            base_score = metrics.get('context', 50)
+            improvement_points = len(improvements) * 10
+            context_score = min(95, base_score + improvement_points + 20)
+            
+            # Determine enhancement type
+            if has_domain and has_use_case:
+                enhancement_type = "domain-specific contextual enhancement"
+            elif has_additional_context:
+                enhancement_type = "comprehensive background integration"
+            elif has_requirements:
+                enhancement_type = "requirement-focused context enhancement"
+            else:
+                enhancement_type = "basic context structure improvement"
+            
+            return {
+                "context_enhanced_prompt": enhanced_prompt.strip(),
+                "context_explanation": f"Applied {len(improvements)} context enhancements to provide better background understanding and domain-specific information. Created {enhancement_type} to improve AI comprehension.",
+                "context_score": context_score,
+                "context_improvements": improvements,
+                "enhancement_type": enhancement_type,
+                "success": False  # Indicates fallback was used
+            }
+            
         except Exception as e:
-            logger.error(f"Error removing duplicates: {e}")
-            return suggestions[:3]
+            logger.error(f"❌ Error in fallback context optimization: {str(e)}")
+            
+            # Return minimal fallback result
+            return {
+                "context_enhanced_prompt": f"**Task:** {original_prompt}\n\n**Context:** Please consider relevant background information when responding.",
+                "context_explanation": "Basic context enhancement applied due to processing error",
+                "context_score": metrics.get('context', 50) + 10,
+                "context_improvements": ["Applied basic context formatting"],
+                "enhancement_type": "basic",
+                "success": False
+            }
 
     def get_fallback_structure_optimization(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> Dict:
         """Fallback structure optimization when Qwen is not available"""
@@ -713,6 +1242,18 @@ class PromptMetricsAnalyzer:
             "rating": rating,
             "rating_explanation": rating_explanation
         }
+
+    def generate_goal_optimization(self, original_prompt: str, goals: Dict, metrics: Dict) -> Dict:
+        """Generate goal-based optimization using QwenClient"""
+        return self.qwen_client.generate_goal_optimization(original_prompt, goals, metrics)
+
+    def generate_structure_optimization(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> Dict:
+        """Generate structure-based optimization using QwenClient"""
+        return self.qwen_client.generate_structure_optimization(original_prompt, structure_options, metrics)
+
+    def generate_context_optimization(self, original_prompt: str, context_options: Dict, metrics: Dict) -> Dict:
+        """Generate context-based optimization using QwenClient"""
+        return self.qwen_client.generate_context_optimization(original_prompt, context_options, metrics)
 
 class TokenValidationResponse(BaseModel):
     valid: bool
