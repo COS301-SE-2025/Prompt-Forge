@@ -32,6 +32,7 @@ import {
   Brain,
   FileText,
   ChevronDown,
+  CheckCircle,
 } from "lucide-react"
 
 interface OptimizationResult {
@@ -43,6 +44,17 @@ interface OptimizationResult {
     impact: string
   }>
   source: string
+  rating?: number
+  rating_explanation?: string
+  metrics?: {
+    clarity: number
+    specificity: number
+    structure: number
+    context: number
+    overall: number
+  }
+  is_excellent?: boolean
+  improvement_potential?: string
 }
 
 export default function OptimizerPage() {
@@ -158,7 +170,7 @@ export default function OptimizerPage() {
           )
         : []
 
-      // Map to your local type
+      // Map to your local type including rating
       const mapped: OptimizationResult = {
         prompt: result.prompt ?? "",
         suggestions: filteredSuggestions.map((s: any) => ({
@@ -168,11 +180,17 @@ export default function OptimizerPage() {
           impact: s.impact,
         })),
         source: result.source ?? "",
+        rating: result.rating,  // Add rating
+        rating_explanation: result.rating_explanation,  // Add rating explanation
+        metrics: result.metrics,  // Add metrics
+        is_excellent: result.is_excellent,  // Add excellence flag
+        improvement_potential: result.improvement_potential,  // Add improvement potential
       }
 
       setOptimizationResult(mapped)
       setTimeout(() => setShowSuggestions(true), 100)
-      showNotification("success", "Optimization Complete", "Your prompt has been optimized with AI suggestions!")
+      showNotification("success", "Optimization Complete", 
+        `Your prompt has been optimized with AI suggestions!${mapped.rating ? ` Original rating: ${mapped.rating}/10` : ''}`)
     } catch (error) {
       console.error("Optimization failed:", error)
       showNotification("error", "Optimization Failed", "Unable to optimize prompt. Please try again.")
@@ -457,6 +475,79 @@ export default function OptimizerPage() {
                 </div>
               )}
             </Card>
+
+            {/* Show rating if available - Add this section after the Original Prompt card */}
+            {optimizationResult && optimizationResult.rating && (
+              <Card className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <Star className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                    Original Prompt Rating
+                  </h3>
+                </div>
+                
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                    {optimizationResult.rating}/10
+                  </div>
+                  <div className="flex-1">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                      <div 
+                        className="bg-blue-500 h-3 rounded-full transition-all duration-500"
+                        style={{ width: `${(optimizationResult.rating / 10) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    {optimizationResult.rating >= 8 ? "Excellent" : 
+                     optimizationResult.rating >= 6 ? "Good" : 
+                     optimizationResult.rating >= 4 ? "Fair" : "Needs Work"}
+                  </div>
+                </div>
+                
+                {optimizationResult.rating_explanation && (
+                  <p className="text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
+                    {optimizationResult.rating_explanation}
+                  </p>
+                )}
+
+                {/* Add excellence badge */}
+                {optimizationResult.is_excellent && (
+                  <div className="mt-4 p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg border border-green-300 dark:border-green-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="font-semibold text-green-800 dark:text-green-200">Excellent Prompt!</span>
+                    </div>
+                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                      Your prompt is already well-optimized. No significant improvements needed.
+                    </p>
+                  </div>
+                )}
+                
+                {/* Improvement potential indicator */}
+                {optimizationResult.improvement_potential && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Improvement Potential:
+                      </span>
+                      <Badge 
+                        className={`
+                          ${optimizationResult.improvement_potential === 'Minimal' ? 'bg-green-100 text-green-800 border-green-300' : 
+                            optimizationResult.improvement_potential === 'Low to Moderate' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                            optimizationResult.improvement_potential === 'Moderate' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                            'bg-red-100 text-red-800 border-red-300'}
+                        `}
+                      >
+                        {optimizationResult.improvement_potential}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
 
           {/* Suggestions Section */}
