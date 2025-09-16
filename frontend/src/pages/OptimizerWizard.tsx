@@ -553,10 +553,26 @@ export default function OptimizerWizard() {
         optimizedPrompt: result.optimized_prompt,
         improvementExplanation: result.improvement_explanation,
         goalAlignmentScore: result.goal_alignment_score,
-        predictedMetrics: result.predicted_metrics,
+        predictedMetrics: result.predicted_metrics || {
+          clarity: result.goal_alignment_score || wizardData.analysisResults.clarity,
+          specificity: result.goal_alignment_score || wizardData.analysisResults.specificity,
+          structure: result.goal_alignment_score || wizardData.analysisResults.structure,
+          context: result.goal_alignment_score || wizardData.analysisResults.context
+        },
         keyChanges: result.key_changes,
         usedAI: result.used_ai
       })
+
+      // Also update the analysis results with the new predicted metrics if available
+      if (result.predicted_metrics) {
+        updateWizardData("analysisResults", {
+          ...wizardData.analysisResults,
+          clarity: result.predicted_metrics.clarity || wizardData.analysisResults.clarity,
+          specificity: result.predicted_metrics.specificity || wizardData.analysisResults.specificity,
+          structure: result.predicted_metrics.structure || wizardData.analysisResults.structure,
+          context: result.predicted_metrics.context || wizardData.analysisResults.context
+        })
+      }
 
       // Update final prompt
       updateWizardData("finalPrompt", result.optimized_prompt)
@@ -679,7 +695,12 @@ export default function OptimizerWizard() {
             optimizedPrompt: goalResult.optimized_prompt,
             improvementExplanation: goalResult.improvement_explanation,
             goalAlignmentScore: goalResult.goal_alignment_score,
-            predictedMetrics: goalResult.predicted_metrics,
+            predictedMetrics: goalResult.predicted_metrics || {
+              clarity: goalResult.goal_alignment_score || wizardData.analysisResults.clarity,
+              specificity: goalResult.goal_alignment_score || wizardData.analysisResults.specificity,
+              structure: goalResult.goal_alignment_score || wizardData.analysisResults.structure,
+              context: goalResult.goal_alignment_score || wizardData.analysisResults.context
+            },
             keyChanges: goalResult.key_changes,
             usedAI: goalResult.used_ai
           })
@@ -1704,7 +1725,28 @@ export default function OptimizerWizard() {
                     </div>
                     <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
                       <div className="text-3xl font-bold text-green-600">
-                        {Math.min(95, wizardData.analysisResults.clarity + 40)}%
+                        {(() => {
+                          // Calculate actual optimized score based on available optimizations
+                          let optimizedScore = wizardData.analysisResults.clarity;
+                          
+                          // Add goal optimization score if available
+                          if (wizardData.goalOptimization.goalAlignmentScore > 0) {
+                            optimizedScore = Math.max(optimizedScore, wizardData.goalOptimization.goalAlignmentScore);
+                          }
+                          
+                          // Add structure optimization score if available
+                          if (wizardData.structureOptimization.structureScore > 0) {
+                            optimizedScore = Math.max(optimizedScore, wizardData.structureOptimization.structureScore);
+                          }
+                          
+                          // Add context optimization score if available
+                          if (wizardData.context.contextScore && wizardData.context.contextScore > 0) {
+                            optimizedScore = Math.max(optimizedScore, wizardData.context.contextScore);
+                          }
+                          
+                          // If no optimizations were applied, show original score
+                          return optimizedScore;
+                        })()}%
                       </div>
                       <div className="text-sm text-green-600 font-medium">Optimized Score</div>
                     </div>
