@@ -41,6 +41,15 @@ public class Game {
   @Column(name = "player2_rating")
   private Integer player2Rating;
 
+  @Column(name = "player1_score")
+  private Integer player1Score;
+
+  @Column(name = "player2_score")
+  private Integer player2Score;
+
+  @Column(name = "rating_explanation", columnDefinition = "TEXT")
+  private String ratingExplanation;
+
   @Column(name = "current_round")
   private Integer currentRound = 1;
 
@@ -174,6 +183,30 @@ public class Game {
     this.player2Rating = player2Rating;
   }
 
+  public Integer getPlayer1Score() {
+    return player1Score;
+  }
+
+  public void setPlayer1Score(Integer player1Score) {
+    this.player1Score = player1Score;
+  }
+
+  public Integer getPlayer2Score() {
+    return player2Score;
+  }
+
+  public void setPlayer2Score(Integer player2Score) {
+    this.player2Score = player2Score;
+  }
+
+  public String getRatingExplanation() {
+    return ratingExplanation;
+  }
+
+  public void setRatingExplanation(String ratingExplanation) {
+    this.ratingExplanation = ratingExplanation;
+  }
+
   public Integer getCurrentRound() {
     return currentRound;
   }
@@ -268,6 +301,17 @@ public class Game {
   }
 
   public UUID calculateWinner() {
+    // Use AI scores if available (new system)
+    if (this.player1Score != null && this.player2Score != null) {
+      if (this.player1Score > this.player2Score) {
+        return this.player1Id; // Player 1 has higher AI score
+      } else if (this.player2Score > this.player1Score) {
+        return this.player2Id; // Player 2 has higher AI score
+      }
+      return null; // Tie
+    }
+
+    // Fallback to old rating system
     if (!bothPlayersRated()) {
       return null;
     }
