@@ -42,6 +42,8 @@ public class PromptController {
     this.jwtUtil = jwtUtil;
     this.userService = userService;
     this.promptInteractionService = promptInteractionService;
+  }
+
   // Endpoint to record a prompt interaction (view, add_to_cart, purchase, etc.)
   @PostMapping("/{id}/interact")
   public ResponseEntity<?> recordPromptInteraction(@PathVariable UUID id, @RequestParam String action, Authentication authentication) {
