@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiveOps.promptforge.promptwars.model.Game;
 import com.fiveOps.promptforge.promptwars.model.GameState;
+import com.fiveOps.promptforge.promptwars.model.GameType;
 import com.fiveOps.promptforge.promptwars.repository.GameRepository;
 
 @Service
@@ -36,20 +37,28 @@ public class GameService {
 
   private final RestTemplate restTemplate = new RestTemplate();
   private final ObjectMapper objectMapper = new ObjectMapper();
+  // In-memory guard to avoid duplicate simultaneous generation requests in this JVM
+  private final java.util.Set<java.util.UUID> generationLocks =
+      java.util.concurrent.ConcurrentHashMap.newKeySet();
 
   @Value("${openrouter.base.url:https://openrouter.ai/api/v1}")
   private String openRouterBaseUrl;
 
   public Game createGame(UUID player1Id, UUID player2Id) {
-    Game game = new Game(player1Id, player2Id);
+    return createGame(player1Id, player2Id, GameType.PROMPT_CREATION);
+  }
+
+  public Game createGame(UUID player1Id, UUID player2Id, GameType gameType) {
+    Game game = new Game(player1Id, player2Id, gameType);
     return gameRepository.save(game);
   }
 
   public Game startGame(UUID gameId) {
-    Game game =
-        gameRepository
-            .findById(gameId)
-            .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+  Game game =
+    gameRepository
+      .findById(gameId)
+      .orElseThrow(
+        () -> new IllegalArgumentException("Game not found"));
 
     if (game.getGameState() != GameState.WAITING) {
       throw new IllegalArgumentException("Game is not in waiting state");
@@ -98,8 +107,10 @@ public class GameService {
   // Prompt Wars specific methods
   public synchronized Game generateScenario(UUID gameId) {
     // Refresh the game from database to get latest state
-    Game game =
-        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
+  Game game =
+    gameRepository
+      .findById(gameId)
+      .orElseThrow(() -> new RuntimeException("Game not found"));
 
     System.out.println("Generating scenario for game: " + gameId);
     System.out.println("Current game state: " + game.getGameState());
@@ -174,8 +185,7 @@ public class GameService {
                       + "\n• Exciting and imaginative"
                       + "\n• Clear and easy to understand"
                       + "\n• Perfect for AI prompt writing"
-                      + "\n\nJust give me ONE short scenario (1-2 sentences max). "
-                      + "Examples:"
+                      + "\n\nJust give me ONE short scenario (1-2 sentences max). Examples:"
                       + "\n'🚀 You're designing an AI assistant for Mars colonists who speak "
                       + "in emoji. Write the perfect prompt!'"
                       + "\n'🎭 Create a prompt for an AI that helps shy people become confident "
@@ -217,11 +227,14 @@ public class GameService {
       "🌙 Write a prompt for an AI dream interpreter that helps people understand their nightmares.",
       "🎵 Create a prompt for an AI DJ that reads the room's mood and plays perfect songs.",
       "🏠 Design a prompt for an AI interior decorator that works with impossible budgets.",
-      "🍳 Write a prompt for an AI chef that only cooks with ingredients found in hotel mini-bars.",
-      "📱 Create a prompt for an AI that writes breakup texts that somehow make people feel better.",
-      "🎭 Design a prompt for an AI acting coach for people who are afraid of their own shadow.",
-      "🎮 Write a prompt for an AI that creates board games for families who never "
-          + "agree on anything.",
+      "🍳 Write a prompt for an AI chef that only cooks with ingredients found in hotel "
+          + "mini-bars.",
+      "📱 Create a prompt for an AI that writes breakup texts that somehow make people "
+          + "feel better.",
+      "🎭 Design a prompt for an AI acting coach for people who are afraid of their own "
+          + "shadow.",
+      "🎮 Write a prompt for an AI that creates board games for families who never agree "
+          + "on anything.",
       "🚗 Create a prompt for an AI GPS that gives directions using only movie quotes.",
     };
     return scenarios[(int) (Math.random() * scenarios.length)];
@@ -604,51 +617,39 @@ public class GameService {
     Game game = getGame(gameId);
 
     System.out.println("Restarting game: " + gameId);
-    System.out.println(
-        "Before restart - Player1 prompt: "
-            + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println(
-        "Before restart - Player2 prompt: "
-            + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
     // Reset game state for a new round
-    game.setGameState(GameState.WAITING); // Set to WAITING so frontend can call generate-scenario
-    game.setScenario(null); // Clear scenario so it can be regenerated
+    game.setGameState(GameState.WAITING);
+    game.setScenario(null);
     game.setPlayer1Prompt(null);
     game.setPlayer2Prompt(null);
     game.setPlayer1Rating(null);
     game.setPlayer2Rating(null);
-    game.setPlayer1Score(null);
-    game.setPlayer2Score(null);
+    game.setPlayer1Score(0);
+    game.setPlayer2Score(0);
+    game.setPlayer1CorrectAnswers(0);
+    game.setPlayer2CorrectAnswers(0);
     game.setRatingExplanation(null);
     game.setWinnerId(null);
     game.setEndedAt(null);
-
-    System.out.println(
-        "After reset - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println(
-        "After reset - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println(
-        "Scenario cleared for regeneration: " + (game.getScenario() != null ? "EXISTS" : "NULL"));
-    System.out.println("Game state set to: " + game.getGameState());
+    game.setCurrentQuestion(null);
+    game.setCurrentOutput(null);
+    game.setCurrentOptions(null);
+    game.setCorrectAnswer(null);
+    game.setQuestionNumber(1);
 
     Game savedGame = gameRepository.save(game);
 
-    System.out.println(
-        "After save - Player1 prompt: "
-            + (savedGame.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println(
-        "After save - Player2 prompt: "
-            + (savedGame.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
-    System.out.println("Final game state: " + savedGame.getGameState());
-    System.out.println(
-        "Ready for scenario generation: " + (savedGame.getScenario() == null ? "YES" : "NO"));
+    System.out.println("Game restarted and saved: " + savedGame.getId());
 
     // Notify both players that the game has been restarted
     Map<String, Object> gameUpdate = new HashMap<>();
     gameUpdate.put("type", "GAME_RESTARTED");
     gameUpdate.put("gameId", savedGame.getId().toString());
     gameUpdate.put("gameState", savedGame.getGameState().toString());
+    gameUpdate.put("questionNumber", savedGame.getQuestionNumber());
+    gameUpdate.put("player1Score", savedGame.getPlayer1CorrectAnswers());
+    gameUpdate.put("player2Score", savedGame.getPlayer2CorrectAnswers());
 
     webSocketService.sendGameUpdate(savedGame.getPlayer1Id(), gameUpdate);
     webSocketService.sendGameUpdate(savedGame.getPlayer2Id(), gameUpdate);
@@ -657,5 +658,402 @@ public class GameService {
         "Sent game restart notification to both players for game: " + savedGame.getId());
 
     return savedGame;
+  }
+
+  // Reverse Prompt Battle methods
+  public synchronized Game generateQuestion(UUID gameId) {
+    // Prevent duplicate in-JVM requests
+    if (!generationLocks.add(gameId)) {
+      System.out.println("Generation already in progress (in-memory) for game: " + gameId);
+      throw new IllegalStateException("Question generation already in progress");
+    }
+
+  Game game =
+    gameRepository.findById(gameId)
+      .orElseThrow(() -> new RuntimeException("Game not found"));
+
+  System.out.println(
+    "Generating question for reverse prompt battle: " + gameId);
+  System.out.println("Current game state: " + game.getGameState());
+
+    if (game.getGameType() != GameType.REVERSE_PROMPT) {
+      generationLocks.remove(gameId);
+      throw new IllegalArgumentException("Game is not a reverse prompt battle");
+    }
+
+    if (game.getGameState() != GameState.WAITING) {
+      generationLocks.remove(gameId);
+      throw new IllegalArgumentException("Game is not in waiting state");
+    }
+
+    // Atomically reserve the round by changing state from WAITING -> WRITING
+    int updated =
+        gameRepository.updateGameStateIf(game.getId(), GameState.WAITING, GameState.WRITING);
+    if (updated == 0) {
+      generationLocks.remove(gameId);
+    String reservationMsg =
+      "Round reservation failed for game " + gameId
+        + ". Current state: " + game.getGameState();
+    System.out.println(reservationMsg);
+      throw new IllegalStateException(
+          "Question generation already in progress or game not waiting");
+    }
+
+  // Reload the game after reservation to ensure fresh entity
+  game =
+    gameRepository.findById(gameId)
+      .orElseThrow(() -> new RuntimeException("Game not found"));
+
+    // Persist WRITING state explicitly so submit flows see it
+    game.setGameState(GameState.WRITING);
+    gameRepository.save(game);
+
+  Map<String, Object> questionData = null;
+  try {
+      // Generate question and options using AI
+      questionData = generateAIQuestion();
+
+      game.setCurrentQuestion((String) questionData.get("question"));
+      game.setCurrentOutput((String) questionData.get("output"));
+      game.setCurrentOptions((String) questionData.get("options")); // JSON string
+      game.setCorrectAnswer((String) questionData.get("correctAnswer"));
+      game.clearAnswers(); // Reset answers for new question
+
+      // Already reserved as WRITING — save final fields
+      Game savedGame = gameRepository.save(game);
+
+      // Send real-time notifications to both players
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", "QUESTION_GENERATED");
+      gameUpdate.put("gameId", gameId.toString());
+      gameUpdate.put("question", savedGame.getCurrentQuestion());
+      gameUpdate.put("output", savedGame.getCurrentOutput());
+      gameUpdate.put("options", savedGame.getCurrentOptions());
+      gameUpdate.put("questionNumber", savedGame.getQuestionNumber());
+      gameUpdate.put("gameState", savedGame.getGameState().toString());
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
+
+    System.out.println(
+        "Sent question update to both players for game: " + gameId);
+
+      return savedGame;
+    } catch (Exception e) {
+      String errMsg =
+          "Error generating question for game " + gameId + ": "
+              + e.getMessage();
+      System.err.println(errMsg);
+      e.printStackTrace();
+      // Revert game state back to WAITING so players can retry
+      try {
+        Game reload = gameRepository.findById(gameId).orElse(null);
+        if (reload != null) {
+          reload.setGameState(GameState.WAITING);
+          gameRepository.save(reload);
+          // Notify players that generation failed and they can retry
+          Map<String, Object> failUpdate = new HashMap<>();
+          failUpdate.put("type", "QUESTION_GENERATION_FAILED");
+          failUpdate.put("gameId", gameId.toString());
+          failUpdate.put("message", "Question generation failed. Please try again.");
+          webSocketService.sendGameUpdate(reload.getPlayer1Id(), failUpdate);
+          webSocketService.sendGameUpdate(reload.getPlayer2Id(), failUpdate);
+        }
+      } catch (Exception ex) {
+        String revertMsg =
+            "Failed to revert game state after generation error: " + ex.getMessage();
+        System.err.println(revertMsg);
+        ex.printStackTrace();
+      }
+      throw new RuntimeException(e);
+    } finally {
+      // Ensure in-memory lock is cleared
+      generationLocks.remove(gameId);
+    }
+  }
+
+  private Map<String, Object> generateAIQuestion() {
+    try {
+      String apiKey = env.getProperty("OPENROUTER_API_KEY");
+      if (apiKey == null) {
+        throw new IllegalStateException("OPENROUTER_API_KEY must be set");
+      }
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      headers.set("Authorization", "Bearer " + apiKey);
+      headers.set("HTTP-Referer", "https://promptforge.ai");
+      headers.set("X-Title", "Prompt Forge");
+
+      Map<String, Object> requestBody = new HashMap<>();
+      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+
+      List<Map<String, Object>> messages =
+          List.of(
+              Map.of(
+                  "role",
+                  "user",
+                  "content",
+                  "Create a reverse prompt engineering question for a game. Keep everything "
+                      + "SHORT and CONCISE. You need to:"
+                      + "\n1. Create a simple scenario/topic"
+                      + "\n2. Generate a SHORT AI output (1-2 sentences max)"
+                      + "\n3. Create 4 SHORT prompts (A, B, C, D) that could have "
+                      + "generated that output"
+                      + "\n4. Make sure only ONE prompt would realistically generate that "
+                      + "specific output"
+                      + "\n\nIMPORTANT: Keep prompts under 10 words each and output under 20 words!"
+                      + "\n\nFormat your response EXACTLY like this:"
+                      + "\nQUESTION: [simple scenario]"
+                      + "\nOUTPUT: [short AI output - max 20 words]"
+                      + "\nA) [short prompt option A - max 10 words]"
+                      + "\nB) [short prompt option B - max 10 words]"
+                      + "\nC) [short prompt option C - max 10 words]"
+                      + "\nD) [short prompt option D - max 10 words]"
+                      + "\nCORRECT: [A, B, C, or D]"
+                      + "\n\nMake it challenging but fair. Keep everything SHORT."
+                      + "\nE) [prompt option E]"
+                      + "\nCORRECT: [A, B, C, D, or E]"
+                      + "\n\nMake it challenging but fair. The output should be unique enough "
+                      + "that only one prompt makes sense."));
+      requestBody.put("messages", messages);
+
+      HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+      ResponseEntity<String> response =
+          restTemplate.exchange(
+              openRouterBaseUrl + "/chat/completions", HttpMethod.POST, entity, String.class);
+
+      JsonNode jsonNode = objectMapper.readTree(response.getBody());
+      if (jsonNode.has("choices") && jsonNode.get("choices").size() > 0) {
+        JsonNode choice = jsonNode.get("choices").get(0);
+        if (choice.has("message") && choice.get("message").has("content")) {
+          String result = choice.get("message").get("content").asText();
+          return parseQuestionResult(result);
+        }
+      }
+
+      // Fallback if AI generation fails
+      return getFallbackQuestion();
+
+    } catch (Exception e) {
+      System.err.println("Error generating AI question: " + e.getMessage());
+      e.printStackTrace();
+      return getFallbackQuestion();
+    }
+  }
+
+  private Map<String, Object> parseQuestionResult(String result) {
+    Map<String, Object> questionData = new HashMap<>();
+
+    try {
+      String[] lines = result.split("\n");
+      String question = "";
+      String output = "";
+      String[] options = new String[4]; // Changed from 5 to 4
+      String correctAnswer = "A";
+
+      for (String line : lines) {
+        line = line.trim();
+        if (line.startsWith("QUESTION:")) {
+          question = line.substring(9).trim();
+        } else if (line.startsWith("OUTPUT:")) {
+          output = line.substring(7).trim();
+        } else if (line.startsWith("A)")) {
+          options[0] = line.substring(2).trim();
+        } else if (line.startsWith("B)")) {
+          options[1] = line.substring(2).trim();
+        } else if (line.startsWith("C)")) {
+          options[2] = line.substring(2).trim();
+        } else if (line.startsWith("D)")) {
+          options[3] = line.substring(2).trim();
+        } else if (line.startsWith("CORRECT:")) {
+          correctAnswer = line.substring(8).trim().toUpperCase();
+        }
+      }
+
+      // Convert options to JSON
+      String optionsJson = "[\"" + String.join("\",\"", options) + "\"]";
+
+      questionData.put("question", question);
+      questionData.put("output", output);
+      questionData.put("options", optionsJson);
+      questionData.put("correctAnswer", correctAnswer);
+
+    } catch (Exception e) {
+      System.err.println("Error parsing question result: " + e.getMessage());
+      return getFallbackQuestion();
+    }
+
+    return questionData;
+  }
+
+  private Map<String, Object> getFallbackQuestion() {
+    Map<String, Object> questionData = new HashMap<>();
+
+    questionData.put("question", "Short Story Writing");
+    questionData.put("output", "The robot smiled and waved goodbye to its human friend.");
+    questionData.put(
+        "options",
+        "[\"Write a sad robot story\","
+            + "\"Create a happy robot friendship tale\","
+            + "\"Generate a technical robot manual\","
+            + "\"Write a robot battle scene\"]");
+    questionData.put("correctAnswer", "B");
+
+    return questionData;
+  }
+
+  public Game submitAnswer(UUID gameId, UUID playerId, String answer) {
+    Game game = getGame(gameId);
+
+    System.out.println("Submitting answer for player: " + playerId + " in game: " + gameId);
+    System.out.println("Answer: " + answer);
+    System.out.println("Game type: " + game.getGameType());
+
+    if (game.getGameType() != GameType.REVERSE_PROMPT) {
+      throw new IllegalArgumentException("Game is not a reverse prompt battle");
+    }
+
+    // Accept submissions if game is in WRITING state.
+    // Also allow a short race window where the DB might still be updating: if state is WAITING but
+    // a currentQuestion exists, treat it as accepting answers.
+    if (game.getGameState() != GameState.WRITING) {
+      if (!(game.getGameState() == GameState.WAITING && game.getCurrentQuestion() != null)) {
+        throw new IllegalArgumentException("Game is not in answering phase");
+      }
+    }
+
+    if (!game.isPlayerInGame(playerId)) {
+      throw new IllegalArgumentException("Player is not in this game");
+    }
+
+    // Treat null/empty as NO_ANSWER for auto-submits
+    String normalizedAnswer = (answer == null || answer.trim().isEmpty())
+        ? "NO_ANSWER"
+        : answer.trim().toUpperCase();
+
+    // Validate answer format (A, B, C, D) or NO_ANSWER
+    if (!(normalizedAnswer.matches("[A-D]") || "NO_ANSWER".equals(normalizedAnswer))) {
+      throw new IllegalArgumentException("Answer must be A, B, C, D or NO_ANSWER");
+    }
+
+    game.submitAnswer(playerId, normalizedAnswer);
+    Game savedGame = gameRepository.save(game);
+
+    // If both players have answered, process the results
+    if (savedGame.bothPlayersAnswered()) {
+      CompletableFuture.runAsync(
+          () -> {
+            try {
+              processAnswers(savedGame);
+            } catch (Exception e) {
+              System.err.println("Error processing answers: " + e.getMessage());
+              e.printStackTrace();
+            }
+          });
+    } else {
+      // Send update that one player has answered
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", "ANSWER_SUBMITTED");
+      gameUpdate.put("gameId", gameId.toString());
+      gameUpdate.put("playerId", playerId.toString());
+      gameUpdate.put("gameState", savedGame.getGameState().toString());
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
+    }
+
+    return savedGame;
+  }
+
+  private void processAnswers(Game game) {
+    System.out.println("Processing answers for game: " + game.getId());
+
+    try {
+      String correctAnswer = game.getCorrectAnswer();
+      String player1Answer = game.getPlayer1Answer();
+      String player2Answer = game.getPlayer2Answer();
+
+      boolean player1Correct = correctAnswer.equals(player1Answer);
+      boolean player2Correct = correctAnswer.equals(player2Answer);
+
+      // Update scores
+      if (player1Correct) {
+        game.setPlayer1CorrectAnswers(game.getPlayer1CorrectAnswers() + 1);
+      }
+      if (player2Correct) {
+        game.setPlayer2CorrectAnswers(game.getPlayer2CorrectAnswers() + 1);
+      }
+
+
+      // Only end the game if a player reaches 5 points, or after 5 questions
+      int player1Score = game.getPlayer1CorrectAnswers();
+      int player2Score = game.getPlayer2CorrectAnswers();
+      int currentQuestion = game.getQuestionNumber();
+      boolean playerReached5 = player1Score >= 5 || player2Score >= 5;
+      boolean lastQuestion = currentQuestion >= 5;
+      boolean gameFinished = false;
+
+      // Only end if a player reached 5 points, or if 5 questions have been answered
+      if (playerReached5 || lastQuestion) {
+        gameFinished = true;
+        UUID winner = null;
+        if (player1Score > player2Score) {
+          winner = game.getPlayer1Id();
+        } else if (player2Score > player1Score) {
+          winner = game.getPlayer2Id();
+        } // else tie, winner remains null
+        game.setWinnerId(winner);
+        game.setGameState(GameState.FINISHED);
+        game.setEndedAt(java.time.Instant.now());
+      } else {
+        // Prepare for next question (increment AFTER the check)
+        game.setQuestionNumber(currentQuestion + 1);
+        game.setGameState(GameState.WAITING); // Ready for next question
+      }
+
+      gameRepository.save(game);
+
+      // Send results to both players
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", gameFinished ? "REVERSE_GAME_FINISHED" : "ANSWER_RESULTS");
+      gameUpdate.put("gameId", game.getId().toString());
+      gameUpdate.put("correctAnswer", correctAnswer);
+      gameUpdate.put("player1Answer", player1Answer);
+      gameUpdate.put("player2Answer", player2Answer);
+      gameUpdate.put("player1Correct", player1Correct);
+      gameUpdate.put("player2Correct", player2Correct);
+      gameUpdate.put("player1Score", player1Score);
+      gameUpdate.put("player2Score", player2Score);
+      gameUpdate.put("questionNumber", game.getQuestionNumber());
+      gameUpdate.put("gameState", game.getGameState().toString());
+
+      if (gameFinished) {
+        gameUpdate.put(
+            "winnerId", game.getWinnerId() != null ? game.getWinnerId().toString() : null);
+        if (player1Score == player2Score) {
+          gameUpdate.put("tie", true);
+        }
+      }
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
+
+      System.out.println("Sent answer results to both players for game: " + game.getId());
+
+      // If not finished, auto-generate the next question
+      if (!gameFinished) {
+        // Small delay to allow frontend to show results before next question
+        try {
+          Thread.sleep(1200);
+        } catch (InterruptedException ignored) {}
+        generateQuestion(game.getId());
+      }
+
+    } catch (Exception e) {
+      System.err.println("Error in processAnswers: " + e.getMessage());
+      e.printStackTrace();
+    }
   }
 }
