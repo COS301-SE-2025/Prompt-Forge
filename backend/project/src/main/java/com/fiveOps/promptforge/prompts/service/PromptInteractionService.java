@@ -16,7 +16,8 @@ public class PromptInteractionService {
     private PromptInteractionRepository promptInteractionRepository;
 
     public void recordInteraction(Prompt prompt, User user, String action) {
-        PromptInteraction interaction = new PromptInteraction(prompt, user, action, LocalDateTime.now());
+        PromptInteraction interaction = new PromptInteraction(prompt, user, action, 
+                LocalDateTime.now());
         promptInteractionRepository.save(interaction);
     }
 
@@ -34,7 +35,8 @@ public class PromptInteractionService {
 
     public double getPromptBounceRate(Prompt prompt) {
         long views = getPromptViews(prompt);
-        long actions = getPromptActions(prompt, "ADD_TO_CART") + getPromptActions(prompt, "PURCHASE");
+        long actions = getPromptActions(prompt, "ADD_TO_CART") 
+                + getPromptActions(prompt, "PURCHASE");
         if (views == 0) return 0.0;
         return ((double)(views - actions) / views) * 100.0;
     }
