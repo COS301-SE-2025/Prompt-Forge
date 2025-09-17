@@ -15,10 +15,28 @@ public class PromptInteractionService {
     @Autowired
     private PromptInteractionRepository promptInteractionRepository;
 
+    // Lazy initialization to avoid circular dependency
+    private com.fiveOps.promptforge.notifications.service.NotificationService notificationService;
+
+    @Autowired(required = false)
+    public void setNotificationService(com.fiveOps.promptforge.notifications.service.NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
     public void recordInteraction(Prompt prompt, User user, String action) {
         PromptInteraction interaction = new PromptInteraction(prompt, user, action, 
                 LocalDateTime.now());
         promptInteractionRepository.save(interaction);
+        
+        // Trigger notifications asynchronously
+        if (notificationService != null) {
+            notificationService.notifyPromptInteraction(prompt, action, user);
+            
+            // Check bounce rate after each interaction
+            if ("VIEW".equals(action) || "ADD_TO_CART".equals(action) || "PURCHASE".equals(action)) {
+                notificationService.checkBounceRateAndNotify(prompt);
+            }
+        }
     }
 
     public long getPromptViews(Prompt prompt) {
