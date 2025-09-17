@@ -38,7 +38,7 @@ public class PromptWarsChallengeController {
 
       Challenge challenge =
           challengeService.sendChallenge(
-              challengerId, request.getOpponentId(), request.getMessage());
+              challengerId, request.getOpponentId(), request.getMessage(), request.getGameType());
 
       System.out.println("DEBUG: Challenge created successfully with ID: " + challenge.getId());
       return ResponseEntity.ok(challenge);

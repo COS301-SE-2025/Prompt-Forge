@@ -33,71 +33,94 @@ import { promptWarsWebSocket, GameUpdate } from "../services/promptWarsWebSocket
 
 type GameState = "waiting" | "scenario" | "writing" | "rating" | "results" | "finished" | "cancelled"
 
+
 interface ChatMessage {
-  id: string
-  user: string
-  message: string
-  timestamp: Date
+  id: string;
+  user: string;
+  message: string;
+  timestamp: Date;
 }
 
-// Helper function to generate unique IDs (move outside component)
-let idCounter = 0
-const generateUniqueId = () => `${Date.now()}-${++idCounter}`
-
-export default function PromptWarsPage() {
-  
-  // Helper function to show user-friendly error messages
-  const getErrorMessage = (error: any): string => {
-    if (typeof error === 'string') {
-      return error
-    }
-    
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase()
-      
-      // Transform backend errors to user-friendly messages
-      if (message.includes('already in an active game')) {
-        return 'You are currently in another battle. Please finish your current battle before starting a new one.'
-      }
-      if (message.includes('player is already in an active game')) {
-        return 'This player is currently in another battle. Please try challenging them later.'
-      }
-      if (message.includes('users you follow')) {
-        return 'You can only challenge users you follow. Please follow this user first.'
-      }
-      if (message.includes('currently offline')) {
-        return 'This user is currently offline. Please try again when they are online.'
-      }
-      if (message.includes('pending challenge')) {
-        return 'You already have a pending challenge with this user. Please wait for them to respond.'
-      }
-      if (message.includes('not found')) {
-        return 'The requested battle could not be found. It may have been cancelled or completed.'
-      }
-      if (message.includes('unauthorized')) {
-        return 'You are not authorized to view this battle.'
-      }
-      if (message.includes('network') || message.includes('fetch')) {
-        return 'Connection error. Please check your internet connection and try again.'
-      }
-      
-      return error.message
-    }
-    
-    return 'An unexpected error occurred. Please try again.'
+export default function PromptWars() {
+  // Helper to generate unique IDs for chat messages
+  function generateUniqueId() {
+    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   }
 
-  // Get gameId from URL params (for /prompt-wars/game/:gameId)
-  const params = useParams();
-  const gameId = params.gameId;
-  const isMultiplayerGame = !!gameId
-  
-  // Game data from backend
-  const [gameData, setGameData] = useState<GameResponse | null>(null)
-  const [gameStateDetails, setGameStateDetails] = useState<GameStateDetails | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
+  // Game and UI state
+  const [gameData, setGameData] = useState<any>(null);
+  const [gameStateDetails, setGameStateDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Helper for error messages
+  function getErrorMessage(error: any) {
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === 'object' && 'message' in error) return (error as any).message;
+    return 'An unknown error occurred';
+  }
+
+  // Robust parser for options payloads (backend sometimes returns malformed JSON)
+  function parseOptions(raw: any): string[] {
+    if (!raw && raw !== "" ) return []
+    // If it's already an array, return as-is
+    if (Array.isArray(raw)) return raw
+
+    let s = String(raw).trim()
+
+    // Quick attempt: try direct JSON.parse
+    try {
+      const parsed = JSON.parse(s)
+      if (Array.isArray(parsed)) return parsed
+      // If parsed to something else, try to coerce to array of strings
+      if (parsed == null) return []
+      return Array.isArray(parsed) ? parsed : [String(parsed)]
+    } catch (e) {
+      // continue to heuristics
+    }
+
+    // Common backend bug: double double-quotes -> replace "" with "
+    try {
+      const fixed = s.replace(/""/g, '"')
+      const parsed = JSON.parse(fixed)
+      if (Array.isArray(parsed)) return parsed
+    } catch (e) {
+      // ignore
+    }
+
+    // If the payload uses single quotes for strings, switch them to double quotes
+    if (/^\[\s*'/.test(s) || s.includes("',")) {
+      try {
+        const attempt = s.replace(/'/g, '"')
+        const parsed = JSON.parse(attempt)
+        if (Array.isArray(parsed)) return parsed
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Fallback: extract quoted segments (either single or double quoted)
+    const matches = Array.from(s.matchAll(/"([^"]+)"|'([^']+)'/g))
+    if (matches && matches.length > 0) {
+      return matches.map(m => (m[1] || m[2] || '').trim())
+    }
+
+    // Last resort: split on commas and trim brackets/quotes
+    try {
+      const stripped = s.replace(/^\[|\]$/g, '')
+      const parts = stripped.split(',').map(p => p.trim().replace(/^['"]|['"]$/g, ''))
+      return parts.filter(p => p.length > 0)
+    } catch (e) {
+      console.error('parseOptions fallback failed:', e, 'raw:', raw)
+      return []
+    }
+  }
+
+// Get params for multiplayer game (must be after gameData)
+const params = useParams();
+const gameId = params.gameId || (typeof gameData?.id === 'string' ? gameData.id : undefined);
+const isMultiplayerGame = !!gameId;
   // Game state
   const [gameState, setGameState] = useState<GameState>("waiting")
   const [scenario, setScenario] = useState("")
@@ -113,6 +136,48 @@ export default function PromptWarsPage() {
   const [isLoadingRating, setIsLoadingRating] = useState(false)
   const [winner, setWinner] = useState<"player" | "opponent" | "tie" | null>(null)
   const [opponentName, setOpponentName] = useState("Player 2")
+
+  // Reverse prompt battle state
+  const [currentQuestion, setCurrentQuestion] = useState("")
+  const [currentOutput, setCurrentOutput] = useState("")
+  const [currentOptions, setCurrentOptions] = useState<string[]>([])
+  const [selectedAnswer, setSelectedAnswer] = useState<string>("")
+  const [questionNumber, setQuestionNumber] = useState(1)
+  const [playerScore, setPlayerScore] = useState(0)
+  const [opponentScore, setOpponentScore] = useState(0)
+  const [correctAnswer, setCorrectAnswer] = useState<string>("")
+  const [showResults, setShowResults] = useState(false)
+  const [roundLoading, setRoundLoading] = useState(false)
+  const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false)
+  // Guard to prevent duplicate generateQuestion requests for the same question number
+  const generationRequestedForQN = useRef<number | null>(null)
+
+  // Helper to map backend player1/player2 scores into the local player's perspective.
+  // Accepts optional player1Id/player2Id from payload to avoid relying on possibly-stale `gameData`.
+  const mapAndSetScores = (p1: number, p2: number, player1Id?: string, player2Id?: string) => {
+    try {
+      const currentUserId = localStorage.getItem('userId')
+      const p1Id = player1Id || gameData?.player1Id
+      const p2Id = player2Id || gameData?.player2Id
+      if (p1Id && p2Id) {
+        if (currentUserId === p1Id) {
+          setPlayerScore(p1 || 0)
+          setOpponentScore(p2 || 0)
+        } else {
+          setPlayerScore(p2 || 0)
+          setOpponentScore(p1 || 0)
+        }
+      } else {
+        // Fallback when IDs are not available: assume p1 is the current player
+        setPlayerScore(p1 || 0)
+        setOpponentScore(p2 || 0)
+      }
+    } catch (e) {
+      console.error('mapAndSetScores failed', e)
+      setPlayerScore(p1 || 0)
+      setOpponentScore(p2 || 0)
+    }
+  }
 
   // UI state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -323,6 +388,47 @@ export default function PromptWarsPage() {
         setOpponentRating(0)
         setRatingExplanation("")
         setWinner(null)
+        // Reset reverse-battle specific state
+        setQuestionNumber(1)
+        setPlayerScore(0)
+        setOpponentScore(0)
+        setCurrentQuestion("")
+        setCurrentOutput("")
+        setCurrentOptions([])
+        setRoundLoading(false)
+        setHasSubmittedAnswer(false)
+
+        // If this is a reverse prompt game, attempt to auto-generate the first question.
+        // Fetch a fresh game record to avoid relying on possibly stale closure values.
+        ;(async () => {
+          try {
+            console.debug('GAME_RESTARTED: fetching fresh game to check type...')
+            const freshGame = isMultiplayerGame && gameId ? await promptWarsGameAPI.getGame(gameId) : null
+            console.debug('GAME_RESTARTED: freshGame:', freshGame)
+            const isReverse = (data.gameType === 'REVERSE_PROMPT') || (freshGame && freshGame.gameType === 'REVERSE_PROMPT')
+            console.debug('GAME_RESTARTED: isReverse=', isReverse, 'isMultiplayerGame=', isMultiplayerGame, 'gameId=', gameId)
+            if (isMultiplayerGame && gameId && isReverse) {
+              // mark loading and request generation
+              console.debug('GAME_RESTARTED: auto-generating first question for reverse game:', gameId)
+              setRoundLoading(true)
+              await promptWarsGameAPI.generateQuestion(gameId)
+              setChatMessages(prev => [
+                ...prev,
+                {
+                  id: generateUniqueId(),
+                  user: "System",
+                  message: "🎮 Generating first reverse question after rematch...",
+                  timestamp: new Date(),
+                },
+              ])
+            } else {
+              console.debug('GAME_RESTARTED: skipping auto-generate (not reverse or missing gameId)')
+            }
+          } catch (e) {
+            console.error('Auto-generate question after GAME_RESTARTED failed:', e)
+            setRoundLoading(false)
+          }
+        })()
       }
     })
 
@@ -374,6 +480,127 @@ export default function PromptWarsPage() {
       console.log('WebSocket event:', data)
     })
 
+    // Reverse prompt battle event listeners
+    const unsubscribeQuestionGenerated = promptWarsWebSocket.on('QUESTION_GENERATED', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('Question generated:', data)
+        console.log('Setting question:', data.question)
+        console.log('Setting output:', data.output)
+        console.log('Setting options:', data.options)
+        
+  setCurrentQuestion(data.question || '')
+  setCurrentOutput(data.output || '')
+        
+        // Robustly parse options using helper to handle malformed payloads
+        const options = parseOptions(data.options)
+        console.log('Parsed options (robust):', options)
+        if ((!options || options.length === 0) && data.options) {
+          console.warn('parseOptions returned empty for raw options:', data.options)
+        }
+  setCurrentOptions(options)
+        
+        setQuestionNumber(data.questionNumber || 1)
+        setGameState('writing') // Players are now "answering"
+        setTimeLeft(60) // 1 minute to answer
+        setSelectedAnswer('') // Reset selection
+        setShowResults(false)
+        // Round finished loading
+        setRoundLoading(false)
+        setHasSubmittedAnswer(false)
+        // Clear client-side generation guard for this question
+        generationRequestedForQN.current = null
+      }
+    })
+
+    
+
+    const unsubscribeAnswerResults = promptWarsWebSocket.on('ANSWER_RESULTS', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('Answer results:', data)
+        setCorrectAnswer(data.correctAnswer)
+        // Map scores correctly according to which player we are.
+        // Prefer IDs supplied in the payload (avoid relying on possibly stale gameData)
+        const currentUserId = localStorage.getItem('userId')
+        // Use payload IDs when available to map scores reliably
+        mapAndSetScores(data.player1Score || 0, data.player2Score || 0, data.player1Id, data.player2Id)
+        setQuestionNumber(data.questionNumber)
+        setShowResults(true)
+        
+        // Show results for 3 seconds, then prepare for next question
+        setTimeout(() => {
+          setShowResults(false)
+          // Show waiting state and display loading spinner until next question is generated
+          setGameState('waiting') // Ready for next question
+          setRoundLoading(true)
+          // Prepare for next round - ensure submit button state resets
+          setHasSubmittedAnswer(false)
+        }, 3000)
+      }
+    })
+
+    const unsubscribeReverseGameFinished = promptWarsWebSocket.on('REVERSE_GAME_FINISHED', (data: any) => {
+      if (data.gameId === gameId) {
+        console.log('Reverse game finished:', data)
+        setGameState('finished')
+        const currentUserId = localStorage.getItem('userId')
+        let result: "player" | "opponent" | "tie" = "opponent";
+        // Determine player IDs and scores from payload or fallback to gameData
+        const p1 = data.player1Score || 0
+        const p2 = data.player2Score || 0
+        const p1Id = data.player1Id || gameData?.player1Id
+        const p2Id = data.player2Id || gameData?.player2Id
+
+        // Compute myScore and oppScore deterministically
+        let myScore = 0
+        let oppScore = 0
+        if (currentUserId && p1Id && p2Id) {
+          if (currentUserId === p1Id) {
+            myScore = p1; oppScore = p2
+          } else if (currentUserId === p2Id) {
+            myScore = p2; oppScore = p1
+          } else {
+            // unknown userId: default to assigning p1->player
+            myScore = p1; oppScore = p2
+          }
+        } else if (currentUserId && gameData?.player1Id && gameData?.player2Id) {
+          // Fallback to gameData ids
+          if (currentUserId === gameData.player1Id) {
+            myScore = p1; oppScore = p2
+          } else {
+            myScore = p2; oppScore = p1
+          }
+        } else {
+          // Last resort: assume p1 is local player
+          myScore = p1; oppScore = p2
+        }
+
+        // Set scores synchronously so UI reflects the correct perspective immediately
+        setPlayerScore(myScore)
+        setOpponentScore(oppScore)
+
+        // Debug trace to help diagnose mapping issues
+        console.debug('REVERSE_GAME_FINISHED mapping:', { currentUserId, p1Id, p2Id, p1, p2, myScore, oppScore, winnerId: data.winnerId })
+
+        // Determine result from computed scores
+        if (myScore === oppScore) {
+          result = 'tie'
+        } else if (myScore > oppScore) {
+          result = 'player'
+        } else {
+          result = 'opponent'
+        }
+
+        setWinner(result)
+        setChatMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          user: "System",
+          message: `🏆 Game Over! ${
+            result === 'player' ? 'You won!' : result === 'opponent' ? 'You lost!' : 'It\'s a draw!'} Final Score: ${myScore}-${oppScore}`,
+          timestamp: new Date(),
+        }])
+      }
+    })
+
     return () => {
       unsubscribeGameUpdate()
       unsubscribeScenarioGenerated()
@@ -386,6 +613,9 @@ export default function PromptWarsPage() {
       unsubscribeChatMessage()
       unsubscribeUserJoined()
       unsubscribeAll()
+      unsubscribeQuestionGenerated()
+      unsubscribeAnswerResults()
+      unsubscribeReverseGameFinished()
     }
   }, [gameId, opponentName])
 
@@ -405,6 +635,34 @@ export default function PromptWarsPage() {
       setGameData(game)
       setGameStateDetails(state)
       setGameState(game.gameState.toLowerCase() as GameState)
+      
+      console.log('Loaded game data:', game)
+      console.log('Game type:', game.gameType)
+      
+      // Load reverse prompt battle data if applicable
+      if (game.gameType === 'REVERSE_PROMPT') {
+        setQuestionNumber(game.questionNumber || 1)
+        // Map stored correct answers to the local player's perspective
+        mapAndSetScores(game.player1CorrectAnswers || 0, game.player2CorrectAnswers || 0)
+        
+        if (game.currentQuestion) {
+          setCurrentQuestion(game.currentQuestion)
+          setCurrentOutput(game.currentOutput || '')
+          if (game.currentOptions) {
+            try {
+              // Fix backend double-double-quote bug: replace all "" with "
+              const fixedOptions = game.currentOptions.replace(/""/g, '"');
+              setCurrentOptions(JSON.parse(fixedOptions));
+            } catch (e) {
+              console.error('Malformed currentOptions from backend:', game.currentOptions, e);
+              setCurrentOptions([]);
+              setError('Failed to load answer options. Please try again or contact support.');
+            }
+          } else {
+            setCurrentOptions([]);
+          }
+        }
+      }
       
       if (game.scenario) {
         setScenario(game.scenario)
@@ -484,6 +742,45 @@ export default function PromptWarsPage() {
       if (interval) clearInterval(interval)
     }
   }, [gameState, timeLeft])
+
+  // Auto-submit on timeout for reverse prompt battles
+  useEffect(() => {
+    if (!isMultiplayerGame || !gameId) return
+    if (gameState !== 'writing') return
+    if (timeLeft !== 0) return
+    // Only for reverse prompt battles
+    if (gameData?.gameType !== 'REVERSE_PROMPT') return
+
+    // If already submitted, nothing to do
+    if (hasSubmittedAnswer) return
+
+    const answerToSend = selectedAnswer && selectedAnswer.trim() ? selectedAnswer : 'NO_ANSWER'
+
+    const doAutoSubmit = async () => {
+      try {
+        setLoading(true)
+        console.debug('Auto-submitting answer due to timeout:', answerToSend)
+        await promptWarsGameAPI.submitAnswer(gameId, { answer: answerToSend })
+        setHasSubmittedAnswer(true)
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: 'System',
+            message: answerToSend === 'NO_ANSWER' ? '⏱️ Time expired — auto-submitted NO_ANSWER.' : '⏱️ Time expired — auto-submitted your selection.',
+            timestamp: new Date(),
+          },
+        ])
+      } catch (e) {
+        console.error('Auto-submit failed:', e)
+        setError(getErrorMessage(e))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    doAutoSubmit()
+  }, [timeLeft, gameState, selectedAnswer, hasSubmittedAnswer, isMultiplayerGame, gameId, gameData])
 
   // Auto-scroll chat
   useEffect(() => {
@@ -584,19 +881,41 @@ export default function PromptWarsPage() {
       // Start real multiplayer game
       setLoading(true)
       try {
-        await promptWarsGameAPI.startGame(gameId, { gameMode: "multiplayer" })
-        
-        // Update local state immediately for better UX
-        setGameState("scenario")
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: generateUniqueId(),
-            user: "System",
-            message: "🎮 Battle started! Generating scenario...",
-            timestamp: new Date(),
-          },
-        ])
+        // Check if this is a reverse prompt battle
+        if (gameData?.gameType === 'REVERSE_PROMPT') {
+          // For reverse prompt battles, mark the next round as loading and generate the first question
+          setRoundLoading(true)
+          // Prevent duplicate generation: mark that we've requested generation for the current question number
+          const qn = gameData.questionNumber || 1
+          generationRequestedForQN.current = qn
+          // For reverse prompt battles, generate the first question instead of scenario
+          await promptWarsGameAPI.generateQuestion(gameId)
+
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: generateUniqueId(),
+              user: "System",
+              message: "🎮 Reverse Battle started! Generating first question...",
+              timestamp: new Date(),
+            },
+          ])
+        } else {
+          // For classic prompt battles, start with scenario generation
+          await promptWarsGameAPI.startGame(gameId, { gameMode: "multiplayer" })
+          
+          // Update local state immediately for better UX
+          setGameState("scenario")
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: generateUniqueId(),
+              user: "System",
+              message: "🎮 Battle started! Generating scenario...",
+              timestamp: new Date(),
+            },
+          ])
+        }
         
         // Game state will also be updated via WebSocket
       } catch (error) {
@@ -924,6 +1243,14 @@ Overall Analysis: [brief summary]`,
     setWinner(null)
     setTimeLeft(120)
     setError(null)
+    // Reset reverse-battle state as well
+    setQuestionNumber(1)
+    setPlayerScore(0)
+    setOpponentScore(0)
+    setCurrentQuestion("")
+    setCurrentOutput("")
+    setCurrentOptions([])
+    setRoundLoading(false)
     setChatMessages(prev => [
       ...prev,
       {
@@ -962,6 +1289,56 @@ Overall Analysis: [brief summary]`,
     }
   }
 
+  // Reverse Prompt Battle Functions
+  const generateQuestion = async () => {
+    if (!gameId) return
+    
+    console.log('Generating question for game:', gameId)
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // mark that a new round is loading so UI hides begin button
+      const qn = (gameData && gameData.questionNumber) ? gameData.questionNumber : questionNumber
+      if (generationRequestedForQN.current === qn) {
+        console.log('Generation already requested for questionNumber', qn, '— skipping duplicate request')
+        return
+      }
+      generationRequestedForQN.current = qn
+      setRoundLoading(true)
+      const response = await promptWarsGameAPI.generateQuestion(gameId)
+      console.log('Generate question response:', response)
+      // Question data will come via WebSocket
+    } catch (error) {
+      console.error('Failed to generate question:', error)
+      setError(getErrorMessage(error))
+      // if generation fails, clear round loading so players can retry
+      setRoundLoading(false)
+      generationRequestedForQN.current = null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitAnswer = async () => {
+    if (!gameId || !selectedAnswer) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      await promptWarsGameAPI.submitAnswer(gameId, { answer: selectedAnswer })
+      // Prevent duplicate submits locally until results arrive
+      setHasSubmittedAnswer(true)
+      // Results will come via WebSocket
+    } catch (error) {
+      console.error('Failed to submit answer:', error)
+      setError(getErrorMessage(error))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -984,7 +1361,7 @@ Overall Analysis: [brief summary]`,
                 </div>
               </div>
               <h1 className="text-5xl font-black bg-gradient-to-r from-[#3ebb9e] via-white to-[#4079ff] bg-clip-text text-transparent">
-                PROMPT WARS
+                {gameData?.gameType === 'REVERSE_PROMPT' ? 'REVERSE PROMPT WARS' : 'PROMPT WARS'}
               </h1>
               <div className="relative">
                 <Swords className="h-12 w-12 text-[#4079ff] animate-pulse" />
@@ -1150,32 +1527,72 @@ Overall Analysis: [brief summary]`,
                       <div className="absolute inset-0 text-8xl animate-ping opacity-20">⚔️</div>
                     </div>
                     <h2 className="text-3xl font-black text-white mb-4">
-                      {isMultiplayerGame ? "AWAITING CHALLENGER" : "ENTER THE ARENA"}
+                      {gameData?.gameType === 'REVERSE_PROMPT' 
+                        ? (isMultiplayerGame ? "REVERSE BATTLE READY" : "REVERSE ARENA") 
+                        : (isMultiplayerGame ? "AWAITING CHALLENGER" : "ENTER THE ARENA")}
                     </h2>
                     <p className="text-slate-300 text-lg mb-8 max-w-md mx-auto leading-relaxed">
-                      {isMultiplayerGame
-                        ? "Your opponent is preparing for battle. Both warriors must be ready before the arena opens..."
-                        : "Step into the ultimate prompt crafting battleground. Face AI opponents in epic battles of creativity, strategy, and wit."}
+                      {gameData?.gameType === 'REVERSE_PROMPT' 
+                        ? (isMultiplayerGame
+                          ? "Ready for reverse prompt battle! You'll guess which prompts generated AI outputs. First to 5 wins!"
+                          : "Test your prompt analysis skills in reverse battles!")
+                        : (isMultiplayerGame
+                          ? "Your opponent is preparing for battle. Both warriors must be ready before the arena opens..."
+                          : "Step into the ultimate prompt crafting battleground. Face AI opponents in epic battles of creativity, strategy, and wit.")}
                     </p>
                   </div>
 
-                  <Button
-                    onClick={startNewBattle}
-                    disabled={loading || isLoadingScenario}
-                    className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  >
-                    {loading || isLoadingScenario ? (
-                      <>
-                        <Loader2 className="h-6 w-6 mr-3 animate-spin" />
-                        {isMultiplayerGame ? "INITIATING BATTLE..." : "GENERATING SCENARIO..."}
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="h-6 w-6 mr-3" />
-                        {isMultiplayerGame ? "BEGIN LIVE BATTLE" : "START NEW BATTLE"}
-                      </>
-                    )}
-                  </Button>
+                  {/* Show loading spinner and round info between rounds for reverse prompt battles */}
+                  {/* Show loading spinner whenever a round is being generated or between rounds (questionNumber > 1) */}
+                  {gameData?.gameType === 'REVERSE_PROMPT' && isMultiplayerGame && gameState === 'waiting' && (roundLoading || (questionNumber > 1)) ? (
+                    <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6">
+                      <Loader2 className="h-12 w-12 animate-spin text-[#4079ff] mb-4" />
+                      <div className="text-xl text-white font-bold">Loading next round...</div>
+                      <div className="text-slate-400">Round {questionNumber} of 5</div>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={startNewBattle}
+                      disabled={
+                        loading || isLoadingScenario || roundLoading ||
+                        (isMultiplayerGame && gameData?.gameType === 'REVERSE_PROMPT' && (questionNumber > 1 || gameState !== 'waiting'))
+                      }
+                      className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    >
+                      {loading || isLoadingScenario || roundLoading ? (
+                        <>
+                          <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+                          {isMultiplayerGame ? "INITIATING BATTLE..." : "GENERATING SCENARIO..."}
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-6 w-6 mr-3" />
+                          {isMultiplayerGame ? "BEGIN LIVE BATTLE" : "START NEW BATTLE"}
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Next Question Button for Reverse Battles
+                  {isMultiplayerGame && gameData?.gameType === 'REVERSE_PROMPT' && gameState === 'waiting' && gameData.questionNumber && gameData.questionNumber > 0 && (
+                    <Button
+                      onClick={generateQuestion}
+                      disabled={loading}
+                      className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ml-4"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+                          GENERATING...
+                        </>
+                      ) : (
+                        <>
+                          <Target className="h-6 w-6 mr-3" />
+                          NEXT QUESTION
+                        </>
+                      )}
+                    </Button>
+                  )} */}
                 </div>
               )}
 
@@ -1232,66 +1649,183 @@ Overall Analysis: [brief summary]`,
 
               {gameState === "writing" && (
                 <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
-                      <Timer className="h-8 w-8 text-yellow-400" />
-                      CRAFTING PHASE
-                      <div
-                        className={`text-2xl font-black ml-4 ${
-                          timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-yellow-400"
-                        }`}
-                      >
-                        {formatTime(timeLeft)}
+                  {/* Classic Prompt Battle - Writing Phase */}
+                  {(!gameData?.gameType || gameData?.gameType === 'PROMPT_CREATION') && (
+                    <>
+                      <div className="text-center mb-6">
+                        <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                          <Timer className="h-8 w-8 text-yellow-400" />
+                          CRAFTING PHASE
+                          <div
+                            className={`text-2xl font-black ml-4 ${
+                              timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-yellow-400"
+                            }`}
+                          >
+                            {formatTime(timeLeft)}
+                          </div>
+                        </h2>
+                        <p className="text-slate-400">Channel your creativity into the ultimate prompt</p>
                       </div>
-                    </h2>
-                    <p className="text-slate-400">Channel your creativity into the ultimate prompt</p>
-                  </div>
 
-                  {/* Scenario Reminder */}
-                  <div className="bg-[#4079ff]/10 border border-[#4079ff]/30 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <Target className="h-5 w-5 text-[#4079ff] mt-1 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-white mb-1">Mission Briefing</h4>
-                        <p className="text-sm text-slate-300">{scenario}</p>
+                      {/* Scenario Reminder */}
+                      <div className="bg-[#4079ff]/10 border border-[#4079ff]/30 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <Target className="h-5 w-5 text-[#4079ff] mt-1 flex-shrink-0" />
+                          <div>
+                            <h4 className="font-semibold text-white mb-1">Mission Briefing</h4>
+                            <p className="text-sm text-slate-300">{scenario}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Prompt Input */}
-                  <div className="space-y-4">
-                    <label className="block text-white font-bold text-lg">🎯 Your Battle Prompt</label>
-                    <textarea
-                      value={myPrompt}
-                      onChange={(e) => setMyPrompt(e.target.value)}
-                      placeholder="Forge your legendary prompt here... Make it count, warrior!"
-                      className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none text-lg custom-scrollbar"
-                    />
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">💡 Tip: Be specific, creative, and consider edge cases</span>
-                      <span className="text-slate-400">{myPrompt.length} characters</span>
-                    </div>
-                  </div>
+                      {/* Prompt Input */}
+                      <div className="space-y-4">
+                        <label className="block text-white font-bold text-lg">🎯 Your Battle Prompt</label>
+                        <textarea
+                          value={myPrompt}
+                          onChange={(e) => setMyPrompt(e.target.value)}
+                          placeholder="Forge your legendary prompt here... Make it count, warrior!"
+                          className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none text-lg custom-scrollbar"
+                        />
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400">💡 Tip: Be specific, creative, and consider edge cases</span>
+                          <span className="text-slate-400">{myPrompt.length} characters</span>
+                        </div>
+                      </div>
 
-                  <div className="text-center">
-                    <Button
-                      onClick={submitPrompt}
-                      disabled={loading || !myPrompt.trim() || timeLeft === 0}
-                      className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-5 w-5 mr-2" />
-                          SUBMIT PROMPT
-                        </>
+                      <div className="text-center">
+                        <Button
+                          onClick={submitPrompt}
+                          disabled={loading || !myPrompt.trim() || timeLeft === 0}
+                          className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-5 w-5 mr-2" />
+                              SUBMIT PROMPT
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Reverse Prompt Battle - Answering Phase */}
+                  {gameData?.gameType === 'REVERSE_PROMPT' && (
+                    <>
+                      <div className="text-center mb-6">
+                        <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                          <Target className="h-8 w-8 text-purple-400" />
+                          REVERSE BATTLE
+                          <div
+                            className={`text-2xl font-black ml-4 ${
+                              timeLeft <= 15 ? "text-red-400 animate-pulse" : "text-purple-400"
+                            }`}
+                          >
+                            {formatTime(timeLeft)}
+                          </div>
+                        </h2>
+                        <p className="text-slate-400">Question {questionNumber} • Score: {playerScore} vs {opponentScore}</p>
+                      </div>
+
+                      {/* Question */}
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-6">
+                        <div className="flex items-start gap-3">
+                          <Sparkles className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-white mb-2">
+                              {currentQuestion || 'Loading question...'}
+                            </h4>
+                            <div className="bg-slate-800 rounded-lg p-4 mt-4">
+                              <h5 className="text-purple-300 font-medium mb-2">AI Output:</h5>
+                              <p className="text-slate-300 italic">
+                                {currentOutput || 'Loading AI output...'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Answer Options */}
+                      <div className="space-y-3">
+                        <h4 className="text-white font-bold text-lg">Which prompt generated this output?</h4>
+                        {currentOptions.length > 0 ? (
+                          currentOptions.map((option, index) => {
+                            const letter = String.fromCharCode(65 + index); // A, B, C, D
+                            return (
+                              <div
+                                key={letter}
+                                className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                                  selectedAnswer === letter
+                                    ? 'border-purple-400 bg-purple-400/10'
+                                    : 'border-slate-600 hover:border-slate-500'
+                                }`}
+                                onClick={() => setSelectedAnswer(letter)}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                    selectedAnswer === letter
+                                      ? 'border-purple-400 bg-purple-400'
+                                      : 'border-slate-500'
+                                  }`}>
+                                    <span className="text-white text-sm font-bold">{letter}</span>
+                                  </div>
+                                  <span className="text-slate-300">{option}</span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-8">
+                            <Loader2 className="h-8 w-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <p className="text-slate-400">Loading answer options...</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Results Display */}
+                      {showResults && (
+                        <div className="bg-slate-800 border border-slate-600 rounded-lg p-6">
+                          <div className="text-center">
+                            <h4 className="text-2xl font-bold text-white mb-4">
+                              {selectedAnswer === correctAnswer ? '🎉 Correct!' : '❌ Wrong!'}
+                            </h4>
+                            <p className="text-slate-300 mb-2">
+                              Correct answer was: <span className="text-purple-400 font-bold">{correctAnswer}</span>
+                            </p>
+                            <p className="text-slate-400">
+                              Score: {playerScore} vs {opponentScore}
+                            </p>
+                          </div>
+                        </div>
                       )}
-                    </Button>
-                  </div>
+
+                      <div className="text-center">
+                        <Button
+                          onClick={submitAnswer}
+                          disabled={loading || hasSubmittedAnswer || !selectedAnswer || timeLeft === 0}
+                          className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white px-8 py-3 text-lg font-bold rounded-xl disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-5 w-5 mr-2" />
+                              Submit Answer
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -1418,7 +1952,7 @@ Overall Analysis: [brief summary]`,
                     </h2>
                     <p className="text-slate-300 text-lg">
                       {winner === "player"
-                        ? "Your prompt mastery has triumphed! Legendary craftsmanship!"
+                        ? "You got the most correct answers!"
                         : winner === "opponent"
                           ? "A worthy opponent has bested you. Train harder, warrior!"
                           : "Both warriors showed equal skill! An honorable draw!"}
@@ -1428,52 +1962,32 @@ Overall Analysis: [brief summary]`,
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div
                       className={`rounded-xl p-6 ${
-                        winner === "player"
+                        playerScore >= opponentScore
                           ? "bg-gradient-to-br from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/40"
                           : "bg-slate-700/30 border border-slate-600/50"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-white">Your Score</h3>
-                        {winner === "player" && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
+                        {playerScore > opponentScore && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{playerRating}/10</div>
-                      <div className="flex mb-2">
-                        {[...Array(10)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < playerRating ? "text-[#3ebb9e] fill-[#3ebb9e]" : "text-slate-600"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-slate-400">AI Score</p>
+                      <div className="text-4xl font-black text-white mb-2">{playerScore}/5</div>
+                      <p className="text-sm text-slate-400">Correct Answers</p>
                     </div>
 
                     <div
                       className={`rounded-xl p-6 ${
-                        winner === "opponent"
+                        opponentScore > playerScore
                           ? "bg-gradient-to-br from-[#4079ff]/20 to-blue-500/20 border border-[#4079ff]/40"
                           : "bg-slate-700/30 border border-slate-600/50"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-white">Opponent's Score</h3>
-                        {winner === "opponent" && <Crown className="h-6 w-6 text-[#4079ff]" />}
+                        {opponentScore > playerScore && <Crown className="h-6 w-6 text-[#4079ff]" />}
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{opponentRating}/10</div>
-                      <div className="flex mb-2">
-                        {[...Array(10)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < opponentRating ? "text-[#4079ff] fill-[#4079ff]" : "text-slate-600"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-slate-400">AI Score</p>
+                      <div className="text-4xl font-black text-white mb-2">{opponentScore}/5</div>
+                      <p className="text-sm text-slate-400">Correct Answers</p>
                     </div>
                   </div>
 

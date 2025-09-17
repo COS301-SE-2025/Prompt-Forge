@@ -29,6 +29,10 @@ public class Challenge {
   @Column(length = 200)
   private String message;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "game_type", nullable = false)
+  private GameType gameType = GameType.PROMPT_CREATION;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -50,6 +54,14 @@ public class Challenge {
     this();
     this.challengerId = challengerId;
     this.opponentId = opponentId;
+  }
+
+  // Constructor with required fields and game type
+  public Challenge(UUID challengerId, UUID opponentId, GameType gameType) {
+    this();
+    this.challengerId = challengerId;
+    this.opponentId = opponentId;
+    this.gameType = gameType;
   }
 
   // Getters and Setters
@@ -115,6 +127,14 @@ public class Challenge {
 
   public void setRespondedAt(Instant respondedAt) {
     this.respondedAt = respondedAt;
+  }
+
+  public GameType getGameType() {
+    return gameType;
+  }
+
+  public void setGameType(GameType gameType) {
+    this.gameType = gameType;
   }
 
   // Utility methods
