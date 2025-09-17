@@ -7,7 +7,12 @@ import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -22,9 +27,10 @@ public class PromptInteractionController {
     private UserService userService;
 
     @PostMapping("/record")
-    public ResponseEntity<?> recordInteraction(@RequestParam UUID promptId, @RequestParam UUID userId, @RequestParam String action) {
+    public ResponseEntity<?> recordInteraction(@RequestParam UUID promptId, 
+            @RequestParam UUID userId, @RequestParam String action) {
         Prompt prompt = promptRepository.findById(promptId).orElse(null);
-        User user = userService.getUserById(userId);
+        User user = userService.findById(userId);
         if (prompt == null || user == null) {
             return ResponseEntity.badRequest().body("Invalid prompt or user");
         }

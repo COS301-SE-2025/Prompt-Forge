@@ -254,6 +254,10 @@ public class UserService {
         .orElse(null); // Return null if not found, let controller handle it
   }
 
+  public User findById(UUID id) {
+    return userRepository.findById(id).orElse(null);
+  }
+
   public User findByResetToken(String token) {
     return userRepository.findByResetToken(token).orElse(null);
   }
