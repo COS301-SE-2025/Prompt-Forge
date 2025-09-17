@@ -37,7 +37,8 @@ public class PromptController {
   private final UserService userService;
   private final PromptInteractionService promptInteractionService;
 
-  public PromptController(PromptService promptService, JwtUtil jwtUtil, UserService userService, PromptInteractionService promptInteractionService) {
+  public PromptController(PromptService promptService, JwtUtil jwtUtil, 
+      UserService userService, PromptInteractionService promptInteractionService) {
     this.promptService = promptService;
     this.jwtUtil = jwtUtil;
     this.userService = userService;
@@ -46,7 +47,8 @@ public class PromptController {
 
   // Endpoint to record a prompt interaction (view, add_to_cart, purchase, etc.)
   @PostMapping("/{id}/interact")
-  public ResponseEntity<?> recordPromptInteraction(@PathVariable UUID id, @RequestParam String action, Authentication authentication) {
+  public ResponseEntity<?> recordPromptInteraction(@PathVariable UUID id, 
+      @RequestParam String action, Authentication authentication) {
     Prompt prompt = promptService.getPromptById(id);
     if (prompt == null) {
       return ResponseEntity.notFound().build();
@@ -72,7 +74,6 @@ public class PromptController {
     }
     double bounceRate = promptInteractionService.getPromptBounceRate(prompt);
     return ResponseEntity.ok(bounceRate);
-  }
   }
 
   @GetMapping
