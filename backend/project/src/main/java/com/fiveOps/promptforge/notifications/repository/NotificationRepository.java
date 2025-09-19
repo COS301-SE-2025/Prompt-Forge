@@ -32,7 +32,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByPromptIdOrderByCreatedAtDesc(UUID promptId);
     
     // Find recent notifications (last 30 days)
-    @Query("SELECT n FROM Notification n WHERE n.user = :user AND n.createdAt >= :since ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.user = :user " +
+           "AND n.createdAt >= :since ORDER BY n.createdAt DESC")
     List<Notification> findRecentNotifications(@Param("user") User user, 
                                              @Param("since") LocalDateTime since);
     
