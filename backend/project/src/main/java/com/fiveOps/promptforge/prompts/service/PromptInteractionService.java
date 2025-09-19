@@ -34,7 +34,8 @@ public class PromptInteractionService {
             notificationService.notifyPromptInteraction(prompt, action, user);
             
             // Check bounce rate after each interaction
-            if ("VIEW".equals(action) || "ADD_TO_CART".equals(action) || "PURCHASE".equals(action)) {
+            if ("VIEW".equals(action) || "ADD_TO_CART".equals(action) 
+                || "PURCHASE".equals(action)) {
                 notificationService.checkBounceRateAndNotify(prompt);
             }
         }
