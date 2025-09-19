@@ -126,9 +126,11 @@ public class DashboardController {
     try {
       Long totalDownloads = dashboardService.getTotalDownloads(userId);
       Double averageRating = dashboardService.getAverageRating(userId);
+      Double averageBounceRate = dashboardService.getAverageBounceRate(userId);
 
       result.put("totalPrompts", dashboardService.getTotalPrompts(userId));
       result.put("averageRating", averageRating);
+      result.put("averageBounceRate", averageBounceRate);
       result.put("totalDownloads", totalDownloads);
       result.put("topPrompts", dashboardService.getTopPrompts(userId, 5));
       result.put("monthlyUsage", dashboardService.getMonthlyPromptCount(userId));
@@ -138,7 +140,7 @@ public class DashboardController {
           dashboardService.getMonthlyPromptCounts(userId, java.time.LocalDate.now().getYear()));
 
       System.out.println(
-          "Dashboard data retrieved - Downloads: " + totalDownloads + ", Rating: " + averageRating);
+          "Dashboard data retrieved - Downloads: " + totalDownloads + ", Rating: " + averageRating + ", Bounce Rate: " + averageBounceRate);
     } catch (Exception e) {
       System.err.println("Dashboard service error: " + e.getMessage());
       e.printStackTrace();
@@ -152,6 +154,7 @@ public class DashboardController {
     Map<String, Object> result = new HashMap<>();
     result.put("totalPrompts", 12);
     result.put("averageRating", 4.6);
+    result.put("averageBounceRate", 15.2);
     result.put("totalDownloads", 3847);
     result.put("topPrompts", new java.util.ArrayList<>());
     result.put("monthlyUsage", 1250);
