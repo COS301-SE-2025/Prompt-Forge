@@ -29,11 +29,15 @@ public class NotificationDto {
         this.readAt = readAt;
     }
     
-    public NotificationDto(Long id, UUID promptId, String type, String title, 
-                          String message, Boolean isRead, LocalDateTime createdAt, 
-                          LocalDateTime readAt, String metadata) {
-        this(id, promptId, type, title, message, isRead, createdAt, readAt);
-        this.metadata = metadata;
+    // Factory method for creating NotificationDto with metadata
+    public static NotificationDto withMetadata(Long id, UUID promptId, String type, 
+                                             String title, String message, Boolean isRead, 
+                                             LocalDateTime createdAt, LocalDateTime readAt, 
+                                             String metadata) {
+        NotificationDto dto = new NotificationDto(id, promptId, type, title, 
+                                                message, isRead, createdAt, readAt);
+        dto.setMetadata(metadata);
+        return dto;
     }
 
     // Getters and setters

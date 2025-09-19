@@ -244,7 +244,7 @@ public class NotificationService {
      * Convert Notification entity to DTO
      */
     private NotificationDto convertToDto(Notification notification) {
-        return new NotificationDto(
+        return NotificationDto.withMetadata(
             notification.getId(),
             notification.getPromptId(),
             notification.getType(),
