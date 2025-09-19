@@ -54,11 +54,10 @@ public class GameService {
   }
 
   public Game startGame(UUID gameId) {
-  Game game =
-    gameRepository
-      .findById(gameId)
-      .orElseThrow(
-        () -> new IllegalArgumentException("Game not found"));
+    Game game =
+        gameRepository
+            .findById(gameId)
+            .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
     if (game.getGameState() != GameState.WAITING) {
       throw new IllegalArgumentException("Game is not in waiting state");
@@ -107,10 +106,8 @@ public class GameService {
   // Prompt Wars specific methods
   public synchronized Game generateScenario(UUID gameId) {
     // Refresh the game from database to get latest state
-  Game game =
-    gameRepository
-      .findById(gameId)
-      .orElseThrow(() -> new RuntimeException("Game not found"));
+    Game game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     System.out.println("Generating scenario for game: " + gameId);
     System.out.println("Current game state: " + game.getGameState());
@@ -668,13 +665,11 @@ public class GameService {
       throw new IllegalStateException("Question generation already in progress");
     }
 
-  Game game =
-    gameRepository.findById(gameId)
-      .orElseThrow(() -> new RuntimeException("Game not found"));
+    Game game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
-  System.out.println(
-    "Generating question for reverse prompt battle: " + gameId);
-  System.out.println("Current game state: " + game.getGameState());
+    System.out.println("Generating question for reverse prompt battle: " + gameId);
+    System.out.println("Current game state: " + game.getGameState());
 
     if (game.getGameType() != GameType.REVERSE_PROMPT) {
       generationLocks.remove(gameId);
@@ -691,25 +686,23 @@ public class GameService {
         gameRepository.updateGameStateIf(game.getId(), GameState.WAITING, GameState.WRITING);
     if (updated == 0) {
       generationLocks.remove(gameId);
-    String reservationMsg =
-      "Round reservation failed for game " + gameId
-        + ". Current state: " + game.getGameState();
-    System.out.println(reservationMsg);
+      String reservationMsg =
+          "Round reservation failed for game " + gameId + ". Current state: " + game.getGameState();
+      System.out.println(reservationMsg);
       throw new IllegalStateException(
           "Question generation already in progress or game not waiting");
     }
 
-  // Reload the game after reservation to ensure fresh entity
-  game =
-    gameRepository.findById(gameId)
-      .orElseThrow(() -> new RuntimeException("Game not found"));
+    // Reload the game after reservation to ensure fresh entity
+    game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     // Persist WRITING state explicitly so submit flows see it
     game.setGameState(GameState.WRITING);
     gameRepository.save(game);
 
-  Map<String, Object> questionData = null;
-  try {
+    Map<String, Object> questionData = null;
+    try {
       // Generate question and options using AI
       questionData = generateAIQuestion();
 
@@ -735,14 +728,11 @@ public class GameService {
       webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
       webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
 
-    System.out.println(
-        "Sent question update to both players for game: " + gameId);
+      System.out.println("Sent question update to both players for game: " + gameId);
 
       return savedGame;
     } catch (Exception e) {
-      String errMsg =
-          "Error generating question for game " + gameId + ": "
-              + e.getMessage();
+      String errMsg = "Error generating question for game " + gameId + ": " + e.getMessage();
       System.err.println(errMsg);
       e.printStackTrace();
       // Revert game state back to WAITING so players can retry
@@ -760,8 +750,7 @@ public class GameService {
           webSocketService.sendGameUpdate(reload.getPlayer2Id(), failUpdate);
         }
       } catch (Exception ex) {
-        String revertMsg =
-            "Failed to revert game state after generation error: " + ex.getMessage();
+        String revertMsg = "Failed to revert game state after generation error: " + ex.getMessage();
         System.err.println(revertMsg);
         ex.printStackTrace();
       }
@@ -929,9 +918,8 @@ public class GameService {
     }
 
     // Treat null/empty as NO_ANSWER for auto-submits
-    String normalizedAnswer = (answer == null || answer.trim().isEmpty())
-        ? "NO_ANSWER"
-        : answer.trim().toUpperCase();
+    String normalizedAnswer =
+        (answer == null || answer.trim().isEmpty()) ? "NO_ANSWER" : answer.trim().toUpperCase();
 
     // Validate answer format (A, B, C, D) or NO_ANSWER
     if (!(normalizedAnswer.matches("[A-D]") || "NO_ANSWER".equals(normalizedAnswer))) {
@@ -985,7 +973,6 @@ public class GameService {
       if (player2Correct) {
         game.setPlayer2CorrectAnswers(game.getPlayer2CorrectAnswers() + 1);
       }
-
 
       // Only end the game if a player reaches 5 points, or after 5 questions
       int player1Score = game.getPlayer1CorrectAnswers();
@@ -1047,7 +1034,8 @@ public class GameService {
         // Small delay to allow frontend to show results before next question
         try {
           Thread.sleep(1200);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
         generateQuestion(game.getId());
       }
 
