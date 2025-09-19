@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.fiveOps.promptforge.dashboard.repository.DashboardRepository;
 import com.fiveOps.promptforge.prompts.model.Prompt;
+import com.fiveOps.promptforge.prompts.service.PromptInteractionService;
 
 @Service
 public class DashboardService {
@@ -24,6 +25,7 @@ public class DashboardService {
   }
 
   @Autowired private DashboardRepository dashboardRepository;
+  @Autowired private PromptInteractionService promptInteractionService;
 
   // Now counts all prompts (public and private)
   public long getTotalPrompts(UUID userId) {
@@ -52,5 +54,27 @@ public class DashboardService {
     Long count =
         dashboardRepository.monthlyPromptCountByUser(userId, now.getYear(), now.getMonthValue());
     return count != null ? count : 0L;
+  }
+
+  // Average bounce rate for all prompts by a user
+  public Double getAverageBounceRate(UUID userId) {
+    List<Prompt> userPrompts = dashboardRepository.findAllByUser(userId);
+    if (userPrompts.isEmpty()) {
+      return 0.0;
+    }
+    
+    double totalBounceRate = 0.0;
+    int promptsWithViews = 0;
+    
+    for (Prompt prompt : userPrompts) {
+      long views = promptInteractionService.getPromptViews(prompt);
+      if (views > 0) {
+        double bounceRate = promptInteractionService.getPromptBounceRate(prompt);
+        totalBounceRate += bounceRate;
+        promptsWithViews++;
+      }
+    }
+    
+    return promptsWithViews > 0 ? totalBounceRate / promptsWithViews : 0.0;
   }
 }
