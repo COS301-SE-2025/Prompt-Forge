@@ -19,7 +19,8 @@ public class PromptInteractionService {
     private com.fiveOps.promptforge.notifications.service.NotificationService notificationService;
 
     @Autowired(required = false)
-    public void setNotificationService(com.fiveOps.promptforge.notifications.service.NotificationService notificationService) {
+    public void setNotificationService(
+            com.fiveOps.promptforge.notifications.service.NotificationService notificationService) {
         this.notificationService = notificationService;
     }
 

@@ -171,7 +171,8 @@ public class NotificationService {
     public void notifyPromptInteraction(Prompt prompt, String action, User interactingUser) {
         try {
             User promptOwner = userService.findById(prompt.getAuthorId());
-            if (promptOwner != null && !promptOwner.getUserId().equals(interactingUser.getUserId())) {
+            if (promptOwner != null 
+                && !promptOwner.getUserId().equals(interactingUser.getUserId())) {
                 String title;
                 String message;
                 String type;
