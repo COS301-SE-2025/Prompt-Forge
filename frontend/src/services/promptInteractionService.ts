@@ -105,6 +105,64 @@ export class PromptInteractionService {
   async recordPurchase(promptId: string): Promise<PromptInteractionResponse> {
     return this.recordInteraction(promptId, InteractionType.PURCHASE);
   }
+
+  /**
+   * Get bounce rate for user's prompts
+   * @returns Promise<number> - The average bounce rate
+   */
+  static async getBounceRate(): Promise<number> {
+    try {
+      const response = await HttpClient.get('/api/dashboard');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get bounce rate: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.averageBounceRate || 0;
+    } catch (error) {
+      console.error('Error fetching bounce rate:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get engagement funnel data for heat map
+   * @returns Promise<EngagementFunnelData> - The engagement funnel metrics
+   */
+  static async getEngagementFunnelData(): Promise<{
+    totalViews: number;
+    totalCartAdds: number;
+    totalPurchases: number;
+    viewToCartRate: number;
+    cartToPurchaseRate: number;
+  }> {
+    try {
+      const response = await HttpClient.get('/api/dashboard/engagement-funnel');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get engagement funnel data: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        totalViews: data.totalViews || 0,
+        totalCartAdds: data.totalCartAdds || 0,
+        totalPurchases: data.totalPurchases || 0,
+        viewToCartRate: data.viewToCartRate || 0,
+        cartToPurchaseRate: data.cartToPurchaseRate || 0,
+      };
+    } catch (error) {
+      console.error('Error fetching engagement funnel data:', error);
+      return {
+        totalViews: 0,
+        totalCartAdds: 0,
+        totalPurchases: 0,
+        viewToCartRate: 0,
+        cartToPurchaseRate: 0,
+      };
+    }
+  }
 }
 
 export default PromptInteractionService;

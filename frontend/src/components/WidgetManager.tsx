@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import {
@@ -17,6 +17,7 @@ import {
   PieChart,
   LineChart,
 } from "lucide-react"
+import PromptInteractionService from "@/services/promptInteractionService"
 import {
   BarChart as ReBarChart,
   Bar,
@@ -84,10 +85,10 @@ const availableWidgets = [
   {
     id: "bounce-rate",
     type: "stat", 
-    title: "Average Bounce Rate",
+    title: "Bounce Rate Analytics",
     icon: <TrendingUp size={20} color="#FF6B6B" />,
-    size: "small" as WidgetSize,
-    minSize: "small" as WidgetSize,
+    size: "medium" as WidgetSize,
+    minSize: "medium" as WidgetSize,
   },
   {
     id: "monthly-usage",
@@ -174,6 +175,26 @@ export default function WidgetManager({
 }: WidgetManagerProps) {
   const [showAddWidget, setShowAddWidget] = useState(false)
   const [showResizeWidget, setShowResizeWidget] = useState<string | null>(null)
+  const [engagementFunnelData, setEngagementFunnelData] = useState({
+    totalViews: 0,
+    totalCartAdds: 0,
+    totalPurchases: 0,
+    viewToCartRate: 0,
+    cartToPurchaseRate: 0,
+  })
+
+  useEffect(() => {
+    const fetchEngagementData = async () => {
+      try {
+        const data = await PromptInteractionService.getEngagementFunnelData();
+        setEngagementFunnelData(data);
+      } catch (error) {
+        console.error('Error fetching engagement funnel data:', error);
+      }
+    };
+
+    fetchEngagementData();
+  }, []);
 
   const addWidget = (widgetType: (typeof availableWidgets)[0]) => {
     const newWidget: Widget = {
@@ -244,14 +265,98 @@ export default function WidgetManager({
           </div>
         )
       case "bounce-rate":
+        const bounceRate = data?.averageBounceRate || 0;
+        const getBounceRateColor = (rate: number) => {
+          if (rate <= 20) return "text-green-600";
+          if (rate <= 40) return "text-yellow-600";
+          if (rate <= 60) return "text-orange-600";
+          return "text-red-600";
+        };
+        
+        const getBounceRateGradient = (rate: number) => {
+          if (rate <= 20) return "from-green-500/20 to-green-600/30";
+          if (rate <= 40) return "from-yellow-500/20 to-yellow-600/30";
+          if (rate <= 60) return "from-orange-500/20 to-orange-600/30";
+          return "from-red-500/20 to-red-600/30";
+        };
+
+        // Use real engagement funnel data
+        const totalViews = engagementFunnelData.totalViews || 0;
+        const totalCartAdds = engagementFunnelData.totalCartAdds || 0;
+        const totalPurchases = engagementFunnelData.totalPurchases || 0;
+        
+        const cartAddRate = totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0;
+        const purchaseRate = totalCartAdds > 0 ? (totalPurchases / totalCartAdds) * 100 : 0;
+        
+        const components = [
+          { 
+            name: "Views", 
+            value: 100, 
+            count: totalViews,
+            color: "bg-blue-500" 
+          },
+          { 
+            name: "Cart Adds", 
+            value: cartAddRate, 
+            count: totalCartAdds,
+            color: "bg-green-500" 
+          },
+          { 
+            name: "Purchases", 
+            value: purchaseRate,
+            count: totalPurchases, 
+            color: "bg-purple-500" 
+          },
+        ];
+
         return (
-          <div className="flex items-center justify-between h-full">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Average Bounce Rate</p>
-              <p className="text-2xl font-bold text-orange-600">{data?.averageBounceRate?.toFixed(1) || "0.0"}%</p>
-              <p className="text-xs text-muted-foreground">Views without engagement</p>
+          <div className="h-full p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Bounce Rate Analytics</p>
+                <p className={`text-2xl font-bold ${getBounceRateColor(bounceRate)}`}>
+                  {bounceRate.toFixed(1)}%
+                </p>
+              </div>
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(bounceRate)}`}>
+                {widgetType.icon}
+              </div>
             </div>
-            {widgetType.icon}
+            
+            {/* Heat Map Visualization */}
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground mb-2">Engagement Funnel</p>
+              {components.map((component) => (
+                <div key={component.name} className="flex items-center space-x-2">
+                  <div className="w-16 text-xs text-muted-foreground">{component.name}</div>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 relative overflow-hidden">
+                    <div
+                      className={`h-full ${component.color} transition-all duration-500 ease-in-out`}
+                      style={{ width: `${Math.min(100, Math.max(5, component.value))}%` }}
+                    />
+                  </div>
+                  <div className="w-12 text-xs text-muted-foreground text-right">
+                    {component.count > 0 ? component.count : Math.round(component.value) + '%'}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Status indicator */}
+              <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    bounceRate <= 20 ? "bg-green-500" :
+                    bounceRate <= 40 ? "bg-yellow-500" :
+                    bounceRate <= 60 ? "bg-orange-500" : "bg-red-500"
+                  }`} />
+                  <span className="text-xs text-muted-foreground">
+                    {bounceRate <= 20 ? "Excellent engagement" :
+                     bounceRate <= 40 ? "Good engagement" :
+                     bounceRate <= 60 ? "Moderate engagement" : "Needs improvement"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         )
       case "monthly-usage":

@@ -1,7 +1,9 @@
 package com.fiveOps.promptforge.dashboard.services;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,5 +78,41 @@ public class DashboardService {
     }
     
     return promptsWithViews > 0 ? totalBounceRate / promptsWithViews : 0.0;
+  }
+
+  // Get engagement funnel data for dashboard analytics
+  public Map<String, Object> getEngagementFunnelData(UUID userId) {
+    List<Prompt> userPrompts = dashboardRepository.findAllByUser(userId);
+    Map<String, Object> funnelData = new HashMap<>();
+    
+    if (userPrompts.isEmpty()) {
+      funnelData.put("totalViews", 0L);
+      funnelData.put("totalCartAdds", 0L);
+      funnelData.put("totalPurchases", 0L);
+      funnelData.put("viewToCartRate", 0.0);
+      funnelData.put("cartToPurchaseRate", 0.0);
+      return funnelData;
+    }
+    
+    long totalViews = 0;
+    long totalCartAdds = 0;
+    long totalPurchases = 0;
+    
+    for (Prompt prompt : userPrompts) {
+      totalViews += promptInteractionService.getPromptViews(prompt);
+      totalCartAdds += promptInteractionService.getPromptActions(prompt, "ADD_TO_CART");
+      totalPurchases += promptInteractionService.getPromptActions(prompt, "PURCHASE");
+    }
+    
+    double viewToCartRate = totalViews > 0 ? ((double) totalCartAdds / totalViews) * 100.0 : 0.0;
+    double cartToPurchaseRate = totalCartAdds > 0 ? ((double) totalPurchases / totalCartAdds) * 100.0 : 0.0;
+    
+    funnelData.put("totalViews", totalViews);
+    funnelData.put("totalCartAdds", totalCartAdds);
+    funnelData.put("totalPurchases", totalPurchases);
+    funnelData.put("viewToCartRate", viewToCartRate);
+    funnelData.put("cartToPurchaseRate", cartToPurchaseRate);
+    
+    return funnelData;
   }
 }

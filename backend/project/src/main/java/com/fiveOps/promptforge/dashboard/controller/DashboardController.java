@@ -150,6 +150,43 @@ public class DashboardController {
     return result;
   }
 
+  @GetMapping("/engagement-funnel")
+  public Map<String, Object> getEngagementFunnelData(Principal principal) {
+    UUID userId = null;
+    String userEmail = null;
+
+    if (principal != null && principal.getName() != null && !principal.getName().isEmpty()) {
+      userEmail = principal.getName();
+      User user = userRepository.findByEmail(userEmail).orElse(null);
+      if (user != null) {
+        userId = user.getUserId();
+      }
+    }
+    
+    if (userId == null) {
+      Map<String, Object> emptyFunnel = new HashMap<>();
+      emptyFunnel.put("totalViews", 0L);
+      emptyFunnel.put("totalCartAdds", 0L);
+      emptyFunnel.put("totalPurchases", 0L);
+      emptyFunnel.put("viewToCartRate", 0.0);
+      emptyFunnel.put("cartToPurchaseRate", 0.0);
+      return emptyFunnel;
+    }
+
+    try {
+      return dashboardService.getEngagementFunnelData(userId);
+    } catch (Exception e) {
+      System.err.println("Error fetching engagement funnel data: " + e.getMessage());
+      Map<String, Object> errorFunnel = new HashMap<>();
+      errorFunnel.put("totalViews", 0L);
+      errorFunnel.put("totalCartAdds", 0L);
+      errorFunnel.put("totalPurchases", 0L);
+      errorFunnel.put("viewToCartRate", 0.0);
+      errorFunnel.put("cartToPurchaseRate", 0.0);
+      return errorFunnel;
+    }
+  }
+
   private Map<String, Object> createEmptyDashboardData() {
     Map<String, Object> result = new HashMap<>();
     result.put("totalPrompts", 12);

@@ -132,13 +132,13 @@ const [loadingMonthlyCounts, setLoadingMonthlyCounts] = useState(true);
     {
       id: "bounce-rate",
       type: "stat",
-      title: "Average Bounce Rate",
+      title: "Bounce Rate Analytics",
       icon: <TrendingUp size={20} color="#FF6B6B" />,
       component: <div></div>,
       isActive: true,
       position: 2,
-      size: "small",
-      minSize: "small",
+      size: "medium",
+      minSize: "medium",
     },
     {
       id: "category-breakdown",
