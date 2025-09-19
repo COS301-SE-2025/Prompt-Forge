@@ -1,5 +1,6 @@
 import { EnrichedPrompt } from "@/Models/CartPrompt"
 import { CartService, PaymentAccessCodeAndReference } from "@/services/cartServices"
+import PromptInteractionService from "@/services/promptInteractionService"
 import { Button } from "./ui/Button"
 import PaystackPop from '@paystack/inline-js'
 import { useState } from "react"
@@ -18,6 +19,7 @@ export const CartSummary = ({
 }: CartSummaryProps) => {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const cartService = new CartService()
+  const interactionService = new PromptInteractionService()
   const tax = subtotal * 0.18 // 10% tax
   const total = subtotal + tax
 
@@ -51,16 +53,34 @@ export const CartSummary = ({
     }, 4000)
   }
 
+  // Helper function to record purchase interactions for all prompts
+  const recordPurchaseInteractions = async (purchasedPrompts: EnrichedPrompt[]) => {
+    try {
+      await Promise.all(
+        purchasedPrompts.map(async (prompt) => {
+          try {
+            await interactionService.recordPurchase(prompt.promptId)
+          } catch (error) {
+            console.warn(`Failed to record purchase interaction for prompt ${prompt.promptId}:`, error)
+          }
+        })
+      )
+    } catch (error) {
+      console.warn("Error recording purchase interactions:", error)
+    }
+  }
+
   const handleCheckout = async () => {
     setIsCheckingOut(true)
     try {
       if (total == 0) {
         cartService.checkout(prompts)
-        .then(()=>{
+        .then(async () => {
+          await recordPurchaseInteractions(prompts)
           onCheckoutSuccess()
           showNotification("success", "Checkout successful!", "Items purchased.")
         })
-        .catch((error:string)=>{
+        .catch((error:string) => {
           showNotification("error", "Checkout failed", error || "Unknown error")
         })
       }
@@ -75,7 +95,8 @@ export const CartSummary = ({
             callback: function (response:{status:string}) {
               if(response.status == "success"){
                 cartService.checkout(prompts)
-                .then(() => {
+                .then(async () => {
+                  await recordPurchaseInteractions(prompts)
                   onCheckoutSuccess()
                   showNotification("success", "Checkout successful!", "Items purchased.")
                 })

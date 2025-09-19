@@ -76,6 +76,17 @@ public class PromptController {
     return ResponseEntity.ok(bounceRate);
   }
 
+  // Endpoint to get view count for a prompt
+  @GetMapping("/{id}/views")
+  public ResponseEntity<Long> getPromptViewCount(@PathVariable UUID id) {
+    Prompt prompt = promptService.getPromptById(id);
+    if (prompt == null) {
+      return ResponseEntity.notFound().build();
+    }
+    long views = promptInteractionService.getPromptViews(prompt);
+    return ResponseEntity.ok(views);
+  }
+
   @GetMapping
   public ResponseEntity<List<Prompt>> getAllPrompts() {
     return ResponseEntity.ok(promptService.getAllPrompts());

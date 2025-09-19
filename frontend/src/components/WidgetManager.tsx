@@ -82,6 +82,14 @@ const availableWidgets = [
     minSize: "small" as WidgetSize,
   },
   {
+    id: "bounce-rate",
+    type: "stat", 
+    title: "Average Bounce Rate",
+    icon: <TrendingUp size={20} color="#FF6B6B" />,
+    size: "small" as WidgetSize,
+    minSize: "small" as WidgetSize,
+  },
+  {
     id: "monthly-usage",
     type: "stat",
     title: "Monthly Usage",
@@ -231,6 +239,17 @@ export default function WidgetManager({
               <p className="text-sm text-muted-foreground mb-1">Average Rating</p>
               <p className="text-2xl font-bold">{data?.averageRating?.toFixed(1) || "0.0"}</p>
               <p className="text-xs text-muted-foreground">Across your published prompts</p>
+            </div>
+            {widgetType.icon}
+          </div>
+        )
+      case "bounce-rate":
+        return (
+          <div className="flex items-center justify-between h-full">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Average Bounce Rate</p>
+              <p className="text-2xl font-bold text-orange-600">{data?.averageBounceRate?.toFixed(1) || "0.0"}%</p>
+              <p className="text-xs text-muted-foreground">Views without engagement</p>
             </div>
             {widgetType.icon}
           </div>

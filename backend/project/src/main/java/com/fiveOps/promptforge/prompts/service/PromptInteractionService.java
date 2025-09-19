@@ -5,6 +5,7 @@ import com.fiveOps.promptforge.prompts.model.PromptInteraction;
 import com.fiveOps.promptforge.prompts.repository.PromptInteractionRepository;
 import com.fiveOps.promptforge.user_profile.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ public class PromptInteractionService {
     private com.fiveOps.promptforge.notifications.service.NotificationService notificationService;
 
     @Autowired(required = false)
+    @Lazy
     public void setNotificationService(
             com.fiveOps.promptforge.notifications.service.NotificationService notificationService) {
         this.notificationService = notificationService;
