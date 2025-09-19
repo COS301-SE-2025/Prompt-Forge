@@ -18,7 +18,7 @@ public class NotificationDto {
 
     public NotificationDto(Long id, UUID promptId, String type, String title, 
                           String message, Boolean isRead, LocalDateTime createdAt, 
-                          LocalDateTime readAt, String metadata) {
+                          LocalDateTime readAt) {
         this.id = id;
         this.promptId = promptId;
         this.type = type;
@@ -27,6 +27,12 @@ public class NotificationDto {
         this.isRead = isRead;
         this.createdAt = createdAt;
         this.readAt = readAt;
+    }
+    
+    public NotificationDto(Long id, UUID promptId, String type, String title, 
+                          String message, Boolean isRead, LocalDateTime createdAt, 
+                          LocalDateTime readAt, String metadata) {
+        this(id, promptId, type, title, message, isRead, createdAt, readAt);
         this.metadata = metadata;
     }
 
