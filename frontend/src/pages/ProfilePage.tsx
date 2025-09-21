@@ -3,22 +3,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { MyPrompt } from '@/Models/MyPrompt';
-// import WidgetManager, { type Widget } from "@/components/WidgetManager"
 import { dashProfileService } from '../services/dashprofileService';
 
 
-// Category breakdown widget
 import { PromptCard } from '@/components/PromptCard';
+import { SocialAPI } from '@/services/socialService';
 
-
-
-type DashboardData = {
-  monthlyUsage: number
-  totalDownloads: number
-  averageRating: number
-  totalPrompts: number
-  topPrompts: any[]
-}
 
 type UserProfile = {
   userId: string
@@ -305,6 +295,31 @@ export default function ProfilePage() {
     setLoadingTopUserPrompts(false)
   }, [myPrompts, avgRatingMap])
 
+  const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
+    try {
+      if (isCurrentlyFollowing) {
+        await SocialAPI.unfollowUser(userId);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: !prev.isFollowing,
+          followersCount: prev.followersCount - 1
+        }));
+      } else {
+        await SocialAPI.followUser(userId);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: !prev.isFollowing,
+          followersCount: prev.followersCount + 1
+        }));
+      }
+    }
+    catch (error) {
+      console.error('Failed to follow/unfollow user:', error);
+      setError('Failed to update follow status. Please try again.');
+    }
+  }
+
+
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -406,6 +421,20 @@ export default function ProfilePage() {
             >
               {username}
             </h3>
+
+            <div className="flex space-x-2 my-3">
+              <Button
+                size="sm"
+                variant={userProfile.isFollowing ? "outline" : "default"}
+                className={`px-6 flex-1 ${userProfile.isFollowing
+                  ? "hover:border-[#3ebb9e] hover:text-[#3ebb9e]"
+                  : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                  } transition-colors duration-300`}
+                onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
+              >
+                {userProfile.isFollowing ? "Following" : "Follow"}
+              </Button>
+            </div>
             
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
               <div className="text-center">
