@@ -290,6 +290,37 @@ public class UserController {
     return ResponseEntity.ok(cardData);
   }
 
+  @GetMapping("/profile/{username}")
+  public ResponseEntity<Map<String, Object>> getUserData(
+      @PathVariable String username, HttpServletRequest request) {
+    // String email = extractEmailFromCookie(request);
+    
+    UserDto user = userService.getUserByUsername(username);
+
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+    }
+
+    Map<String, Object> cardData =
+        Map.of(
+            "userId",
+            user.getUserId() != null ? user.getUserId() : "",
+            "username",
+            user.getUsername() != null ? user.getUsername() : "",
+            "bio",
+            user.getBio() != null ? user.getBio() : "",
+            "profilePicture",
+            user.getProfilePicture() != null ? user.getProfilePicture() : "",
+            "followersCount",
+            user.getFollowers() == null ? 0 : user.getFollowers().size(),
+            "followingCount",
+            user.getFollowing() == null ? 0 : user.getFollowing().size(),
+            "badges",
+            user.getBadges() == null ? List.of() : user.getBadges());
+
+    return ResponseEntity.ok(cardData);
+  }
+
   @GetMapping("/me/full")
   public ResponseEntity<UserDto> getFullCurrentUser(HttpServletRequest request) {
     String email = extractEmailFromCookie(request);
