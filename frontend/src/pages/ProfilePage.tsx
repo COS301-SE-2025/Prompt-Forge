@@ -8,6 +8,7 @@ import { dashProfileService } from '../services/dashprofileService';
 
 import { PromptCard } from '@/components/PromptCard';
 import { SocialAPI } from '@/services/socialService';
+import { FullScreenSpinner } from '@/components/FullScreenSpinner';
 
 
 type UserProfile = {
@@ -61,41 +62,12 @@ export default function ProfilePage() {
   const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
   const [publicPromptCount, setPublicPromptCount] = useState<number>(0)
   // Dashboard
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Top user prompts (by avgRating)
-  const [topUserPrompts, setTopUserPrompts] = useState<(MyPrompt & { avgRating: number })[]>([])
-  const [loadingTopUserPrompts, setLoadingTopUserPrompts] = useState(true)
 
   //Pagination
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
-
-  // Fetch category breakdown
-  useEffect(() => {
-    const fetchCategoryBreakdown = async () => {
-      setLoadingCategoryBreakdown(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/dashboard/category-breakdown`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setCategoryBreakdown(data);
-        } else {
-          setCategoryBreakdown({});
-        }
-      } catch {
-        setCategoryBreakdown({});
-      }
-      setLoadingCategoryBreakdown(false);
-    };
-    if (isAuthenticated) fetchCategoryBreakdown();
-  }, [isAuthenticated]);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -127,6 +99,7 @@ export default function ProfilePage() {
         const profile: UserProfile = await dashProfileService.getDashboardProfileByUsername(username || "")
         console.log("profile", profile);
         setUserProfile(profile)
+        setLoading(false);
       }
       catch (error) {
         console.error('Failed to fetch user profile:', error)
@@ -210,39 +183,6 @@ export default function ProfilePage() {
     fetchMyPrompts()
   }, [isAuthenticated, navigate, currentPage])
 
-  // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!isAuthenticated) return
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await fetch(`${API_BASE_URL}/dashboard`, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setDashboard(data)
-        } else if (response.status === 401) {
-          localStorage.removeItem("username")
-          localStorage.removeItem("userId")
-          setIsAuthenticated(false)
-          navigate("/login")
-          return
-        } else {
-          throw new Error(`Failed to fetch dashboard data: ${response.status}`)
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load dashboard")
-      } finally {
-        setLoading(false)
-      }
-    }
-    if (isAuthenticated) fetchDashboardData()
-  }, [isAuthenticated, navigate])
-
   // Fetch avgRating for each prompt
   useEffect(() => {
     const fetchRatings = async () => {
@@ -275,26 +215,6 @@ export default function ProfilePage() {
     fetchRatings()
   }, [myPrompts])
 
-  // Compute top user prompts (by avgRating, descending)
-  useEffect(() => {
-    setLoadingTopUserPrompts(true)
-    if (!myPrompts.length) {
-      setTopUserPrompts([])
-      setLoadingTopUserPrompts(false)
-      return
-    }
-    const promptsWithRating = myPrompts.map((p) => ({
-      ...p,
-      avgRating: avgRatingMap[p.id] ?? 0,
-    }))
-    const sorted = promptsWithRating
-      .filter((p) => p.avgRating > 0)
-      .sort((a, b) => b.avgRating - a.avgRating || b.uses - a.uses)
-      .slice(0, 5)
-    setTopUserPrompts(sorted)
-    setLoadingTopUserPrompts(false)
-  }, [myPrompts, avgRatingMap])
-
   const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
     try {
       if (isCurrentlyFollowing) {
@@ -322,34 +242,19 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
+      <FullScreenSpinner content="Checking authentication"/>
     )
   }
-
+  
   if (!isAuthenticated) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Redirecting to login...</p>
-        </div>
-      </div>
+      <FullScreenSpinner content="Redirecting to login"/>
     )
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
+      <FullScreenSpinner content="Loading profile"/>
     )
   }
 
@@ -367,7 +272,7 @@ export default function ProfilePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium mb-2">Error Loading Dashboard</h3>
+          <h3 className="text-lg font-medium mb-2">Error Loading Profile</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => window.location.reload()} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
             Try Again
@@ -377,7 +282,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!dashboard) {
+  if (userProfile.userId === "") {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
@@ -391,7 +296,7 @@ export default function ProfilePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium mb-2">No Dashboard Data</h3>
+          <h3 className="text-lg font-medium mb-2">No Profile Data</h3>
           <p className="text-muted-foreground mb-4">Unable to load dashboard information</p>
           <Button onClick={() => window.location.reload()} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
             Refresh Page
@@ -483,9 +388,6 @@ export default function ProfilePage() {
               ) : myPrompts.length === 0 ? (
                 <div className="col-span-full text-center py-8">
                   <p className="text-muted-foreground mb-4">No Prompts Yet.</p>
-                  <Link to="/submit">
-                    <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">Create Your First Prompt</Button>
-                  </Link>
                 </div>
               ) : (
                 myPrompts.map((prompt, idx) => {
