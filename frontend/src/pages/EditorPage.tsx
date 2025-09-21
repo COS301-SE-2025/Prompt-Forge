@@ -2,7 +2,7 @@
 
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings, Sparkles } from "lucide-react"
+import { Save, History, HelpCircle, Copy, Download, RotateCcw, Play, Check, Star, Image, ImagePlus, Settings, Sparkles, Wand2 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { ChevronUp, ChevronDown } from "lucide-react"
@@ -1010,10 +1010,10 @@ const fallbackToWorkingModel = async () => {
                 title="Optimize Prompt"
                 size="icon"
                 onClick={() => {
-                  navigate(`/optimizer?prompt=${encodeURIComponent(promptText)}`);
+                  navigate(`/wizard?prompt=${encodeURIComponent(promptText)}`);
                 }}
               >
-                <Sparkles className="h-4 w-4" />
+                <Wand2 className="h-4 w-4" />
               </Button>
               <Button 
                 variant="ghost" 

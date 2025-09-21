@@ -817,7 +817,7 @@ export default function OptimizerWizard() {
                     value={wizardData.originalPrompt}
                     onChange={(e) => updateWizardData("originalPrompt", e.target.value)}
                     placeholder="Example: Write a marketing email for our new product launch. Make it engaging and persuasive."
-                    className="min-h-[150px] text-base bg-white dark:bg-gray-800 border-2 border-[#3ebb9e]/30 focus:border-[#3ebb9e] transition-all duration-300 rounded-lg resize-none"
+                    className="min-h-[150px] text-base bg-white dark:bg-gray-800 border-2 border-[#3ebb9e]/30 focus:border-[#3ebb9e] transition-all duration-300 rounded-lg resize-none placeholder:text-muted-foreground/50"
                   />
                 </div>
 
@@ -1003,7 +1003,7 @@ export default function OptimizerWizard() {
                       value={wizardData.goals.targetAudience}
                       onChange={(e) => updateWizardData("goals", { targetAudience: e.target.value })}
                       placeholder="e.g., Marketing professionals, Students, General public"
-                      className="bg-white dark:bg-gray-800 border-2 border-[#3ebb9e]/30 focus:border-[#3ebb9e] h-12 text-base"
+                      className="bg-white dark:bg-gray-800 border-2 border-[#3ebb9e]/30 focus:border-[#3ebb9e] h-12 text-base placeholder:text-muted-foreground/50"
                     />
                   </div>
 
@@ -1479,7 +1479,7 @@ export default function OptimizerWizard() {
                       value={wizardData.context.useCase}
                       onChange={(e) => updateWizardData("context", { useCase: e.target.value })}
                       placeholder="e.g., Product launch email, Technical documentation, Training material"
-                      className="bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 h-12 text-base"
+                      className="bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 h-12 text-base placeholder:text-muted-foreground/50"
                     />
                   </div>
 
@@ -1489,7 +1489,7 @@ export default function OptimizerWizard() {
                       value={wizardData.context.additionalContext}
                       onChange={(e) => updateWizardData("context", { additionalContext: e.target.value })}
                       placeholder="Provide any additional background information, constraints, or specific requirements..."
-                      className="min-h-[120px] bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 resize-none"
+                      className="min-h-[120px] bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 focus:border-orange-400 resize-none placeholder:text-muted-foreground/50"
                     />
                   </div>
 
@@ -1506,7 +1506,7 @@ export default function OptimizerWizard() {
                               updateWizardData("context", { requirements: newReqs })
                             }}
                             placeholder="Enter a requirement"
-                            className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700"
+                            className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700 placeholder:text-muted-foreground/50"
                           />
                           <Button
                             variant="ghost"
@@ -1839,7 +1839,7 @@ export default function OptimizerWizard() {
                     }}
                   />
                 </div>
-                <h1 className="sm:text-4xl font-medium bg-gradient-to-r from-[#3ebb9e] via-[#4079ff] to-purple-600 bg-clip-text text-transparent tracking-tight">
+                <h1 className="sm:text-4xl font-medium bg-gradient-to-r from-[#3ebb9e] via-[#4079ff] to-purple-600 bg-clip-text text-transparent tracking-tight text-left">
                   Prompt Optimizer Wizard
                 </h1>
               </div>
@@ -1863,7 +1863,7 @@ export default function OptimizerWizard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate("/editor")}
-                  className="border border-gray-300 hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 h-10 px-4 rounded-lg transition-all duration-300"
+                  className="border border-gray-600 hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 h-10 px-4 rounded-lg transition-all duration-300"
                   title="Back to Editor"
                 >
                   <X className="h-4 w-4" />
