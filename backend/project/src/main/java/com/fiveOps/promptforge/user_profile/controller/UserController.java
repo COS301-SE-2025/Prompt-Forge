@@ -290,11 +290,19 @@ public class UserController {
     return ResponseEntity.ok(cardData);
   }
 
-  @GetMapping("/profile/{username}")
+@GetMapping("/profile/{username}")
   public ResponseEntity<Map<String, Object>> getUserData(
-      @PathVariable String username, HttpServletRequest request) {
+      @PathVariable String username, Authentication authentication) {
     // String email = extractEmailFromCookie(request);
-    
+    if (authentication == null
+        || authentication.getName() == null
+        || authentication.getName().trim().equals("")) {
+      return ResponseEntity.status(401).build();
+    }
+
+    String userEmail = authentication.getName();
+    UUID currentUserId = userService.getUserIdByEmail(userEmail);
+
     UserDto user = userService.getUserByUsername(username);
 
     if (user == null) {
@@ -316,7 +324,12 @@ public class UserController {
             "followingCount",
             user.getFollowing() == null ? 0 : user.getFollowing().size(),
             "badges",
-            user.getBadges() == null ? List.of() : user.getBadges());
+            user.getBadges() == null ? List.of() : user.getBadges(),
+            "isFollowing",
+            user.getFollowers().indexOf(currentUserId) != -1,
+            "isFollowedBy",
+            user.getFollowing().indexOf(currentUserId) != -1
+        );
 
     return ResponseEntity.ok(cardData);
   }
