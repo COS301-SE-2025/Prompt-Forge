@@ -814,7 +814,6 @@ export default function SocialPage() {
                   size="sm"
                   onClick={() => changePage("discover", Math.max(1, currentPage.discover - 1))}
                   disabled={currentPage.discover === 1}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Previous
                 </Button>
@@ -838,8 +837,7 @@ export default function SocialPage() {
                       size="sm"
                       className={`min-w-[2.5rem] rounded-lg ${
                         currentPage.discover === pageNumber
-                          ? "bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white shadow-lg"
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
                       }`}
                       onClick={() => changePage("discover", pageNumber)}
                     >
@@ -851,7 +849,6 @@ export default function SocialPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                   onClick={() => changePage("discover", Math.min(totalPages.discover, currentPage.discover + 1))}
                   disabled={currentPage.discover === totalPages.discover}
                 >
@@ -916,7 +913,6 @@ export default function SocialPage() {
                   size="sm"
                   onClick={() => changePage("following", Math.max(1, currentPage.following - 1))}
                   disabled={currentPage.following === 1}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Previous
                 </Button>
@@ -940,8 +936,7 @@ export default function SocialPage() {
                       size="sm"
                       className={`min-w-[2.5rem] rounded-lg ${
                         currentPage.following === pageNumber
-                          ? "bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white shadow-lg"
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
                       }`}
                       onClick={() => changePage("following", pageNumber)}
                     >
@@ -955,7 +950,6 @@ export default function SocialPage() {
                   size="sm"
                   onClick={() => changePage("following", Math.min(totalPages.following, currentPage.following + 1))}
                   disabled={currentPage.following === totalPages.following}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Next
                 </Button>
@@ -1012,7 +1006,6 @@ export default function SocialPage() {
                   size="sm"
                   onClick={() => changePage("followers", Math.max(1, currentPage.followers - 1))}
                   disabled={currentPage.followers === 1}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Previous
                 </Button>
@@ -1036,8 +1029,7 @@ export default function SocialPage() {
                       size="sm"
                       className={`min-w-[2.5rem] rounded-lg ${
                         currentPage.followers === pageNumber
-                          ? "bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white shadow-lg"
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
                       }`}
                       onClick={() => changePage("followers", pageNumber)}
                     >
@@ -1051,7 +1043,6 @@ export default function SocialPage() {
                   size="sm"
                   onClick={() => changePage("followers", Math.min(totalPages.followers, currentPage.followers + 1))}
                   disabled={currentPage.followers === totalPages.followers}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Next
                 </Button>
