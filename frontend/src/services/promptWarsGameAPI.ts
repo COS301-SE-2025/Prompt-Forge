@@ -4,14 +4,23 @@ export interface GameResponse {
   id: string;
   player1Id: string;
   player2Id: string;
+  gameType?: 'PROMPT_CREATION' | 'REVERSE_PROMPT';
   gameState: 'WAITING' | 'SCENARIO' | 'WRITING' | 'RATING' | 'RESULTS' | 'FINISHED' | 'CANCELLED';
   scenario?: string;
+  // Classic prompt battle fields
   startedAt?: string;
   endedAt?: string;
   winnerId?: string;
   player1Score?: number;
   player2Score?: number;
   ratingExplanation?: string;
+  // Reverse prompt battle fields
+  questionNumber?: number;
+  currentQuestion?: string;
+  currentOutput?: string;
+  currentOptions?: string; // JSON string
+  player1CorrectAnswers?: number;
+  player2CorrectAnswers?: number;
   createdAt: string;
 }
 
@@ -46,6 +55,26 @@ export interface PromptSubmissionRequest {
 export interface RatingRequest {
   rating: number;
   explanation: string;
+}
+
+export interface QuestionResponse {
+  question: string;
+  output: string;
+  options: string; // JSON string array
+  questionNumber: number;
+  gameState: string;
+}
+
+export interface AnswerRequest {
+  answer: string; // A, B, C, or D
+}
+
+export interface AnswerResponse {
+  gameState: string;
+  player1Score: number;
+  player2Score: number;
+  questionNumber: number;
+  answersSubmitted: boolean;
 }
 
 export class PromptWarsGameAPI {
@@ -185,6 +214,34 @@ export class PromptWarsGameAPI {
     if (!response.ok) {
       throw new Error(`Failed to forfeit game: ${response.statusText}`);
     }
+  }
+
+  // Reverse Prompt Battle methods
+  async generateQuestion(gameId: string): Promise<QuestionResponse> {
+    const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/generate-question`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate question: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async submitAnswer(gameId: string, request: AnswerRequest): Promise<AnswerResponse> {
+    const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/submit-answer`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to submit answer: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 }
 

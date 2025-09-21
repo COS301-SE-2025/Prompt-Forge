@@ -6,4 +6,6 @@ numpy
 scikit-learn
 joblib
 huggingface-hub
+openai
+python-dotenv
 

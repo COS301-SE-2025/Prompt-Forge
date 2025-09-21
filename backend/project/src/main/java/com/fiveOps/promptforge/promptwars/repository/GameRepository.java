@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fiveOps.promptforge.promptwars.model.Game;
 import com.fiveOps.promptforge.promptwars.model.GameState;
@@ -52,4 +54,15 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
           + "ORDER BY g.createdAt DESC")
   List<Game> findGamesBetweenPlayers(
       @Param("player1") UUID player1, @Param("player2") UUID player2);
+
+  // Atomically update the game state only if it currently matches the expected state.
+  @Modifying
+  @Transactional
+  @Query(
+      "UPDATE Game g SET g.gameState = :newState "
+          + "WHERE g.id = :id AND g.gameState = :expectedState")
+  int updateGameStateIf(
+      @Param("id") UUID id,
+      @Param("expectedState") GameState expectedState,
+      @Param("newState") GameState newState);
 }
