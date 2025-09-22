@@ -282,18 +282,17 @@ export default function WidgetManager({
       case "bounce-rate":
         const bounceRate = data?.averageBounceRate || 0;
         const getBounceRateColor = (rate: number) => {
-          if (rate >= 80) return "text-green-600";      // 80-100% = Excellent
-          if (rate >= 60) return "text-yellow-600";     // 60-79% = Good  
-          if (rate >= 40) return "text-orange-600";     // 40-59% = Fair
-          if (rate > 0) return "text-red-600";          // 1-39% = Poor
-          return "text-red-600";                        // 0% = Needs improvement
+          if (rate <= 40) return "text-green-600";      // 0-40% = Excellent (low bounce rate)
+          if (rate <= 55) return "text-yellow-600";     // 41-55% = Good (moderate bounce rate)
+          if (rate <= 70) return "text-orange-600";     // 56-70% = Fair (high bounce rate)
+          return "text-red-600";                        // 71%+ = Poor (very high bounce rate)
         };
         
         const getBounceRateGradient = (rate: number) => {
-          if (rate >= 80) return "from-green-500/20 to-green-600/30";      // Excellent
-          if (rate >= 60) return "from-yellow-500/20 to-yellow-600/30";    // Good
-          if (rate >= 40) return "from-orange-500/20 to-orange-600/30";    // Fair  
-          return "from-red-500/20 to-red-600/30";                          // Poor/Needs improvement
+          if (rate <= 40) return "from-green-500/20 to-green-600/30";      // Excellent
+          if (rate <= 55) return "from-yellow-500/20 to-yellow-600/30";    // Good
+          if (rate <= 70) return "from-orange-500/20 to-orange-600/30";    // Fair  
+          return "from-red-500/20 to-red-600/30";                          // Poor
         };
         
         // Note: Bounce rate should be INVERSE of engagement
@@ -531,15 +530,15 @@ export default function WidgetManager({
               <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    correctedBounceRate >= 80 ? "bg-green-500" :      // 80-100% = Excellent
-                    correctedBounceRate >= 60 ? "bg-yellow-500" :     // 60-79% = Good
-                    correctedBounceRate >= 40 ? "bg-orange-500" :     // 40-59% = Fair
-                    "bg-red-500"                                      // 0-39% = Needs improvement
+                    correctedBounceRate <= 40 ? "bg-green-500" :      // 0-40% = Excellent (low bounce rate)
+                    correctedBounceRate <= 55 ? "bg-yellow-500" :     // 41-55% = Good (moderate bounce rate)
+                    correctedBounceRate <= 70 ? "bg-orange-500" :     // 56-70% = Fair (high bounce rate)
+                    "bg-red-500"                                      // 71%+ = Poor (very high bounce rate)
                   }`} />
                   <span className="text-xs text-muted-foreground">
-                    {correctedBounceRate >= 80 ? "Excellent engagement" :
-                     correctedBounceRate >= 60 ? "Good engagement" :
-                     correctedBounceRate >= 40 ? "Fair engagement" : "Engagement needs improvement"}
+                    {correctedBounceRate <= 40 ? "Excellent engagement" :
+                     correctedBounceRate <= 55 ? "Good engagement" :
+                     correctedBounceRate <= 70 ? "Fair engagement" : "Engagement needs improvement"}
                   </span>
                 </div>
                 {correctedBounceRate !== bounceRate && (
