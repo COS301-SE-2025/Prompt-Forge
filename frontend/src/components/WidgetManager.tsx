@@ -385,19 +385,12 @@ export default function WidgetManager({
         });
         
         // Function to get dynamic color based on engagement level
-        const getEngagementColor = (rate: number, type: string) => {
-          if (type === "Views") {
-            // Views color based on engagement rate (higher = better)
-            if (rate >= 70) return "bg-green-500"; // Excellent engagement
-            if (rate >= 50) return "bg-yellow-500"; // Good engagement
-            if (rate >= 30) return "bg-orange-500"; // Fair engagement
-            return "bg-red-500"; // Poor engagement
-          }
-          // For cart adds and purchases, use performance-based colors
-          if (rate >= 15) return "bg-green-500"; // Excellent
-          if (rate >= 10) return "bg-yellow-500"; // Good
-          if (rate >= 5) return "bg-orange-500";  // Fair
-          return "bg-red-500"; // Poor
+        const getEngagementColor = (rate: number) => {
+          // Unified color coding for all components based on performance
+          if (rate >= 70) return "bg-green-500"; // Excellent performance (70%+)
+          if (rate >= 50) return "bg-yellow-500"; // Good performance (50-69%)
+          if (rate >= 30) return "bg-orange-500"; // Fair performance (30-49%)
+          return "bg-red-500"; // Poor performance (<30%)
         };
         
         // Enhanced color calculation for better visual feedback
@@ -415,7 +408,7 @@ export default function WidgetManager({
             value: viewsBarWidth, // Bar width shows engagement rate
             count: totalViews,
             percentage: `${engagementRate.toFixed(1)}%`, // Views that didn't bounce = engagement rate
-            color: getEngagementColor(engagementRate, "Views"),
+            color: getEngagementColor(engagementRate),
             intensity: getBarIntensity(engagementRate)
           },
           { 
@@ -423,7 +416,7 @@ export default function WidgetManager({
             value: cartAddsBarWidth, // Bar width matches percentage shown
             count: totalCartAdds,
             percentage: `${viewToCartRate.toFixed(1)}%`, // Text shows conversion rate from backend
-            color: getEngagementColor(viewToCartRate, "Cart"),
+            color: getEngagementColor(viewToCartRate),
             intensity: getBarIntensity(viewToCartRate)
           },
           { 
@@ -431,7 +424,7 @@ export default function WidgetManager({
             value: purchasesBarWidth, // Bar width matches percentage shown
             count: totalPurchases, 
             percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
-            color: getEngagementColor(cartToPurchaseRate, "Purchase"),
+            color: getEngagementColor(cartToPurchaseRate),
             intensity: getBarIntensity(cartToPurchaseRate)
           },
         ];
