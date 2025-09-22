@@ -514,17 +514,22 @@ export default function WidgetManager({
               <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    bounceRate >= 80 ? "bg-green-500" :      // 80-100% = Excellent
-                    bounceRate >= 60 ? "bg-yellow-500" :     // 60-79% = Good
-                    bounceRate >= 40 ? "bg-orange-500" :     // 40-59% = Fair
-                    "bg-red-500"                             // 0-39% = Needs improvement
+                    correctedBounceRate >= 80 ? "bg-green-500" :      // 80-100% = Excellent
+                    correctedBounceRate >= 60 ? "bg-yellow-500" :     // 60-79% = Good
+                    correctedBounceRate >= 40 ? "bg-orange-500" :     // 40-59% = Fair
+                    "bg-red-500"                                      // 0-39% = Needs improvement
                   }`} />
                   <span className="text-xs text-muted-foreground">
-                    {bounceRate >= 80 ? "Excellent engagement" :
-                     bounceRate >= 60 ? "Good engagement" :
-                     bounceRate >= 40 ? "Fair engagement" : "Engagement needs improvement"}
+                    {correctedBounceRate >= 80 ? "Excellent engagement" :
+                     correctedBounceRate >= 60 ? "Good engagement" :
+                     correctedBounceRate >= 40 ? "Fair engagement" : "Engagement needs improvement"}
                   </span>
                 </div>
+                {correctedBounceRate !== bounceRate && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    (Corrected from {bounceRate.toFixed(1)}% based on engagement data)
+                  </div>
+                )}
               </div>
             </div>
           </div>
