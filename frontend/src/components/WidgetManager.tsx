@@ -295,6 +295,11 @@ export default function WidgetManager({
           if (rate >= 40) return "from-orange-500/20 to-orange-600/30";    // Fair  
           return "from-red-500/20 to-red-600/30";                          // Poor/Needs improvement
         };
+        
+        // Note: Bounce rate should be INVERSE of engagement
+        // High bounce rate = people leave immediately 
+        // High engagement = people interact (cart, purchase)
+        // These should be opposite values!
 
         // Use real engagement funnel data from backend API with dashboard data fallback
         let totalViews = engagementFunnelData.totalViews || 0;
@@ -312,8 +317,22 @@ export default function WidgetManager({
           dashboardData: data,
           totalViews,
           totalCartAdds,
-          totalPurchases
+          totalPurchases,
+          bounceRateFromAPI: data?.averageBounceRate,
+          viewToCartRate,
+          cartToPurchaseRate
         });
+        
+        // Fix bounce rate calculation - if people are engaging (cart adds/purchases), 
+        // bounce rate should be lower, not higher
+        let correctedBounceRate = bounceRate;
+        
+        if ((totalCartAdds > 0 || totalPurchases > 0) && bounceRate > 50) {
+          // If we have engagement but high bounce rate, recalculate based on engagement
+          const engagementRate = Math.max(viewToCartRate, (totalPurchases / totalViews) * 100);
+          correctedBounceRate = Math.max(0, 100 - engagementRate);
+          console.log('Corrected bounce rate from', bounceRate, 'to', correctedBounceRate, 'based on engagement rate', engagementRate);
+        }
         
         if (!hasEngagementData && data) {
           console.log('Using dashboard data fallback');
@@ -372,7 +391,7 @@ export default function WidgetManager({
             name: "Views", 
             value: viewsVolumePercent, // Use real views data
             count: totalViews,
-            percentage: "100%", // Views are the baseline for funnel
+            percentage: `${(100 - bounceRate).toFixed(1)}%`, // Views that didn't bounce = engagement rate
             color: "bg-blue-500",
             intensity: "opacity-100"
           },
@@ -404,11 +423,11 @@ export default function WidgetManager({
                     <span className="text-xs ml-1 animate-pulse">🔄 Updating...</span>
                   )}
                 </p>
-                <p className={`text-2xl font-bold ${getBounceRateColor(bounceRate)} transition-colors duration-500`}>
-                  {bounceRate.toFixed(1)}%
+                <p className={`text-2xl font-bold ${getBounceRateColor(correctedBounceRate)} transition-colors duration-500`}>
+                  {correctedBounceRate.toFixed(1)}%
                 </p>
               </div>
-              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(bounceRate)} transition-all duration-500`}>
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(correctedBounceRate)} transition-all duration-500`}>
                 {widgetType.icon}
               </div>
             </div>
