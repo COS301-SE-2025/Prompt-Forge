@@ -5,27 +5,43 @@ from models import (
     GoalBasedRequest, GoalOptimizationResponse, StructureBasedRequest, StructureOptimizationResponse,
     ContextBasedRequest, ContextOptimizationResponse, TokenValidationResponse
 )
-from metrics_analyzer import PromptMetricsAnalyzer
+from metrics_analyzer import EnhancedPromptMetricsAnalyzer
 
-# Initialize analyzer
-analyzer = PromptMetricsAnalyzer()
+# Initialize enhanced analyzer with rubric system
+analyzer = EnhancedPromptMetricsAnalyzer()
 
 def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "prompt-optimizer-qwen-metrics"}
+    return {"status": "healthy", "service": "enhanced-prompt-optimizer-with-rubric"}
 
 def read_root():
     """Root endpoint"""
-    return {"message": "Prompt Optimizer API with Qwen and Metrics Analysis is running."}
+    return {
+        "message": "Enhanced Prompt Optimizer API with Standardized Rubric System",
+        "version": "2.0",
+        "features": [
+            "Standardized rubric-based evaluation",
+            "Consistency validation",
+            "Deterministic scoring",
+            "AI-powered optimization with fallbacks"
+        ]
+    }
 
 async def analyze_prompt_metrics(request: PromptRequest):
-    """Analyze prompt metrics without generating suggestions"""
+    """Analyze prompt metrics using standardized rubric system"""
     try:
         if not request.text or request.text.strip() == "":
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
         
-        logger.info(f"Analyzing prompt: {request.text[:100]}...")
-        analysis = analyzer.analyze_prompt_comprehensive(request.text)
+        logger.info(f"Analyzing prompt with rubric system: {request.text[:100]}...")
+        
+        # Use enhanced analyzer with rubric system
+        # Enable consistency validation for analysis endpoint
+        analysis = analyzer.analyze_prompt_comprehensive(
+            request.text, 
+            validate_consistency=True,
+            num_consistency_runs=3
+        )
         
         return AnalysisResponse(
             prompt=request.text,
@@ -37,42 +53,114 @@ async def analyze_prompt_metrics(request: PromptRequest):
             rating=analysis["rating"],
             rating_explanation=analysis["rating_explanation"]
         )
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Analysis failed: {e}", exc_info=True)
+        logger.error(f"Enhanced analysis failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Analysis service temporarily unavailable")
 
 async def optimize_prompt(request: PromptRequest):
-    """Optimize prompt using basic optimization (legacy endpoint)"""
+    """Basic prompt optimization (legacy endpoint with enhanced analysis)"""
     try:
         if not request.text or request.text.strip() == "":
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
         
-        logger.info(f"Basic optimization for prompt: {request.text[:100]}...")
+        logger.info(f"Basic optimization with enhanced analysis: {request.text[:100]}...")
         
-        # For basic optimization, create simple rule-based suggestions
-        suggestions = create_basic_optimization_suggestions(request.text)
+        # Use enhanced analyzer for initial assessment
+        analysis = analyzer.analyze_prompt_comprehensive(request.text)
+        
+        # Create rule-based suggestions based on rubric analysis
+        suggestions = create_enhanced_optimization_suggestions(request.text, analysis)
         
         # Determine source based on whether we got AI suggestions or fallback
-        source = "ai" if analyzer.qwen_client.token_validated and analyzer.qwen_client.get_available_models() else "fallback"
+        source = "enhanced_rubric" if analysis["rubric_analysis"] else "fallback"
         
         return OptimizationResponse(
             prompt=request.text, 
             suggestions=suggestions,
             source=source
         )
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Optimization failed: {e}", exc_info=True)
+        logger.error(f"Enhanced optimization failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Optimization service temporarily unavailable")
 
-def create_basic_optimization_suggestions(text: str):
-    """Create basic optimization suggestions"""
+def create_enhanced_optimization_suggestions(text: str, analysis: dict):
+    """Create optimization suggestions based on rubric analysis"""
     suggestions = []
     
-    # Check for common issues and suggest improvements
+    if not analysis or not analysis.get("rubric_analysis"):
+        # Fallback to basic suggestions
+        return create_basic_optimization_suggestions(text)
+    
+    rubric_analysis = analysis["rubric_analysis"]
+    criteria_scores = rubric_analysis.get("criteria_scores", {})
+    detailed_analysis = rubric_analysis.get("detailed_analysis", {})
+    
+    # Generate suggestions based on low-scoring criteria
+    for criterion_name, criterion_data in criteria_scores.items():
+        score = criterion_data.get("score", 0)
+        
+        if score < 70:  # Below good performance
+            if criterion_name == "clarity":
+                suggestions.append(OptimizationSuggestion(
+                    suggestion="Improve clarity by removing vague language",
+                    before="Contains unclear or ambiguous terms",
+                    after="Use specific, concrete language with clear action verbs",
+                    impact="Increases clarity score by 15-25 points"
+                ))
+                
+            elif criterion_name == "specificity":
+                suggestions.append(OptimizationSuggestion(
+                    suggestion="Add specific requirements and constraints",
+                    before="Generic request without details",
+                    after="Include format, length, audience, and specific deliverables",
+                    impact="Increases specificity score by 20-30 points"
+                ))
+                
+            elif criterion_name == "structure":
+                suggestions.append(OptimizationSuggestion(
+                    suggestion="Organize content with clear structure",
+                    before="Unstructured stream of text",
+                    after="Use headers, bullet points, numbered lists, and logical flow",
+                    impact="Increases structure score by 18-25 points"
+                ))
+                
+            elif criterion_name == "context":
+                suggestions.append(OptimizationSuggestion(
+                    suggestion="Provide background context and purpose",
+                    before="Request lacks situational context",
+                    after="Include background, purpose, use case, and constraints",
+                    impact="Increases context score by 20-30 points"
+                ))
+                
+            elif criterion_name == "actionability":
+                suggestions.append(OptimizationSuggestion(
+                    suggestion="Make the prompt more actionable",
+                    before="Unclear what specific actions to take",
+                    after="Include clear action verbs, deliverables, and step-by-step guidance",
+                    impact="Increases actionability score by 15-25 points"
+                ))
+    
+    # If no specific suggestions generated, provide general improvement
+    if not suggestions:
+        suggestions.append(OptimizationSuggestion(
+            suggestion="Apply general prompt improvements",
+            before="Prompt meets most criteria but could be enhanced",
+            after="Add minor refinements in clarity, structure, or specificity",
+            impact="Overall improvement of 5-10 points"
+        ))
+    
+    return suggestions[:4]  # Limit to top 4 suggestions
+
+def create_basic_optimization_suggestions(text: str):
+    """Fallback basic optimization suggestions"""
+    suggestions = []
+    
     if len(text.split()) < 10:
         suggestions.append(OptimizationSuggestion(
             suggestion="Add more detail and context",
@@ -100,23 +188,46 @@ def create_basic_optimization_suggestions(text: str):
     return suggestions
 
 async def optimize_prompt_with_goals(request: GoalBasedRequest):
-    """Optimize prompt using Qwen based on user goals and current metrics"""
+    """Optimize prompt using AI based on user goals with consistency validation"""
     try:
         if not request.text or request.text.strip() == "":
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
         
-        logger.info(f"Optimizing prompt with goals using Qwen: {request.text[:100]}...")
+        logger.info(f"Goal-based optimization with consistency validation: {request.text[:100]}...")
         
-        # First, analyze current metrics
+        # First, analyze current metrics using enhanced analyzer
         analysis = analyzer.analyze_prompt_comprehensive(request.text)
         current_metrics = analysis["metrics"]
         
-        # Then, generate goal-based optimization using Qwen
+        # Then, generate goal-based optimization using AI
         optimization_result = analyzer.generate_goal_optimization(
             request.text, 
             request.goals, 
             current_metrics
         )
+        
+        # Validate consistency of optimization if AI was used
+        if optimization_result.get("success") and optimization_result.get("optimized_prompt"):
+            try:
+                # Quick consistency check (fewer runs for performance)
+                comparison = analyzer.compare_prompts_with_validation(
+                    request.text,
+                    optimization_result["optimized_prompt"],
+                    validate_consistency=True
+                )
+                
+                # Log consistency results
+                if comparison.get("consistency_validation"):
+                    consistency_summary = comparison["consistency_validation"]["validation_summary"]
+                    logger.info(f"Optimization consistency: {consistency_summary['recommendation']}")
+                    
+                    # If optimization is not reliable, add warning
+                    if not consistency_summary.get("optimization_reliable", True):
+                        optimization_result["consistency_warning"] = "Optimization shows inconsistent results across multiple evaluations"
+                
+            except Exception as e:
+                logger.warning(f"Consistency validation failed: {e}")
+                optimization_result["consistency_warning"] = "Could not validate optimization consistency"
         
         return GoalOptimizationResponse(
             original_prompt=request.text,
@@ -126,61 +237,44 @@ async def optimize_prompt_with_goals(request: GoalBasedRequest):
             predicted_metrics=optimization_result["predicted_metrics"],
             key_changes=optimization_result["key_changes"],
             current_metrics=current_metrics,
-            used_ai=optimization_result["success"]  # True if Qwen was used, False if fallback
+            used_ai=optimization_result["success"]
         )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Goal-based optimization failed: {e}", exc_info=True)
+        logger.error(f"Enhanced goal-based optimization failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Goal-based optimization service temporarily unavailable")
 
 async def optimize_prompt_with_structure(request: StructureBasedRequest):
-    """Optimize prompt structure using Qwen based on selected options and current metrics"""
+    """Optimize prompt structure with consistency validation"""
     try:
-        logger.info("=== STRUCTURE OPTIMIZATION ENDPOINT CALLED ===")
+        logger.info("=== ENHANCED STRUCTURE OPTIMIZATION ENDPOINT ===")
         logger.info(f"Request text length: {len(request.text) if request.text else 0}")
         logger.info(f"Structure options: {request.structure_options}")
         
         # Validate request
-        if not request:
-            logger.error("No request object provided")
-            raise HTTPException(status_code=400, detail="Invalid request")
-            
-        if not hasattr(request, 'text') or not request.text:
-            logger.error("No text field in request or text is empty")
+        if not request or not hasattr(request, 'text') or not request.text:
             raise HTTPException(status_code=400, detail="Prompt text is required")
-            
+        
         if not hasattr(request, 'structure_options'):
-            logger.error("No structure_options field in request")
             raise HTTPException(status_code=400, detail="Structure options are required")
         
         if not request.text.strip():
-            logger.error("Empty prompt text provided")
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
         
-        logger.info(f"Optimizing prompt structure: {request.text[:100]}...")
+        logger.info(f"Enhanced structure optimization: {request.text[:100]}...")
         
-        # First, analyze current metrics
-        logger.info("Analyzing current metrics...")
+        # First, analyze current metrics using enhanced analyzer
         try:
             analysis = analyzer.analyze_prompt_comprehensive(request.text)
             current_metrics = analysis["metrics"]
-            logger.info(f"Current metrics: {current_metrics}")
+            logger.info(f"Current rubric-based metrics: {current_metrics}")
         except Exception as e:
             logger.error(f"Error analyzing metrics: {str(e)}")
-            # Use default metrics if analysis fails
-            current_metrics = {
-                "clarity": 50,
-                "specificity": 50,
-                "structure": 50,
-                "context": 50,
-                "overall": 50
-            }
-            logger.warning("Using default metrics due to analysis error")
+            current_metrics = {"clarity": 50, "specificity": 50, "structure": 50, "context": 50, "overall": 50}
         
-        # Then, generate structure-based optimization
-        logger.info("Starting structure optimization...")
+        # Generate structure-based optimization
         try:
             structure_result = analyzer.generate_structure_optimization(
                 request.text, 
@@ -188,18 +282,36 @@ async def optimize_prompt_with_structure(request: StructureBasedRequest):
                 current_metrics
             )
             
-            logger.info("=== STRUCTURE OPTIMIZATION RESULT ===")
+            # If structure optimization was successful, validate consistency
+            if structure_result.get("success") and structure_result.get("structured_prompt"):
+                try:
+                    logger.info("Validating structure optimization consistency...")
+                    comparison = analyzer.compare_prompts_with_validation(
+                        request.text,
+                        structure_result["structured_prompt"],
+                        validate_consistency=True
+                    )
+                    
+                    if comparison.get("consistency_validation"):
+                        consistency_summary = comparison["consistency_validation"]["validation_summary"]
+                        logger.info(f"Structure optimization consistency: {consistency_summary['recommendation']}")
+                        
+                        # Add consistency information to result
+                        structure_result["consistency_validated"] = consistency_summary.get("optimization_reliable", True)
+                        structure_result["consistency_note"] = consistency_summary["recommendation"]
+                
+                except Exception as e:
+                    logger.warning(f"Structure consistency validation failed: {e}")
+                    structure_result["consistency_validated"] = False
+                    structure_result["consistency_note"] = "Could not validate consistency"
+            
+            logger.info("=== ENHANCED STRUCTURE OPTIMIZATION RESULT ===")
             logger.info(f"Success: {structure_result.get('success', False)}")
             logger.info(f"Structure score: {structure_result.get('structure_score', 0)}")
-            logger.info(f"Improvements count: {len(structure_result.get('structural_improvements', []))}")
+            logger.info(f"Consistency validated: {structure_result.get('consistency_validated', False)}")
             
         except Exception as e:
             logger.error(f"Error in structure optimization: {str(e)}")
-            logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            
-            # Create a basic fallback result
             structure_result = {
                 "structured_prompt": f"## Task\n{request.text}\n\n## Instructions\n- Provide clear and detailed responses\n- Follow professional standards",
                 "structure_explanation": "Basic structure applied due to processing error",
@@ -208,94 +320,54 @@ async def optimize_prompt_with_structure(request: StructureBasedRequest):
                 "organization_type": "basic",
                 "success": False
             }
-            logger.warning("Using emergency fallback structure result")
-        
-        # Validate structure_result
-        required_fields = ['structured_prompt', 'structure_explanation', 'structure_score', 'structural_improvements', 'organization_type']
-        for field in required_fields:
-            if field not in structure_result:
-                logger.error(f"Missing required field in structure_result: {field}")
-                structure_result[field] = "Unknown" if field in ['structure_explanation', 'organization_type'] else ([] if field == 'structural_improvements' else 50)
         
         # Create response
-        try:
-            response = StructureOptimizationResponse(
-                original_prompt=request.text,
-                structured_prompt=structure_result["structured_prompt"],
-                structure_explanation=structure_result["structure_explanation"],
-                structure_score=int(structure_result["structure_score"]) if isinstance(structure_result["structure_score"], (int, float)) else 50,
-                structural_improvements=structure_result["structural_improvements"] if isinstance(structure_result["structural_improvements"], list) else [],
-                organization_type=structure_result["organization_type"],
-                current_metrics=current_metrics,
-                used_ai=structure_result.get("success", False)
-            )
-            
-            logger.info("✅ Structure optimization response created successfully")
-            return response
-            
-        except Exception as e:
-            logger.error(f"Error creating response object: {str(e)}")
-            logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            raise HTTPException(status_code=500, detail=f"Error creating response: {str(e)}")
+        response = StructureOptimizationResponse(
+            original_prompt=request.text,
+            structured_prompt=structure_result.get("structured_prompt", request.text),
+            structure_explanation=structure_result.get("structure_explanation", "Structure optimization applied"),
+            structure_score=int(structure_result.get("structure_score", 50)),
+            structural_improvements=structure_result.get("structural_improvements", []),
+            organization_type=structure_result.get("organization_type", "enhanced"),
+            current_metrics=current_metrics,
+            used_ai=structure_result.get("success", False)
+        )
+        
+        logger.info("✅ Enhanced structure optimization response created successfully")
+        return response
         
     except HTTPException:
-        logger.error("HTTPException in structure optimization")
         raise
     except Exception as e:
-        logger.error(f"❌ Unexpected error in structure optimization endpoint: {str(e)}")
-        logger.error(f"Error type: {type(e).__name__}")
-        import traceback
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"❌ Enhanced structure optimization error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 async def optimize_prompt_with_context(request: ContextBasedRequest):
-    """Optimize prompt context using Qwen based on selected options and current metrics"""
+    """Optimize prompt context with consistency validation"""
     try:
-        logger.info("=== CONTEXT OPTIMIZATION ENDPOINT CALLED ===")
-        logger.info(f"Request text length: {len(request.text) if request.text else 0}")
-        logger.info(f"Context options: {request.context_options}")
+        logger.info("=== ENHANCED CONTEXT OPTIMIZATION ENDPOINT ===")
         
         # Validate request
-        if not request:
-            logger.error("No request object provided")
-            raise HTTPException(status_code=400, detail="Invalid request")
-            
-        if not hasattr(request, 'text') or not request.text:
-            logger.error("No text field in request or text is empty")
+        if not request or not hasattr(request, 'text') or not request.text:
             raise HTTPException(status_code=400, detail="Prompt text is required")
-            
+        
         if not hasattr(request, 'context_options'):
-            logger.error("No context_options field in request")
             raise HTTPException(status_code=400, detail="Context options are required")
         
         if not request.text.strip():
-            logger.error("Empty prompt text provided")
             raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
         
-        logger.info(f"Optimizing prompt context: {request.text[:100]}...")
+        logger.info(f"Enhanced context optimization: {request.text[:100]}...")
         
-        # First, analyze current metrics
-        logger.info("Analyzing current metrics...")
+        # Analyze current metrics
         try:
             analysis = analyzer.analyze_prompt_comprehensive(request.text)
             current_metrics = analysis["metrics"]
-            logger.info(f"Current metrics: {current_metrics}")
         except Exception as e:
             logger.error(f"Error analyzing metrics: {str(e)}")
-            # Use default metrics if analysis fails
-            current_metrics = {
-                "clarity": 50,
-                "specificity": 50,
-                "structure": 50,
-                "context": 50,
-                "overall": 50
-            }
-            logger.warning("Using default metrics due to analysis error")
+            current_metrics = {"clarity": 50, "specificity": 50, "structure": 50, "context": 50, "overall": 50}
         
-        # Then, generate context-based optimization
-        logger.info("Starting context optimization...")
+        # Generate context-based optimization
         try:
             context_result = analyzer.generate_context_optimization(
                 request.text, 
@@ -303,18 +375,28 @@ async def optimize_prompt_with_context(request: ContextBasedRequest):
                 current_metrics
             )
             
-            logger.info("=== CONTEXT OPTIMIZATION RESULT ===")
-            logger.info(f"Success: {context_result.get('success', False)}")
-            logger.info(f"Context score: {context_result.get('context_score', 0)}")
-            logger.info(f"Improvements count: {len(context_result.get('context_improvements', []))}")
+            # Validate consistency if context optimization was successful
+            if context_result.get("success") and context_result.get("context_enhanced_prompt"):
+                try:
+                    logger.info("Validating context optimization consistency...")
+                    comparison = analyzer.compare_prompts_with_validation(
+                        request.text,
+                        context_result["context_enhanced_prompt"],
+                        validate_consistency=True
+                    )
+                    
+                    if comparison.get("consistency_validation"):
+                        consistency_summary = comparison["consistency_validation"]["validation_summary"]
+                        context_result["consistency_validated"] = consistency_summary.get("optimization_reliable", True)
+                        context_result["consistency_note"] = consistency_summary["recommendation"]
+                
+                except Exception as e:
+                    logger.warning(f"Context consistency validation failed: {e}")
+                    context_result["consistency_validated"] = False
+                    context_result["consistency_note"] = "Could not validate consistency"
             
         except Exception as e:
             logger.error(f"Error in context optimization: {str(e)}")
-            logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            
-            # Create a basic fallback result
             context_result = {
                 "context_enhanced_prompt": f"**Task:** {request.text}\n\n**Context:** Please consider relevant background information when responding.",
                 "context_explanation": "Basic context enhancement applied due to processing error",
@@ -323,60 +405,71 @@ async def optimize_prompt_with_context(request: ContextBasedRequest):
                 "enhancement_type": "basic",
                 "success": False
             }
-            logger.warning("Using emergency fallback context result")
         
-        # Validate context_result
-        required_fields = ['context_enhanced_prompt', 'context_explanation', 'context_score', 'context_improvements', 'enhancement_type']
-        for field in required_fields:
-            if field not in context_result:
-                logger.error(f"Missing required field in context_result: {field}")
-                context_result[field] = "Unknown" if field in ['context_explanation', 'enhancement_type'] else ([] if field == 'context_improvements' else 50)
+        response = ContextOptimizationResponse(
+            original_prompt=request.text,
+            context_enhanced_prompt=context_result.get("context_enhanced_prompt", request.text),
+            context_explanation=context_result.get("context_explanation", "Context optimization applied"),
+            context_score=int(context_result.get("context_score", 50)),
+            context_improvements=context_result.get("context_improvements", []),
+            enhancement_type=context_result.get("enhancement_type", "enhanced"),
+            current_metrics=current_metrics,
+            used_ai=context_result.get("success", False)
+        )
         
-        # Create response
-        try:
-            response = ContextOptimizationResponse(
-                original_prompt=request.text,
-                context_enhanced_prompt=context_result["context_enhanced_prompt"],
-                context_explanation=context_result["context_explanation"],
-                context_score=int(context_result["context_score"]) if isinstance(context_result["context_score"], (int, float)) else 50,
-                context_improvements=context_result["context_improvements"] if isinstance(context_result["context_improvements"], list) else [],
-                enhancement_type=context_result["enhancement_type"],
-                current_metrics=current_metrics,
-                used_ai=context_result.get("success", False)
-            )
-            
-            logger.info("✅ Context optimization response created successfully")
-            return response
-            
-        except Exception as e:
-            logger.error(f"Error creating response object: {str(e)}")
-            logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            raise HTTPException(status_code=500, detail=f"Error creating response: {str(e)}")
+        logger.info("✅ Enhanced context optimization response created successfully")
+        return response
         
     except HTTPException:
-        logger.error("HTTPException in context optimization")
         raise
     except Exception as e:
-        logger.error(f"❌ Unexpected error in context optimization endpoint: {str(e)}")
-        logger.error(f"Error type: {type(e).__name__}")
-        import traceback
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"❌ Enhanced context optimization error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 def validate_token():
-    """Validate service availability"""
+    """Validate service availability with enhanced features"""
     qwen_valid = analyzer.qwen_client.validate_token()
     available_models = analyzer.qwen_client.get_available_models() if qwen_valid else []
     
     if qwen_valid:
-        message = "Qwen models available for goal-based optimization"
+        message = "Enhanced system: Qwen models + standardized rubric with consistency validation"
     else:
-        message = "Metrics analysis available, goal optimization will use fallback"
+        message = "Enhanced system: Standardized rubric analysis + fallback optimization available"
     
     return TokenValidationResponse(
-        valid=True,  # Service is always available (metrics + fallback)
+        valid=True,
         message=message,
-        available_models=available_models + ["metrics-analyzer", "prompt-evaluator"]
+        available_models=available_models + [
+            "standardized-rubric-analyzer", 
+            "consistency-validator", 
+            "enhanced-metrics-engine"
+        ]
     )
+
+# New endpoint for rubric information
+async def get_rubric_info():
+    """Get detailed information about the rubric system"""
+    try:
+        return analyzer.get_rubric_information()
+    except Exception as e:
+        logger.error(f"Error getting rubric info: {e}")
+        raise HTTPException(status_code=500, detail="Could not retrieve rubric information")
+
+# New endpoint for consistency testing
+async def test_consistency(prompts: list, num_runs: int = 3):
+    """Test system consistency with provided prompts"""
+    try:
+        if not prompts or len(prompts) == 0:
+            raise HTTPException(status_code=400, detail="At least one prompt is required for testing")
+        
+        if len(prompts) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 prompts allowed for batch testing")
+        
+        logger.info(f"Running consistency test on {len(prompts)} prompts")
+        return analyzer.test_system_consistency(prompts, num_runs)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Consistency testing failed: {e}")
+        raise HTTPException(status_code=500, detail="Consistency testing service temporarily unavailable")

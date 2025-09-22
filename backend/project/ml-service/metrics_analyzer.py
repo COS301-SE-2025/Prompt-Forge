@@ -1,345 +1,335 @@
 import re
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from sentence_transformers import SentenceTransformer
 from config import Config, logger
 from qwen_client import QwenClient
+from rubric_sys import StandardizedRubric, RubricLevel
+from consistency_validator import ConsistencyValidator
 
-class PromptMetricsAnalyzer:
-    """Advanced analyzer for evaluating prompt quality across multiple dimensions"""
+class EnhancedPromptMetricsAnalyzer:
+    """
+    Enhanced analyzer using standardized rubric system for consistent evaluation
+    Addresses supervisor concerns about LLM reliability by using deterministic scoring
+    """
     
     def __init__(self):
-        # Initialize models for different metrics
+        # Initialize models for embeddings (if needed for advanced features)
         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
         
-        # Initialize Qwen client for goal-based optimization
+        # Initialize standardized rubric system
+        self.rubric = StandardizedRubric()
+        
+        # Initialize consistency validator
+        self.consistency_validator = ConsistencyValidator(self.rubric)
+        
+        # Initialize Qwen client for AI-powered optimization
         self.qwen_client = QwenClient()
         
-        # Thresholds for "cannot improve" status
-        self.excellence_thresholds = Config.EXCELLENCE_THRESHOLDS
-        self.metric_weights = Config.METRIC_WEIGHTS
+        # Thresholds for "cannot improve" status (more conservative)
+        self.excellence_thresholds = {
+            "clarity": 90,      # Increased from 85
+            "specificity": 85,  # Increased from 80
+            "structure": 92,    # Increased from 88
+            "context": 88,      # Increased from 82
+            "actionability": 85,
+            "overall": 88       # Increased from 84
+        }
         
-        logger.info("Prompt Metrics Analyzer with Qwen integration initialized successfully")
-
-    def analyze_clarity(self, text: str) -> Tuple[float, List[str]]:
-        """Analyze prompt clarity using multiple factors"""
-        issues = []
-        clarity_score = 100.0
+        logger.info("Enhanced Prompt Metrics Analyzer with Standardized Rubric initialized")
+    
+    def analyze_prompt_comprehensive(self, text: str, validate_consistency: bool = False, 
+                                   num_consistency_runs: int = 3) -> Dict:
+        """
+        Comprehensive analysis using standardized rubric system
         
-        if not text.strip():
-            return 0.0, ["Empty prompt"]
+        Args:
+            text: Prompt text to analyze
+            validate_consistency: Whether to run consistency validation
+            num_consistency_runs: Number of runs for consistency testing
         
-        words = text.split()
-        sentences = re.split(r'[.!?]+', text)
-        sentences = [s.strip() for s in sentences if s.strip()]
-        
-        # Factor 1: Length appropriateness (10-200 words is optimal)
-        if len(words) < 5:
-            clarity_score -= 30
-            issues.append("Prompt is too short - needs more detail")
-        elif len(words) > 300:
-            clarity_score -= 15
-            issues.append("Prompt may be too long and complex")
-        
-        # Factor 2: Sentence structure
-        if sentences:
-            avg_sentence_length = len(words) / len(sentences)
-            if avg_sentence_length > 25:
-                clarity_score -= 10
-                issues.append("Sentences are too long - break them down")
-            elif avg_sentence_length < 3:
-                clarity_score -= 20
-                issues.append("Sentences are too fragmented")
-        
-        # Factor 3: Question marks and clear instructions
-        has_questions = '?' in text
-        instruction_words = ['write', 'create', 'generate', 'explain', 'describe', 'analyze', 'compare']
-        has_clear_instruction = any(word in text.lower() for word in instruction_words)
-        
-        if not has_questions and not has_clear_instruction:
-            clarity_score -= 25
-            issues.append("Add clear action words (write, create, explain, etc.)")
-        
-        # Factor 4: Ambiguous words
-        vague_words = ['something', 'anything', 'stuff', 'things', 'good', 'nice', 'some']
-        vague_count = sum(1 for word in vague_words if word in text.lower())
-        if vague_count > 0:
-            clarity_score -= (vague_count * 8)
-            issues.append("Replace vague words with specific terms")
-        
-        # Factor 5: Grammar and punctuation
-        if not re.search(r'[.!?]$', text.strip()):
-            clarity_score -= 8
-            issues.append("Add proper punctuation")
-        
-        return max(0, clarity_score), issues
-
-    def analyze_specificity(self, text: str) -> Tuple[float, List[str]]:
-        """Analyze how specific and detailed the prompt is"""
-        issues = []
-        specificity_score = 50.0  # Start with middle score
-        
-        if not text.strip():
-            return 0.0, ["Empty prompt"]
-        
-        text_lower = text.lower()
-        
-        # Factor 1: Specific requirements mentioned
-        requirement_indicators = [
-            'format', 'length', 'style', 'tone', 'audience', 'purpose',
-            'include', 'must', 'should', 'need', 'require', 'specify'
-        ]
-        requirements_mentioned = sum(1 for indicator in requirement_indicators if indicator in text_lower)
-        specificity_score += (requirements_mentioned * 8)
-        
-        # Factor 2: Numbers and quantities
-        numbers = re.findall(r'\b\d+\b', text)
-        if numbers:
-            specificity_score += 15
-        else:
-            issues.append("Add specific numbers (word count, quantity, etc.)")
-        
-        # Factor 3: Examples mentioned
-        example_words = ['example', 'like', 'such as', 'including', 'for instance']
-        has_examples = any(word in text_lower for word in example_words)
-        if has_examples:
-            specificity_score += 12
-        else:
-            issues.append("Consider adding examples of what you want")
-        
-        # Factor 4: Target audience specified
-        audience_words = ['for', 'audience', 'readers', 'users', 'customers', 'students', 'professionals']
-        has_audience = any(word in text_lower for word in audience_words)
-        if has_audience:
-            specificity_score += 10
-        else:
-            issues.append("Specify your target audience")
-        
-        # Factor 5: Output format specified
-        format_words = ['email', 'report', 'list', 'paragraph', 'summary', 'article', 'bullet points']
-        has_format = any(word in text_lower for word in format_words)
-        if has_format:
-            specificity_score += 8
-        else:
-            issues.append("Specify the desired output format")
-        
-        # Factor 6: Context provided
-        context_words = ['because', 'since', 'for', 'background', 'context', 'situation']
-        has_context = any(word in text_lower for word in context_words)
-        if has_context:
-            specificity_score += 7
-        
-        return min(100, max(0, specificity_score)), issues
-
-    def analyze_structure(self, text: str) -> Tuple[float, List[str]]:
-        """Analyze the structural organization of the prompt"""
-        issues = []
-        structure_score = 60.0  # Start with above-middle score
-        
-        if not text.strip():
-            return 0.0, ["Empty prompt"]
-        
-        # Factor 1: Logical flow
-        sentences = re.split(r'[.!?]+', text)
-        sentences = [s.strip() for s in sentences if s.strip()]
-        
-        if len(sentences) >= 2:
-            structure_score += 10
-        
-        # Factor 2: Use of lists or bullet points
-        has_bullets = '•' in text or '*' in text or re.search(r'^\s*[-\*\+]', text, re.MULTILINE)
-        has_numbers = re.search(r'^\s*\d+\.', text, re.MULTILINE)
-        
-        if has_bullets or has_numbers:
-            structure_score += 15
-        else:
-            issues.append("Consider using bullet points or numbered lists for clarity")
-        
-        # Factor 3: Clear sections
-        section_indicators = ['first', 'second', 'then', 'next', 'finally', 'also', 'additionally']
-        has_sections = any(indicator in text.lower() for indicator in section_indicators)
-        if has_sections:
-            structure_score += 8
-        
-        # Factor 4: Proper capitalization and formatting
-        if text[0].isupper():
-            structure_score += 5
-        else:
-            issues.append("Start with a capital letter")
-        
-        # Factor 5: Paragraph structure
-        paragraphs = text.split('\n\n')
-        if len(paragraphs) > 1:
-            structure_score += 10
-            
-        # Factor 6: Transition words
-        transitions = ['however', 'therefore', 'moreover', 'furthermore', 'in addition']
-        has_transitions = any(transition in text.lower() for transition in transitions)
-        if has_transitions:
-            structure_score += 5
-        
-        return min(100, max(0, structure_score)), issues
-
-    def analyze_context(self, text: str) -> Tuple[float, List[str]]:
-        """Analyze how much context and background information is provided"""
-        issues = []
-        context_score = 40.0  # Start lower as context is often missing
-        
-        if not text.strip():
-            return 0.0, ["Empty prompt"]
-        
-        text_lower = text.lower()
-        
-        # Factor 1: Background information
-        background_words = ['background', 'context', 'about', 'regarding', 'concerning', 'situation']
-        has_background = any(word in text_lower for word in background_words)
-        if has_background:
-            context_score += 20
-        else:
-            issues.append("Add background information or context")
-        
-        # Factor 2: Purpose explanation
-        purpose_words = ['purpose', 'goal', 'aim', 'objective', 'to', 'for', 'in order to']
-        has_purpose = any(word in text_lower for word in purpose_words)
-        if has_purpose:
-            context_score += 15
-        else:
-            issues.append("Explain the purpose or goal")
-        
-        # Factor 3: Domain/industry mentioned
-        domain_words = ['business', 'technical', 'academic', 'medical', 'legal', 'marketing', 'education']
-        has_domain = any(word in text_lower for word in domain_words)
-        if has_domain:
-            context_score += 12
-        
-        # Factor 4: Constraints mentioned
-        constraint_words = ['limit', 'within', 'maximum', 'minimum', 'constraint', 'restriction']
-        has_constraints = any(word in text_lower for word in constraint_words)
-        if has_constraints:
-            context_score += 10
-        
-        # Factor 5: Use case described
-        use_case_words = ['will be used', 'intended for', 'purpose is', 'used to', 'help with']
-        has_use_case = any(phrase in text_lower for phrase in use_case_words)
-        if has_use_case:
-            context_score += 13
-        else:
-            issues.append("Describe how the output will be used")
-        
-        return min(100, max(0, context_score)), issues
-
-    def calculate_overall_score(self, clarity: float, specificity: float, structure: float, context: float) -> float:
-        """Calculate weighted overall score"""
-        overall = (
-            clarity * self.metric_weights["clarity"] +
-            specificity * self.metric_weights["specificity"] +
-            structure * self.metric_weights["structure"] +
-            context * self.metric_weights["context"]
-        )
-        
-        return round(overall, 1)
-
-    def is_excellent_prompt(self, metrics: Dict[str, float]) -> bool:
-        """Check if prompt is already excellent and cannot be improved significantly"""
-        return (
-            metrics["clarity"] >= self.excellence_thresholds["clarity"] and
-            metrics["specificity"] >= self.excellence_thresholds["specificity"] and
-            metrics["structure"] >= self.excellence_thresholds["structure"] and
-            metrics["context"] >= self.excellence_thresholds["context"] and
-            metrics["overall"] >= self.excellence_thresholds["overall"]
-        )
-
-    def analyze_prompt_comprehensive(self, text: str) -> Dict:
-        """Comprehensive analysis of a prompt"""
+        Returns:
+            Comprehensive analysis with rubric-based scoring
+        """
         if not text or not text.strip():
             return {
                 "metrics": {
-                    "clarity": 0,
-                    "specificity": 0,
-                    "structure": 0,
-                    "context": 0,
-                    "overall": 0
+                    "clarity": 0, "specificity": 0, "structure": 0, 
+                    "context": 0, "actionability": 0, "overall": 0
                 },
                 "issues": ["Empty prompt provided"],
                 "suggestions": ["Please provide a prompt to analyze"],
                 "is_excellent": False,
                 "improvement_potential": "High",
                 "rating": 1,
-                "rating_explanation": "No prompt provided for analysis"
+                "rating_explanation": "No prompt provided for analysis",
+                "rubric_analysis": None,
+                "consistency_validation": None
             }
         
-        # Analyze each metric
-        clarity_score, clarity_issues = self.analyze_clarity(text)
-        specificity_score, specificity_issues = self.analyze_specificity(text)
-        structure_score, structure_issues = self.analyze_structure(text)
-        context_score, context_issues = self.analyze_context(text)
+        # Use standardized rubric for evaluation
+        rubric_evaluation = self.rubric.evaluate_prompt(text)
         
-        # Calculate overall score
-        overall_score = self.calculate_overall_score(clarity_score, specificity_score, structure_score, context_score)
+        # Extract standardized metrics
+        metrics = self._extract_metrics_from_rubric(rubric_evaluation)
         
-        metrics = {
-            "clarity": round(clarity_score, 1),
-            "specificity": round(specificity_score, 1),
-            "structure": round(structure_score, 1),
-            "context": round(context_score, 1),
-            "overall": overall_score
-        }
+        # Generate issues and suggestions based on rubric analysis
+        issues, suggestions = self._generate_issues_and_suggestions(rubric_evaluation)
         
-        # Combine all issues
-        all_issues = clarity_issues + specificity_issues + structure_issues + context_issues
-        
-        # Check if prompt is excellent
-        is_excellent = self.is_excellent_prompt(metrics)
+        # Check if prompt meets excellence criteria
+        is_excellent = self._is_excellent_prompt_rubric(metrics)
         
         # Determine improvement potential
-        if is_excellent:
-            improvement_potential = "Minimal"
-            suggestions = [
-                "Your prompt is already excellent!",
-                "Minor refinements might be possible, but major improvements aren't needed",
-                "Consider testing with different AI models to optimize performance"
-            ]
-        elif overall_score >= 70:
-            improvement_potential = "Low to Moderate"
-            suggestions = all_issues[:3] if all_issues else ["Your prompt is quite good with minor areas for improvement"]
-        elif overall_score >= 50:
-            improvement_potential = "Moderate"
-            suggestions = all_issues[:4] if all_issues else ["Several areas could be enhanced for better results"]
-        else:
-            improvement_potential = "High"
-            suggestions = all_issues[:5] if all_issues else ["Significant improvements needed for optimal performance"]
+        improvement_potential = self._assess_improvement_potential(metrics["overall"])
         
-        # Calculate rating out of 10
-        rating = max(1, min(10, round(overall_score / 10)))
+        # Calculate rating and explanation
+        rating, rating_explanation = self._generate_rating_and_explanation(metrics, rubric_evaluation)
         
-        # Generate rating explanation
-        if rating >= 9:
-            rating_explanation = "Excellent prompt with clear instructions, proper context, and specific requirements"
-        elif rating >= 7:
-            rating_explanation = "Good prompt with minor areas for improvement in clarity or specificity"
-        elif rating >= 5:
-            rating_explanation = "Average prompt, needs improvement in several areas"
-        else:
-            rating_explanation = "Poor prompt, significant improvements needed"
-        
-        return {
+        result = {
             "metrics": metrics,
-            "issues": all_issues,
+            "issues": issues,
             "suggestions": suggestions,
             "is_excellent": is_excellent,
             "improvement_potential": improvement_potential,
             "rating": rating,
-            "rating_explanation": rating_explanation
+            "rating_explanation": rating_explanation,
+            "rubric_analysis": rubric_evaluation,
+            "consistency_validation": None
         }
-
+        
+        # Add consistency validation if requested
+        if validate_consistency and num_consistency_runs > 1:
+            logger.info(f"Running consistency validation with {num_consistency_runs} runs")
+            consistency_result = self.consistency_validator.test_prompt_consistency(
+                text, num_consistency_runs
+            )
+            result["consistency_validation"] = {
+                "is_consistent": consistency_result.is_consistent,
+                "consistency_rating": consistency_result.consistency_rating,
+                "coefficient_of_variation": consistency_result.coefficient_of_variation,
+                "mean_score": consistency_result.mean_score,
+                "std_deviation": consistency_result.std_deviation,
+                "test_runs": consistency_result.test_runs,
+                "recommendation": self._get_consistency_recommendation(consistency_result)
+            }
+        
+        return result
+    
+    def _extract_metrics_from_rubric(self, rubric_evaluation: Dict) -> Dict[str, float]:
+        """Extract metrics in expected format from rubric evaluation"""
+        metrics = {}
+        
+        # Map rubric criteria to expected metric names
+        criteria_mapping = {
+            "clarity": "clarity",
+            "specificity": "specificity", 
+            "structure": "structure",
+            "context": "context",
+            "actionability": "actionability"
+        }
+        
+        for rubric_name, metric_name in criteria_mapping.items():
+            if rubric_name in rubric_evaluation["criteria_scores"]:
+                metrics[metric_name] = rubric_evaluation["criteria_scores"][rubric_name]["score"]
+            else:
+                metrics[metric_name] = 0.0
+        
+        # Overall score from rubric
+        metrics["overall"] = rubric_evaluation["overall_metrics"]["weighted_score"]
+        
+        return metrics
+    
+    def _generate_issues_and_suggestions(self, rubric_evaluation: Dict) -> Tuple[List[str], List[str]]:
+        """Generate issues and suggestions based on rubric analysis"""
+        issues = []
+        suggestions = []
+        
+        for criterion_name, criterion_data in rubric_evaluation["criteria_scores"].items():
+            level_name = criterion_data["level"]
+            score = criterion_data["score"]
+            
+            # Add issues for poor performance
+            if score < 60:  # Below average performance
+                issue = f"{criterion_name.title()} needs improvement (score: {score}/100)"
+                issues.append(issue)
+                
+                # Add specific suggestions based on detailed analysis
+                if criterion_name in rubric_evaluation["detailed_analysis"]:
+                    analysis = rubric_evaluation["detailed_analysis"][criterion_name]
+                    if "issues" in analysis:
+                        issues.extend(analysis["issues"])
+        
+        # Generate improvement suggestions based on low-scoring criteria
+        low_scoring_criteria = [
+            name for name, data in rubric_evaluation["criteria_scores"].items()
+            if data["score"] < 70
+        ]
+        
+        for criterion in low_scoring_criteria:
+            if criterion == "clarity":
+                suggestions.append("Use more specific, unambiguous language")
+                suggestions.append("Add clear action verbs (write, create, explain)")
+            elif criterion == "specificity":
+                suggestions.append("Include specific requirements (format, length, audience)")
+                suggestions.append("Add numbers, examples, or concrete constraints")
+            elif criterion == "structure":
+                suggestions.append("Organize content with headers, bullets, or numbered lists")
+                suggestions.append("Use logical flow with clear transitions")
+            elif criterion == "context":
+                suggestions.append("Provide background information and purpose")
+                suggestions.append("Explain the use case and intended outcome")
+            elif criterion == "actionability":
+                suggestions.append("Include clear, specific action items")
+                suggestions.append("Specify deliverables and expected outputs")
+        
+        # Remove duplicates while preserving order
+        issues = list(dict.fromkeys(issues))
+        suggestions = list(dict.fromkeys(suggestions))
+        
+        return issues[:8], suggestions[:6]  # Limit for readability
+    
+    def _is_excellent_prompt_rubric(self, metrics: Dict[str, float]) -> bool:
+        """Check if prompt meets excellence criteria using rubric scores"""
+        return (
+            metrics.get("clarity", 0) >= self.excellence_thresholds["clarity"] and
+            metrics.get("specificity", 0) >= self.excellence_thresholds["specificity"] and
+            metrics.get("structure", 0) >= self.excellence_thresholds["structure"] and
+            metrics.get("context", 0) >= self.excellence_thresholds["context"] and
+            metrics.get("actionability", 0) >= self.excellence_thresholds["actionability"] and
+            metrics.get("overall", 0) >= self.excellence_thresholds["overall"]
+        )
+    
+    def _assess_improvement_potential(self, overall_score: float) -> str:
+        """Assess improvement potential based on overall score"""
+        if overall_score >= 85:
+            return "Minimal"
+        elif overall_score >= 70:
+            return "Low to Moderate"
+        elif overall_score >= 50:
+            return "Moderate"
+        else:
+            return "High"
+    
+    def _generate_rating_and_explanation(self, metrics: Dict, rubric_evaluation: Dict) -> Tuple[int, str]:
+        """Generate rating and explanation based on rubric evaluation"""
+        overall_score = metrics["overall"]
+        letter_grade = rubric_evaluation["overall_metrics"]["letter_grade"]
+        
+        # Convert to 1-10 scale
+        rating = max(1, min(10, round(overall_score / 10)))
+        
+        # Generate explanation based on letter grade and rubric analysis
+        if letter_grade == "A":
+            explanation = "Excellent prompt meeting all quality criteria with clear structure and specificity"
+        elif letter_grade == "B":
+            explanation = "Good prompt with minor areas for improvement in clarity or detail"
+        elif letter_grade == "C":
+            explanation = "Average prompt requiring moderate improvements in multiple areas"
+        elif letter_grade == "D":
+            explanation = "Below-average prompt needing significant improvements in structure and specificity"
+        else:
+            explanation = "Poor prompt requiring major revisions across all criteria"
+        
+        return rating, explanation
+    
+    def _get_consistency_recommendation(self, consistency_result) -> str:
+        """Generate recommendation based on consistency test results"""
+        if consistency_result.consistency_rating == "excellent":
+            return "Rubric scoring is highly consistent and reliable"
+        elif consistency_result.consistency_rating == "good":
+            return "Rubric scoring shows good consistency"
+        elif consistency_result.consistency_rating == "acceptable":
+            return "Rubric scoring has acceptable consistency but could be improved"
+        else:
+            return "Rubric scoring shows poor consistency - may indicate prompt ambiguity"
+    
+    def compare_prompts_with_validation(self, original_text: str, optimized_text: str,
+                                      validate_consistency: bool = True) -> Dict:
+        """
+        Compare two prompts using rubric system with optional consistency validation
+        
+        Args:
+            original_text: Original prompt
+            optimized_text: Optimized prompt  
+            validate_consistency: Whether to validate consistency across multiple runs
+        
+        Returns:
+            Comprehensive comparison with rubric analysis and consistency validation
+        """
+        logger.info("Comparing prompts using standardized rubric with consistency validation")
+        
+        # Get rubric-based comparison
+        comparison = self.rubric.compare_prompts(original_text, optimized_text)
+        
+        # Add consistency validation if requested
+        if validate_consistency:
+            consistency_validation = self.consistency_validator.validate_optimization_consistency(
+                original_text, optimized_text, num_runs=3
+            )
+            comparison["consistency_validation"] = consistency_validation
+        
+        # Add summary metrics in expected format
+        original_metrics = self._extract_metrics_from_rubric(comparison["original_evaluation"])
+        optimized_metrics = self._extract_metrics_from_rubric(comparison["optimized_evaluation"])
+        
+        comparison["summary"] = {
+            "original_metrics": original_metrics,
+            "optimized_metrics": optimized_metrics,
+            "improvement_verified": comparison["overall_improvement"]["meaningful_improvement"],
+            "consistency_validated": validate_consistency and consistency_validation["validation_summary"]["optimization_reliable"],
+            "recommendation": self._generate_comparison_recommendation(comparison, consistency_validation if validate_consistency else None)
+        }
+        
+        return comparison
+    
+    def _generate_comparison_recommendation(self, comparison: Dict, consistency_validation: Optional[Dict]) -> str:
+        """Generate recommendation based on comparison and consistency results"""
+        improvement = comparison["overall_improvement"]["improvement"]
+        meaningful = comparison["overall_improvement"]["meaningful_improvement"]
+        
+        if consistency_validation:
+            reliable = consistency_validation["validation_summary"]["optimization_reliable"]
+            if not reliable:
+                return "Optimization shows inconsistent results - consider alternative approaches"
+        
+        if meaningful and improvement >= 10:
+            return "Significant and reliable improvement achieved"
+        elif meaningful:
+            return "Moderate improvement achieved with good consistency"
+        elif improvement > 0:
+            return "Minor improvement - consider more substantial optimization"
+        else:
+            return "No meaningful improvement detected - optimization unsuccessful"
+    
+    # Delegation methods to maintain compatibility with existing code
     def generate_goal_optimization(self, original_prompt: str, goals: Dict, metrics: Dict) -> Dict:
         """Generate goal-based optimization using QwenClient"""
         return self.qwen_client.generate_goal_optimization(original_prompt, goals, metrics)
-
+    
     def generate_structure_optimization(self, original_prompt: str, structure_options: Dict, metrics: Dict) -> Dict:
         """Generate structure-based optimization using QwenClient"""
         return self.qwen_client.generate_structure_optimization(original_prompt, structure_options, metrics)
-
+    
     def generate_context_optimization(self, original_prompt: str, context_options: Dict, metrics: Dict) -> Dict:
         """Generate context-based optimization using QwenClient"""
         return self.qwen_client.generate_context_optimization(original_prompt, context_options, metrics)
+    
+    def get_rubric_information(self) -> Dict:
+        """Get information about the rubric system for transparency"""
+        return self.rubric.get_rubric_summary()
+    
+    def test_system_consistency(self, test_prompts: List[str], num_runs: int = 5) -> Dict:
+        """
+        Test system consistency with a set of test prompts
+        Useful for validating rubric reliability
+        """
+        logger.info(f"Testing system consistency with {len(test_prompts)} prompts")
+        
+        batch_results = self.consistency_validator.batch_consistency_test(test_prompts, num_runs)
+        consistency_report = self.consistency_validator.generate_consistency_report(batch_results)
+        
+        return {
+            "individual_results": batch_results,
+            "system_report": consistency_report,
+            "rubric_info": self.get_rubric_information()
+        }

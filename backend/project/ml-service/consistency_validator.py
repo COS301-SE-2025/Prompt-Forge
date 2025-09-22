@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import time
 import json
 from config import logger
-from rubric_system import StandardizedRubric
+from rubric_sys import StandardizedRubric
 
 @dataclass
 class ConsistencyTestResult:
