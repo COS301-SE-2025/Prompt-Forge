@@ -361,15 +361,30 @@ export default function WidgetManager({
           console.log('No data available at all');
         }
         
-        // For funnel visualization, show relative volumes where Views is the baseline
-        const maxViews = Math.max(totalViews, 1); // Prevent division by zero
-        const viewsVolumePercent = 100; // Views are always 100% as baseline
-        const cartAddsVolumePercent = (totalCartAdds / maxViews) * 100;
-        const purchasesVolumePercent = (totalPurchases / maxViews) * 100;
+        // For funnel visualization, bars should match the percentages shown
+        // Views bar should show engagement rate (100 - bounce rate)
+        const engagementRate = 100 - correctedBounceRate;
+        const viewsBarWidth = engagementRate; // Views bar matches engagement percentage
+        const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
+        const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
+        
+        console.log('Bar widths calculated:', {
+          engagementRate,
+          viewsBarWidth,
+          cartAddsBarWidth, 
+          purchasesBarWidth,
+          correctedBounceRate
+        });
         
         // Function to get dynamic color based on engagement level
         const getEngagementColor = (rate: number, type: string) => {
-          if (type === "Views") return "bg-blue-500";
+          if (type === "Views") {
+            // Views color based on engagement rate (higher = better)
+            if (rate >= 70) return "bg-green-500"; // Excellent engagement
+            if (rate >= 50) return "bg-yellow-500"; // Good engagement
+            if (rate >= 30) return "bg-orange-500"; // Fair engagement
+            return "bg-red-500"; // Poor engagement
+          }
           // For cart adds and purchases, use performance-based colors
           if (rate >= 15) return "bg-green-500"; // Excellent
           if (rate >= 10) return "bg-yellow-500"; // Good
@@ -389,15 +404,15 @@ export default function WidgetManager({
         const components = [
           { 
             name: "Views", 
-            value: viewsVolumePercent, // Use real views data
+            value: viewsBarWidth, // Bar width shows engagement rate
             count: totalViews,
-            percentage: `${(100 - bounceRate).toFixed(1)}%`, // Views that didn't bounce = engagement rate
-            color: "bg-blue-500",
-            intensity: "opacity-100"
+            percentage: `${engagementRate.toFixed(1)}%`, // Views that didn't bounce = engagement rate
+            color: getEngagementColor(engagementRate, "Views"),
+            intensity: getBarIntensity(engagementRate)
           },
           { 
             name: "Cart Adds", 
-            value: cartAddsVolumePercent, // Bar width shows volume relative to views
+            value: cartAddsBarWidth, // Bar width matches percentage shown
             count: totalCartAdds,
             percentage: `${viewToCartRate.toFixed(1)}%`, // Text shows conversion rate from backend
             color: getEngagementColor(viewToCartRate, "Cart"),
@@ -405,7 +420,7 @@ export default function WidgetManager({
           },
           { 
             name: "Purchases", 
-            value: purchasesVolumePercent, // Bar width shows volume relative to views
+            value: purchasesBarWidth, // Bar width matches percentage shown
             count: totalPurchases, 
             percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
             color: getEngagementColor(cartToPurchaseRate, "Purchase"),
@@ -444,9 +459,10 @@ export default function WidgetManager({
                     <div
                       className={`h-full ${component.color} ${component.intensity} transition-all duration-1000 ease-out relative`}
                       style={{ 
-                        width: `${Math.min(100, Math.max(3, component.value))}%`,
+                        width: `${Math.min(100, Math.max(1, component.value))}%`,
                         transitionDelay: `${index * 100}ms`
                       }}
+                      title={`Bar width: ${component.value.toFixed(1)}% | Display: ${component.percentage}`}
                     >
                       {/* Simple shine effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
