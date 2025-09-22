@@ -282,25 +282,65 @@ export default function WidgetManager({
       case "bounce-rate":
         const bounceRate = data?.averageBounceRate || 0;
         const getBounceRateColor = (rate: number) => {
-          if (rate <= 20) return "text-green-600";
-          if (rate <= 40) return "text-yellow-600";
-          if (rate <= 60) return "text-orange-600";
-          return "text-red-600";
+          if (rate >= 80) return "text-green-600";      // 80-100% = Excellent
+          if (rate >= 60) return "text-yellow-600";     // 60-79% = Good  
+          if (rate >= 40) return "text-orange-600";     // 40-59% = Fair
+          if (rate > 0) return "text-red-600";          // 1-39% = Poor
+          return "text-red-600";                        // 0% = Needs improvement
         };
         
         const getBounceRateGradient = (rate: number) => {
-          if (rate <= 20) return "from-green-500/20 to-green-600/30";
-          if (rate <= 40) return "from-yellow-500/20 to-yellow-600/30";
-          if (rate <= 60) return "from-orange-500/20 to-orange-600/30";
-          return "from-red-500/20 to-red-600/30";
+          if (rate >= 80) return "from-green-500/20 to-green-600/30";      // Excellent
+          if (rate >= 60) return "from-yellow-500/20 to-yellow-600/30";    // Good
+          if (rate >= 40) return "from-orange-500/20 to-orange-600/30";    // Fair  
+          return "from-red-500/20 to-red-600/30";                          // Poor/Needs improvement
         };
 
-        // Use real engagement funnel data from backend API
-        const totalViews = engagementFunnelData.totalViews || 0;
-        const totalCartAdds = engagementFunnelData.totalCartAdds || 0;
-        const totalPurchases = engagementFunnelData.totalPurchases || 0;
-        const viewToCartRate = engagementFunnelData.viewToCartRate || 0;
-        const cartToPurchaseRate = engagementFunnelData.cartToPurchaseRate || 0;
+        // Use real engagement funnel data from backend API with dashboard data fallback
+        let totalViews = engagementFunnelData.totalViews || 0;
+        let totalCartAdds = engagementFunnelData.totalCartAdds || 0;
+        let totalPurchases = engagementFunnelData.totalPurchases || 0;
+        let viewToCartRate = engagementFunnelData.viewToCartRate || 0;
+        let cartToPurchaseRate = engagementFunnelData.cartToPurchaseRate || 0;
+        
+        // If engagement funnel data is empty, use dashboard data as fallback
+        const hasEngagementData = totalViews > 0 || totalCartAdds > 0 || totalPurchases > 0;
+        
+        console.log('Bounce Rate Widget Debug:', {
+          hasEngagementData,
+          engagementFunnelData,
+          dashboardData: data,
+          totalViews,
+          totalCartAdds,
+          totalPurchases
+        });
+        
+        if (!hasEngagementData && data) {
+          console.log('Using dashboard data fallback');
+          // Use total prompts as proxy for views (people viewing your prompts)
+          totalViews = Math.max(data.totalPrompts || 0, 1); // Ensure at least 1 for visualization
+          
+          // Use total downloads as proxy for purchases (completed transactions)
+          totalPurchases = data.totalDownloads || 0;
+          
+          // Estimate cart adds as somewhere between views and purchases
+          // If no downloads, estimate 20% of prompts had cart interactions
+          totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
+          
+          // Recalculate rates based on fallback data
+          viewToCartRate = totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0;
+          cartToPurchaseRate = totalCartAdds > 0 ? (totalPurchases / totalCartAdds) * 100 : 0;
+          
+          console.log('Fallback data calculated:', {
+            totalViews,
+            totalCartAdds, 
+            totalPurchases,
+            viewToCartRate,
+            cartToPurchaseRate
+          });
+        } else if (!hasEngagementData && !data) {
+          console.log('No data available at all');
+        }
         
         // For funnel visualization, show relative volumes where Views is the baseline
         const maxViews = Math.max(totalViews, 1); // Prevent division by zero
@@ -433,8 +473,12 @@ export default function WidgetManager({
                 {/* Data source indicator */}
                 <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
                   <div className="text-xs text-muted-foreground flex items-center">
-                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${totalViews > 0 ? 'bg-green-400' : 'bg-red-400'}`}></span>
-                    {totalViews > 0 ? 'Live Data' : 'No Data Available'}
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                      hasEngagementData ? 'bg-green-400' : 
+                      (totalViews > 0 || totalPurchases > 0) ? 'bg-yellow-400' : 'bg-red-400'
+                    }`}></span>
+                    {hasEngagementData ? 'Live Interaction Data' : 
+                     (totalViews > 0 || totalPurchases > 0) ? 'Dashboard Data (Estimated)' : 'No Data Available'}
                   </div>
                 </div>
               </div>
