@@ -308,6 +308,10 @@ export default function WidgetManager({
         let viewToCartRate = engagementFunnelData.viewToCartRate || 0;
         let cartToPurchaseRate = engagementFunnelData.cartToPurchaseRate || 0;
         
+        // Validate and cap rates at 100% to prevent display issues
+        viewToCartRate = Math.min(Math.max(viewToCartRate, 0), 100);
+        cartToPurchaseRate = Math.min(Math.max(cartToPurchaseRate, 0), 100);
+        
         // If engagement funnel data is empty, use dashboard data as fallback
         const hasEngagementData = totalViews > 0 || totalCartAdds > 0 || totalPurchases > 0;
         
@@ -346,9 +350,13 @@ export default function WidgetManager({
           // If no downloads, estimate 20% of prompts had cart interactions
           totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
           
-          // Recalculate rates based on fallback data
+          // Recalculate rates based on fallback data (backend already returns percentages, so we match that format)
           viewToCartRate = totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0;
           cartToPurchaseRate = totalCartAdds > 0 ? (totalPurchases / totalCartAdds) * 100 : 0;
+          
+          // Cap rates at 100% to prevent display issues
+          viewToCartRate = Math.min(viewToCartRate, 100);
+          cartToPurchaseRate = Math.min(cartToPurchaseRate, 100);
           
           console.log('Fallback data calculated:', {
             totalViews,
