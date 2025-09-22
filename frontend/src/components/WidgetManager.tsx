@@ -495,9 +495,9 @@ export default function WidgetManager({
                   <div className="flex justify-between text-xs">
                     <span>View → Cart Rate:</span>
                     <span className={`font-medium ${
-                      viewToCartRate >= 25 ? 'text-green-400' : 
-                      viewToCartRate >= 15 ? 'text-yellow-400' : 
-                      viewToCartRate >= 10 ? 'text-orange-400' : 'text-red-400'
+                      viewToCartRate >= 70 ? 'text-green-400' : 
+                      viewToCartRate >= 50 ? 'text-yellow-400' : 
+                      viewToCartRate >= 30 ? 'text-orange-400' : 'text-red-400'
                     }`}>
                       {viewToCartRate.toFixed(1)}%
                     </span>
