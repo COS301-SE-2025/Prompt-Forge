@@ -676,7 +676,7 @@ export const PromptDetails = () => {
                 <div className="flex items-baseline justify-between mb-3">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">Price</h3>
                   <p className="text-2xl font-bold text-[#3ebb9e]">
-                    {prompt.price === 0 ? "Free" : `$${prompt.price.toFixed(2)}`}
+                    {prompt.price === 0 ? "Free" : `ZAR ${prompt.price.toFixed(2)}`}
                   </p>
                 </div>
 

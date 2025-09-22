@@ -1010,10 +1010,10 @@ const fallbackToWorkingModel = async () => {
                 title="Optimize Prompt"
                 size="icon"
                 onClick={() => {
-                  navigate(`/wizard?prompt=${encodeURIComponent(promptText)}`);
+                  navigate(`/optimizer?prompt=${encodeURIComponent(promptText)}`);
                 }}
               >
-                <Wand2 className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
               </Button>
               <Button 
                 variant="ghost" 
@@ -1137,71 +1137,17 @@ explain how the response should be adapted to fit.]"
                 <Play className="h-3 w-3 mr-1" />
                 {isLoading ? "Testing..." : "Test Prompt"}
               </Button>
-              <Button
-                size="sm"
-                className={`bg-amber-500 hover:bg-amber-600 text-white text-xs h-8 ${isLoadingRating ? "opacity-70 cursor-not-allowed" : ""}`}
+              {/* Optimizer Wizard button */}
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-[#BF40BF] to-[#4079ff] hover:from-[#4079ff] hover:to-[#BF40BF] text-white font-semibold text-xs h-8"
+                title="Optimize Prompt"
                 onClick={() => {
-                  if (isLoadingRating) return;
-                  setIsLoadingRating(true);
-                  // If previous attempt failed, ensure loading state is reset
-                  setIsLoadingRating(false);
-                  
-                  // Clear previous response if switching views
-                  if (currentView !== "rate") {
-                    typingEffect.clear();
-                  }
-                  
-                  // Set the view and page
-                  setCurrentView("rate");
-                  setCurrentPage(2);
-                  
-                  // Retry logic for rating
-                  if (lastTestedPrompt) {
-                    // Add a small delay before making the API call
-                    setRatingResponse("Preparing to rate your prompt...");
-                    setTimeout(() => {
-                      getRating(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
-                    }, 100); 
-                  } else if (promptText) {
-                    // If no test has been run but there's prompt text, let user know
-                    setRatingResponse("Please test your prompt first before rating.");
-                  }
+                  navigate(`/wizard?prompt=${encodeURIComponent(promptText)}`);
                 }}
-                disabled={isLoadingRating}
               >
-                <Star className="h-3 w-3 mr-1" />
-                {isLoadingRating ? "Rating..." : "Rate"}
-              </Button>
-              <Button
-                size="sm"
-                className={`bg-violet-500 hover:bg-violet-600 text-white text-xs h-8 ${isLoadingSuggestion ? "opacity-70 cursor-not-allowed" : ""}`}
-                onClick={() => {
-                  if (isLoadingSuggestion) return;
-                  setIsLoadingSuggestion(true);
-                  // Clear previous response if switching views
-                  if (currentView !== "suggest") {
-                    typingEffect.clear();
-                  }
-                  
-                  // Set the view and page
-                  setCurrentView("suggest");
-                  setCurrentPage(3);
-                  
-                  // Only make API call if we have a tested prompt
-                  if (lastTestedPrompt) {
-                    setSuggestionResponse("Preparing suggestions...");
-                    // Add a small delay before making the API call
-                    setTimeout(() => {
-                      getSuggested(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
-                    }, 100);
-                  } else {
-                    setSuggestionResponse("Please test your prompt first before requesting suggestions.");
-                  }
-                }}
-                disabled={isLoadingSuggestion}
-              >
-                <HelpCircle className="h-3 w-3 mr-1" />
-                {isLoadingSuggestion ? "Suggesting..." : "Suggest"}
+                <Wand2 className="h-3 w-3 mr-1" />
+                Optimize Prompt
               </Button>
             </div>
           </div>
@@ -1480,6 +1426,74 @@ explain how the response should be adapted to fit.]"
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Reset
               </Button>
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  className={`bg-amber-500 hover:bg-amber-600 text-white text-xs h-8 ${isLoadingRating ? "opacity-70 cursor-not-allowed" : ""}`}
+                  onClick={() => {
+                    if (isLoadingRating) return;
+                    setIsLoadingRating(true);
+                    // If previous attempt failed, ensure loading state is reset
+                    setIsLoadingRating(false);
+                    
+                    // Clear previous response if switching views
+                    if (currentView !== "rate") {
+                      typingEffect.clear();
+                    }
+                    
+                    // Set the view and page
+                    setCurrentView("rate");
+                    setCurrentPage(2);
+                    
+                    // Retry logic for rating
+                    if (lastTestedPrompt) {
+                      // Add a small delay before making the API call
+                      setRatingResponse("Preparing to rate your prompt...");
+                      setTimeout(() => {
+                        getRating(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
+                      }, 100); 
+                    } else if (promptText) {
+                      // If no test has been run but there's prompt text, let user know
+                      setRatingResponse("Please test your prompt first before rating.");
+                    }
+                  }}
+                  disabled={isLoadingRating}
+                >
+                  <Star className="h-3 w-3 mr-1" />
+                  {isLoadingRating ? "Rating..." : "Rate"}
+                </Button>
+                <Button
+                  size="sm"
+                  className={`bg-violet-500 hover:bg-violet-600 text-white text-xs h-8 ${isLoadingSuggestion ? "opacity-70 cursor-not-allowed" : ""}`}
+                  onClick={() => {
+                    if (isLoadingSuggestion) return;
+                    setIsLoadingSuggestion(true);
+                    // Clear previous response if switching views
+                    if (currentView !== "suggest") {
+                      typingEffect.clear();
+                    }
+                    
+                    // Set the view and page
+                    setCurrentView("suggest");
+                    setCurrentPage(3);
+                    
+                    // Only make API call if we have a tested prompt
+                    if (lastTestedPrompt) {
+                      setSuggestionResponse("Preparing suggestions...");
+                      // Add a small delay before making the API call
+                      setTimeout(() => {
+                        getSuggested(lastTestedPrompt, streamingEnabled ? typingEffect.displayText : aiResponse);
+                      }, 100);
+                    } else {
+                      setSuggestionResponse("Please test your prompt first before requesting suggestions.");
+                    }
+                  }}
+                  disabled={isLoadingSuggestion}
+                >
+                  <HelpCircle className="h-3 w-3 mr-1" />
+                  {isLoadingSuggestion ? "Suggesting..." : "Suggest"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
