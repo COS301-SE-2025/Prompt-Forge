@@ -458,13 +458,21 @@ export default function WidgetManager({
                 <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
                   <div className="flex justify-between text-xs">
                     <span>View → Cart Rate:</span>
-                    <span className={`font-medium ${viewToCartRate >= 15 ? 'text-green-400' : viewToCartRate >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    <span className={`font-medium ${
+                      viewToCartRate >= 25 ? 'text-green-400' : 
+                      viewToCartRate >= 15 ? 'text-yellow-400' : 
+                      viewToCartRate >= 10 ? 'text-orange-400' : 'text-red-400'
+                    }`}>
                       {viewToCartRate.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span>Cart → Purchase Rate:</span>
-                    <span className={`font-medium ${cartToPurchaseRate >= 25 ? 'text-green-400' : cartToPurchaseRate >= 15 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    <span className={`font-medium ${
+                      cartToPurchaseRate >= 70 ? 'text-green-400' : 
+                      cartToPurchaseRate >= 50 ? 'text-yellow-400' : 
+                      cartToPurchaseRate >= 30 ? 'text-orange-400' : 'text-red-400'
+                    }`}>
                       {cartToPurchaseRate.toFixed(1)}%
                     </span>
                   </div>
@@ -487,14 +495,15 @@ export default function WidgetManager({
               <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    bounceRate <= 20 ? "bg-green-500" :
-                    bounceRate <= 40 ? "bg-yellow-500" :
-                    bounceRate <= 60 ? "bg-orange-500" : "bg-red-500"
+                    bounceRate >= 80 ? "bg-green-500" :      // 80-100% = Excellent
+                    bounceRate >= 60 ? "bg-yellow-500" :     // 60-79% = Good
+                    bounceRate >= 40 ? "bg-orange-500" :     // 40-59% = Fair
+                    "bg-red-500"                             // 0-39% = Needs improvement
                   }`} />
                   <span className="text-xs text-muted-foreground">
-                    {bounceRate <= 20 ? "Excellent engagement" :
-                     bounceRate <= 40 ? "Good engagement" :
-                     bounceRate <= 60 ? "Moderate engagement" : "Needs improvement"}
+                    {bounceRate >= 80 ? "Excellent engagement" :
+                     bounceRate >= 60 ? "Good engagement" :
+                     bounceRate >= 40 ? "Fair engagement" : "Engagement needs improvement"}
                   </span>
                 </div>
               </div>
