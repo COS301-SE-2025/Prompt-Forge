@@ -105,7 +105,8 @@ public class DashboardService {
     }
     
     double viewToCartRate = totalViews > 0 ? ((double) totalCartAdds / totalViews) * 100.0 : 0.0;
-    double cartToPurchaseRate = totalCartAdds > 0 ? ((double) totalPurchases / totalCartAdds) * 100.0 : 0.0;
+    double cartToPurchaseRate = totalCartAdds > 0 
+        ? ((double) totalPurchases / totalCartAdds) * 100.0 : 0.0;
     
     funnelData.put("totalViews", totalViews);
     funnelData.put("totalCartAdds", totalCartAdds);

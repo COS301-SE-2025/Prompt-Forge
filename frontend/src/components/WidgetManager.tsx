@@ -182,18 +182,33 @@ export default function WidgetManager({
     viewToCartRate: 0,
     cartToPurchaseRate: 0,
   })
+  const [isLoadingEngagement, setIsLoadingEngagement] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState(Date.now())
 
   useEffect(() => {
     const fetchEngagementData = async () => {
       try {
+        setIsLoadingEngagement(true);
         const data = await PromptInteractionService.getEngagementFunnelData();
+        console.log('Fetched engagement funnel data:', data); // Debug log
         setEngagementFunnelData(data);
+        setLastUpdate(Date.now());
       } catch (error) {
         console.error('Error fetching engagement funnel data:', error);
+        // Don't clear existing data on error, keep showing last known good data
+      } finally {
+        setIsLoadingEngagement(false);
       }
     };
 
     fetchEngagementData();
+    
+    // Refresh data every 30 seconds for real backend data
+    const interval = setInterval(() => {
+      fetchEngagementData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const addWidget = (widgetType: (typeof availableWidgets)[0]) => {
@@ -280,32 +295,62 @@ export default function WidgetManager({
           return "from-red-500/20 to-red-600/30";
         };
 
-        // Use real engagement funnel data
+        // Use real engagement funnel data from backend API
         const totalViews = engagementFunnelData.totalViews || 0;
         const totalCartAdds = engagementFunnelData.totalCartAdds || 0;
         const totalPurchases = engagementFunnelData.totalPurchases || 0;
+        const viewToCartRate = engagementFunnelData.viewToCartRate || 0;
+        const cartToPurchaseRate = engagementFunnelData.cartToPurchaseRate || 0;
         
-        const cartAddRate = totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0;
-        const purchaseRate = totalCartAdds > 0 ? (totalPurchases / totalCartAdds) * 100 : 0;
+        // For funnel visualization, show relative volumes where Views is the baseline
+        const maxViews = Math.max(totalViews, 1); // Prevent division by zero
+        const viewsVolumePercent = 100; // Views are always 100% as baseline
+        const cartAddsVolumePercent = (totalCartAdds / maxViews) * 100;
+        const purchasesVolumePercent = (totalPurchases / maxViews) * 100;
+        
+        // Function to get dynamic color based on engagement level
+        const getEngagementColor = (rate: number, type: string) => {
+          if (type === "Views") return "bg-blue-500";
+          // For cart adds and purchases, use performance-based colors
+          if (rate >= 15) return "bg-green-500"; // Excellent
+          if (rate >= 10) return "bg-yellow-500"; // Good
+          if (rate >= 5) return "bg-orange-500";  // Fair
+          return "bg-red-500"; // Poor
+        };
+        
+        // Enhanced color calculation for better visual feedback
+        const getBarIntensity = (rate: number) => {
+          if (rate >= 20) return "opacity-100";
+          if (rate >= 15) return "opacity-90";
+          if (rate >= 10) return "opacity-75";
+          if (rate >= 5) return "opacity-60";
+          return "opacity-40";
+        };
         
         const components = [
           { 
             name: "Views", 
-            value: 100, 
+            value: viewsVolumePercent, // Use real views data
             count: totalViews,
-            color: "bg-blue-500" 
+            percentage: "100%", // Views are the baseline for funnel
+            color: "bg-blue-500",
+            intensity: "opacity-100"
           },
           { 
             name: "Cart Adds", 
-            value: cartAddRate, 
+            value: cartAddsVolumePercent, // Bar width shows volume relative to views
             count: totalCartAdds,
-            color: "bg-green-500" 
+            percentage: `${viewToCartRate.toFixed(1)}%`, // Text shows conversion rate from backend
+            color: getEngagementColor(viewToCartRate, "Cart"),
+            intensity: getBarIntensity(viewToCartRate)
           },
           { 
             name: "Purchases", 
-            value: purchaseRate,
+            value: purchasesVolumePercent, // Bar width shows volume relative to views
             count: totalPurchases, 
-            color: "bg-purple-500" 
+            percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
+            color: getEngagementColor(cartToPurchaseRate, "Purchase"),
+            intensity: getBarIntensity(cartToPurchaseRate)
           },
         ];
 
@@ -313,12 +358,17 @@ export default function WidgetManager({
           <div className="h-full p-4">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Bounce Rate Analytics</p>
-                <p className={`text-2xl font-bold ${getBounceRateColor(bounceRate)}`}>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Bounce Rate Analytics 
+                  {isLoadingEngagement && (
+                    <span className="text-xs ml-1 animate-pulse">🔄 Updating...</span>
+                  )}
+                </p>
+                <p className={`text-2xl font-bold ${getBounceRateColor(bounceRate)} transition-colors duration-500`}>
                   {bounceRate.toFixed(1)}%
                 </p>
               </div>
-              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(bounceRate)}`}>
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(bounceRate)} transition-all duration-500`}>
                 {widgetType.icon}
               </div>
             </div>
@@ -326,20 +376,68 @@ export default function WidgetManager({
             {/* Heat Map Visualization */}
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground mb-2">Engagement Funnel</p>
-              {components.map((component) => (
+              {components.map((component, index) => (
                 <div key={component.name} className="flex items-center space-x-2">
                   <div className="w-16 text-xs text-muted-foreground">{component.name}</div>
-                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 relative overflow-hidden">
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-3 relative overflow-hidden">
+                    {/* Background pattern for visual depth */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
                     <div
-                      className={`h-full ${component.color} transition-all duration-500 ease-in-out`}
-                      style={{ width: `${Math.min(100, Math.max(5, component.value))}%` }}
-                    />
+                      className={`h-full ${component.color} ${component.intensity} transition-all duration-1000 ease-out relative`}
+                      style={{ 
+                        width: `${Math.min(100, Math.max(3, component.value))}%`,
+                        transitionDelay: `${index * 100}ms`
+                      }}
+                    >
+                      {/* Simple shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+                    </div>
                   </div>
-                  <div className="w-12 text-xs text-muted-foreground text-right">
-                    {component.count > 0 ? component.count : Math.round(component.value) + '%'}
+                  <div className={`w-12 text-xs text-muted-foreground text-right font-medium transition-all duration-500`}>
+                    {component.percentage}
                   </div>
                 </div>
               ))}
+              
+              {/* Additional metrics display */}
+              <div className="mt-2 pt-2 text-xs text-muted-foreground border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Total Views:</span>
+                  <span className="font-medium text-blue-400">{totalViews.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Cart Conversions:</span>
+                  <span className="font-medium text-green-400">{totalCartAdds.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Purchase Conversions:</span>
+                  <span className="font-medium text-purple-400">{totalPurchases.toLocaleString()}</span>
+                </div>
+                
+                {/* Real conversion rates from backend */}
+                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
+                  <div className="flex justify-between text-xs">
+                    <span>View → Cart Rate:</span>
+                    <span className={`font-medium ${viewToCartRate >= 15 ? 'text-green-400' : viewToCartRate >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {viewToCartRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Cart → Purchase Rate:</span>
+                    <span className={`font-medium ${cartToPurchaseRate >= 25 ? 'text-green-400' : cartToPurchaseRate >= 15 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {cartToPurchaseRate.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Data source indicator */}
+                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
+                  <div className="text-xs text-muted-foreground flex items-center">
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${totalViews > 0 ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                    {totalViews > 0 ? 'Live Data' : 'No Data Available'}
+                  </div>
+                </div>
+              </div>
               
               {/* Status indicator */}
               <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
