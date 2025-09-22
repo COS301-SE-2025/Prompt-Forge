@@ -9,7 +9,7 @@
 EPI-USE Labs.     </a>
 </h3>
 
-Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment.
+Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment. The platform features an integrated chat system for real-time collaboration and community engagement.
 
 ---
 
@@ -190,32 +190,27 @@ We use a **GitFlow** branching strategy to organize our development:
 Our Demo 4 showcases two impressive extra features beyond the original client requirements:
 
 ### 🎯 WOW Factor 1: Prompt Wars - Competitive Prompt Testing Arena
-An innovative gamified feature that transforms prompt engineering into an engaging competitive experience. Users can create "battles" where multiple prompts compete against each other using the same AI model and test datasets. The system automatically evaluates prompts based on multiple criteria including response quality, creativity, accuracy, and performance metrics. Features include:
+An innovative gamified feature that transforms prompt engineering into an engaging competitive experience. Users can create "battles" where prompts compete against each other using the same AI model. The system automatically evaluates prompts based on multiple criteria including response quality, creativity, accuracy, and performance metrics. Features include:
 
 - **Real-time Battle Arena**: Live competitive testing environment where prompts face off
 - **Automated Scoring System**: Intelligent evaluation using multiple AI models and human-defined criteria
-- **Leaderboards & Rankings**: Track top-performing prompts and prompt engineers
-- **Tournament Mode**: Bracket-style competitions with elimination rounds
-- **Community Voting**: Allow users to vote on prompt effectiveness and creativity
-- **Battle History & Analytics**: Detailed performance tracking and improvement suggestions
+- **Reverse Prompt War Mode**: A unique twist where users are given AI responses and must craft the most effective prompt that could have generated that output - testing reverse engineering skills
+- **Real-time Chat Integration**: Participants can discuss strategies and share insights during battles
 
 ### 🚀 WOW Factor 2: AI Optimizer Wizard - Intelligent Prompt Enhancement
 A sophisticated AI-powered assistant that automatically analyzes and optimizes user prompts for better performance. This wizard uses advanced natural language processing and machine learning techniques to suggest improvements, restructure prompts, and enhance their effectiveness across different AI models. Key capabilities include:
 
 - **Smart Prompt Analysis**: Deep analysis of prompt structure, clarity, and potential effectiveness
 - **Auto-Optimization Suggestions**: AI-generated recommendations for prompt improvements
-- **Multi-Model Compatibility**: Ensures prompts work optimally across different LLM providers
 - **Performance Prediction**: Estimates prompt effectiveness before execution
 - **Template Generation**: Creates optimized prompt templates based on user goals
-- **A/B Testing Integration**: Automatically generates prompt variations for testing
-- **Learning from Success**: Analyzes high-performing prompts to suggest best practices
 
 ---
 
 ## 🧪 Testing & Quality Assurance
 
 ### Automated Testing Coverage
-- ✅ **Unit Tests**: 100% coverage of all components
+- ✅ **Unit Tests**: 80% coverage of all components
 - ✅ **Integration Tests**: All use cases covered
 - ✅ **Non-Functional Tests**: Performance, Security, Usability
 
