@@ -52,11 +52,12 @@ export default function MarketplacePage() {
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [showFeatured, setShowFeatured] = useState(true)
-  const [availableCategories, setAvailableCategories] = useState<Tag[]>([]) // ✅ Changed to Tag[]
+  const [availableCategories, setAvailableCategories] = useState<Tag[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [ratingsLoading, setRatingsLoading] = useState(false)
-  const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [categoriesError, setCategoriesError] = useState<string | null>(null) // ✅ Add categories error state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Pagination calculations
@@ -68,19 +69,40 @@ export default function MarketplacePage() {
     { value: "new", label: "New" },
   ]
 
-  // ✅ Fetch available categories/tags from the database
-  const fetchAvailableCategories = async () => {
+  // ✅ Enhanced category fetching with retry logic
+  const fetchAvailableCategories = async (retryCount = 0) => {
+    const maxRetries = 3
     setCategoriesLoading(true)
+    setCategoriesError(null)
+    
     try {
       const tags = await promptService.getAllTags()
-      // console.log("Fetched tags:", tags) // Debug log
-      setAvailableCategories(tags)
+      console.log("Fetched tags:", tags) // Debug log
+      setAvailableCategories(tags || []) // Ensure fallback to empty array
+      setCategoriesError(null)
     } catch (error) {
       console.error('Error fetching categories:', error)
+      
+      if (retryCount < maxRetries) {
+        console.log(`Retrying category fetch (${retryCount + 1}/${maxRetries})...`)
+        setTimeout(() => {
+          fetchAvailableCategories(retryCount + 1)
+        }, 1000 * (retryCount + 1)) // Exponential backoff
+        return
+      }
+      
+      setCategoriesError('Failed to load categories')
       setAvailableCategories([]) // Fallback to empty array
     } finally {
-      setCategoriesLoading(false)
+      if (retryCount >= maxRetries || retryCount === 0) {
+        setCategoriesLoading(false)
+      }
     }
+  }
+
+  // ✅ Add manual retry function for categories
+  const retryCategoriesLoad = () => {
+    fetchAvailableCategories(0)
   }
 
   const handleFilterChange = (filter: string) => {
@@ -95,6 +117,8 @@ export default function MarketplacePage() {
     setSelectedCategory(category);
     setCurrentPage(1) //Reset to page 1
     // console.log("category:", category);
+    
+    // Only update results, don't reload categories
     fetchData(category, selectedFilter, searchQuery, 1)
   }
 
@@ -155,9 +179,20 @@ export default function MarketplacePage() {
 
   //Load initial data and categories when component mounts
   useEffect(() => {
-    fetchAvailableCategories() // Fetch categories first
-    fetchData() // Then fetch prompts
+    // Fetch categories and prompts independently - only once on mount
+    fetchAvailableCategories() 
+    fetchData() 
   }, [])
+
+  // ✅ Add effect to retry categories if they fail to load and prompts are successful
+  useEffect(() => {
+    if (!categoriesLoading && availableCategories.length === 0 && categoriesError && currentPrompts.length > 0) {
+      console.log("Prompts loaded but categories failed, retrying categories...")
+      setTimeout(() => {
+        fetchAvailableCategories(0)
+      }, 2000)
+    }
+  }, [categoriesLoading, availableCategories.length, categoriesError, currentPrompts.length])
 
   // Add this useEffect to check for refresh flag:
   useEffect(() => {
@@ -196,8 +231,8 @@ export default function MarketplacePage() {
     }
   }, [currentPrompts, selectedCategory, selectedFilter, searchQuery, currentPage])
 
-  // Show loading screen (full screen like other pages)
-  if ((loading && currentPrompts.length === 0) || categoriesLoading) {
+  // Show loading screen (full screen like other pages) - Only block for prompts, not categories
+  if (loading && currentPrompts.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
@@ -325,9 +360,26 @@ export default function MarketplacePage() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
                   </div>
                 )}
+                {/* ✅ Enhanced error handling for categories */}
                 {!categoriesLoading && availableCategories.length === 0 && (
-                  <div className="text-xs text-muted-foreground px-2 py-1">
-                    No categories found
+                  <div className="px-2 py-1">
+                    {categoriesError ? (
+                      <div className="text-center">
+                        <div className="text-xs text-red-500 mb-2">{categoriesError}</div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={retryCategoriesLoad}
+                          className="text-xs h-6 px-2 text-[#3ebb9e] hover:text-[#3ebb9e] hover:bg-[#3ebb9e]/10"
+                        >
+                          Retry
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">
+                        No categories found
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

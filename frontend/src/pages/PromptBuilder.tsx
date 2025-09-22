@@ -393,7 +393,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
           onComplete: () => {
             setIsGenerating(false)
             setGeneratedPrompt(accumulatedContent)
-            showNotification("success", "Prompt Generated", "Your optimized prompt has been generated successfully!");
+            showNotification("success", "Prompt Generated", "Your prompt has been generated successfully!");
             // console.log("Prompt generation completed")
           },
           onError: (error: string) => {
@@ -700,7 +700,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     <div className="text-center">
                       <Wand2 className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">Your optimized prompt will appear here</p>
+                      <p className="text-sm">Your generated prompt will appear here</p>
                       <p className="text-xs mt-1">Select a profile and describe your idea to get started</p>
                     </div>
                   </div>
@@ -945,7 +945,7 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
                     <div className="flex items-center justify-center h-full text-muted-foreground">
                       <div className="text-center">
                         <Wand2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">Your optimized prompt will appear here</p>
+                        <p className="text-sm">Your generated prompt will appear here</p>
                         <p className="text-xs mt-1">Select a profile and describe your idea to get started</p>
                       </div>
                     </div>

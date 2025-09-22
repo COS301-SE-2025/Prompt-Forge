@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fiveOps.promptforge.promptwars.model.Challenge;
 import com.fiveOps.promptforge.promptwars.model.Game;
 import com.fiveOps.promptforge.promptwars.model.GameState;
+import com.fiveOps.promptforge.promptwars.model.GameType;
 import com.fiveOps.promptforge.promptwars.repository.ChallengeRepository;
 import com.fiveOps.promptforge.promptwars.repository.GameRepository;
 import com.fiveOps.promptforge.user_profile.model.User;
@@ -32,11 +33,18 @@ public class ChallengeService {
   @Autowired private GameService gameService;
 
   public Challenge sendChallenge(UUID challengerId, UUID opponentId, String message) {
+    return sendChallenge(challengerId, opponentId, message, GameType.PROMPT_CREATION);
+  }
+
+  public Challenge sendChallenge(
+      UUID challengerId, UUID opponentId, String message, GameType gameType) {
     System.out.println(
         "DEBUG: Starting sendChallenge - challengerId: "
             + challengerId
             + ", opponentId: "
-            + opponentId);
+            + opponentId
+            + ", gameType: "
+            + gameType);
 
     try {
       // Validation
@@ -68,7 +76,7 @@ public class ChallengeService {
 
       // Create challenge
       System.out.println("DEBUG: Creating challenge...");
-      Challenge challenge = new Challenge(challengerId, opponentId);
+      Challenge challenge = new Challenge(challengerId, opponentId, gameType);
       if (message != null && !message.trim().isEmpty()) {
         challenge.setMessage(message.trim());
       }
@@ -127,7 +135,9 @@ public class ChallengeService {
     challengeRepository.save(challenge);
 
     // Create game
-    Game game = gameService.createGame(challenge.getChallengerId(), challenge.getOpponentId());
+    Game game =
+        gameService.createGame(
+            challenge.getChallengerId(), challenge.getOpponentId(), challenge.getGameType());
 
     // Notify both players
     User challenger = userRepository.findById(challenge.getChallengerId()).orElseThrow();
