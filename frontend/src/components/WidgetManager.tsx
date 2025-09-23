@@ -453,40 +453,6 @@ export default function WidgetManager({
                   <span>Purchase Conversions:</span>
                   <span className="font-medium text-purple-400">{totalPurchases.toLocaleString()}</span>
                 </div>
-                
-                {/* Real conversion rates from backend */}
-                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
-                  <div className="flex justify-between text-xs">
-                    <span>View → Cart Rate:</span>
-                    <span className={`font-medium ${
-                      viewToCartRate >= 70 ? 'text-green-400' : 
-                      viewToCartRate >= 50 ? 'text-yellow-400' : 
-                      viewToCartRate >= 30 ? 'text-orange-400' : 'text-red-400'
-                    }`}>
-                      {viewToCartRate.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Cart → Purchase Rate:</span>
-                    <span className={`font-medium ${
-                      cartToPurchaseRate >= 70 ? 'text-green-400' : 
-                      cartToPurchaseRate >= 50 ? 'text-yellow-400' : 
-                      cartToPurchaseRate >= 30 ? 'text-orange-400' : 'text-red-400'
-                    }`}>
-                      {cartToPurchaseRate.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Data source indicator */}
-                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
-                      (totalViews > 0 || totalPurchases > 0) ? 'bg-yellow-400' : 'bg-red-400'
-                    }`}></span>
-                    {(totalViews > 0 || totalPurchases > 0) ? 'Dashboard Data (Calculated)' : 'No Data Available'}
-                  </div>
-                </div>
               </div>
               
               {/* Status indicator */}
@@ -637,14 +603,6 @@ export default function WidgetManager({
                     {totalCartAdds > 0 ? ((totalPurchases / totalCartAdds) * 100).toFixed(1) : 0}% of Cart Adds
                   </span>
                 </div>
-              </div>
-            </div>
-            
-            {/* Status Indicator */}
-            <div className="mt-2">
-              <div className="text-xs text-muted-foreground flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mr-1"></span>
-                Dashboard Data (Calculated)
               </div>
             </div>
           </div>
