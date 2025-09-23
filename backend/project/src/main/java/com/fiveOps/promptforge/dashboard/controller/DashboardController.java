@@ -140,8 +140,12 @@ public class DashboardController {
           dashboardService.getMonthlyPromptCounts(userId, java.time.LocalDate.now().getYear()));
 
       System.out.println(
-          "Dashboard data retrieved - Downloads: " + totalDownloads 
-          + ", Rating: " + averageRating + ", Bounce Rate: " + averageBounceRate);
+          "Dashboard data retrieved - Downloads: "
+              + totalDownloads
+              + ", Rating: "
+              + averageRating
+              + ", Bounce Rate: "
+              + averageBounceRate);
     } catch (Exception e) {
       System.err.println("Dashboard service error: " + e.getMessage());
       e.printStackTrace();
@@ -163,7 +167,7 @@ public class DashboardController {
         userId = user.getUserId();
       }
     }
-    
+
     if (userId == null) {
       Map<String, Object> emptyFunnel = new HashMap<>();
       emptyFunnel.put("totalViews", 0L);
