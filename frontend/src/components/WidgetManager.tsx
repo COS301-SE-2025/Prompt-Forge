@@ -279,15 +279,6 @@ export default function WidgetManager({
         const totalEngagedViews = totalCartAdds + totalPurchases; // People who took any action (cart OR purchase)
         const bounceRate = totalViews > 0 ? Math.max(0, Math.min(100, ((totalViews - totalEngagedViews) / totalViews) * 100)) : 0;
         
-        console.log('Bounce Rate Widget - Dashboard Data Mode:', {
-          totalViews,
-          totalCartAdds,
-          totalPurchases,
-          calculatedBounceRate: bounceRate.toFixed(1) + '%',
-          viewToCartRate: viewToCartRate.toFixed(1) + '%',
-          cartToPurchaseRate: cartToPurchaseRate.toFixed(1) + '%'
-        });
-        
         const getBounceRateColor = (rate: number) => {
           if (rate <= 40) return "text-green-600";      // 0-40% = Excellent (low bounce rate)
           if (rate <= 55) return "text-yellow-600";     // 41-55% = Good (moderate bounce rate)
@@ -308,14 +299,6 @@ export default function WidgetManager({
         const viewsBarWidth = engagementRate; // Views bar matches engagement percentage
         const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
         const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
-        
-        console.log('Bar widths calculated:', {
-          engagementRate,
-          viewsBarWidth,
-          cartAddsBarWidth, 
-          purchasesBarWidth,
-          bounceRate
-        });
         
         // Function to get dynamic color based on engagement level
         const getEngagementColor = (rate: number) => {
