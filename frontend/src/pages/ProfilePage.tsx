@@ -9,6 +9,8 @@ import { dashProfileService } from '../services/dashprofileService';
 import { PromptCard } from '@/components/PromptCard';
 import { SocialAPI } from '@/services/socialService';
 import { FullScreenSpinner } from '@/components/FullScreenSpinner';
+import { Swords } from 'lucide-react';
+import { promptWarsWebSocket } from '@/services/promptWarsWebSocket';
 
 
 type UserProfile = {
@@ -21,18 +23,9 @@ type UserProfile = {
   profilePicture?: string
   isFollowing: boolean
   isFollowedBy: boolean
+  isActive?:boolean
 }
 
-// Update the allowedTags array to match the actual Category type
-
-const allowedTags = [
-  "Business",
-  "Coding",
-  "Science",
-  "Technical",
-  "Health",
-  "General"
-] as const;
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>()
@@ -97,9 +90,9 @@ export default function ProfilePage() {
 
       try {
         const profile: UserProfile = await dashProfileService.getDashboardProfileByUsername(username || "")
-        console.log("profile", profile);
         setUserProfile(profile)
         setLoading(false);
+        return profile;
       }
       catch (error) {
         console.error('Failed to fetch user profile:', error)
@@ -112,6 +105,32 @@ export default function ProfilePage() {
     }
 
     fetchUserProfile()
+    .then((profile) =>{
+      const userId = localStorage.getItem('userId')
+      
+      if (profile && userId) {
+        promptWarsWebSocket.connect(userId)
+        .then(()=>{
+          promptWarsWebSocket.getUserOnlineStatus({"userId":userId,"otherUserId":profile.userId})
+        })
+      }
+
+    })
+
+    const subscribeActivity = promptWarsWebSocket.on('USER_ONLINE_STATUS', (data: any) => {
+      setUserProfile(prev => ({
+        ...prev,
+        isActive: data.isActive,
+      }))
+
+      
+    })
+
+    return () => {
+      subscribeActivity();
+    }
+
+    
   }, [isAuthenticated, navigate])
 
   // Fetch user's prompts
@@ -139,15 +158,12 @@ export default function ProfilePage() {
         if (response.ok) {
           let page = (await response.json());
 
-          console.log("page.totalElements:", page);
-          console.log("page.totalElements:", page.totalElements);
           setTotalPages(page.totalPages)
           setPublicPromptCount(page.totalElements)
           let prompts = page.content;
-          // console.log("prompts:", prompts);
 
           if (!Array.isArray(prompts)) prompts = [];
-
+          console.log("propmts:",prompts);
 
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
             id: p.id,
@@ -318,7 +334,10 @@ export default function ProfilePage() {
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
                 onClick={() => navigate(`/profile-settings`)}
               />
-              <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
+              {
+                userProfile.isActive &&
+                <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
+              }
             </div>
             <h3
               className="font-medium cursor-pointer hover:text-[#3ebb9e]"
@@ -338,6 +357,21 @@ export default function ProfilePage() {
                 onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
               >
                 {userProfile.isFollowing ? "Following" : "Follow"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                
+                className={`transition-all duration-300 w-full 
+                  bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
+                  `}
+                title={ "Challenge to Prompt Wars" }
+              >
+                
+                <Swords className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-300" />
+                {/* Challenge */}
+               
+
               </Button>
             </div>
             
@@ -391,11 +425,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 myPrompts.map((prompt, idx) => {
-                  const tags = prompt.tags.map((tag, tagIdx) =>
-                    allowedTags.includes(tag as typeof allowedTags[number])
-                      ? (tag as typeof allowedTags[number])
-                      : "General"
-                  );
+                  
                   return (
                     <div key={prompt.id + '-' + idx}>
                       <PromptCard
@@ -404,7 +434,7 @@ export default function ProfilePage() {
                         description={prompt.description}
                         rating={avgRatingMap[prompt.id] ?? 0}
                         price={prompt.price}
-                        tags={tags.map((tag, tagIdx) => tag)}
+                        tags={prompt.tags}
                         authorname={username || ""}
                       />
                     </div>
