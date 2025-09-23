@@ -1,0 +1,60 @@
+.custom-radio {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #a855f7; /* purple-500 */
+  border-radius: 9999px;
+  background: #fff;
+  display: inline-block;
+  position: relative;
+  transition: border-color 0.2s;
+  vertical-align: middle;
+}
+
+.custom-radio:checked {
+  border-color: #3ebb9e; /* pink-500 */
+  background: #fff;
+}
+
+.custom-radio:checked::after {
+  content: "";
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  background: #3ebb9e; /* pink-500 */
+  border-radius: 9999px;
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  transition: background 0.2s;
+}
+
+.custom-checkbox {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #a855f7; /* purple-500 */
+  border-radius: 0.25rem;
+  background: #fff;
+  position: relative;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.custom-checkbox:checked {
+  border-color: #3ebb9e; /* green-500 */
+  background: #3ebb9e;
+}
+
+.custom-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 0.28rem;
+  top: 0.18rem;
+  width: 0.5rem;
+  height: 0.9rem;
+  border: solid #fff;
+  border-width: 0 0.18rem 0.18rem 0;
+  transform: rotate(45deg);
+  display: block;
+}

@@ -173,4 +173,56 @@ public class PromptWarsGameController {
           .body("Failed to cancel active game: " + e.getMessage());
     }
   }
+
+  // Reverse Prompt Battle endpoints
+
+  @PostMapping("/{gameId}/generate-question")
+  public ResponseEntity<Map<String, Object>> generateQuestion(@PathVariable String gameId) {
+    try {
+      UUID id = UUID.fromString(gameId);
+      Game game = gameService.generateQuestion(id);
+
+      Map<String, Object> response =
+          Map.of(
+              "question", game.getCurrentQuestion(),
+              "output", game.getCurrentOutput(),
+              "options", game.getCurrentOptions(),
+              "questionNumber", game.getQuestionNumber(),
+              "gameState", game.getGameState().toString());
+
+      return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
+  @PostMapping("/{gameId}/submit-answer")
+  public ResponseEntity<Map<String, Object>> submitAnswer(
+      @PathVariable String gameId,
+      @RequestBody Map<String, String> request,
+      @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
+    try {
+      UUID id = UUID.fromString(gameId);
+      String answer = request.get("answer");
+      UUID playerId = UUID.fromString(userIdHeader);
+
+      Game game = gameService.submitAnswer(id, playerId, answer);
+
+      Map<String, Object> response =
+          Map.of(
+              "gameState", game.getGameState().toString(),
+              "player1Score", game.getPlayer1CorrectAnswers(),
+              "player2Score", game.getPlayer2CorrectAnswers(),
+              "questionNumber", game.getQuestionNumber(),
+              "answersSubmitted", game.bothPlayersAnswered());
+
+      return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
 }
