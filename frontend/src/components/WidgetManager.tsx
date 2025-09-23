@@ -247,14 +247,14 @@ export default function WidgetManager({
         )
       }
       case "bounce-rate": {
-        // Skip engagement funnel API to avoid 500 errors - use dashboard data directly
+        // Skip engagement funnel use dashboard data directly
         let totalViews = 0;
         let totalCartAdds = 0;
         let totalPurchases = 0;
         let viewToCartRate = 0;
         let cartToPurchaseRate = 0;
         
-        // Use dashboard data as primary source (avoids API failures)
+        // Use dashboard data as primary source
         if (data) {
           // Handle zero prompts case - no views, no activity
           const basePrompts = data.totalPrompts || 0;
@@ -267,14 +267,9 @@ export default function WidgetManager({
             viewToCartRate = 0;
             cartToPurchaseRate = 0;
           } else {
-            // Make total views 50% more than total prompts (more realistic than 1:1 ratio)
-            totalViews = Math.floor(basePrompts * 1.5); // 50% more views than prompts
             
-            // Use total downloads as proxy for purchases (completed transactions)
+            totalViews = Math.floor(basePrompts * 1.5); 
             totalPurchases = data.totalDownloads || 0;
-            
-            // Estimate cart adds as somewhere between views and purchases
-            // If no downloads, estimate 20% of views had cart interactions
             totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
             
             // Calculate rates based on dashboard data
