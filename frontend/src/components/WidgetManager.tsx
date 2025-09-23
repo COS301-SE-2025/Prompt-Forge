@@ -246,7 +246,7 @@ export default function WidgetManager({
     loading: boolean,
   ) => {
     switch (widgetType.id) {
-      case "total-prompts":
+      case "total-prompts": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -257,7 +257,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "total-users":
+      }
+      case "total-users": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -268,7 +269,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "average-rating":
+      }
+      case "average-rating": {
         return (
           <div className="flex items-center justify-between h-full ">
             <div>
@@ -279,6 +281,7 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
+      }
       case "bounce-rate": {
         const bounceRate = data?.averageBounceRate || 0;
         const getBounceRateColor = (rate: number) => {
