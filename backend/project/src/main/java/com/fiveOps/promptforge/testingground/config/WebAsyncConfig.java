@@ -5,7 +5,7 @@ import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class AsyncConfig implements WebMvcConfigurer {
+public class WebAsyncConfig implements WebMvcConfigurer {
 
   @Override
   public void configureAsyncSupport(AsyncSupportConfigurer configurer) {

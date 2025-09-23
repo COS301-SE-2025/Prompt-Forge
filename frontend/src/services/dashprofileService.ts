@@ -16,6 +16,19 @@ class DashProfileService {
 
     return await response.json();
   }
+
+  async getDashboardProfileByUsername(username: string): Promise<any> {
+    const response = await fetch(`${HttpClient.apiUrl}${this.baseUrl}/profile/${username}`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch dashboard profile");
+    }
+
+    return await response.json();
+  }
 }
 
 export const dashProfileService = new DashProfileService();

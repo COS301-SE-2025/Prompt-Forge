@@ -1491,13 +1491,28 @@ Overall Analysis: [brief summary]`,
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 relative overflow-hidden">
+    <div className={`min-h-screen relative overflow-hidden ${
+      gameData?.gameType === 'REVERSE_PROMPT' 
+        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900'
+        : 'bg-gradient-to-br from-slate-900 via-green-900 to-slate-900'
+    }`}>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#3ebb9e]/10 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-[#4079ff]/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#3ebb9e]/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
-        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-[#4079ff]/5 rounded-full blur-xl animate-pulse delay-3000"></div>
+        {gameData?.gameType === 'REVERSE_PROMPT' ? (
+          <>
+            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-24 h-24 bg-violet-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+            <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-purple-500/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
+            <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-violet-500/5 rounded-full blur-xl animate-pulse delay-3000"></div>
+          </>
+        ) : (
+          <>
+            <div className="absolute top-20 left-10 w-32 h-32 bg-[#3ebb9e]/10 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-24 h-24 bg-[#4079ff]/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+            <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#3ebb9e]/5 rounded-full blur-2xl animate-pulse delay-2000"></div>
+            <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-[#4079ff]/5 rounded-full blur-xl animate-pulse delay-3000"></div>
+          </>
+        )}
       </div>
 
       <div className="relative z-10 p-6">
@@ -2214,7 +2229,7 @@ Overall Analysis: [brief summary]`,
                             ? "bg-gradient-to-r from-[#4079ff]/20 to-green-500/20 border border-[#4079ff]/30 text-white"
                             : message.user === "You"
                               ? "bg-gradient-to-r from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/30 text-[#3ebb9e] ml-4"
-                            : message.user === "Player 2"
+                              : message.user === "Player 2"
                               ? "bg-gradient-to-r from-pink-500/20 to-yellow-400/20 border border-pink-400/30 text-pink-300 mr-4"
                               : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-4"
                           }`}

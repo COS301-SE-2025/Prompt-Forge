@@ -63,7 +63,7 @@ export const PromptCard = ({
               <span className="text-xs ml-1 text-muted-foreground">@{authorname}</span>
             </div>
             <div className="text-xs font-medium group-hover:text-[#3ebb9e] transition-colors duration-300">
-              {price === 0 ? "Free" : `$${price.toFixed(2)}`}
+              {price === 0 ? "Free" : `ZAR ${price.toFixed(2)}`}
             </div>
           </div>
         </div>

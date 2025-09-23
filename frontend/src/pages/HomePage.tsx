@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card"
 import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, FileText, HelpCircle } from "lucide-react"
 import InteractiveBackground from "@/components/InteractiveBackground"
 import GradientText from "@/components/GradientText"
+import { promptWarsWebSocket } from "@/services/promptWarsWebSocket"
 
 export default function HomePage() {
   const [leftLoaded, setLeftLoaded] = useState(false)
@@ -14,6 +15,11 @@ export default function HomePage() {
   useEffect(() => {
     const leftTimer = setTimeout(() => setLeftLoaded(true), 150)
     const cardsTimer = setTimeout(() => setCardsLoaded(true), 300)
+    const userId = localStorage.getItem('userId')
+    
+    if (userId)
+      promptWarsWebSocket.connect(userId)
+
     return () => {
       clearTimeout(leftTimer)
       clearTimeout(cardsTimer)
@@ -156,17 +162,17 @@ export default function HomePage() {
               </Link>
 
               {/* Community Rankings */}
-              <Link to="/community" className="col-span-1">
+              <Link to="/social" className="col-span-1">
                 <Card className="bg-rose-500/20 border-rose-500/30 p-2 sm:p-3 lg:p-4 hover:bg-rose-500/30 transition-all duration-300 cursor-pointer h-full hover:shadow-[0_0_20px_rgba(244,63,94,0.5)] hover:scale-105 backdrop-blur-sm">
                   <div className="bg-rose-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-1 sm:mb-2 lg:mb-3">
                     <Trophy className="text-white h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                   </div>
                   <h3 className="text-foreground text-xs sm:text-sm lg:text-base font-medium mb-1 lg:mb-2">
-                    <span className="sm:hidden">Community</span>
-                    <span className="hidden sm:inline">Community Rankings</span>
+                    <span className="sm:hidden">Social</span>
+                    <span className="hidden sm:inline">Social Hub</span>
                   </h3>
                   <p className="text-muted-foreground text-[10px] sm:text-xs lg:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
-                    See how your prompts rank against others in the community based on ratings.
+                    Connect, follow, challenge, and chat with other prompt creators in the community.
                   </p>
                 </Card>
               </Link>

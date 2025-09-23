@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
+import com.fiveOps.promptforge.prompts.service.PromptInteractionService;
 import com.fiveOps.promptforge.prompts.service.PromptService;
 import com.fiveOps.promptforge.securityConfig.JwtUtil;
 import com.fiveOps.promptforge.user_profile.model.User;
@@ -34,11 +35,59 @@ public class PromptController {
   private final PromptService promptService;
   private final JwtUtil jwtUtil;
   private final UserService userService;
+  private final PromptInteractionService promptInteractionService;
 
-  public PromptController(PromptService promptService, JwtUtil jwtUtil, UserService userService) {
+  public PromptController(
+      PromptService promptService,
+      JwtUtil jwtUtil,
+      UserService userService,
+      PromptInteractionService promptInteractionService) {
     this.promptService = promptService;
     this.jwtUtil = jwtUtil;
     this.userService = userService;
+    this.promptInteractionService = promptInteractionService;
+  }
+
+  // Endpoint to record a prompt interaction (view, add_to_cart, purchase, etc.)
+  @PostMapping("/{id}/interact")
+  public ResponseEntity<?> recordPromptInteraction(
+      @PathVariable UUID id, @RequestParam String action, Authentication authentication) {
+    Prompt prompt = promptService.getPromptById(id);
+    if (prompt == null) {
+      return ResponseEntity.notFound().build();
+    }
+    if (authentication == null || authentication.getName() == null) {
+      return ResponseEntity.status(401).body("Authentication required");
+    }
+    String userEmail = authentication.getName();
+    User user = userService.findByEmail(userEmail);
+    if (user == null) {
+      return ResponseEntity.status(401).body("User not found");
+    }
+    promptInteractionService.recordInteraction(prompt, user, action);
+    return ResponseEntity.ok("Interaction recorded");
+  }
+
+  // Endpoint to get bounce rate for a prompt
+  @GetMapping("/{id}/bounce-rate")
+  public ResponseEntity<Double> getPromptBounceRate(@PathVariable UUID id) {
+    Prompt prompt = promptService.getPromptById(id);
+    if (prompt == null) {
+      return ResponseEntity.notFound().build();
+    }
+    double bounceRate = promptInteractionService.getPromptBounceRate(prompt);
+    return ResponseEntity.ok(bounceRate);
+  }
+
+  // Endpoint to get view count for a prompt
+  @GetMapping("/{id}/views")
+  public ResponseEntity<Long> getPromptViewCount(@PathVariable UUID id) {
+    Prompt prompt = promptService.getPromptById(id);
+    if (prompt == null) {
+      return ResponseEntity.notFound().build();
+    }
+    long views = promptInteractionService.getPromptViews(prompt);
+    return ResponseEntity.ok(views);
   }
 
   @GetMapping
@@ -50,6 +99,12 @@ public class PromptController {
   public ResponseEntity<Page<PromptWithSourceDTO>> getPromptsByAuthor(
       @PathVariable UUID authorId, Pageable pageable) {
     return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId, pageable));
+  }
+
+  @GetMapping("public/author/{username}")
+  public ResponseEntity<Page<PromptWithSourceDTO>> getPublicPromptsByUsername(
+      @PathVariable String username, Pageable pageable) {
+    return ResponseEntity.ok(promptService.getPublicPromptsByUsername(username, pageable));
   }
 
   @GetMapping("/{id}")

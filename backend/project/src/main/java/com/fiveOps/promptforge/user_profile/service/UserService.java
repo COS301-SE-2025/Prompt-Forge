@@ -45,6 +45,10 @@ public class UserService {
     return mapToDto(user);
   }
 
+  public User findById(UUID id) {
+    return userRepository.findById(id).orElse(null);
+  }
+
   public UserDto getUserByEmail(String email) {
     User user =
         userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));

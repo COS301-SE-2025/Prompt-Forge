@@ -27,6 +27,7 @@ import { StarRating } from "./StarRating"
 import { Card } from "./ui/Card"
 import { ReviewForm } from "./ReviewForm"
 import { PromptService } from "@/services/promptService"
+import PromptInteractionService from "@/services/promptInteractionService"
 import type { PromptWithTags, Review } from "@/Models/Prompt"
 import { Button } from "./ui/Button"
 import { CartService } from "@/services/cartServices"
@@ -53,11 +54,12 @@ export const PromptDetails = () => {
   const [reviewsCollapsed, setReviewsCollapsed] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
-  const [viewCount] = useState(1247) // Mock view count
+  const [viewCount, setViewCount] = useState(0) // Real view count from API
   const [showAllReviews, setShowAllReviews] = useState(false)
 
   const promptService = new PromptService()
   const cartService = new CartService()
+  const interactionService = new PromptInteractionService()
   const notificationRef = useRef<HTMLDivElement | null>(null)
 
   // Notification helper
@@ -142,6 +144,15 @@ export const PromptDetails = () => {
         }
 
         await checkAuthAndGetUserId()
+
+        // Fetch real view count for the prompt
+        try {
+          const views = await interactionService.getViewCount(actualId)
+          setViewCount(views)
+        } catch (error) {
+          console.warn("Failed to fetch view count:", error)
+          setViewCount(0) // Fallback to 0 if we can't fetch the count
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load data")
       } finally {
@@ -152,6 +163,22 @@ export const PromptDetails = () => {
     fetchPromptData()
   }, [id])
 
+  // Record VIEW interaction when user and prompt data are available
+  useEffect(() => {
+    const recordViewInteraction = async () => {
+      if (currentUserId && prompt && currentUserId !== prompt.authorId && id) {
+        try {
+          const actualId = IdObfuscator.reveal(id)
+          await interactionService.recordView(actualId)
+        } catch (error) {
+          console.warn("Failed to record view interaction:", error)
+        }
+      }
+    }
+
+    recordViewInteraction()
+  }, [currentUserId, prompt, id])
+
   const averageRating =
     reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
 
@@ -161,15 +188,24 @@ export const PromptDetails = () => {
       return
     }
 
-    cartService
-      .addToCart(id)
-      .then((res) => {
-        showNotification("success", "Added to cart", res.message)
-        setUserAddedToCart(true)
-      })
-      .catch((err) => {
-        showNotification("error", "Add to cart failed", err.message)
-      })
+    try {
+      // Add to cart
+      const actualId = IdObfuscator.reveal(id||"")
+      const res = await cartService.addToCart(actualId)
+      showNotification("success", "Added to cart", res.message)
+      setUserAddedToCart(true)
+
+      // Record ADD_TO_CART interaction
+      if (id) {
+        try {
+          await interactionService.recordAddToCart(actualId)
+        } catch (error) {
+          console.warn("Failed to record add to cart interaction:", error)
+        }
+      }
+    } catch (err: any) {
+      showNotification("error", "Add to cart failed", err.message)
+    }
   }
 
   const handleReviewUpdate = async (reviewId: string, updatedReview: { rating: number; comment: string }) => {
@@ -676,7 +712,7 @@ export const PromptDetails = () => {
                 <div className="flex items-baseline justify-between mb-3">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">Price</h3>
                   <p className="text-2xl font-bold text-[#3ebb9e]">
-                    {prompt.price === 0 ? "Free" : `$${prompt.price.toFixed(2)}`}
+                    {prompt.price === 0 ? "Free" : `ZAR ${prompt.price.toFixed(2)}`}
                   </p>
                 </div>
 
