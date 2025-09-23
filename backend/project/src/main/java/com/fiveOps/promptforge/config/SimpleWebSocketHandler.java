@@ -83,7 +83,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
   private void handleUserConnect(WebSocketSession session, Map<String, Object> payload)
       throws IOException {
     String userId = (String) payload.get("userId");
-    
+
     if (userId != null) {
       sessions.put(userId, session);
 
@@ -196,7 +196,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
     }
   }
 
-  private void getUserOnlineStatus(Map<String, Object> payload){
+  private void getUserOnlineStatus(Map<String, Object> payload) {
     String userId = (String) payload.get("userId");
     String otherUserId = (String) payload.get("otherUserId");
     Map<String, Object> actionMessage = new HashMap<>();

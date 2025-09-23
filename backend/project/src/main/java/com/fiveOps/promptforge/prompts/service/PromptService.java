@@ -51,9 +51,9 @@ public class PromptService {
   public Page<PromptWithSourceDTO> getPublicPromptsByUsername(String username, Pageable pageable) {
     UserDto user = userService.getUserByUsername(username);
     // List<PromptWithSourceDTO> prompts =
-    System.out.println("\n\nuserid:"+ user.getUserId());
+    System.out.println("\n\nuserid:" + user.getUserId());
     return promptRepository.findByAuthorIdAndVisibilityAndOptionalTag(
-            user.getUserId(), null, "public", pageable);
+        user.getUserId(), null, "public", pageable);
 
     // long totalElements = promptRepository.countAuthoredPrompts(username);
     // return new PageImpl<>(prompts, pageable, totalElements);

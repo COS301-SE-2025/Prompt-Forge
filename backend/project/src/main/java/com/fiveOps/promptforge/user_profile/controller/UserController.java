@@ -290,7 +290,7 @@ public class UserController {
     return ResponseEntity.ok(cardData);
   }
 
-@GetMapping("/profile/{username}")
+  @GetMapping("/profile/{username}")
   public ResponseEntity<Map<String, Object>> getUserData(
       @PathVariable String username, Authentication authentication) {
     // String email = extractEmailFromCookie(request);
@@ -328,8 +328,7 @@ public class UserController {
             "isFollowing",
             user.getFollowers().indexOf(currentUserId) != -1,
             "isFollowedBy",
-            user.getFollowing().indexOf(currentUserId) != -1
-        );
+            user.getFollowing().indexOf(currentUserId) != -1);
 
     return ResponseEntity.ok(cardData);
   }
