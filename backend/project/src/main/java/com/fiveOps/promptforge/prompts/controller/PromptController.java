@@ -101,6 +101,12 @@ public class PromptController {
     return ResponseEntity.ok(promptService.getPromptsByAuthor(authorId, pageable));
   }
 
+  @GetMapping("public/author/{username}")
+  public ResponseEntity<Page<PromptWithSourceDTO>> getPublicPromptsByUsername(
+      @PathVariable String username, Pageable pageable) {
+    return ResponseEntity.ok(promptService.getPublicPromptsByUsername(username, pageable));
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<Prompt> getPromptById(@PathVariable UUID id) {
     Prompt prompt = promptService.getPromptById(id);

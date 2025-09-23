@@ -290,6 +290,49 @@ public class UserController {
     return ResponseEntity.ok(cardData);
   }
 
+  @GetMapping("/profile/{username}")
+  public ResponseEntity<Map<String, Object>> getUserData(
+      @PathVariable String username, Authentication authentication) {
+    // String email = extractEmailFromCookie(request);
+    if (authentication == null
+        || authentication.getName() == null
+        || authentication.getName().trim().equals("")) {
+      return ResponseEntity.status(401).build();
+    }
+
+    String userEmail = authentication.getName();
+    UUID currentUserId = userService.getUserIdByEmail(userEmail);
+
+    UserDto user = userService.getUserByUsername(username);
+
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+    }
+
+    Map<String, Object> cardData =
+        Map.of(
+            "userId",
+            user.getUserId() != null ? user.getUserId() : "",
+            "username",
+            user.getUsername() != null ? user.getUsername() : "",
+            "bio",
+            user.getBio() != null ? user.getBio() : "",
+            "profilePicture",
+            user.getProfilePicture() != null ? user.getProfilePicture() : "",
+            "followersCount",
+            user.getFollowers() == null ? 0 : user.getFollowers().size(),
+            "followingCount",
+            user.getFollowing() == null ? 0 : user.getFollowing().size(),
+            "badges",
+            user.getBadges() == null ? List.of() : user.getBadges(),
+            "isFollowing",
+            user.getFollowers().indexOf(currentUserId) != -1,
+            "isFollowedBy",
+            user.getFollowing().indexOf(currentUserId) != -1);
+
+    return ResponseEntity.ok(cardData);
+  }
+
   @GetMapping("/me/full")
   public ResponseEntity<UserDto> getFullCurrentUser(HttpServletRequest request) {
     String email = extractEmailFromCookie(request);

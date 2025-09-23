@@ -55,7 +55,7 @@ function App() {
           <Route path="/war" element={<WarPage />} />
           <Route path="/prompt-wars/game/:gameId" element={<PromptWarsPage />} />
           <Route path="/builder" element={<BuilderPage />} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/user/:username" element={<ProfilePage />} />
           <Route path="/social" element={<SocialPage />} />
           <Route path="/optimizer" element={<OptimizerPage />} />
           <Route path="/wizard" element={<OptimizerWizard />} />
