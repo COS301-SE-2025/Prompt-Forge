@@ -201,6 +201,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
     String otherUserId = (String) payload.get("otherUserId");
     Map<String, Object> actionMessage = new HashMap<>();
     actionMessage.put("type", "USER_ONLINE_STATUS");
+    actionMessage.put("userId", otherUserId);
     actionMessage.put("isActive", sessions.get(otherUserId) != null);
     sendMessageToUser(userId, actionMessage);
   }
