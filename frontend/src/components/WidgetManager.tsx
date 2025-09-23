@@ -256,27 +256,36 @@ export default function WidgetManager({
         
         // Use dashboard data as primary source (avoids API failures)
         if (data) {
-          // Make total views 50% more than total prompts (more realistic than 1:1 ratio)
+          // Handle zero prompts case - no views, no activity
           const basePrompts = data.totalPrompts || 0;
-          totalViews = Math.floor(basePrompts * 1.5); // 50% more views than prompts
           
-          // Ensure minimum of 1 view for visualization
-          totalViews = Math.max(totalViews, 1);
-          
-          // Use total downloads as proxy for purchases (completed transactions)
-          totalPurchases = data.totalDownloads || 0;
-          
-          // Estimate cart adds as somewhere between views and purchases
-          // If no downloads, estimate 20% of prompts had cart interactions
-          totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
-          
-          // Calculate rates based on dashboard data
-          viewToCartRate = totalViews > 0 ? Math.min((totalCartAdds / totalViews) * 100, 100) : 0;
-          cartToPurchaseRate = totalCartAdds > 0 ? Math.min((totalPurchases / totalCartAdds) * 100, 100) : 0;
+          if (basePrompts === 0) {
+            // No prompts = no views, no cart adds, no purchases, no bounce rate
+            totalViews = 0;
+            totalCartAdds = 0;
+            totalPurchases = 0;
+            viewToCartRate = 0;
+            cartToPurchaseRate = 0;
+          } else {
+            // Make total views 50% more than total prompts (more realistic than 1:1 ratio)
+            totalViews = Math.floor(basePrompts * 1.5); // 50% more views than prompts
+            
+            // Use total downloads as proxy for purchases (completed transactions)
+            totalPurchases = data.totalDownloads || 0;
+            
+            // Estimate cart adds as somewhere between views and purchases
+            // If no downloads, estimate 20% of views had cart interactions
+            totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
+            
+            // Calculate rates based on dashboard data
+            viewToCartRate = totalViews > 0 ? Math.min((totalCartAdds / totalViews) * 100, 100) : 0;
+            cartToPurchaseRate = totalCartAdds > 0 ? Math.min((totalPurchases / totalCartAdds) * 100, 100) : 0;
+          }
         }
         
         // Always calculate bounce rate logically to ensure data consistency
         const totalEngagedViews = totalCartAdds + totalPurchases; // People who took any action (cart OR purchase)
+        // If no views, bounce rate should be 0 (not applicable)
         const bounceRate = totalViews > 0 ? Math.max(0, Math.min(100, ((totalViews - totalEngagedViews) / totalViews) * 100)) : 0;
         
         const getBounceRateColor = (rate: number) => {
