@@ -24,6 +24,10 @@ public interface DashboardRepository extends CrudRepository<Prompt, UUID> {
   @Query("SELECT COUNT(p) FROM Prompt p WHERE p.authorId = :userId")
   long countAllByUser(UUID userId);
 
+  // Get all prompts by user (public and private)
+  @Query("SELECT p FROM Prompt p WHERE p.authorId = :userId")
+  List<Prompt> findAllByUser(UUID userId);
+
   // Average rating for all user's prompts (public and private)
   // @Query(
   //     """
