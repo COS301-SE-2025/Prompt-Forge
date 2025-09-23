@@ -105,12 +105,10 @@ public class GameService {
   }
 
   // Prompt Wars specific methods
-  public synchronized Game generateScenario(UUID gameId) {
+  public Game generateScenario(UUID gameId) {
     // Refresh the game from database to get latest state
-  Game game =
-    gameRepository
-      .findById(gameId)
-      .orElseThrow(() -> new RuntimeException("Game not found"));
+    Game game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     System.out.println("Generating scenario for game: " + gameId);
     System.out.println("Current game state: " + game.getGameState());
@@ -120,6 +118,17 @@ public class GameService {
       System.out.println("Game is not in WAITING state, current state: " + game.getGameState());
       throw new IllegalArgumentException("Game is not in waiting state");
     }
+
+    // Use DB-level reservation so generation is idempotent across service instances
+    int updated = gameRepository.updateGameStateIf(game.getId(), GameState.WAITING, GameState.WRITING);
+    if (updated == 0) {
+      // Another instance or request reserved/changed the state first
+      System.out.println("Scenario generation reservation failed for game: " + gameId + ". Aborting.");
+      throw new IllegalStateException("Scenario generation already in progress or game not waiting");
+    }
+
+    // Reload the game after reservation to ensure fresh entity
+    game = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     // Only generate scenario if not already set
     if (game.getScenario() == null || game.getScenario().trim().isEmpty()) {
@@ -138,6 +147,7 @@ public class GameService {
               + "...");
     }
 
+    // Persist WRITING state and scenario
     game.setGameState(GameState.WRITING);
     Game savedGame = gameRepository.save(game);
     System.out.println(
@@ -192,7 +202,11 @@ public class GameService {
                       + "public speakers in 30 days.'"
                       + "\n'🌟 Design a prompt for an AI chef that creates meals based on your "
                       + "current mood and the weather.'"
-                      + "\n\nNow create something totally new and exciting:"));
+                      + "\n\nNow create something totally new and exciting:"
+                      + "explicitly say what the players need to prompt within the  "
+                      +"scenarion or what kind of prompt they need to generate without giving "
+                      + "the actual prompt. This prompt battle shows who can prompt better, "
+                      +"given a scenario. Keep the scenario very brief- 1-2 sentences max."));
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -343,19 +357,27 @@ public class GameService {
           getAIRating(game.getScenario(), game.getPlayer1Prompt(), game.getPlayer2Prompt());
 
       System.out.println("AI rating completed, processing results...");
-      int player1Score = (Integer) ratings.get("player1Score");
-      int player2Score = (Integer) ratings.get("player2Score");
+  int player1Score = (Integer) ratings.get("player1Score");
+  int player2Score = (Integer) ratings.get("player2Score");
+  // Clamp scores to expected 0-10 range to avoid DB constraint violations
+  player1Score = Math.max(0, Math.min(10, player1Score));
+  player2Score = Math.max(0, Math.min(10, player2Score));
       System.out.println("Player 1 score: " + player1Score + ", Player 2 score: " + player2Score);
 
-      // Set the AI scores
-      game.setPlayer1Score(player1Score);
-      game.setPlayer2Score(player2Score);
+  // Set the AI scores (clamped to 0-10)
+  game.setPlayer1Score(Integer.valueOf(player1Score));
+  game.setPlayer2Score(Integer.valueOf(player2Score));
       game.setRatingExplanation((String) ratings.get("explanation"));
 
-      // Set the ratings (Note: in our system, players rate opponent's prompts)
-      // So player1's rating is actually the score given to player2's prompt
-      game.setPlayer1Rating(player2Score); // Player1 "rates" Player2's prompt
-      game.setPlayer2Rating(player1Score); // Player2 "rates" Player1's prompt
+  // Set the ratings (Note: in our system, players rate opponent's prompts)
+  // So player1's rating is actually the score given to player2's prompt
+  // Validate/clamp ratings to avoid DB check constraint violations. If the AI
+  // returned an out-of-range value (e.g. 0 when a prompt was missing), we
+  // should not write that into the playerX_rating columns which expect 1-10.
+  Integer player1Rating = (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
+  Integer player2Rating = (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
+  game.setPlayer1Rating(player1Rating);
+  game.setPlayer2Rating(player2Rating);
 
       // Calculate winner
       UUID winner = game.calculateWinner();
@@ -392,14 +414,18 @@ public class GameService {
 
           int player1Score = (Integer) fallbackRatings.get("player1Score");
           int player2Score = (Integer) fallbackRatings.get("player2Score");
+          player1Score = Math.max(0, Math.min(10, player1Score));
+          player2Score = Math.max(0, Math.min(10, player2Score));
 
-          fallbackGame.setPlayer1Score(player1Score);
-          fallbackGame.setPlayer2Score(player2Score);
-          fallbackGame.setRatingExplanation(
-              "AI rating service temporarily unavailable. Random scores assigned.");
+          fallbackGame.setPlayer1Score(Integer.valueOf(player1Score));
+          fallbackGame.setPlayer2Score(Integer.valueOf(player2Score));
+      fallbackGame.setRatingExplanation(
+        "AI rating service temporarily unavailable. Random scores assigned.");
 
-          fallbackGame.setPlayer1Rating(player2Score);
-          fallbackGame.setPlayer2Rating(player1Score);
+      Integer fbPlayer1Rating = (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
+      Integer fbPlayer2Rating = (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
+      fallbackGame.setPlayer1Rating(fbPlayer1Rating);
+      fallbackGame.setPlayer2Rating(fbPlayer2Rating);
 
           UUID winner = fallbackGame.calculateWinner();
           fallbackGame.setWinnerId(winner);
@@ -477,7 +503,9 @@ public class GameService {
                   + "Prompt 1 Score: X/10\n"
                   + "Prompt 2 Score: Y/10\n"
                   + "Winner: [Prompt 1/Prompt 2/Tie]\n"
-                  + "Explanation: [Your detailed analysis]",
+                  + "Explanation: [Your detailed analysis]"
+                  +"NB: be very critical and judge based on how the prompt answers the scenario"
+                  +" and do not grade without critical evaluation. strictly",
               scenario, player1Prompt, player2Prompt);
 
       Map<String, Object> requestBody = new HashMap<>();
@@ -658,6 +686,50 @@ public class GameService {
         "Sent game restart notification to both players for game: " + savedGame.getId());
 
     return savedGame;
+  }
+
+  /**
+   * Force finish a game: assign 0 to missing prompts and ensure AI rating runs if at least one prompt exists.
+   * Useful for admin/testing or resolving stuck games.
+   */
+  public Game forceFinishGame(UUID gameId) {
+    Game game = getGame(gameId);
+
+    if (!game.isActive()) {
+      throw new IllegalArgumentException("Game is not active");
+    }
+
+    // If writing phase, move to finished by assigning missing prompts as empty and letting rating run.
+    if (game.getGameState() == GameState.WRITING || game.getGameState() == GameState.WAITING) {
+      // Assign auto-empty prompts where missing
+      if (game.getPlayer1Prompt() == null) {
+        // Use a non-empty placeholder so hasPlayerSubmittedPrompt considers this a submission
+        game.submitPrompt(game.getPlayer1Id(), "NO_ANSWER");
+      }
+      if (game.getPlayer2Prompt() == null) {
+        game.submitPrompt(game.getPlayer2Id(), "NO_ANSWER");
+      }
+
+      Game saved = gameRepository.save(game);
+
+      // If both prompts now present, run AI rating synchronously here
+      if (saved.bothPlayersSubmittedPrompts()) {
+        performAIRating(saved);
+      } else {
+        // Set finished with zeros if no prompts
+        saved.setPlayer1Score(saved.getPlayer1Score() == null ? 0 : saved.getPlayer1Score());
+        saved.setPlayer2Score(saved.getPlayer2Score() == null ? 0 : saved.getPlayer2Score());
+        UUID winner = saved.calculateWinner();
+        saved.setWinnerId(winner);
+        saved.setGameState(GameState.FINISHED);
+        saved.setEndedAt(java.time.Instant.now());
+        gameRepository.save(saved);
+      }
+
+      return getGame(gameId);
+    }
+
+    throw new IllegalArgumentException("Game cannot be force-finished from its current state");
   }
 
   // Reverse Prompt Battle methods
