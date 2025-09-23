@@ -334,7 +334,7 @@ export default function WidgetManager({
         
         const components = [
           { 
-            name: "Engaged Views", 
+            name: "Views", 
             value: viewsBarWidth, // Bar width shows engagement rate
             count: totalViews,
             percentage: `${engagementRate.toFixed(1)}%`, // Views that didn't bounce = engagement rate
