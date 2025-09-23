@@ -270,7 +270,23 @@ export default function WidgetManager({
             
             totalViews = Math.floor(basePrompts * 1.5); 
             totalPurchases = data.totalDownloads || 0;
-            totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
+            
+            // Ensure cart adds are always >= purchases (logical requirement)
+            if (totalPurchases > 0) {
+              // Use deterministic calculation to ensure consistency across all profiles
+              // Target 70% cart-to-purchase conversion rate (industry standard)
+              totalCartAdds = Math.ceil(totalPurchases / 0.7);
+              
+              // Ensure cart adds are ALWAYS at least 40% higher than purchases
+              const minimumCartAdds = Math.ceil(totalPurchases * 1.4);
+              totalCartAdds = Math.max(totalCartAdds, minimumCartAdds);
+              
+              // Absolute minimum: cart adds must be at least purchases + 2
+              totalCartAdds = Math.max(totalCartAdds, totalPurchases + 2);
+            } else {
+              // No purchases = estimate 20% of views result in cart adds
+              totalCartAdds = Math.max(Math.floor(totalViews * 0.2), 1);
+            }
             
             // Calculate rates based on dashboard data
             viewToCartRate = totalViews > 0 ? Math.min((totalCartAdds / totalViews) * 100, 100) : 0;
@@ -311,8 +327,11 @@ export default function WidgetManager({
           viewsBarWidth = engagementRate; // Views bar matches engagement percentage
         }
         
-        const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
-        const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
+        const cartAddsBarWidth = viewToCartRate; // Cart adds bar: (cartAdds / views) * 100
+        
+        // FIXED: Purchases bar should also be relative to views for visual consistency
+        const purchaseToViewRate = totalViews > 0 ? (totalPurchases / totalViews) * 100 : 0;
+        const purchasesBarWidth = purchaseToViewRate; // Purchases bar: (purchases / views) * 100
         
         // Function to get dynamic color based on engagement level
         const getEngagementColor = (rate: number) => {
@@ -353,9 +372,9 @@ export default function WidgetManager({
             name: "Purchases", 
             value: purchasesBarWidth, // Bar width matches percentage shown
             count: totalPurchases, 
-            percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
-            color: getEngagementColor(cartToPurchaseRate),
-            intensity: getBarIntensity(cartToPurchaseRate)
+            percentage: `${purchaseToViewRate.toFixed(1)}%`, // Text shows purchase rate relative to views (consistent with cart adds)
+            color: getEngagementColor(purchaseToViewRate),
+            intensity: getBarIntensity(purchaseToViewRate)
           },
         ];
 
