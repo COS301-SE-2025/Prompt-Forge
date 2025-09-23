@@ -27,6 +27,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import { normalizeScenario, parseAIJudgment } from "../utils/gameHelpers"
 import { useParams } from "react-router-dom"
 import { promptWarsGameAPI, GameResponse, GameStateDetails, PromptSubmission } from "../services/promptWarsGameAPI"
 import { promptWarsWebSocket, GameUpdate } from "../services/promptWarsWebSocket"
@@ -237,7 +238,7 @@ const isMultiplayerGame = !!gameId;
         console.log('Game state update received:', update)
         setGameState(update.gameState.toLowerCase() as GameState)
         if (update.scenario) {
-          setScenario(update.scenario)
+          setScenario(normalizeScenario(update.scenario))
         }
         loadGameData() // Refresh full game state
       }
@@ -246,8 +247,8 @@ const isMultiplayerGame = !!gameId;
     // Handle scenario generation
     const unsubscribeScenarioGenerated = promptWarsWebSocket.on('SCENARIO_GENERATED', (data: any) => {
       if (data.gameId === gameId) {
-        console.log('Scenario generated:', data)
-        setScenario(data.scenario)
+  console.log('Scenario generated:', data)
+  setScenario(normalizeScenario(data.scenario))
         setGameState(data.gameState.toLowerCase() as GameState)
         setChatMessages(prev => [
           ...prev,
@@ -365,9 +366,9 @@ const isMultiplayerGame = !!gameId;
     // Handle game restart event
     const unsubscribeGameRestarted = promptWarsWebSocket.on('GAME_RESTARTED', (data: any) => {
       if (data.gameId === gameId) {
-        console.log('Game restarted:', data)
-        setGameState(data.gameState.toLowerCase() as GameState) // Convert to lowercase
-        setScenario(data.scenario)
+  console.log('Game restarted:', data)
+  setGameState(data.gameState.toLowerCase() as GameState) // Convert to lowercase
+  setScenario(normalizeScenario(data.scenario))
         setTimeLeft(120) // Start the timer
         setChatMessages(prev => [
           ...prev,
@@ -665,7 +666,7 @@ const isMultiplayerGame = !!gameId;
       }
       
       if (game.scenario) {
-        setScenario(game.scenario)
+        setScenario(normalizeScenario(game.scenario))
       }
       
       // Load current submissions
@@ -689,31 +690,71 @@ const isMultiplayerGame = !!gameId;
       if (game.gameState.toLowerCase() === 'finished' || game.gameState.toLowerCase() === 'results') {
         console.log('Game finished, loading final results:', game)
         setShowOpponentPrompt(true)
-        
-        // Extract ratings from the game data
+
         const currentUserId = localStorage.getItem('userId')
-        
-        // Set player scores based on which player the current user is
-        if (game.player1Id === currentUserId) {
-          setPlayerRating(game.player1Score || 0)
-          setOpponentRating(game.player2Score || 0)
-        } else {
-          setPlayerRating(game.player2Score || 0) 
-          setOpponentRating(game.player1Score || 0)
-        }
-        
-        // Set winner based on winnerId
-        if (game.winnerId === currentUserId) {
-          setWinner('player')
-        } else if (game.winnerId) {
-          setWinner('opponent')
-        } else {
-          setWinner('tie')
-        }
-        
-        // Set rating explanation if available
-        if (game.ratingExplanation) {
-          setRatingExplanation(game.ratingExplanation)
+
+        // Classic prompt battles use scores out of 10. Reverse prompt uses correct answer counts (out of 5).
+        if (game.gameType === 'PROMPT_CREATION' || !game.gameType) {
+          // Prefer explicit player1Score/player2Score fields from backend.
+          const rawP1 = (typeof game.player1Score === 'number') ? game.player1Score : null
+          const rawP2 = (typeof game.player2Score === 'number') ? game.player2Score : null
+
+          // Try to parse scores/explanation from ratingExplanation if backend placed them there
+          const parsed = parseAIJudgment(game.ratingExplanation)
+
+          // Prefer explicit numeric fields from backend; fall back to parsed values
+          const finalP1 = (typeof game.player1Score === 'number') ? game.player1Score : (parsed.p1 ?? null)
+          const finalP2 = (typeof game.player2Score === 'number') ? game.player2Score : (parsed.p2 ?? null)
+
+          // Map to current player's perspective
+          if (game.player1Id === currentUserId) {
+            setPlayerRating(finalP1 ?? 0)
+            setOpponentRating(finalP2 ?? 0)
+          } else {
+            setPlayerRating(finalP2 ?? 0)
+            setOpponentRating(finalP1 ?? 0)
+          }
+
+          // Determine winner from winnerId if present, otherwise from scores
+          if (game.winnerId === currentUserId) {
+            setWinner('player')
+          } else if (game.winnerId) {
+            setWinner('opponent')
+          } else if (finalP1 != null && finalP2 != null) {
+            // Compare using mapped scores
+            const myScore = game.player1Id === currentUserId ? finalP1 : finalP2
+            const theirScore = game.player1Id === currentUserId ? finalP2 : finalP1
+            if (myScore > theirScore) setWinner('player')
+            else if (myScore < theirScore) setWinner('opponent')
+            else setWinner('tie')
+          } else {
+            setWinner('tie')
+          }
+
+          // Use parsed explanation paragraphs only (strip score lines). Keep as multiline text joined by blank lines.
+          const parsedExplanation = (parsed && (parsed.paragraphs && parsed.paragraphs.length > 0)) ? parsed.paragraphs.join('\n\n') : (parsed.explanation || '')
+          setRatingExplanation(parsedExplanation || (game.ratingExplanation || ''))
+
+        } else if (game.gameType === 'REVERSE_PROMPT') {
+          // Reverse prompt: scores are correct-answer counts (out of 5)
+          if (game.player1Id === currentUserId) {
+            setPlayerRating(game.player1Score || 0)
+            setOpponentRating(game.player2Score || 0)
+          } else {
+            setPlayerRating(game.player2Score || 0)
+            setOpponentRating(game.player1Score || 0)
+          }
+
+          if (game.winnerId === currentUserId) {
+            setWinner('player')
+          } else if (game.winnerId) {
+            setWinner('opponent')
+          } else {
+            setWinner('tie')
+          }
+
+          // For reverse prompts, keep the ratingExplanation as-is (it's likely the AI text)
+          setRatingExplanation(game.ratingExplanation || '')
         }
       }
       
@@ -781,6 +822,44 @@ const isMultiplayerGame = !!gameId;
 
     doAutoSubmit()
   }, [timeLeft, gameState, selectedAnswer, hasSubmittedAnswer, isMultiplayerGame, gameId, gameData])
+
+  // Auto-handle timeout for classic prompt battles: if timer hits zero, ensure game moves to rating/finished
+  useEffect(() => {
+    if (!isMultiplayerGame || !gameId) return
+    if (gameState !== 'writing') return
+    if (timeLeft !== 0) return
+    // Only for classic prompt battles
+    if (gameData?.gameType === 'REVERSE_PROMPT') return
+
+    const doForceFinish = async () => {
+      try {
+        setLoading(true)
+        // Ask server to force finish the game: it will assign empty prompts where missing and run AI rating if at least one prompt exists
+        await promptWarsGameAPI.forceFinishGame(gameId)
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: 'System',
+            message: '⏱️ Time expired — game forced to finish. Awaiting AI judgment...',
+            timestamp: new Date(),
+          },
+        ])
+      } catch (e) {
+        console.error('Force-finish failed:', e)
+        setError(getErrorMessage(e))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Debounce a bit to avoid double-calls from simultaneous clients
+    const t = setTimeout(() => {
+      doForceFinish()
+    }, 250)
+
+    return () => clearTimeout(t)
+  }, [timeLeft, gameState, isMultiplayerGame, gameId, gameData])
 
   // Auto-scroll chat
   useEffect(() => {
@@ -901,20 +980,31 @@ const isMultiplayerGame = !!gameId;
             },
           ])
         } else {
-          // For classic prompt battles, start with scenario generation
+          // For classic prompt battles, start the game and request scenario generation.
+          // Allow either player to initiate; server-side generation is idempotent and guarded.
           await promptWarsGameAPI.startGame(gameId, { gameMode: "multiplayer" })
-          
-          // Update local state immediately for better UX
-          setGameState("scenario")
-          setChatMessages(prev => [
-            ...prev,
-            {
-              id: generateUniqueId(),
-              user: "System",
-              message: "🎮 Battle started! Generating scenario...",
-              timestamp: new Date(),
-            },
-          ])
+
+          // Immediately request scenario generation so both players are notified via WS
+          setIsLoadingScenario(true)
+          try {
+            await promptWarsGameAPI.generateScenario(gameId)
+            setChatMessages(prev => [
+              ...prev,
+              {
+                id: generateUniqueId(),
+                user: "System",
+                message: "🎮 Battle started! Generating scenario...",
+                timestamp: new Date(),
+              },
+            ])
+            // Do not set local scenario here - will be pushed via WebSocket
+          } catch (e) {
+            console.warn('Scenario generation request failed or was already handled by another player', e)
+            // If another player already generated, refresh game state
+            await loadGameData()
+          } finally {
+            setIsLoadingScenario(false)
+          }
         }
         
         // Game state will also be updated via WebSocket
@@ -934,14 +1024,13 @@ const isMultiplayerGame = !!gameId;
 
   const proceedToWriting = async () => {
     if (isMultiplayerGame && gameId && !scenario) {
-      // Generate scenario for real game - only if not already generated
+      // Allow either player to request scenario generation. Server enforces single generation.
+      // Add a small client-side debounce to avoid immediate duplicate requests from fast double-clicks.
+      if (isLoadingScenario) return
       setIsLoadingScenario(true)
       try {
         const newScenario = await promptWarsGameAPI.generateScenario(gameId)
-        setScenario(newScenario)
-        
-        // Don't set local state here - wait for WebSocket notification
-        // This ensures both players get the update simultaneously
+        // Do not set local scenario here - wait for WebSocket push to ensure both clients sync
         setChatMessages(prev => [
           ...prev,
           {
@@ -952,23 +1041,9 @@ const isMultiplayerGame = !!gameId;
           },
         ])
       } catch (error) {
-        console.error('Failed to generate scenario:', error)
-        setError(getErrorMessage(error))
-        
-        // Check if the error is because game already started
-        if (getErrorMessage(error).includes('not in waiting state')) {
-          setChatMessages(prev => [
-            ...prev,
-            {
-              id: generateUniqueId(),
-              user: "System",
-              message: "⚠️ Battle already started by another player!",
-              timestamp: new Date(),
-            },
-          ])
-          // Refresh game state to sync with current state
-          loadGameData()
-        }
+        console.warn('Scenario generation request failed or already handled by peer:', error)
+        // Refresh game state to sync up if another player already generated
+        await loadGameData()
       } finally {
         setIsLoadingScenario(false)
       }
@@ -1149,16 +1224,16 @@ Overall Analysis: [brief summary]`,
         if (data.choices && data.choices[0] && data.choices[0].message) {
           const ratingText = data.choices[0].message.content
           
-          // Parse the AI response to extract ratings
+          // Parse the AI response to extract ratings and a cleaned explanation
           const rating1Match = ratingText.match(/Rating 1:\s*(\d+)/i)
           const rating2Match = ratingText.match(/Rating 2:\s*(\d+)/i)
           const winnerMatch = ratingText.match(/Winner:\s*(1|2|Tie)/i)
-          
+
           const myAIRating = rating1Match ? Number.parseInt(rating1Match[1]) : myRating
           const opponentAIRating = rating2Match ? Number.parseInt(rating2Match[1]) : Math.floor(Math.random() * 3) + 7
-          
+
           setOpponentRating(opponentAIRating)
-          
+
           // Determine winner based on AI analysis
           let gameWinner = "tie"
           if (winnerMatch) {
@@ -1172,19 +1247,37 @@ Overall Analysis: [brief summary]`,
             // Fallback to numeric comparison
             gameWinner = myAIRating > opponentAIRating ? "player" : myAIRating === opponentAIRating ? "tie" : "opponent"
           }
-          
+
           setWinner(gameWinner as "player" | "opponent" | "tie")
           setGameState("results")
-          
-          setChatMessages(prev => [
-            ...prev,
-            {
-              id: generateUniqueId(),
-              user: "AI Judge",
-              message: `🏆 AI Analysis Complete!\n\n${ratingText}`,
-              timestamp: new Date(),
-            },
-          ])
+
+          // Use the shared parser to clean the AI judgement text for display
+          try {
+            const parsed = parseAIJudgment(ratingText)
+            const parsedExplanation = (parsed && parsed.paragraphs && parsed.paragraphs.length > 0) ? parsed.paragraphs.join('\n\n') : (parsed.explanation || '')
+            setRatingExplanation(parsedExplanation)
+            setChatMessages(prev => [
+              ...prev,
+              {
+                id: generateUniqueId(),
+                user: "AI Judge",
+                message: `🏆 AI Analysis Complete!\n\n${parsedExplanation}`,
+                timestamp: new Date(),
+              },
+            ])
+          } catch (e) {
+            // Fallback to raw text if parsing fails
+            setRatingExplanation(ratingText)
+            setChatMessages(prev => [
+              ...prev,
+              {
+                id: generateUniqueId(),
+                user: "AI Judge",
+                message: `🏆 AI Analysis Complete!\n\n${ratingText}`,
+                timestamp: new Date(),
+              },
+            ])
+          }
         }
       } catch (error) {
         console.error('AI rating failed, using fallback:', error)
@@ -1934,73 +2027,77 @@ Overall Analysis: [brief summary]`,
               {(gameState === "results" || gameState === "finished") && (
                 <div className="space-y-8">
                   <div className="text-center">
-                    <div className="text-8xl mb-4">
-                      {winner === "player" ? "🏆" : winner === "opponent" ? "⚔️" : "🤝"}
-                    </div>
-                    <h2 className="text-4xl font-black mb-4">
-                      <span
-                        className={`bg-gradient-to-r bg-clip-text text-transparent ${
-                          winner === "player"
-                            ? "from-[#3ebb9e] to-emerald-400"
+                        <div className="text-8xl mb-4">
+                          {winner === "player" ? "🏆" : winner === "opponent" ? "⚔️" : "🤝"}
+                        </div>
+                        <h2 className="text-4xl font-black mb-4">
+                          <span
+                            className={`bg-gradient-to-r bg-clip-text text-transparent ${
+                              winner === "player"
+                                ? "from-[#3ebb9e] to-emerald-400"
+                                : winner === "opponent"
+                                  ? "from-red-400 to-orange-400"
+                                  : "from-[#4079ff] to-purple-400"
+                            }`}
+                          >
+                            {winner === "player" ? "VICTORY!" : winner === "opponent" ? "DEFEAT" : "DRAW!"}
+                          </span>
+                        </h2>
+                        <p className="text-slate-300 text-lg">
+                          {winner === "player"
+                            ? (gameData?.gameType === 'REVERSE_PROMPT' ? 'You got the most correct answers!' : 'You scored higher on the AI judge!')
                             : winner === "opponent"
-                              ? "from-red-400 to-orange-400"
-                              : "from-[#4079ff] to-purple-400"
-                        }`}
-                      >
-                        {winner === "player" ? "VICTORY!" : winner === "opponent" ? "DEFEAT" : "DRAW!"}
-                      </span>
-                    </h2>
-                    <p className="text-slate-300 text-lg">
-                      {winner === "player"
-                        ? "You got the most correct answers!"
-                        : winner === "opponent"
-                          ? "A worthy opponent has bested you. Train harder, warrior!"
-                          : "Both warriors showed equal skill! An honorable draw!"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div
-                      className={`rounded-xl p-6 ${
-                        playerScore >= opponentScore
-                          ? "bg-gradient-to-br from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/40"
-                          : "bg-slate-700/30 border border-slate-600/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Your Score</h3>
-                        {playerScore > opponentScore && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
+                              ? (gameData?.gameType === 'REVERSE_PROMPT' ? 'A worthy opponent has bested you. Train harder, warrior!' : 'A worthy opponent has bested you. Train harder, warrior!')
+                              : 'Both warriors showed equal skill! An honorable draw!'}
+                        </p>
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{playerScore}/5</div>
-                      <p className="text-sm text-slate-400">Correct Answers</p>
-                    </div>
 
-                    <div
-                      className={`rounded-xl p-6 ${
-                        opponentScore > playerScore
-                          ? "bg-gradient-to-br from-[#4079ff]/20 to-blue-500/20 border border-[#4079ff]/40"
-                          : "bg-slate-700/30 border border-slate-600/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Opponent's Score</h3>
-                        {opponentScore > playerScore && <Crown className="h-6 w-6 text-[#4079ff]" />}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div
+                          className={`rounded-xl p-6 ${
+                            playerRating >= opponentRating
+                              ? "bg-gradient-to-br from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/40"
+                              : "bg-slate-700/30 border border-slate-600/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Your Score</h3>
+                            {playerRating > opponentRating && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
+                          </div>
+                          <div className="text-4xl font-black text-white mb-2">{playerRating}/{gameData?.gameType === 'REVERSE_PROMPT' ? 5 : 10}</div>
+                          <p className="text-sm text-slate-400">{gameData?.gameType === 'REVERSE_PROMPT' ? 'Correct Answers' : 'AI Judge Score'}</p>
+                        </div>
+
+                        <div
+                          className={`rounded-xl p-6 ${
+                            opponentRating > playerRating
+                              ? "bg-gradient-to-br from-[#4079ff]/20 to-blue-500/20 border border-[#4079ff]/40"
+                              : "bg-slate-700/30 border border-slate-600/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Opponent's Score</h3>
+                            {opponentRating > playerRating && <Crown className="h-6 w-6 text-[#4079ff]" />}
+                          </div>
+                          <div className="text-4xl font-black text-white mb-2">{opponentRating}/{gameData?.gameType === 'REVERSE_PROMPT' ? 5 : 10}</div>
+                          <p className="text-sm text-slate-400">{gameData?.gameType === 'REVERSE_PROMPT' ? 'Correct Answers' : 'AI Judge Score'}</p>
+                        </div>
                       </div>
-                      <div className="text-4xl font-black text-white mb-2">{opponentScore}/5</div>
-                      <p className="text-sm text-slate-400">Correct Answers</p>
-                    </div>
-                  </div>
 
-                  {/* AI Rating Explanation */}
-                  {ratingExplanation && (
-                    <div className="bg-slate-800/50 border border-slate-600/50 rounded-xl p-6">
-                      <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
-                        AI Judge Analysis
-                      </h3>
-                      <p className="text-slate-300 leading-relaxed">{ratingExplanation}</p>
-                    </div>
-                  )}
+                      {/* AI Rating Explanation: show only the explanation text for classic games, keep as-is for reverse */}
+                      {ratingExplanation && (
+                        <div className="bg-slate-800/50 border border-slate-600/50 rounded-xl p-6">
+                          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                            <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
+                            AI Judge Analysis
+                          </h3>
+                          <div className="text-slate-300 leading-relaxed space-y-4">
+                            {ratingExplanation.split(/\n\s*\n/).map((para, idx) => (
+                              <p key={idx} className="text-slate-300">{para}</p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                   <div className="text-center space-y-4">
                     <Button
@@ -2018,7 +2115,7 @@ Overall Analysis: [brief summary]`,
                         className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white px-6 py-3 text-lg font-semibold rounded-xl"
                       >
                         <Users className="h-5 w-5 mr-2" />
-                        Return to Arena
+                        Return to Social
                       </Button>
                     )}
                   </div>
