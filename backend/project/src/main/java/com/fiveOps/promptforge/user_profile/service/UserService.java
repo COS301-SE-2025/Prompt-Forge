@@ -45,6 +45,10 @@ public class UserService {
     return mapToDto(user);
   }
 
+  public User findById(UUID id) {
+    return userRepository.findById(id).orElse(null);
+  }
+
   public UserDto getUserByEmail(String email) {
     User user =
         userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
@@ -268,5 +272,153 @@ public class UserService {
 
   public boolean matchesPassword(String raw, String encoded) {
     return passwordEncoder.matches(raw, encoded);
+  }
+
+  // Paginated methods for social features
+  public org.springframework.data.domain.Page<UserDto> getUsersPaginated(
+      int page, int size, String search) {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(page, size);
+
+    org.springframework.data.domain.Page<User> usersPage;
+    if (search != null && !search.trim().isEmpty()) {
+      usersPage =
+          userRepository.findByIsActiveTrueAndUsernameContainingIgnoreCase(search.trim(), pageable);
+    } else {
+      usersPage = userRepository.findByIsActiveTrue(pageable);
+    }
+
+    return usersPage.map(this::mapToDto);
+  }
+
+  public org.springframework.data.domain.Page<UserDto> getFollowersPaginated(
+      String email, int page, int size) {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(page, size);
+
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Get the user's followers array and convert to List for query
+    UUID[] followersArray = user.getFollowers();
+    if (followersArray == null || followersArray.length == 0) {
+      // Return empty page if no followers
+      return org.springframework.data.domain.Page.empty(pageable);
+    }
+
+    java.util.List<UUID> followersList = java.util.Arrays.asList(followersArray);
+    org.springframework.data.domain.Page<User> followersPage =
+        userRepository.findUsersByUserIds(followersList, pageable);
+    return followersPage.map(this::mapToDto);
+  }
+
+  public org.springframework.data.domain.Page<UserDto> getFollowingPaginated(
+      String email, int page, int size) {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(page, size);
+
+    User user =
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Get the user's following array and convert to List for query
+    UUID[] followingArray = user.getFollowing();
+    if (followingArray == null || followingArray.length == 0) {
+      // Return empty page if not following anyone
+      return org.springframework.data.domain.Page.empty(pageable);
+    }
+
+    java.util.List<UUID> followingList = java.util.Arrays.asList(followingArray);
+    org.springframework.data.domain.Page<User> followingPage =
+        userRepository.findUsersByUserIds(followingList, pageable);
+    return followingPage.map(this::mapToDto);
+  }
+
+  // Follow/Unfollow functionality
+  @Transactional
+  public void followUser(UUID currentUserId, UUID targetUserId) {
+    if (currentUserId.equals(targetUserId)) {
+      throw new IllegalArgumentException("Cannot follow yourself");
+    }
+
+    User currentUser =
+        userRepository
+            .findById(currentUserId)
+            .orElseThrow(() -> new RuntimeException("Current user not found"));
+    User targetUser =
+        userRepository
+            .findById(targetUserId)
+            .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+    // Add targetUserId to current user's following list
+    UUID[] currentFollowing = currentUser.getFollowing();
+    List<UUID> followingList =
+        currentFollowing != null
+            ? new java.util.ArrayList<>(Arrays.asList(currentFollowing))
+            : new java.util.ArrayList<>();
+
+    if (!followingList.contains(targetUserId)) {
+      followingList.add(targetUserId);
+      currentUser.setFollowing(followingList.toArray(new UUID[0]));
+    }
+
+    // Add currentUserId to target user's followers list
+    UUID[] currentFollowers = targetUser.getFollowers();
+    List<UUID> followersList =
+        currentFollowers != null
+            ? new java.util.ArrayList<>(Arrays.asList(currentFollowers))
+            : new java.util.ArrayList<>();
+
+    if (!followersList.contains(currentUserId)) {
+      followersList.add(currentUserId);
+      targetUser.setFollowers(followersList.toArray(new UUID[0]));
+    }
+
+    userRepository.save(currentUser);
+    userRepository.save(targetUser);
+  }
+
+  @Transactional
+  public void unfollowUser(UUID currentUserId, UUID targetUserId) {
+    User currentUser =
+        userRepository
+            .findById(currentUserId)
+            .orElseThrow(() -> new RuntimeException("Current user not found"));
+    User targetUser =
+        userRepository
+            .findById(targetUserId)
+            .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+    // Remove targetUserId from current user's following list
+    UUID[] currentFollowing = currentUser.getFollowing();
+    if (currentFollowing != null) {
+      List<UUID> followingList = new java.util.ArrayList<>(Arrays.asList(currentFollowing));
+      followingList.remove(targetUserId);
+      currentUser.setFollowing(followingList.toArray(new UUID[0]));
+    }
+
+    // Remove currentUserId from target user's followers list
+    UUID[] currentFollowers = targetUser.getFollowers();
+    if (currentFollowers != null) {
+      List<UUID> followersList = new java.util.ArrayList<>(Arrays.asList(currentFollowers));
+      followersList.remove(currentUserId);
+      targetUser.setFollowers(followersList.toArray(new UUID[0]));
+    }
+
+    userRepository.save(currentUser);
+    userRepository.save(targetUser);
+  }
+
+  public boolean isFollowing(UUID currentUserId, UUID targetUserId) {
+    User currentUser =
+        userRepository
+            .findById(currentUserId)
+            .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+    UUID[] following = currentUser.getFollowing();
+    if (following == null) {
+      return false;
+    }
+
+    return Arrays.asList(following).contains(targetUserId);
   }
 }

@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate } from "react-router-dom"
 import { Category, CategoryColors } from "@/Models/Prompt"
 import { PromptService } from "@/services/promptService"
+import IdObfuscator from "@/utils/idObfuscator"
 
 // Update the interface to make onEdit optional
 interface StandardPromptCardProps {
@@ -96,7 +97,7 @@ export function StandardPromptCard({
   }
 
   return (
-    <Link to={`/prompt/${id}`} onClick={handleCardClick}>
+    <Link to={`/prompt/${IdObfuscator.hide(id)}`} onClick={handleCardClick}>
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col cursor-pointer group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
         <div className="p-4 flex-1">
           {/* Header with tags and rating */}

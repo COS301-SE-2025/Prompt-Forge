@@ -34,6 +34,45 @@ export default function MyPromptsPage() {
   const [totalPages, setTotalPages] = useState<number>(0)
   const [promptCount, setPromptCount] = useState<number>(0)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(true) // ✅ Add categories loading state
+  const [categoriesError, setCategoriesError] = useState<string | null>(null) // ✅ Add categories error state
+
+  // ✅ Enhanced category fetching with retry logic (same as MarketplacePage)
+  const fetchAvailableCategories = async (retryCount = 0) => {
+    const maxRetries = 3
+    setCategoriesLoading(true)
+    setCategoriesError(null)
+    
+    try {
+      const tags = await promptService.getAllTags()
+      console.log("Fetched tags:", tags) // Debug log
+      const categoryNames = ["all", ...(tags || []).map(tag => tag.name)]
+      setAvailableCategories(categoryNames)
+      setCategoriesError(null)
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      
+      if (retryCount < maxRetries) {
+        console.log(`Retrying category fetch (${retryCount + 1}/${maxRetries})...`)
+        setTimeout(() => {
+          fetchAvailableCategories(retryCount + 1)
+        }, 1000 * (retryCount + 1)) // Exponential backoff
+        return
+      }
+      
+      setCategoriesError('Failed to load categories')
+      setAvailableCategories(["all"]) // Fallback to just "all"
+    } finally {
+      if (retryCount >= maxRetries || retryCount === 0) {
+        setCategoriesLoading(false)
+      }
+    }
+  }
+
+  // ✅ Add manual retry function for categories
+  const retryCategoriesLoad = () => {
+    fetchAvailableCategories(0)
+  }
 
   // Check authentication and get user profile
   useEffect(() => {
@@ -93,32 +132,24 @@ export default function MyPromptsPage() {
 
         if (userProfile?.userId) {
           authorId = userProfile.userId
-
-          // console.log("Using authorId from profile:", authorId)
         }
         else { //Fallback: get from localStorage if profile not loaded yet
           authorId = localStorage.getItem('userId')
-          // console.log("Using authorId from localStorage:", authorId)
         }
 
         if (!authorId) {
-          // console.log("No authorId available, using empty prompts")
-
           setMyPrompts([])
-          // setFilteredPrompts([])
           setLoading(false)
           return
         }
 
         //Fetch prompts using JWT authentication (cookies)
-        // console.log("Fetching prompts for authorId:", authorId)
+        console.log("Fetching prompts for authorId:", authorId)
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
 
-
         let prompts = userPromptsPage.content
-        // console.log("prompts", prompts);
 
         if (!Array.isArray(prompts)) prompts = []
         // Map backend fields to frontend MyPrompt interface
@@ -148,22 +179,11 @@ export default function MyPromptsPage() {
           })
         )
         setMyPrompts(mappedPrompts)
-        // setFilteredPrompts(mappedPrompts)
 
-        const tagNamesString = localStorage.getItem("tagNames");
-        let tags = ["all"]
-        if (tagNamesString != null) {
-          tags = [...tags, ...JSON.parse(tagNamesString)];
-        }
-        else {
-          //TODO: fetch tags from API
-        }
-        setAvailableCategories(tags)
+        // ✅ Remove localStorage dependency for categories - now handled by fetchAvailableCategories
 
       } catch (error) {
-
         console.error("Error fetching prompts:", error)
-
         setMyPrompts([])
       } finally {
         setLoading(false)
@@ -173,8 +193,24 @@ export default function MyPromptsPage() {
     if (isAuthenticated && (userProfile?.userId || localStorage.getItem('userId'))) {
       fetchMyPrompts()
     }
-  }, [isAuthenticated, navigate, userProfile, currentPage])
+  }, [isAuthenticated, navigate, userProfile])
 
+  // ✅ Add useEffect to fetch categories independently (same as MarketplacePage)
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAvailableCategories()
+    }
+  }, [isAuthenticated])
+
+  // ✅ Add effect to retry categories if they fail to load and prompts are successful
+  useEffect(() => {
+    if (!categoriesLoading && availableCategories.length <= 1 && categoriesError && allUserPrompts.length > 0) {
+      console.log("Prompts loaded but categories failed, retrying categories...")
+      setTimeout(() => {
+        fetchAvailableCategories(0)
+      }, 2000)
+    }
+  }, [categoriesLoading, availableCategories.length, categoriesError, allUserPrompts.length])
 
   useEffect(() => {
     const fetchRatings = async () => {
@@ -204,95 +240,6 @@ export default function MyPromptsPage() {
     }
     fetchRatings()
   }, [myPrompts])
-
-    //TODO: create a global fetchMyPrompts function for reuse (the one below is literally the same as the other)
-    const fetchMyPrompts = async () => {
-      if (!isAuthenticated) {
-        setLoading(false)
-        return
-      }
-      setLoading(true)
-      try {
-        let authorId: string | null = null
-
-        if (userProfile?.userId) {
-          authorId = userProfile.userId
-
-          // console.log("Using authorId from profile:", authorId)
-        }
-        else { //Fallback: get from localStorage if profile not loaded yet
-          authorId = localStorage.getItem('userId')
-          // console.log("Using authorId from localStorage:", authorId)
-        }
-
-        if (!authorId) {
-          // console.log("No authorId available, using empty prompts")
-
-          setMyPrompts([])
-          // setFilteredPrompts([])
-          setLoading(false)
-          return
-        }
-
-        //Fetch prompts using JWT authentication (cookies)
-        // console.log("Fetching prompts for authorId:", authorId)
-
-        const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
-        setTotalPages(userPromptsPage.totalPages);
-        setPromptCount(userPromptsPage.totalElements)
-
-        let prompts = userPromptsPage.content
-
-        if (!Array.isArray(prompts)) prompts = []
-
-        // Map backend fields to frontend MyPrompt interface
-        const mappedPrompts: MyPrompt[] = await Promise.all(
-          prompts.map(async (p: any) => {
-            const { averageRating } = await promptService.getPromptRatingSummary(p.id)
-            return {
-              id: p.id,
-              title: p.title,
-              description: p.description || "",
-              content: p.content || "",
-              category: "General", // Default, backend does not provide
-              tags: (p.tagNames || []).filter((t: string, i: number, arr: string[]) => t !== "all" && arr.indexOf(t) === i),
-              createdAt: p.createdAt,
-              updatedAt: p.publishedAt || p.createdAt,
-              rating: averageRating || 0, // Default, backend does not provide
-              uses: p.usageCount,   // Default, backend does not provide
-              featured: p.featured || false,
-              price: p.price || 0,
-              isPrivate: p.visibility === "private",
-              isFavorite: false, // Default, backend does not provide
-              authorName: p.authorName || userProfile?.username || "You",
-              source: p.source,
-              isPublished: p.visibility === "public" || p.publishedAt !== null, // Add this
-              publishedAt: p.publishedAt // Add this
-            }
-          })
-        )
-        setMyPrompts(mappedPrompts)
-        // setFilteredPrompts(mappedPrompts)
-
-        const tagNamesString = localStorage.getItem("tagNames");
-        let tags = ["all"]
-        if (tagNamesString != null) {
-          tags = [...tags, ...JSON.parse(tagNamesString)];
-        }
-        else {
-          //TODO: fetch tags from API
-        }
-        setAvailableCategories(tags)
-
-      } catch (error) {
-
-        console.error("Error fetching prompts:", error)
-
-        setMyPrompts([])
-      } finally {
-        setLoading(false)
-      }
-    }
 
   const filters = [
     { value: "all", label: "All" },
@@ -607,6 +554,33 @@ export default function MyPromptsPage() {
                       {category === "all" ? "All" : category}
                     </Button>
                   ))}
+                  {/* Add loading and error states for categories */}
+                  {categoriesLoading && (
+                    <div className="flex justify-center py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3ebb9e]"></div>
+                    </div>
+                  )}
+                  {!categoriesLoading && availableCategories.length <= 1 && (
+                    <div className="px-2 py-1">
+                      {categoriesError ? (
+                        <div className="text-center">
+                          <div className="text-xs text-red-500 mb-2">{categoriesError}</div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={retryCategoriesLoad}
+                            className="text-xs h-6 px-2 text-[#3ebb9e] hover:text-[#3ebb9e] hover:bg-[#3ebb9e]/10"
+                          >
+                            Retry
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          No categories found
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               {userProfile && (

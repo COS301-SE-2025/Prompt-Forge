@@ -3,6 +3,7 @@ import { Card } from "./ui/Card"
 import { Button } from "./ui/Button"
 import { Link } from "react-router-dom"
 import { Category, CategoryColors } from "@/Models/Prompt"
+import IdObfuscator from "@/utils/idObfuscator"
 
 interface PromptCardProps {
   id: string
@@ -27,7 +28,7 @@ export const PromptCard = ({
 }: PromptCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
-      <Link to={`/prompt/${id}`} className="flex flex-col flex-1">
+      <Link to={`/prompt/${IdObfuscator.hide(id)}`} className="flex flex-col flex-1">
         <div className="p-4 flex-1">
           <div className="flex justify-between items-start mb-2">
             {/* Tags */}
@@ -62,7 +63,7 @@ export const PromptCard = ({
               <span className="text-xs ml-1 text-muted-foreground">@{authorname}</span>
             </div>
             <div className="text-xs font-medium group-hover:text-[#3ebb9e] transition-colors duration-300">
-              {price === 0 ? "Free" : `$${price.toFixed(2)}`}
+              {price === 0 ? "Free" : `ZAR ${price.toFixed(2)}`}
             </div>
           </div>
         </div>

@@ -332,7 +332,7 @@ export default function OptimizerPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent tracking-tight">
-                  AI Prompt Optimizer
+                  AI Recommendations
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
                   Transform your prompts with AI-powered optimization

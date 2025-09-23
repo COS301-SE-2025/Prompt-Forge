@@ -892,7 +892,7 @@ export default function SubmitPromptPage() {
                     Price <span className="text-red-500">*</span>
                   </ Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">$</span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">R</span>
                     <input
                       id="price"
                       type="number"

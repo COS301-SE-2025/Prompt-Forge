@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, Star, Activity, Rocket } from "lucide-react"
+import { ArrowRight, Star, Activity, Rocket, TrendingUp } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
 import { MyPrompt } from '@/Models/MyPrompt';
 import WidgetManager, { type Widget } from "@/components/WidgetManager"
@@ -130,13 +130,24 @@ const [loadingMonthlyCounts, setLoadingMonthlyCounts] = useState(true);
       minSize: "small",
     },
     {
+      id: "bounce-rate",
+      type: "stat",
+      title: "Bounce Rate Analytics",
+      icon: <TrendingUp size={20} color="#FF6B6B" />,
+      component: <div></div>,
+      isActive: true,
+      position: 2,
+      size: "medium",
+      minSize: "medium",
+    },
+    {
       id: "category-breakdown",
       type: "list",
       title: "Category Breakdown",
       icon: <PieChart size={20} color="#60A5FA" />,
       component: <CategoryBreakdownWidget data={categoryBreakdown} loading={loadingCategoryBreakdown} />,
       isActive: true,
-      position: 2,
+      position: 3,
       size: "medium",
       minSize: "medium",
     },
@@ -147,7 +158,7 @@ const [loadingMonthlyCounts, setLoadingMonthlyCounts] = useState(true);
       icon: <Star size={24} color="#60A5FA" />,
       component: <div></div>,
       isActive: true,
-      position: 3,
+      position: 4,
       size: "medium",
       minSize: "medium",
     },
@@ -158,7 +169,7 @@ const [loadingMonthlyCounts, setLoadingMonthlyCounts] = useState(true);
       icon: <Activity size={24} color="#60A5FA" />,
       component: <div></div>,
       isActive: true,
-      position: 4,
+      position: 5,
       size: "medium",
       minSize: "medium",
     },
@@ -605,13 +616,13 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
                 src={profileImage || "/placeholder.svg?height=80&width=80"}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
+                onClick={() => navigate(`/profile-settings`)}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
             <h3
               className="font-medium cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile/${currentUserId}`)}
+              onClick={() => navigate(`/profile-settings`)}
             >
               {username}
             </h3>
