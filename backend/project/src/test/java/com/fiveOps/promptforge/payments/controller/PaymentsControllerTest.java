@@ -92,7 +92,9 @@ public class PaymentsControllerTest {
     PayoutCardDTO returnedDetails = (PayoutCardDTO) result.getBody().getData();
     assertEquals("123", returnedDetails.getBank().getCode());
     assertEquals("Test Bank", returnedDetails.getBank().getName());
-    assertEquals("1234567890", returnedDetails.getAccountNumber());
+    assertEquals(
+        "1234567890",
+        returnedDetails.getAccountNumber()); // This should be decrypted by the service
     assertEquals("Test User", returnedDetails.getAccountHolder());
   }
 

@@ -21,6 +21,7 @@ import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
 public class BankDetailsServiceTest {
 
   @Mock private BankDetailsRepository bankDetailsRepository;
+  @Mock private EncryptionService encryptionService;
 
   @InjectMocks private BankDetailsService bankDetailsService;
 
@@ -61,31 +62,42 @@ public class BankDetailsServiceTest {
   }
 
   @Test
-  void getBankDetails_ShouldReturnDto() {
+  void getBankDetails_ShouldReturnDecryptedDto() {
     // Arrange
-    PayoutCardWithSubaccountCodeDTO dto = new PayoutCardWithSubaccountCodeDTO("", "", "", "", "");
+    String encryptedAccountNumber = "encryptedAccountNumber";
+    String decryptedAccountNumber = "1234567890";
+
+    PayoutCardWithSubaccountCodeDTO dto =
+        new PayoutCardWithSubaccountCodeDTO("", "", encryptedAccountNumber, "", "");
+
     when(bankDetailsRepository.findByUserUserId(userId)).thenReturn(dto);
+    when(encryptionService.decrypt(encryptedAccountNumber)).thenReturn(decryptedAccountNumber);
 
     // Act
     PayoutCardWithSubaccountCodeDTO result = bankDetailsService.getBankDetails(userId);
 
     // Assert
     assertNotNull(result);
-    assertEquals(dto, result);
+    assertEquals(decryptedAccountNumber, result.getAccountNumber());
+    verify(encryptionService).decrypt(encryptedAccountNumber);
   }
 
   @Test
-  void addPayoutDetails_ShouldSaveBankAccount() {
+  void addPayoutDetails_ShouldSaveBankAccountWithEncryptedNumber() {
     // Arrange
     PayoutCardDTO payoutCard = new PayoutCardDTO("TB01", "Test Bank", "12345678", "John Doe");
+    String encryptedAccountNumber = "encryptedAccountNumber";
 
     PaystackAddSubaccountResponseDTO subaccountResponse =
         new PaystackAddSubaccountResponseDTO(true, "SUB123");
+
+    when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act
     bankDetailsService.addPayoutDetails(userId, payoutCard, subaccountResponse);
 
     // Assert
+    verify(encryptionService).encrypt("12345678");
     verify(bankDetailsRepository, times(1)).save(any(BankAccount.class));
   }
 
@@ -102,14 +114,18 @@ public class BankDetailsServiceTest {
   }
 
   @Test
-  void updatePayoutDetails_ShouldDeleteAndSave() {
+  void updatePayoutDetails_ShouldDeleteAndSaveWithEncryptedNumber() {
     // Arrange
     PayoutCardDTO payoutCard = new PayoutCardDTO("TB01", "Test Bank", "12345678", "Jane Doe");
+    String encryptedAccountNumber = "encryptedAccountNumber";
+
+    when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act
     bankDetailsService.updatePayoutDetails(userId, payoutCard, "SUB123");
 
     // Assert
+    verify(encryptionService).encrypt("12345678");
     verify(bankDetailsRepository).deleteByUserUserId(userId);
     verify(bankDetailsRepository).save(any(BankAccount.class));
   }
