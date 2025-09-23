@@ -192,6 +192,8 @@ const isMultiplayerGame = !!gameId;
   const [newMessage, setNewMessage] = useState("")
   const [showChat, setShowChat] = useState(true)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const [showEndPopup, setShowEndPopup] = useState(false)
+  const [endPopupMessage, setEndPopupMessage] = useState('')
 
   // Initialize multiplayer game and WebSocket
   useEffect(() => {
@@ -481,6 +483,25 @@ const isMultiplayerGame = !!gameId;
       console.log('WebSocket event:', data)
     })
 
+    // Listen for explicit game actions (e.g., player left) so we can show a popup and redirect
+    const unsubscribeGameAction = promptWarsWebSocket.on('GAME_ACTION', (data: any) => {
+      if (data.gameId === gameId) {
+        try {
+          const action = data.action
+          if (action === 'PLAYER_LEFT') {
+            // Show a friendly in-app popup and redirect to social hub
+            setEndPopupMessage(data?.data?.message || 'The game ended because a player left.')
+            setShowEndPopup(true)
+            // Leave the room locally to stop receiving further messages
+            try { promptWarsWebSocket.leaveGameRoom(gameId) } catch (e) { /* ignore */ }
+            setTimeout(() => { window.location.href = '/social' }, 1600)
+          }
+        } catch (e) {
+          console.warn('Failed to handle GAME_ACTION:', e)
+        }
+      }
+    })
+
     // Reverse prompt battle event listeners
     const unsubscribeQuestionGenerated = promptWarsWebSocket.on('QUESTION_GENERATED', (data: any) => {
       if (data.gameId === gameId) {
@@ -614,6 +635,7 @@ const isMultiplayerGame = !!gameId;
       unsubscribeChatMessage()
       unsubscribeUserJoined()
       unsubscribeAll()
+      unsubscribeGameAction()
       unsubscribeQuestionGenerated()
       unsubscribeAnswerResults()
       unsubscribeReverseGameFinished()
@@ -1432,6 +1454,42 @@ Overall Analysis: [brief summary]`,
     }
   }
 
+  // Handle returning to social hub: finish game, notify opponent, show popup and redirect
+  const handleReturnToSocial = async () => {
+    // Non-multiplayer fallback: immediate redirect
+    if (!isMultiplayerGame || !gameId) {
+      window.location.href = "/social"
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Ask server to force-finish this game so it will persist ratings/empty prompts
+      try {
+        await promptWarsGameAPI.forceFinishGame(gameId)
+      } catch (e) {
+        // Not fatal — continue to notify peers and redirect
+        console.warn('forceFinishGame failed while returning to social:', e)
+      }
+
+      // Broadcast a game action so the opponent can show a friendly popup and redirect
+      try {
+        promptWarsWebSocket.sendGameAction(gameId, 'PLAYER_LEFT', { message: 'A player left the match.' })
+      } catch (e) {
+        console.warn('sendGameAction failed while returning to social:', e)
+      }
+
+      setEndPopupMessage('The game ended because the other player left.')
+      setShowEndPopup(true)
+
+      // Ensure we leave the room locally then redirect after a short delay so the popup is visible
+      try { promptWarsWebSocket.leaveGameRoom(gameId) } catch (e) { /* ignore */ }
+      setTimeout(() => { window.location.href = '/social' }, 1600)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -2196,18 +2254,23 @@ Overall Analysis: [brief summary]`,
           {isMultiplayerGame && (
             <div className="fixed bottom-6 left-6 z-50">
               <Button
-                onClick={() => {
-                  if (gameId) {
-                    promptWarsWebSocket.leaveGameRoom(gameId);
-                  }
-                  window.location.href = "/social";
-                }}
+                onClick={() => handleReturnToSocial()}
                 variant="outline"
                 className="border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white bg-slate-900/90 backdrop-blur-sm border-2 font-semibold"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Back to Social
               </Button>
+            </div>
+          )}
+
+          {/* End-game non-blocking popup */}
+          {showEndPopup && (
+            <div className="fixed bottom-6 right-6 z-60">
+              <div className="bg-slate-900/80 border border-slate-700/60 text-white rounded-lg px-6 py-4 shadow-lg backdrop-blur-md max-w-sm">
+                <div className="font-semibold mb-1">Match Ended</div>
+                <div className="text-sm text-slate-300">{endPopupMessage}</div>
+              </div>
             </div>
           )}
         </div>
