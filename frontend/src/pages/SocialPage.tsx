@@ -222,14 +222,13 @@ export default function SocialPage() {
             </div>
           `;
           document.body.appendChild(notification);
-          // Add click handler for the button to go to the match (same logic as Accept)
           setTimeout(() => {
             const btn = document.getElementById('view-challenge-btn');
             if (btn) {
               btn.onclick = () => {
                 notification.remove();
-                window.location.hash = 'challenges';
-                window.location.reload();
+                // Navigate directly to the Social page with the challenges hash
+                window.location.href = '/social#challenges';
               };
             }
           }, 100);
