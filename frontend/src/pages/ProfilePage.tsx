@@ -171,7 +171,7 @@ export default function ProfilePage() {
             description: p.description || "",
             content: p.content || "",
             category: p.category || "General",
-            tags: p.tagNames || [],
+            tags: [...new Set(p.tagNames)],
             createdAt: p.createdAt,
             updatedAt: p.publishedAt || p.createdAt,
             rating: 0,
