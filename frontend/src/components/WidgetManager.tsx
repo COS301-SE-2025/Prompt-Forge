@@ -279,7 +279,7 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "bounce-rate":
+      case "bounce-rate": {
         const bounceRate = data?.averageBounceRate || 0;
         const getBounceRateColor = (rate: number) => {
           if (rate <= 40) return "text-green-600";      // 0-40% = Excellent (low bounce rate)
@@ -550,7 +550,8 @@ export default function WidgetManager({
             </div>
           </div>
         )
-      case "monthly-usage":
+      }
+      case "monthly-usage": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -561,7 +562,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "top-prompts":
+      }
+      case "top-prompts": {
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
@@ -589,7 +591,8 @@ export default function WidgetManager({
             </div>
           </div>
         )
-      case "recent-activity":
+      }
+      case "recent-activity": {
         return (
           <div className="h-full flex flex-col items-center justify-center">
             <div className="mb-3 flex justify-between items-center w-full">
@@ -603,6 +606,7 @@ export default function WidgetManager({
             </div>
           </div>
         )
+      }
       case "analytics-chart": {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const analyticsData = Array.from({ length: 12 }, (_, i) => ({
@@ -708,7 +712,7 @@ export default function WidgetManager({
           </div>
         );
       }
-      case "calendar-view":
+      case "calendar-view": {
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
@@ -724,6 +728,7 @@ export default function WidgetManager({
             </div>
           </div>
         )
+      }
       default:
         return <div className="h-full flex items-center justify-center">Widget content</div>
     }
