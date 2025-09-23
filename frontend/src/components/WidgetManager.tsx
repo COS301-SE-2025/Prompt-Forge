@@ -247,7 +247,7 @@ export default function WidgetManager({
         )
       }
       case "bounce-rate": {
-        // Skip engagement funnel use dashboard data directly
+        // Engagement funnel use dashboard data directly
         let totalViews = 0;
         let totalCartAdds = 0;
         let totalPurchases = 0;
