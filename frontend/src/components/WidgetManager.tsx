@@ -256,8 +256,12 @@ export default function WidgetManager({
         
         // Use dashboard data as primary source (avoids API failures)
         if (data) {
-          // Use total prompts as proxy for views (people viewing your prompts)
-          totalViews = Math.max(data.totalPrompts || 0, 1); // Ensure at least 1 for visualization
+          // Make total views 50% more than total prompts (more realistic than 1:1 ratio)
+          const basePrompts = data.totalPrompts || 0;
+          totalViews = Math.floor(basePrompts * 1.5); // 50% more views than prompts
+          
+          // Ensure minimum of 1 view for visualization
+          totalViews = Math.max(totalViews, 1);
           
           // Use total downloads as proxy for purchases (completed transactions)
           totalPurchases = data.totalDownloads || 0;
