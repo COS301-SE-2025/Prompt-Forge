@@ -150,8 +150,21 @@ public class PromptWarsGameController {
   @PostMapping("/{gameId}/forfeit")
   public ResponseEntity<Void> forfeitGame(@PathVariable String gameId) {
     try {
-      // Implementation needed
+      // Forfeit - mark current user as forfeiting (not implemented)
       return ResponseEntity.ok().build();
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
+  @PostMapping("/{gameId}/force-finish")
+  public ResponseEntity<?> forceFinishGame(@PathVariable String gameId) {
+    try {
+      UUID id = UUID.fromString(gameId);
+      Game finished = gameService.forceFinishGame(id);
+      return ResponseEntity.ok(Map.of("gameId", finished.getId().toString(), "gameState", finished.getGameState().toString()));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
