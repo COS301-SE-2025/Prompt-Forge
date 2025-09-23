@@ -303,9 +303,19 @@ export default function WidgetManager({
         };
         
         // For funnel visualization, bars should show the percentages calculated
-        // Views bar should show engagement rate (100 - bounce rate)
-        const engagementRate = 100 - bounceRate;
-        const viewsBarWidth = engagementRate; // Views bar matches engagement percentage
+        // Special handling for zero prompts - no engagement data available
+        let engagementRate, viewsBarWidth;
+        
+        if (totalViews === 0) {
+          // No prompts = no views = no engagement data
+          engagementRate = 0;
+          viewsBarWidth = 0;
+        } else {
+          // Views bar should show engagement rate (100 - bounce rate)
+          engagementRate = 100 - bounceRate;
+          viewsBarWidth = engagementRate; // Views bar matches engagement percentage
+        }
+        
         const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
         const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
         
@@ -457,7 +467,8 @@ export default function WidgetManager({
                     "bg-red-500"                                      // 71%+ = Poor (very high bounce rate)
                   }`} />
                   <span className="text-xs text-muted-foreground">
-                    {bounceRate <= 40 ? "Excellent engagement" :
+                    {totalViews === 0 ? "No Data Available" :
+                     bounceRate <= 40 ? "Excellent engagement" :
                      bounceRate <= 55 ? "Good engagement" :
                      bounceRate <= 70 ? "Fair engagement" : "Engagement needs improvement"}
                   </span>
