@@ -230,6 +230,19 @@ export class PromptWarsGameAPI {
     return response.json();
   }
 
+  async forceFinishGame(gameId: string): Promise<{ gameId: string, gameState: string }> {
+    const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/force-finish`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to force-finish game: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   async submitAnswer(gameId: string, request: AnswerRequest): Promise<AnswerResponse> {
     const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/submit-answer`, {
       method: 'POST',
