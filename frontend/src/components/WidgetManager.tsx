@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import {
@@ -17,6 +17,7 @@ import {
   PieChart,
   LineChart,
 } from "lucide-react"
+import PromptInteractionService from "@/services/promptInteractionService"
 import {
   BarChart as ReBarChart,
   Bar,
@@ -80,6 +81,14 @@ const availableWidgets = [
     icon: <Star size={20} color="#60A5FA" />,
     size: "small" as WidgetSize,
     minSize: "small" as WidgetSize,
+  },
+  {
+    id: "bounce-rate",
+    type: "stat", 
+    title: "Bounce Rate Analytics",
+    icon: <TrendingUp size={20} color="#FF6B6B" />,
+    size: "medium" as WidgetSize,
+    minSize: "medium" as WidgetSize,
   },
   {
     id: "monthly-usage",
@@ -166,6 +175,41 @@ export default function WidgetManager({
 }: WidgetManagerProps) {
   const [showAddWidget, setShowAddWidget] = useState(false)
   const [showResizeWidget, setShowResizeWidget] = useState<string | null>(null)
+  const [engagementFunnelData, setEngagementFunnelData] = useState({
+    totalViews: 0,
+    totalCartAdds: 0,
+    totalPurchases: 0,
+    viewToCartRate: 0,
+    cartToPurchaseRate: 0,
+  })
+  const [isLoadingEngagement, setIsLoadingEngagement] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState(Date.now())
+
+  useEffect(() => {
+    const fetchEngagementData = async () => {
+      try {
+        setIsLoadingEngagement(true);
+        const data = await PromptInteractionService.getEngagementFunnelData();
+        console.log('Fetched engagement funnel data:', data); // Debug log
+        setEngagementFunnelData(data);
+        setLastUpdate(Date.now());
+      } catch (error) {
+        console.error('Error fetching engagement funnel data:', error);
+        // Don't clear existing data on error, keep showing last known good data
+      } finally {
+        setIsLoadingEngagement(false);
+      }
+    };
+
+    fetchEngagementData();
+    
+    // Refresh data every 30 seconds for real backend data
+    const interval = setInterval(() => {
+      fetchEngagementData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const addWidget = (widgetType: (typeof availableWidgets)[0]) => {
     const newWidget: Widget = {
@@ -202,7 +246,7 @@ export default function WidgetManager({
     loading: boolean,
   ) => {
     switch (widgetType.id) {
-      case "total-prompts":
+      case "total-prompts": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -213,7 +257,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "total-users":
+      }
+      case "total-users": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -224,7 +269,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "average-rating":
+      }
+      case "average-rating": {
         return (
           <div className="flex items-center justify-between h-full ">
             <div>
@@ -235,7 +281,280 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "monthly-usage":
+      }
+      case "bounce-rate": {
+        const bounceRate = data?.averageBounceRate || 0;
+        const getBounceRateColor = (rate: number) => {
+          if (rate <= 40) return "text-green-600";      // 0-40% = Excellent (low bounce rate)
+          if (rate <= 55) return "text-yellow-600";     // 41-55% = Good (moderate bounce rate)
+          if (rate <= 70) return "text-orange-600";     // 56-70% = Fair (high bounce rate)
+          return "text-red-600";                        // 71%+ = Poor (very high bounce rate)
+        };
+        
+        const getBounceRateGradient = (rate: number) => {
+          if (rate <= 40) return "from-green-500/20 to-green-600/30";      // Excellent
+          if (rate <= 55) return "from-yellow-500/20 to-yellow-600/30";    // Good
+          if (rate <= 70) return "from-orange-500/20 to-orange-600/30";    // Fair  
+          return "from-red-500/20 to-red-600/30";                          // Poor
+        };
+        
+        // Note: Bounce rate should be INVERSE of engagement
+        // High bounce rate = people leave immediately 
+        // High engagement = people interact (cart, purchase)
+        // These should be opposite values!
+
+        // Use real engagement funnel data from backend API with dashboard data fallback
+        let totalViews = engagementFunnelData.totalViews || 0;
+        let totalCartAdds = engagementFunnelData.totalCartAdds || 0;
+        let totalPurchases = engagementFunnelData.totalPurchases || 0;
+        let viewToCartRate = engagementFunnelData.viewToCartRate || 0;
+        let cartToPurchaseRate = engagementFunnelData.cartToPurchaseRate || 0;
+        
+        // Validate and cap rates at 100% to prevent display issues
+        viewToCartRate = Math.min(Math.max(viewToCartRate, 0), 100);
+        cartToPurchaseRate = Math.min(Math.max(cartToPurchaseRate, 0), 100);
+        
+        // If engagement funnel data is empty, use dashboard data as fallback
+        const hasEngagementData = totalViews > 0 || totalCartAdds > 0 || totalPurchases > 0;
+        
+        console.log('Bounce Rate Widget Debug:', {
+          hasEngagementData,
+          engagementFunnelData,
+          dashboardData: data,
+          totalViews,
+          totalCartAdds,
+          totalPurchases,
+          bounceRateFromAPI: data?.averageBounceRate,
+          viewToCartRate,
+          cartToPurchaseRate
+        });
+        
+        // Fix bounce rate calculation - if people are engaging (cart adds/purchases), 
+        // bounce rate should be lower, not higher
+        let correctedBounceRate = bounceRate;
+        
+        if ((totalCartAdds > 0 || totalPurchases > 0) && bounceRate > 50) {
+          // If we have engagement but high bounce rate, recalculate based on engagement
+          const engagementRate = Math.max(viewToCartRate, (totalPurchases / totalViews) * 100);
+          correctedBounceRate = Math.max(0, 100 - engagementRate);
+          console.log('Corrected bounce rate from', bounceRate, 'to', correctedBounceRate, 'based on engagement rate', engagementRate);
+        }
+        
+        if (!hasEngagementData && data) {
+          console.log('Using dashboard data fallback');
+          // Use total prompts as proxy for views (people viewing your prompts)
+          totalViews = Math.max(data.totalPrompts || 0, 1); // Ensure at least 1 for visualization
+          
+          // Use total downloads as proxy for purchases (completed transactions)
+          totalPurchases = data.totalDownloads || 0;
+          
+          // Estimate cart adds as somewhere between views and purchases
+          // If no downloads, estimate 20% of prompts had cart interactions
+          totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
+          
+          // Recalculate rates based on fallback data (backend already returns percentages, so we match that format)
+          viewToCartRate = totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0;
+          cartToPurchaseRate = totalCartAdds > 0 ? (totalPurchases / totalCartAdds) * 100 : 0;
+          
+          // Cap rates at 100% to prevent display issues
+          viewToCartRate = Math.min(viewToCartRate, 100);
+          cartToPurchaseRate = Math.min(cartToPurchaseRate, 100);
+          
+          console.log('Fallback data calculated:', {
+            totalViews,
+            totalCartAdds, 
+            totalPurchases,
+            viewToCartRate,
+            cartToPurchaseRate
+          });
+        } else if (!hasEngagementData && !data) {
+          console.log('No data available at all');
+        }
+        
+        // For funnel visualization, bars should match the percentages shown
+        // Views bar should show engagement rate (100 - bounce rate)
+        const engagementRate = 100 - correctedBounceRate;
+        const viewsBarWidth = engagementRate; // Views bar matches engagement percentage
+        const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
+        const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
+        
+        console.log('Bar widths calculated:', {
+          engagementRate,
+          viewsBarWidth,
+          cartAddsBarWidth, 
+          purchasesBarWidth,
+          correctedBounceRate
+        });
+        
+        // Function to get dynamic color based on engagement level
+        const getEngagementColor = (rate: number) => {
+          // Unified color coding for all components based on performance
+          if (rate >= 70) return "bg-green-500"; // Excellent performance (70%+)
+          if (rate >= 50) return "bg-yellow-500"; // Good performance (50-69%)
+          if (rate >= 30) return "bg-orange-500"; // Fair performance (30-49%)
+          return "bg-red-500"; // Poor performance (<30%)
+        };
+        
+        // Enhanced color calculation for better visual feedback
+        const getBarIntensity = (rate: number) => {
+          if (rate >= 20) return "opacity-100";
+          if (rate >= 15) return "opacity-90";
+          if (rate >= 10) return "opacity-75";
+          if (rate >= 5) return "opacity-60";
+          return "opacity-40";
+        };
+        
+        const components = [
+          { 
+            name: "Views", 
+            value: viewsBarWidth, // Bar width shows engagement rate
+            count: totalViews,
+            percentage: `${engagementRate.toFixed(1)}%`, // Views that didn't bounce = engagement rate
+            color: getEngagementColor(engagementRate),
+            intensity: getBarIntensity(engagementRate)
+          },
+          { 
+            name: "Cart Adds", 
+            value: cartAddsBarWidth, // Bar width matches percentage shown
+            count: totalCartAdds,
+            percentage: `${viewToCartRate.toFixed(1)}%`, // Text shows conversion rate from backend
+            color: getEngagementColor(viewToCartRate),
+            intensity: getBarIntensity(viewToCartRate)
+          },
+          { 
+            name: "Purchases", 
+            value: purchasesBarWidth, // Bar width matches percentage shown
+            count: totalPurchases, 
+            percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
+            color: getEngagementColor(cartToPurchaseRate),
+            intensity: getBarIntensity(cartToPurchaseRate)
+          },
+        ];
+
+        return (
+          <div className="h-full p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Bounce Rate Analytics 
+                  {isLoadingEngagement && (
+                    <span className="text-xs ml-1 animate-pulse">🔄 Updating...</span>
+                  )}
+                </p>
+                <p className={`text-2xl font-bold ${getBounceRateColor(correctedBounceRate)} transition-colors duration-500`}>
+                  {correctedBounceRate.toFixed(1)}%
+                </p>
+              </div>
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${getBounceRateGradient(correctedBounceRate)} transition-all duration-500`}>
+                {widgetType.icon}
+              </div>
+            </div>
+            
+            {/* Heat Map Visualization */}
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground mb-2">Engagement Funnel</p>
+              {components.map((component, index) => (
+                <div key={component.name} className="flex items-center space-x-2">
+                  <div className="w-16 text-xs text-muted-foreground">{component.name}</div>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-3 relative overflow-hidden">
+                    {/* Background pattern for visual depth */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                    <div
+                      className={`h-full ${component.color} ${component.intensity} transition-all duration-1000 ease-out relative`}
+                      style={{ 
+                        width: `${Math.min(100, Math.max(1, component.value))}%`,
+                        transitionDelay: `${index * 100}ms`
+                      }}
+                      title={`Bar width: ${component.value.toFixed(1)}% | Display: ${component.percentage}`}
+                    >
+                      {/* Simple shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+                    </div>
+                  </div>
+                  <div className={`w-12 text-xs text-muted-foreground text-right font-medium transition-all duration-500`}>
+                    {component.percentage}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Additional metrics display */}
+              <div className="mt-2 pt-2 text-xs text-muted-foreground border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Total Views:</span>
+                  <span className="font-medium text-blue-400">{totalViews.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Cart Conversions:</span>
+                  <span className="font-medium text-green-400">{totalCartAdds.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between transition-all duration-300">
+                  <span>Purchase Conversions:</span>
+                  <span className="font-medium text-purple-400">{totalPurchases.toLocaleString()}</span>
+                </div>
+                
+                {/* Real conversion rates from backend */}
+                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
+                  <div className="flex justify-between text-xs">
+                    <span>View → Cart Rate:</span>
+                    <span className={`font-medium ${
+                      viewToCartRate >= 70 ? 'text-green-400' : 
+                      viewToCartRate >= 50 ? 'text-yellow-400' : 
+                      viewToCartRate >= 30 ? 'text-orange-400' : 'text-red-400'
+                    }`}>
+                      {viewToCartRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Cart → Purchase Rate:</span>
+                    <span className={`font-medium ${
+                      cartToPurchaseRate >= 70 ? 'text-green-400' : 
+                      cartToPurchaseRate >= 50 ? 'text-yellow-400' : 
+                      cartToPurchaseRate >= 30 ? 'text-orange-400' : 'text-red-400'
+                    }`}>
+                      {cartToPurchaseRate.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Data source indicator */}
+                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
+                  <div className="text-xs text-muted-foreground flex items-center">
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                      hasEngagementData ? 'bg-green-400' : 
+                      (totalViews > 0 || totalPurchases > 0) ? 'bg-yellow-400' : 'bg-red-400'
+                    }`}></span>
+                    {hasEngagementData ? 'Live Interaction Data' : 
+                     (totalViews > 0 || totalPurchases > 0) ? 'Dashboard Data (Estimated)' : 'No Data Available'}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status indicator */}
+              <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    correctedBounceRate <= 40 ? "bg-green-500" :      // 0-40% = Excellent (low bounce rate)
+                    correctedBounceRate <= 55 ? "bg-yellow-500" :     // 41-55% = Good (moderate bounce rate)
+                    correctedBounceRate <= 70 ? "bg-orange-500" :     // 56-70% = Fair (high bounce rate)
+                    "bg-red-500"                                      // 71%+ = Poor (very high bounce rate)
+                  }`} />
+                  <span className="text-xs text-muted-foreground">
+                    {correctedBounceRate <= 40 ? "Excellent engagement" :
+                     correctedBounceRate <= 55 ? "Good engagement" :
+                     correctedBounceRate <= 70 ? "Fair engagement" : "Engagement needs improvement"}
+                  </span>
+                </div>
+                {correctedBounceRate !== bounceRate && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    (Corrected from {bounceRate.toFixed(1)}% based on engagement data)
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+      case "monthly-usage": {
         return (
           <div className="flex items-center justify-between h-full">
             <div>
@@ -246,7 +565,8 @@ export default function WidgetManager({
             {widgetType.icon}
           </div>
         )
-      case "top-prompts":
+      }
+      case "top-prompts": {
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
@@ -274,7 +594,8 @@ export default function WidgetManager({
             </div>
           </div>
         )
-      case "recent-activity":
+      }
+      case "recent-activity": {
         return (
           <div className="h-full flex flex-col items-center justify-center">
             <div className="mb-3 flex justify-between items-center w-full">
@@ -288,6 +609,7 @@ export default function WidgetManager({
             </div>
           </div>
         )
+      }
       case "analytics-chart": {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const analyticsData = Array.from({ length: 12 }, (_, i) => ({
@@ -393,7 +715,7 @@ export default function WidgetManager({
           </div>
         );
       }
-      case "calendar-view":
+      case "calendar-view": {
         return (
           <div className="h-full flex flex-col">
             <div className="mb-3 flex justify-between items-center">
@@ -409,6 +731,7 @@ export default function WidgetManager({
             </div>
           </div>
         )
+      }
       default:
         return <div className="h-full flex items-center justify-center">Widget content</div>
     }
