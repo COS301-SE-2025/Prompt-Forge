@@ -164,20 +164,16 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
               author_user.username AS authorName,
               array_agg(t.name) AS tagNames,
               'authored' AS source,
-              (
-                     SELECT COUNT(*)
-                     FROM purchased_prompts pp
-                     WHERE pp.prompt_id = p.prompt_id
-              ) AS usageCount
-       FROM
-              prompts p
+              COUNT(pp.prompt_id) AS usageCount
+       FROM prompts p
        JOIN users author_user ON author_user.user_id = p.author_id
        LEFT JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       LEFT JOIN purchased_prompts pp ON pp.prompt_id = p.prompt_id
        WHERE
               p.author_id = :authorId
               AND (:tagId IS NULL OR :tagId = ANY(p.prompt_tags))
               AND :visibility = p.visibility
-       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description, p.price,
+       GROUP BY p.prompt_id, author_user.username,p.author_id,p.title,p.slug,p.description,p.price,
               p.visibility
        """,
       nativeQuery = true)

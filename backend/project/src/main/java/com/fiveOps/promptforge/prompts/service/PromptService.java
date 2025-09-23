@@ -14,19 +14,24 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
+import com.fiveOps.promptforge.user_profile.dto.UserDto;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 
 @Service
 public class PromptService {
   private final PromptRepository promptRepository;
   private final TagService tagService;
+  private final UserService userService;
   private final UniversalTaggingService taggingService;
 
   public PromptService(
       PromptRepository promptRepository,
       TagService tagService,
+      UserService userService,
       UniversalTaggingService taggingService) {
     this.promptRepository = promptRepository;
     this.tagService = tagService;
+    this.userService = userService;
     this.taggingService = taggingService;
   }
 
@@ -41,6 +46,17 @@ public class PromptService {
 
     long totalElements = promptRepository.countAuthoredPrompts(authorId);
     return new PageImpl<>(prompts, pageable, totalElements);
+  }
+
+  public Page<PromptWithSourceDTO> getPublicPromptsByUsername(String username, Pageable pageable) {
+    UserDto user = userService.getUserByUsername(username);
+    // List<PromptWithSourceDTO> prompts =
+    System.out.println("\n\nuserid:" + user.getUserId());
+    return promptRepository.findByAuthorIdAndVisibilityAndOptionalTag(
+        user.getUserId(), null, "public", pageable);
+
+    // long totalElements = promptRepository.countAuthoredPrompts(username);
+    // return new PageImpl<>(prompts, pageable, totalElements);
   }
 
   public Prompt getPromptById(UUID id) {
