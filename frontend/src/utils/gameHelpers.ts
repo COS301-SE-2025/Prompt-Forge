@@ -1,9 +1,10 @@
 export function normalizeScenario(raw: any): string {
   if (raw === null || raw === undefined) return ''
-  let s = raw
   try {
     if (typeof raw === 'string') {
-      s = raw.trim()
+      let s = raw.trim()
+
+      // If payload looks like JSON with a scenario field, try to parse
       if ((s.startsWith('{') && s.includes('scenario')) || s.startsWith('{"')) {
         try {
           const parsed = JSON.parse(s)
@@ -13,37 +14,21 @@ export function normalizeScenario(raw: any): string {
             const unescaped = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_m: string, g1: string) => String.fromCharCode(parseInt(g1, 16)))
             const parsed2 = JSON.parse(unescaped)
             if (parsed2 && parsed2.scenario) return String(parsed2.scenario)
-          } catch (e2) {
-            // fallthrough
+          } catch (_) {
+            // fallthrough to plain-string cleaning
           }
         }
       }
 
-      if (s.includes('\\u')) {
-        try {
-          const unescaped = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_m: string, g1: string) => String.fromCharCode(parseInt(g1, 16)))
-          if (typeof unescaped === 'string') {
-            // Remove escaped backslashes and unescape escaped asterisks
-            let cleaned = unescaped.replace(/\\\\/g, '\\')
-            cleaned = cleaned.replace(/\\\*/g, '*')
-            // Remove markdown emphasis markers like *text* or **text** or ***text***
-            cleaned = cleaned.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-            return cleaned
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-      // Also strip stray markdown emphasis markers from plain strings and unescape common sequences
-      try {
-        let cleaned = s.replace(/\\\\/g, '\\')
-        cleaned = cleaned.replace(/\\\*/g, '*')
-        cleaned = cleaned.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-        // Trim any leftover whitespace/newlines
-        return cleaned.trim()
-      } catch (e) {
-        return s
-      }
+      // Unescape unicode sequences and common escaped characters
+      s = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_m: string, g1: string) => String.fromCharCode(parseInt(g1, 16)))
+      s = s.replace(/\\\\/g, '\\')
+      s = s.replace(/\\\*/g, '*')
+
+      // Remove markdown emphasis markers like *text* or **text** or ***text***
+      s = s.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+
+      return s.trim()
     }
     return String(raw)
   } catch (e) {
@@ -52,45 +37,147 @@ export function normalizeScenario(raw: any): string {
 }
 
 export function parseAIJudgment(text?: string | null) {
-  if (!text) return { explanation: '', p1: null as number | null, p2: null as number | null }
+  const empty = { explanation: '', p1: null as number | null, p2: null as number | null, paragraphs: [] as string[] }
+  if (!text) return empty
+
   let s = String(text)
+
   // Unescape unicode sequences
-  s = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_m, g1) => String.fromCharCode(parseInt(g1, 16)))
+  s = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_m: string, g1: string) => String.fromCharCode(parseInt(g1, 16)))
 
-  // Attempt several common score patterns and also player-centric lines
-  const patterns = [
-  /Prompt\s*1\s*Score\s*[: -]?\s*(\d{1,2})\s*\/\s*(\d{1,2})/i,
-  /Prompt1Score\s*[: -]?\s*(\d{1,2})/i,
-  /Player\s*1\s*score\s*[: -]?\s*(\d{1,2})/i,
-  /P1[:\s]*?(\d{1,2})\s*\/\s*(\d{1,2})/i,
+  // Remove obvious noisy score/winner lines that sometimes prefix the AI response
+  s = s.replace(/PROMPT\s*1\s*SCORE[:\s-]*[^\n]*/gi, '')
+  s = s.replace(/PROMPT\s*2\s*SCORE[:\s-]*[^\n]*/gi, '')
+  s = s.replace(/Prompt\s*1[:\s]*\d{1,2}[^\n]*/gi, '')
+  s = s.replace(/Prompt\s*2[:\s]*\d{1,2}[^\n]*/gi, '')
+  s = s.replace(/Winner[:\s-]*[^\n]*/gi, '')
+
+  // Ensure known headings are on their own line (helps when AI outputs everything on one line)
+  const headingKeywords = ['Relevance', 'Clarity', 'Specificity', 'Structure', 'Context', 'Actionability', 'Overall', 'Conclusion', 'Analysis']
+  // First, handle compact separators like "Relevance: - - Clarity:" where single hyphens separated by spaces
+  // were used between headings. Convert the hyphen-run into a newline so headings split.
+  const sepBetweenHeadings = new RegExp(
+    `(${headingKeywords.join('|')})\\s*:\\s*(?:-\\s*)+(?=(?:${headingKeywords.join('|')})\\s*:)`,
+    'gi'
+  )
+  // Use a blank-line separator so later split('\n\n') yields distinct paragraphs
+  s = s.replace(sepBetweenHeadings, (_m: string, h: string) => `${h}:\n\n`)
+
+  // Then ensure every heading keyword followed by ':' begins on its own line. Simpler and more reliable
+  // than indexing into the full string.
+  const headingInsert = new RegExp(`(^|\\n)\\s*(${headingKeywords.join('|')})\\s*:`, 'gi')
+  // Insert a blank-line before headings to make them paragraph separators
+  s = s.replace(headingInsert, (_m: string, p1: string, h: string) => `\n\n${h}:`)
+
+  // Normalize separators and whitespace
+  s = s.replace(/\s*[–—-]{2,}\s*/g, '\n')
+  s = s.replace(/\r/g, '\n')
+  s = s.replace(/\n{3,}/g, '\n\n')
+
+  // Helper to clean markdown and escaped characters
+  const cleanText = (t: string) =>
+    t
+      .replace(/\*{1,3}|_{1,3}|`+/g, '')
+      .replace(/\\u[0-9A-Fa-f]{4}/g, '')
+      .replace(/\\\\/g, '\\')
+      .replace(/Prompt\s*\d+\s*scores?\s*\d+\/\d+/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+
+  // If structured headings are present, parse them into sections
+  const structuredPattern = /^\s*(${headingKeywords.join('|')})\s*:/im
+  if (structuredPattern.test(s)) {
+    const sections: { [key: string]: string } = {}
+    const lines = s.split('\n')
+    let currentSection = ''
+    let currentContent = ''
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line) continue
+      const sectionMatch = line.match(new RegExp(`^(${headingKeywords.join('|')})\\s*:\\s*(.*)$`, 'i'))
+      if (sectionMatch) {
+        if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+        currentSection = sectionMatch[1]
+        currentContent = sectionMatch[2] || ''
+      } else if (currentSection) {
+        currentContent += (currentContent ? ' ' : '') + line
+      }
+    }
+    if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+
+    const sectionOrder = headingKeywords
+    const paragraphs: string[] = []
+    for (const section of sectionOrder) {
+      if (sections[section]) {
+        const content = cleanText(sections[section])
+        if (content) paragraphs.push(`${section}: ${content}`)
+      }
+    }
+    const cleanedExplanation = paragraphs.join('\n\n')
+    return { explanation: cleanedExplanation, p1: null, p2: null, paragraphs }
+  }
+
+  // Markdown-style ### headers parsing
+  if (s.includes('###')) {
+    const sections: { [key: string]: string } = {}
+    const lines = s.split('\n')
+    let currentSection = ''
+    let currentContent = ''
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line) continue
+      const headerMatch = line.match(/^###\s*([A-Za-z][A-Za-z\s\-']*)/)
+      if (headerMatch) {
+        if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+        currentSection = headerMatch[1].replace(/\s*\([^)]*\)/, '')
+        currentContent = ''
+      } else if (currentSection) {
+        let cleanedLine = line.replace(/^[•\-*]\s*/, '')
+        cleanedLine = cleanedLine.replace(/^\d+\.\s*/, '')
+        if (cleanedLine) currentContent += (currentContent ? ' ' : '') + cleanedLine
+      }
+    }
+    if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+
+    const sectionOrder = headingKeywords
+    const paragraphs: string[] = []
+    for (const section of sectionOrder) {
+      const key = Object.keys(sections).find(k => k.toLowerCase().includes(section.toLowerCase()))
+      if (key && sections[key]) {
+        const content = cleanText(sections[key])
+        if (content) paragraphs.push(`${section}: ${content}`)
+      }
+    }
+    const cleanedExplanation = paragraphs.join('\n\n')
+    return { explanation: cleanedExplanation, p1: null, p2: null, paragraphs }
+  }
+
+  // Fallback: try to extract numeric scores and produce cleaned explanation paragraphs
+  const scorePatterns1 = [
+    /Prompt\s*1\s*Score\s*[: -]?\s*(\d{1,2})\s*\/\s*(\d{1,2})/i,
+    /Prompt1Score\s*[: -]?\s*(\d{1,2})/i,
+    /Player\s*1\s*score\s*[: -]?\s*(\d{1,2})/i,
+    /P1[:\s]*?(\d{1,2})\s*\/\s*(\d{1,2})/i,
   ]
-
-  const patterns2 = [
-  /Prompt\s*2\s*Score\s*[: -]?\s*(\d{1,2})\s*\/\s*(\d{1,2})/i,
-  /Prompt2Score\s*[: -]?\s*(\d{1,2})/i,
-  /Player\s*2\s*score\s*[: -]?\s*(\d{1,2})/i,
-  /P2[:\s]*?(\d{1,2})\s*\/\s*(\d{1,2})/i,
+  const scorePatterns2 = [
+    /Prompt\s*2\s*Score\s*[: -]?\s*(\d{1,2})\s*\/\s*(\d{1,2})/i,
+    /Prompt2Score\s*[: -]?\s*(\d{1,2})/i,
+    /Player\s*2\s*score\s*[: -]?\s*(\d{1,2})/i,
+    /P2[:\s]*?(\d{1,2})\s*\/\s*(\d{1,2})/i,
   ]
 
   let p1: number | null = null
   let p2: number | null = null
-
-  for (const re of patterns) {
+  for (const re of scorePatterns1) {
     const m = s.match(re)
-    if (m) {
-      p1 = parseInt(m[1], 10)
-      break
-    }
+    if (m) { p1 = parseInt(m[1], 10); break }
   }
-  for (const re of patterns2) {
+  for (const re of scorePatterns2) {
     const m = s.match(re)
-    if (m) {
-      p2 = parseInt(m[1], 10)
-      break
-    }
+    if (m) { p2 = parseInt(m[1], 10); break }
   }
 
-  // Also look for compact "Prompt 1: 6, Prompt 2: 0" lines
   if ((p1 === null || p2 === null)) {
     const compact = s.match(/Prompt\s*1[:\s]*?(\d{1,2})[,;\s]+Prompt\s*2[:\s]*?(\d{1,2})/i)
     if (compact) {
@@ -99,7 +186,6 @@ export function parseAIJudgment(text?: string | null) {
     }
   }
 
-  // If still missing, try searching for 'Player X score: N' verbose logs
   if (p1 === null) {
     const v = s.match(/Player\s*1\s*score[: -]?\s*(\d{1,2})/i)
     if (v) p1 = parseInt(v[1], 10)
@@ -108,61 +194,48 @@ export function parseAIJudgment(text?: string | null) {
     const v = s.match(/Player\s*2\s*score[: -]?\s*(\d{1,2})/i)
     if (v) p2 = parseInt(v[1], 10)
   }
-  // Create a cleaned explanation: remove any top-level score/winner lines and inline parenthetical scores,
-  // strip markdown (asterisks/underscores/backticks), and normalize whitespace.
+
+  // Clean the main explanation text: strip score lines, markdown and extraneous whitespace
   let explanation = s
   try {
-    // Remove header-like score declarations (lines starting with Prompt X Score / PromptXScore / Winner / Explanation)
-  explanation = explanation.replace(/^\s*Prompt\s*1\s*Score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Prompt\s*2\s*Score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Prompt1Score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Prompt2Score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Player\s*1\s*score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Player\s*2\s*score[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Winner[:\s-].*$/gim, '')
-  explanation = explanation.replace(/^\s*Explanation[:\s-]*$/gim, '')
-
-    // Remove inline parenthetical score blocks like "(Prompt 1: 10/10, Prompt 2: 1/10)" or "(Prompt1:10, Prompt2:1)"
+    explanation = explanation.replace(/^\s*Prompt\s*1\s*Score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Prompt\s*2\s*Score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Prompt1Score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Prompt2Score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Player\s*1\s*score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Player\s*2\s*score[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Winner[:\s-].*$/gim, '')
+    explanation = explanation.replace(/^\s*Explanation[:\s-]*$/gim, '')
     explanation = explanation.replace(/\(\s*(?:Prompt\s*1[^)]+|Prompt1[^)]+|Prompt\s*2[^)]+|Prompt2[^)]+|Player\s*1[^)]+|Player\s*2[^)]+)\s*\)/gi, '')
-    // Also remove compact inline 'Prompt 1: 10, Prompt 2: 1' without parentheses
     explanation = explanation.replace(/Prompt\s*1[:\s]*\d{1,2}[^\n]*/gi, '')
     explanation = explanation.replace(/Prompt\s*2[:\s]*\d{1,2}[^\n]*/gi, '')
-
-    // Strip common markdown: bold/italic asterisks, underscores, and inline code ticks
     explanation = explanation.replace(/\*{1,3}/g, '')
     explanation = explanation.replace(/_{1,3}/g, '')
     explanation = explanation.replace(/`+/g, '')
-
-    // Remove stray repeated backslashes and unescape any remaining unicode escapes
     explanation = explanation.replace(/\\\\/g, '\\')
-    explanation = explanation.replace(/\\u([0-9A-Fa-f]{4})/g, (_m, g1) => String.fromCharCode(parseInt(g1, 16)))
-
-    // Normalize newlines and whitespace
+    explanation = explanation.replace(/\\u([0-9A-Fa-f]{4})/g, (_m: string, g1: string) => String.fromCharCode(parseInt(g1, 16)))
     explanation = explanation.replace(/\r/g, '\n')
     explanation = explanation.replace(/\n{3,}/g, '\n\n')
     explanation = explanation.replace(/\t/g, ' ')
     explanation = explanation.replace(/\s{2,}/g, ' ')
     explanation = explanation.trim()
   } catch (e) {
-    // If cleaning fails, fall back to raw text
     explanation = s
   }
 
-  // Split into paragraphs at numbered markers like '1.' or at blank lines. Keep order and numbering.
   const paragraphs = explanation
     .split(/\n\s*\n|\n(?=\d+\.)/)
-    .map(p => p.trim())
-    .filter(p => p.length > 0)
+    .map((p: string) => p.trim())
+    .filter((p: string) => p.length > 0)
 
-  // Final pass: remove any leftover leading numbering labels like '1.' from paragraph starts while keeping the text
   for (let i = 0; i < paragraphs.length; i++) {
     paragraphs[i] = paragraphs[i].replace(/^\d+\.\s*/g, '').trim()
   }
-  // Make sure the explanation is plain text: no markdown, no embedded score snippets
+
   const cleanedExplanation = paragraphs
-    .map(p => p.replace(/\*{1,3}|_{1,3}|`+/g, '').trim())
-    .map(p => p.replace(/\s{2,}/g, ' '))
+    .map((p: string) => p.replace(/\*{1,3}|_{1,3}|`+/g, '').trim())
+    .map((p: string) => p.replace(/\s{2,}/g, ' '))
     .join('\n\n')
 
-  return { explanation: cleanedExplanation, p1, p2, paragraphs: cleanedExplanation.split('\n\n') }
+  return { explanation: cleanedExplanation, p1, p2, paragraphs: cleanedExplanation ? cleanedExplanation.split('\n\n') : [] }
 }
