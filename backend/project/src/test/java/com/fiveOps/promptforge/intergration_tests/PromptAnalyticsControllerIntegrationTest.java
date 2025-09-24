@@ -28,6 +28,7 @@
 
 // @SpringBootTest
 // @AutoConfigureMockMvc
+// @ActiveProfiles("test")
 // @Transactional
 // class PromptAnalyticsControllerIntegrationTest {
 
