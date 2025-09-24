@@ -129,16 +129,16 @@ export const CartSummary = ({
       <div className="space-y-3 mb-4">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>ZAR {subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span>Tax</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>ZAR {tax.toFixed(2)}</span>
         </div>
         <div className="border-t pt-3">
           <div className="flex justify-between font-semibold">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>ZAR {total.toFixed(2)}</span>
           </div>
         </div>
       </div>

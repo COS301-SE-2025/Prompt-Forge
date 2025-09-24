@@ -26,23 +26,46 @@ public class BankDetailsService {
   private final EncryptionService encryptionService;
 
   public String getSubaccountCodeByUserID(UUID userId) {
-    System.out.println("userId:" + userId);
-    PayoutCardWithSubaccountCodeDTO bankDetails = getBankDetails(userId);
+    System.out.println("Getting subaccount code for userId:" + userId);
 
-    if (bankDetails == null) {
-      throw new RuntimeException("Author payment details not found");
+    try {
+      PayoutCardWithSubaccountCodeDTO bankDetails = bankDetailsRepository.findByUserUserId(userId);
+
+      if (bankDetails == null) {
+        System.out.println("No bank details found for user: " + userId);
+        throw new RuntimeException("Author payment details not found");
+      }
+
+      String subaccountCode = bankDetails.getPaystackSubaccountCode();
+      System.out.println("Retrieved subaccount code: " + subaccountCode);
+
+      if (subaccountCode == null || subaccountCode.isEmpty()) {
+        throw new RuntimeException("Paystack subaccount code not found for author");
+      }
+
+      return subaccountCode;
+    } catch (Exception e) {
+      System.err.println(
+          "Error getting subaccount code for user " + userId + ": " + e.getMessage());
+      throw new RuntimeException("Failed to retrieve author payment details: " + e.getMessage(), e);
     }
-    return bankDetails.getPaystackSubaccountCode();
   }
 
   public PayoutCardWithSubaccountCodeDTO getBankDetails(UUID userId) {
-    PayoutCardWithSubaccountCodeDTO dto = bankDetailsRepository.findByUserUserId(userId);
-    if (dto != null && dto.getAccountNumber() != null && !dto.getAccountNumber().isEmpty()) {
-      // Decrypt the account number before returning
-      String decryptedAccountNumber = encryptionService.decrypt(dto.getAccountNumber());
-      dto.setAccountNumber(decryptedAccountNumber);
+    try {
+      PayoutCardWithSubaccountCodeDTO dto = bankDetailsRepository.findByUserUserId(userId);
+      if (dto != null && dto.getAccountNumber() != null && !dto.getAccountNumber().isEmpty()) {
+        System.out.println("Decrypting account number for user: " + userId);
+        // Decrypt the account number before returning
+        String decryptedAccountNumber = encryptionService.decrypt(dto.getAccountNumber());
+        dto.setAccountNumber(decryptedAccountNumber);
+        System.out.println("Successfully decrypted account number");
+      }
+      return dto;
+    } catch (Exception e) {
+      System.err.println("Error getting bank details for user " + userId + ": " + e.getMessage());
+      throw new RuntimeException("Failed to retrieve bank details: " + e.getMessage(), e);
     }
-    return dto;
   }
 
   public void addPayoutDetails(
