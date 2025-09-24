@@ -41,6 +41,27 @@ def health():
 # ----------------------------
 # Analysis Routes
 # ----------------------------
+@app.post("/evaluate-prompt", response_model=EvaluationResponse)
+async def evaluate_prompt(request: PromptRequest):
+    """
+    Evaluate a prompt using the LLM-powered rubric with defined score ranges
+    """
+    if rubric_system is None:
+        raise HTTPException(status_code=503, detail="Rubric system not initialized")
+    
+    try:
+        logger.info(f"Evaluating prompt: {request.text[:100]}...")
+        
+        evaluation = await rubric_system.evaluate_prompt(
+            text=request.text,
+            use_cache=request.use_cache
+        )
+        
+        return EvaluationResponse(**evaluation)
+        
+    except Exception as e:
+        logger.error(f"Error evaluating prompt: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze(request: PromptRequest):
