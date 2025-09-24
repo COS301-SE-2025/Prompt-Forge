@@ -33,6 +33,7 @@ export default function SocialPage() {
   const [following, setFollowing] = useState<SocialUser[]>([])
   const [followers, setFollowers] = useState<SocialUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set())
   const [tabLoading, setTabLoading] = useState<{ [key: string]: boolean }>({
     discover: false,
     following: false,
@@ -68,6 +69,14 @@ export default function SocialPage() {
 
   // Add state to track failed avatars
   const [failedAvatars, setFailedAvatars] = useState<{ [id: string]: boolean }>({})
+
+  // Helper function to ensure correct isFollowing status
+  const applyFollowingStatus = (users: SocialUser[]) => {
+    return users.map(user => ({
+      ...user,
+      isFollowing: followedUserIds.has(user.userId)
+    }))
+  }
 
   // Helper function to show user-friendly error messages
   const getErrorMessage = (error: any): string => {
@@ -368,6 +377,9 @@ export default function SocialPage() {
       // Load cached counts first
       await loadCachedCounts()
 
+      // Initialize followed users set from following list
+      await initializeFollowedUsers()
+
       // Load initial page for discover tab
       await loadPageData("discover", 1)
 
@@ -378,6 +390,17 @@ export default function SocialPage() {
       setError("Failed to load data. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Initialize the followed users set
+  const initializeFollowedUsers = async () => {
+    try {
+      const followingResponse = await SocialAPI.getFollowingPaginated(0, 1000) // Get all followed users
+      const followedIds = new Set((followingResponse.content || []).map((user: any) => user.userId))
+      setFollowedUserIds(followedIds)
+    } catch (error) {
+      console.error("Failed to initialize followed users:", error)
     }
   }
 
@@ -437,13 +460,13 @@ export default function SocialPage() {
         case "discover": {
           // Changed from search to searchQuery
           const usersResponse = await SocialAPI.getUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
-          // Add online status simulation and ensure isFollowing is properly set
-          const usersWithOnlineStatus = (usersResponse.content || []).map((user) => ({
+          // Add online status simulation and apply correct following status
+          const usersWithStatus = (usersResponse.content || []).map((user) => ({
             ...user,
             isOnline: Math.random() > 0.3, // 70% chance of being online for demo
-            isFollowing: user.isFollowing || false, // Ensure this field exists
           }))
-          setUsers(usersWithOnlineStatus)
+          const usersWithFollowingStatus = applyFollowingStatus(usersWithStatus)
+          setUsers(usersWithFollowingStatus)
           setTotalPages((prev) => ({ ...prev, discover: usersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, discover: usersResponse.totalElements || 0 }))
           setCurrentPage((prev) => ({ ...prev, discover: page }))
@@ -459,6 +482,12 @@ export default function SocialPage() {
             isFollowing: true, // All users in following tab are being followed
           }))
           setFollowing(followingWithOnlineStatus)
+          
+          // Update the followed users set with current following list
+          const currentFollowedIds = new Set(followedUserIds)
+          followingWithOnlineStatus.forEach(user => currentFollowedIds.add(user.userId))
+          setFollowedUserIds(currentFollowedIds)
+          
           setTotalPages((prev) => ({ ...prev, following: followingResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, following: followingResponse.totalElements || 0 }))
           setCurrentPage((prev) => ({ ...prev, following: page }))
@@ -473,13 +502,13 @@ export default function SocialPage() {
 
         case "followers": {
           const followersResponse = await SocialAPI.getFollowersPaginated(page - 1, USERS_PER_PAGE)
-          // Add online status simulation and check if we follow them back
-          const followersWithOnlineStatus = (followersResponse.content || []).map((user) => ({
+          // Add online status simulation and apply correct following status
+          const followersWithStatus = (followersResponse.content || []).map((user) => ({
             ...user,
             isOnline: Math.random() > 0.3, // 70% chance of being online for demo
-            isFollowing: user.isFollowing || false, // Check if we follow them back
           }))
-          setFollowers(followersWithOnlineStatus)
+          const followersWithFollowingStatus = applyFollowingStatus(followersWithStatus)
+          setFollowers(followersWithFollowingStatus)
           setTotalPages((prev) => ({ ...prev, followers: followersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, followers: followersResponse.totalElements || 0 }))
           setCurrentPage((prev) => ({ ...prev, followers: page }))
@@ -588,6 +617,12 @@ export default function SocialPage() {
     try {
       if (isCurrentlyFollowing) {
         await SocialAPI.unfollowUser(userId)
+        // Update followed users set
+        setFollowedUserIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(userId)
+          return newSet
+        })
         // Update cached following count
         setCachedCounts(prev => ({
           ...prev,
@@ -600,6 +635,12 @@ export default function SocialPage() {
         }))
       } else {
         await SocialAPI.followUser(userId)
+        // Update followed users set
+        setFollowedUserIds(prev => {
+          const newSet = new Set(prev)
+          newSet.add(userId)
+          return newSet
+        })
         // Update cached following count
         setCachedCounts(prev => ({
           ...prev,
@@ -612,29 +653,36 @@ export default function SocialPage() {
         }))
       }
 
-      // Update the user's following status in local state
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.userId === userId
-            ? {
-                ...user,
-                isFollowing: !isCurrentlyFollowing,
-                followers: Array.isArray(user.followers)
+      // Update the user's following status in local state across ALL state arrays
+      const updateUserInArray = (user: any) => 
+        user.userId === userId
+          ? {
+              ...user,
+              isFollowing: !isCurrentlyFollowing,
+              followers: Array.isArray(user.followers)
+                ? isCurrentlyFollowing
+                  ? user.followers.filter((f: string) => f !== currentUser?.userId)
+                  : [...user.followers, currentUser?.userId || ""]
+                : typeof user.followers === "number"
                   ? isCurrentlyFollowing
-                    ? user.followers.filter((f) => f !== currentUser?.userId)
-                    : [...user.followers, currentUser?.userId || ""]
-                  : typeof user.followers === "number"
-                    ? isCurrentlyFollowing
-                      ? user.followers - 1
-                      : user.followers + 1
-                    : 0,
-              }
-            : user,
-        ),
-      )
+                    ? user.followers - 1
+                    : user.followers + 1
+                  : 0,
+            }
+          : user
 
-      // Refresh following list if we're currently on the following tab
-      if (activeTab === "following") {
+      // Update users array (discover tab)
+      setUsers((prev) => prev.map(updateUserInArray))
+      
+      // Update following array (following tab)
+      setFollowing((prev) => prev.map(updateUserInArray))
+      
+      // Update followers array (followers tab)
+      setFollowers((prev) => prev.map(updateUserInArray))
+
+      // Only refresh following list if we're currently on the following tab AND we unfollowed someone
+      // (to remove them from the following list)
+      if (activeTab === "following" && isCurrentlyFollowing) {
         changePage("following", currentPage.following)
       }
 

@@ -7,6 +7,7 @@ import { StandardPromptCard } from "@/components/StandardPromptCard"
 import { MyPrompt } from '@/Models/MyPrompt';
 import WidgetManager, { type Widget, availableWidgets } from "@/components/WidgetManager"
 import { dashProfileService } from '../services/dashprofileService';
+import { BadgeCollection } from '@/components/BadgeCollection';
 
 
 // Category breakdown widget
@@ -690,6 +691,16 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
               analyticsOverviewData={monthlyPromptCounts}
               loadingAnalyticsOverview={loadingMonthlyCounts}
               loadingTopUserPrompts={loadingTopUserPrompts}
+            />
+          </div>
+
+          {/* Badges Section */}
+          <div className="mb-8">
+            <BadgeCollection
+              showProgress={true}
+              isOwnProfile={true}
+              maxDisplay={6}
+              title="My Badges"
             />
           </div>
 

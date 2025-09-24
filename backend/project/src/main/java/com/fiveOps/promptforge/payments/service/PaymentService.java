@@ -171,7 +171,8 @@ public class PaymentService {
         } catch (RuntimeException e) {
           if (e.getMessage() != null && e.getMessage().contains("decrypting data")) {
             throw new RuntimeException(
-                "Payment setup issue. The prompt author needs to update their payout details. Please contact support.");
+                "Payment setup issue. The prompt author needs to update their payout details. "
+                    + "Please contact support.");
           }
           throw e;
         }
@@ -193,7 +194,8 @@ public class PaymentService {
           } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("decrypting data")) {
               throw new RuntimeException(
-                  "Payment setup issue. One or more prompt authors need to update their payout details. Please contact support.");
+                  "Payment setup issue. One or more prompt authors need to update their payout "
+                      + "details. Please contact support.");
             }
             throw e;
           }

@@ -414,4 +414,9 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
       nativeQuery = true)
   long countPopularAuthoredPromptsByUserIdAndOptionalTag(
       @Param("authorId") UUID authorId, @Param("tagId") UUID tagId);
+
+  // Methods for badge awarding service
+  long countByAuthorId(UUID authorId);
+
+  List<Prompt> findByAuthorId(UUID authorId);
 }

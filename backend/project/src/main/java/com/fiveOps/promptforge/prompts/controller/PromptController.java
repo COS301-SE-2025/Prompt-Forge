@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fiveOps.promptforge.badges.service.BadgeAwardingService;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.service.PromptInteractionService;
@@ -36,16 +37,19 @@ public class PromptController {
   private final JwtUtil jwtUtil;
   private final UserService userService;
   private final PromptInteractionService promptInteractionService;
+  private final BadgeAwardingService badgeAwardingService;
 
   public PromptController(
       PromptService promptService,
       JwtUtil jwtUtil,
       UserService userService,
-      PromptInteractionService promptInteractionService) {
+      PromptInteractionService promptInteractionService,
+      BadgeAwardingService badgeAwardingService) {
     this.promptService = promptService;
     this.jwtUtil = jwtUtil;
     this.userService = userService;
     this.promptInteractionService = promptInteractionService;
+    this.badgeAwardingService = badgeAwardingService;
   }
 
   // Endpoint to record a prompt interaction (view, add_to_cart, purchase, etc.)
@@ -176,6 +180,16 @@ public class PromptController {
           "Creating prompt for user: " + userEmail + " (ID: " + user.getUserId() + ")");
 
       Prompt created = promptService.createPrompt(prompt);
+
+      // Check and award badges after prompt creation
+      try {
+        badgeAwardingService.checkAndAwardBadgesAfterPromptCreation(user.getUserId());
+        badgeAwardingService.checkAndAwardEarlyAdopterBadge(user.getUserId());
+      } catch (Exception e) {
+        System.err.println("Error checking badges: " + e.getMessage());
+        // Don't fail the prompt creation if badge checking fails
+      }
+
       return ResponseEntity.ok(created);
 
     } catch (IllegalArgumentException e) {
