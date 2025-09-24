@@ -104,7 +104,7 @@ public class GameService {
   }
 
   // Prompt Wars specific methods
-  public synchronized Game generateScenario(UUID gameId) {
+  public Game generateScenario(UUID gameId) {
     // Refresh the game from database to get latest state
     Game game =
         gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
@@ -117,6 +117,21 @@ public class GameService {
       System.out.println("Game is not in WAITING state, current state: " + game.getGameState());
       throw new IllegalArgumentException("Game is not in waiting state");
     }
+
+    // Use DB-level reservation so generation is idempotent across service instances
+    int updated =
+        gameRepository.updateGameStateIf(game.getId(), GameState.WAITING, GameState.WRITING);
+    if (updated == 0) {
+      // Another instance or request reserved/changed the state first
+      System.out.println(
+          "Scenario generation reservation failed for game: " + gameId + ". Aborting.");
+      throw new IllegalStateException(
+          "Scenario generation already in progress or game not waiting");
+    }
+
+    // Reload the game after reservation to ensure fresh entity
+    game =
+        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
     // Only generate scenario if not already set
     if (game.getScenario() == null || game.getScenario().trim().isEmpty()) {
@@ -135,7 +150,9 @@ public class GameService {
               + "...");
     }
 
+    // Persist WRITING state and scenario
     game.setGameState(GameState.WRITING);
+    game.setWritingStartedAt(java.time.Instant.now());
     Game savedGame = gameRepository.save(game);
     System.out.println(
         "Game saved with scenario. Final scenario: "
@@ -170,26 +187,28 @@ public class GameService {
       headers.set("X-Title", "Prompt Forge");
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
+
+      StringBuilder sb = new StringBuilder();
+      sb.append("Create a fun, creative scenario for a prompt battle! Make it:\n");
+      sb.append("• Exciting and imaginative\n");
+      sb.append("• Clear and easy to understand\n");
+      sb.append("• Perfect for AI prompt writing\n\n");
+      sb.append("Just give me ONE short scenario (1-2 sentences max). Examples:\n");
+      sb.append("'🚀 You're designing an AI assistant for Mars colonists who speak in emoji. ");
+      sb.append("Write the perfect prompt!'\n");
+      sb.append("'🎭 Create a prompt for an AI that helps shy people become confident public ");
+      sb.append("speakers in 30 days.'\n");
+      sb.append("'🌟 Design a prompt for an AI chef that creates meals based on your current ");
+      sb.append("mood and the weather.'\n\n");
+      sb.append("Now create something totally new and exciting: explicitly say what the ");
+      sb.append("players need to prompt within the scenario or what kind of prompt they need ");
+      sb.append("to generate without giving the actual prompt. This prompt battle shows who ");
+      sb.append("can prompt better, given a scenario. Keep the scenario very brief - 1-2 ");
+      sb.append("sentences max.");
 
       List<Map<String, Object>> messages =
-          List.of(
-              Map.of(
-                  "role",
-                  "user",
-                  "content",
-                  "Create a fun, creative scenario for a prompt battle! Make it:"
-                      + "\n• Exciting and imaginative"
-                      + "\n• Clear and easy to understand"
-                      + "\n• Perfect for AI prompt writing"
-                      + "\n\nJust give me ONE short scenario (1-2 sentences max). Examples:"
-                      + "\n'🚀 You're designing an AI assistant for Mars colonists who speak "
-                      + "in emoji. Write the perfect prompt!'"
-                      + "\n'🎭 Create a prompt for an AI that helps shy people become confident "
-                      + "public speakers in 30 days.'"
-                      + "\n'🌟 Design a prompt for an AI chef that creates meals based on your "
-                      + "current mood and the weather.'"
-                      + "\n\nNow create something totally new and exciting:"));
+          List.of(Map.of("role", "user", "content", sb.toString()));
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -342,17 +361,22 @@ public class GameService {
       System.out.println("AI rating completed, processing results...");
       int player1Score = (Integer) ratings.get("player1Score");
       int player2Score = (Integer) ratings.get("player2Score");
+      // Clamp scores to expected 0-10 range to avoid DB constraint violations
+      player1Score = Math.max(0, Math.min(10, player1Score));
+      player2Score = Math.max(0, Math.min(10, player2Score));
       System.out.println("Player 1 score: " + player1Score + ", Player 2 score: " + player2Score);
 
-      // Set the AI scores
-      game.setPlayer1Score(player1Score);
-      game.setPlayer2Score(player2Score);
+      // Set the AI scores (clamped to 0-10)
+      game.setPlayer1Score(Integer.valueOf(player1Score));
+      game.setPlayer2Score(Integer.valueOf(player2Score));
       game.setRatingExplanation((String) ratings.get("explanation"));
 
-      // Set the ratings (Note: in our system, players rate opponent's prompts)
-      // So player1's rating is actually the score given to player2's prompt
-      game.setPlayer1Rating(player2Score); // Player1 "rates" Player2's prompt
-      game.setPlayer2Rating(player1Score); // Player2 "rates" Player1's prompt
+      Integer player1Rating =
+          (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
+      Integer player2Rating =
+          (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
+      game.setPlayer1Rating(player1Rating);
+      game.setPlayer2Rating(player2Rating);
 
       // Calculate winner
       UUID winner = game.calculateWinner();
@@ -380,51 +404,60 @@ public class GameService {
     } catch (Exception e) {
       System.err.println("Error in performAIRating: " + e.getMessage());
       e.printStackTrace();
+      applyFallbackRating(game.getId());
+    }
+  }
 
-      // Fallback: Use random rating to complete the game
-      try {
-        Game fallbackGame = getGame(game.getId());
-        if (fallbackGame.getGameState() != GameState.FINISHED) {
-          Map<String, Object> fallbackRatings = getFallbackRating();
-
-          int player1Score = (Integer) fallbackRatings.get("player1Score");
-          int player2Score = (Integer) fallbackRatings.get("player2Score");
-
-          fallbackGame.setPlayer1Score(player1Score);
-          fallbackGame.setPlayer2Score(player2Score);
-          fallbackGame.setRatingExplanation(
-              "AI rating service temporarily unavailable. Random scores assigned.");
-
-          fallbackGame.setPlayer1Rating(player2Score);
-          fallbackGame.setPlayer2Rating(player1Score);
-
-          UUID winner = fallbackGame.calculateWinner();
-          fallbackGame.setWinnerId(winner);
-          fallbackGame.setGameState(GameState.FINISHED);
-          fallbackGame.setEndedAt(java.time.Instant.now());
-
-          gameRepository.save(fallbackGame);
-
-          // Send fallback results
-          Map<String, Object> gameUpdate = new HashMap<>();
-          gameUpdate.put("type", "GAME_FINISHED");
-          gameUpdate.put("gameId", fallbackGame.getId().toString());
-          gameUpdate.put("gameState", "FINISHED");
-          gameUpdate.put("player1Score", player1Score);
-          gameUpdate.put("player2Score", player2Score);
-          gameUpdate.put("winnerId", winner != null ? winner.toString() : null);
-          gameUpdate.put(
-              "explanation", "AI rating service temporarily unavailable. Random scores assigned.");
-
-          webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), gameUpdate);
-          webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), gameUpdate);
-
-          System.out.println(
-              "Sent fallback game results to both players for game: " + fallbackGame.getId());
-        }
-      } catch (Exception fallbackError) {
-        System.err.println("Fallback rating also failed: " + fallbackError.getMessage());
+  // Helper to keep performAIRating simpler and reduce cyclomatic complexity
+  private void applyFallbackRating(UUID gameId) {
+    try {
+      Game fallbackGame = getGame(gameId);
+      if (fallbackGame.getGameState() == GameState.FINISHED) {
+        return;
       }
+
+      Map<String, Object> fallbackRatings = getFallbackRating();
+      int player1Score = (Integer) fallbackRatings.get("player1Score");
+      int player2Score = (Integer) fallbackRatings.get("player2Score");
+      player1Score = Math.max(0, Math.min(10, player1Score));
+      player2Score = Math.max(0, Math.min(10, player2Score));
+
+      fallbackGame.setPlayer1Score(player1Score);
+      fallbackGame.setPlayer2Score(player2Score);
+      fallbackGame.setRatingExplanation(
+          "AI rating service temporarily unavailable. Random scores assigned.");
+
+      Integer fbPlayer1Rating =
+          (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
+      Integer fbPlayer2Rating =
+          (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
+      fallbackGame.setPlayer1Rating(fbPlayer1Rating);
+      fallbackGame.setPlayer2Rating(fbPlayer2Rating);
+
+      UUID winner = fallbackGame.calculateWinner();
+      fallbackGame.setWinnerId(winner);
+      fallbackGame.setGameState(GameState.FINISHED);
+      fallbackGame.setEndedAt(java.time.Instant.now());
+
+      gameRepository.save(fallbackGame);
+
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", "GAME_FINISHED");
+      gameUpdate.put("gameId", fallbackGame.getId().toString());
+      gameUpdate.put("gameState", "FINISHED");
+      gameUpdate.put("player1Score", player1Score);
+      gameUpdate.put("player2Score", player2Score);
+      gameUpdate.put("winnerId", winner != null ? winner.toString() : null);
+      gameUpdate.put(
+          "explanation", "AI rating service temporarily unavailable. Random scores assigned.");
+
+      webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), gameUpdate);
+
+      System.out.println(
+          "Sent fallback game results to both players for game: " + fallbackGame.getId());
+    } catch (Exception fallbackError) {
+      System.err.println("Fallback rating also failed: " + fallbackError.getMessage());
     }
   }
 
@@ -454,33 +487,49 @@ public class GameService {
       headers.set("HTTP-Referer", "https://promptforge.ai");
       headers.set("X-Title", "Prompt Forge");
 
-      String ratingPrompt =
-          String.format(
-              "You are judging a prompt writing competition. Here's the scenario and two "
-                  + "competing prompts:\n\n"
-                  + "SCENARIO: %s\n\n"
-                  + "PROMPT 1: %s\n\n"
-                  + "PROMPT 2: %s\n\n"
-                  + "Please evaluate both prompts based on:\n"
-                  + "1. Relevance to the scenario (25%%)\n"
-                  + "2. Clarity and specificity (25%%)\n"
-                  + "3. Creativity and innovation (25%%)\n"
-                  + "4. Practical effectiveness for AI (25%%)\n\n"
-                  + "Provide:\n"
-                  + "1. A score for each prompt (1-10)\n"
-                  + "2. A brief explanation of your scoring\n"
-                  + "3. Declare the winner\n\n"
-                  + "Format your response as:\n"
-                  + "Prompt 1 Score: X/10\n"
-                  + "Prompt 2 Score: Y/10\n"
-                  + "Winner: [Prompt 1/Prompt 2/Tie]\n"
-                  + "Explanation: [Your detailed analysis]",
-              scenario, player1Prompt, player2Prompt);
+      StringBuilder rp = new StringBuilder();
+      rp.append("You are judging a prompt writing competition. Here's the scenario and two ");
+      rp.append("competing prompts:\n\n");
+      rp.append("SCENARIO: %s\n\n");
+      rp.append("PROMPT 1: %s\n\n");
+      rp.append("PROMPT 2: %s\n\n");
+      rp.append("IMPORTANT: Any prompt that is a direct copy-paste from the scenario ");
+      rp.append("should receive a score of 0.\n\n");
+      rp.append("Evaluate both prompts based on these criteria (total weight = 100%%):\n");
+      rp.append("• CLARITY (25%%): How clear and unambiguous the prompt is\n");
+      rp.append("• SPECIFICITY (25%%): Level of detail and concrete requirements\n");
+      rp.append("• STRUCTURE (25%%): Organization and logical flow\n");
+      rp.append("• CONTEXT (15%%): Background information and situational details\n");
+      rp.append("• ACTIONABILITY (10%%): How easy it is to act on the prompt\n\n");
+      rp.append("RELEVANCE TO SCENARIO: Both prompts must be highly relevant to the given ");
+      rp.append("scenario.\n");
+      rp.append("Irrelevant prompts should receive low scores regardless of other criteria.\n\n");
+      rp.append("Provide:\n");
+      rp.append("1. A score for each prompt (1-10, where 10 is exceptional)\n");
+      rp.append("2. A structured analysis with key strengths and weaknesses\n");
+      rp.append("3. Declare the winner\n\n");
+      rp.append("Format your response as:\n");
+      rp.append("Prompt 1 Score: X/10\n");
+      rp.append("Prompt 2 Score: Y/10\n");
+      rp.append("Winner: [Prompt 1/Prompt 2/Tie]\n");
+      rp.append("Analysis:\n");
+      rp.append("Relevance: [Brief assessment of how well each prompt addresses the scenario]\n");
+      rp.append("Clarity: [Assessment of clarity in both prompts]\n");
+      rp.append("Specificity: [Assessment of detail level in both prompts]\n");
+      rp.append("Structure: [Assessment of organization in both prompts]\n");
+      rp.append("Context: [Assessment of background information in both prompts]\n");
+      rp.append("Actionability: [Assessment of usability in both prompts]\n");
+      rp.append("Overall: [Brief conclusion on which prompt is better and why]");
+
+      String ratingPrompt = String.format(rp.toString(), scenario, player1Prompt, player2Prompt);
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
 
-      List<Map<String, Object>> messages = List.of(Map.of("role", "user", "content", ratingPrompt));
+      Map<String, Object> userMsg = new HashMap<>();
+      userMsg.put("role", "user");
+      userMsg.put("content", ratingPrompt);
+      List<Map<String, Object>> messages = List.of(userMsg);
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -618,6 +667,7 @@ public class GameService {
     // Reset game state for a new round
     game.setGameState(GameState.WAITING);
     game.setScenario(null);
+    game.setWritingStartedAt(null);
     game.setPlayer1Prompt(null);
     game.setPlayer2Prompt(null);
     game.setPlayer1Rating(null);
@@ -655,6 +705,119 @@ public class GameService {
         "Sent game restart notification to both players for game: " + savedGame.getId());
 
     return savedGame;
+  }
+
+  /**
+   * Force finish a game: assign 0 to missing prompts and ensure AI rating runs if at least one
+   * prompt exists. Useful for admin/testing or resolving stuck games.
+   */
+  public Game forceFinishGame(UUID gameId) {
+    Game game = getGame(gameId);
+
+    if (!game.isActive()) {
+      throw new IllegalArgumentException("Game is not active");
+    }
+
+    // If writing phase, move to finished by assigning missing prompts as empty and letting rating
+    // run.
+    if (game.getGameState() == GameState.WRITING || game.getGameState() == GameState.WAITING) {
+      // Assign auto-empty prompts where missing
+      if (game.getPlayer1Prompt() == null) {
+        // Use a non-empty placeholder so hasPlayerSubmittedPrompt considers this a submission
+        game.submitPrompt(game.getPlayer1Id(), "NO_ANSWER");
+      }
+      if (game.getPlayer2Prompt() == null) {
+        game.submitPrompt(game.getPlayer2Id(), "NO_ANSWER");
+      }
+
+      Game saved = gameRepository.save(game);
+
+      // If both prompts now present, run AI rating synchronously here
+      if (saved.bothPlayersSubmittedPrompts()) {
+        performAIRating(saved);
+      } else {
+        // Set finished with zeros if no prompts
+        saved.setPlayer1Score(saved.getPlayer1Score() == null ? 0 : saved.getPlayer1Score());
+        saved.setPlayer2Score(saved.getPlayer2Score() == null ? 0 : saved.getPlayer2Score());
+        UUID winner = saved.calculateWinner();
+        saved.setWinnerId(winner);
+        saved.setGameState(GameState.FINISHED);
+        saved.setEndedAt(java.time.Instant.now());
+        saved.setWritingStartedAt(null);
+        gameRepository.save(saved);
+      }
+
+      return getGame(gameId);
+    }
+
+    throw new IllegalArgumentException("Game cannot be force-finished from its current state");
+  }
+
+  /**
+   * Handle timeout when neither player submits a prompt within the time limit. Automatically
+   * assigns 0-0 scores and finishes the game.
+   */
+  public Game handleTimeout(UUID gameId) {
+    Game game = getGame(gameId);
+
+    System.out.println("Handling timeout for game: " + gameId);
+    System.out.println("Current game state: " + game.getGameState());
+    System.out.println("Player 1 prompt submitted: " + (game.getPlayer1Prompt() != null));
+    System.out.println("Player 2 prompt submitted: " + (game.getPlayer2Prompt() != null));
+
+    if (!game.isActive()) {
+      throw new IllegalArgumentException("Game is not active");
+    }
+
+    if (game.getGameState() != GameState.WRITING) {
+      throw new IllegalArgumentException("Game is not in writing phase - cannot handle timeout");
+    }
+
+    // Check if neither player has submitted
+    if (game.getPlayer1Prompt() == null && game.getPlayer2Prompt() == null) {
+      System.out.println("Neither player submitted - assigning automatic 0-0 scores");
+
+      // Set both scores to 0
+      game.setPlayer1Score(0);
+      game.setPlayer2Score(0);
+      game.setPlayer1Rating(null);
+      game.setPlayer2Rating(null);
+      game.setRatingExplanation(
+          "Neither player submitted a prompt within the time limit. Automatic 0-0 result.");
+
+      // No winner in a tie
+      game.setWinnerId(null);
+      game.setGameState(GameState.FINISHED);
+      game.setEndedAt(java.time.Instant.now());
+      game.setWritingStartedAt(null);
+
+      Game savedGame = gameRepository.save(game);
+
+      // Send timeout results to both players
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", "GAME_FINISHED");
+      gameUpdate.put("gameId", gameId.toString());
+      gameUpdate.put("gameState", "FINISHED");
+      gameUpdate.put("player1Score", 0);
+      gameUpdate.put("player2Score", 0);
+      gameUpdate.put("winnerId", null);
+      gameUpdate.put(
+          "explanation",
+          "Neither player submitted a prompt within the time limit. Automatic 0-0 result.");
+      gameUpdate.put("timeout", true);
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
+
+      System.out.println("Sent timeout game finished update to both players for game: " + gameId);
+
+      return savedGame;
+    } else {
+      // At least one player submitted - let the normal flow handle it
+      // This shouldn't happen if called correctly, but handle gracefully
+      System.out.println("At least one player submitted - letting normal flow handle");
+      return game;
+    }
   }
 
   // Reverse Prompt Battle methods
@@ -699,6 +862,7 @@ public class GameService {
 
     // Persist WRITING state explicitly so submit flows see it
     game.setGameState(GameState.WRITING);
+    game.setWritingStartedAt(java.time.Instant.now());
     gameRepository.save(game);
 
     Map<String, Object> questionData = null;
@@ -775,36 +939,32 @@ public class GameService {
       headers.set("X-Title", "Prompt Forge");
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
+
+      StringBuilder qsb = new StringBuilder();
+      qsb.append("Create a reverse prompt engineering question for a game. Keep everything ");
+      qsb.append("SHORT and CONCISE. You need to:\n");
+      qsb.append("1. Create a simple scenario/topic\n");
+      qsb.append("2. Generate a SHORT AI output (1-2 sentences max)\n");
+      qsb.append("3. Create 4 SHORT prompts (A, B, C, D) that could have generated that ");
+      qsb.append("output\n");
+      qsb.append("4. Make sure only ONE prompt would realistically generate that specific ");
+      qsb.append("output\n\n");
+      qsb.append("IMPORTANT: Keep prompts under 10 words each and output under 20 words!\n\n");
+      qsb.append("Format your response EXACTLY like this:\n");
+      qsb.append("QUESTION: [simple scenario]\n");
+      qsb.append("OUTPUT: [short AI output - max 20 words]\n");
+      qsb.append("A) [short prompt option A - max 10 words]\n");
+      qsb.append("B) [short prompt option B - max 10 words]\n");
+      qsb.append("C) [short prompt option C - max 10 words]\n");
+      qsb.append("D) [short prompt option D - max 10 words]\n");
+      qsb.append("CORRECT: [A, B, C, or D]\n\n");
+      qsb.append("Make it challenging but fair. Keep everything SHORT.\n");
+      qsb.append("Random seed: ").append(new java.util.Random().nextInt(10000)).append("\n\n");
+      qsb.append("The output should be unique enough that only one prompt makes sense.");
 
       List<Map<String, Object>> messages =
-          List.of(
-              Map.of(
-                  "role",
-                  "user",
-                  "content",
-                  "Create a reverse prompt engineering question for a game. Keep everything "
-                      + "SHORT and CONCISE. You need to:"
-                      + "\n1. Create a simple scenario/topic"
-                      + "\n2. Generate a SHORT AI output (1-2 sentences max)"
-                      + "\n3. Create 4 SHORT prompts (A, B, C, D) that could have "
-                      + "generated that output"
-                      + "\n4. Make sure only ONE prompt would realistically generate that "
-                      + "specific output"
-                      + "\n\nIMPORTANT: Keep prompts under 10 words each and output under 20 words!"
-                      + "\n\nFormat your response EXACTLY like this:"
-                      + "\nQUESTION: [simple scenario]"
-                      + "\nOUTPUT: [short AI output - max 20 words]"
-                      + "\nA) [short prompt option A - max 10 words]"
-                      + "\nB) [short prompt option B - max 10 words]"
-                      + "\nC) [short prompt option C - max 10 words]"
-                      + "\nD) [short prompt option D - max 10 words]"
-                      + "\nCORRECT: [A, B, C, or D]"
-                      + "\n\nMake it challenging but fair. Keep everything SHORT."
-                      + "\nE) [prompt option E]"
-                      + "\nCORRECT: [A, B, C, D, or E]"
-                      + "\n\nMake it challenging but fair. The output should be unique enough "
-                      + "that only one prompt makes sense."));
+          List.of(Map.of("role", "user", "content", qsb.toString()));
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -1013,6 +1173,8 @@ public class GameService {
       gameUpdate.put("player2Correct", player2Correct);
       gameUpdate.put("player1Score", player1Score);
       gameUpdate.put("player2Score", player2Score);
+      gameUpdate.put("player1Id", game.getPlayer1Id().toString());
+      gameUpdate.put("player2Id", game.getPlayer2Id().toString());
       gameUpdate.put("questionNumber", game.getQuestionNumber());
       gameUpdate.put("gameState", game.getGameState().toString());
 

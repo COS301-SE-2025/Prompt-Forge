@@ -7,6 +7,7 @@ export interface GameResponse {
   gameType?: 'PROMPT_CREATION' | 'REVERSE_PROMPT';
   gameState: 'WAITING' | 'SCENARIO' | 'WRITING' | 'RATING' | 'RESULTS' | 'FINISHED' | 'CANCELLED';
   scenario?: string;
+  writingStartedAt?: string;
   // Classic prompt battle fields
   startedAt?: string;
   endedAt?: string;
@@ -225,6 +226,19 @@ export class PromptWarsGameAPI {
 
     if (!response.ok) {
       throw new Error(`Failed to generate question: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async forceFinishGame(gameId: string): Promise<{ gameId: string, gameState: string }> {
+    const response = await fetch(`${API_BASE_URL}/prompt-wars/games/${gameId}/force-finish`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to force-finish game: ${response.statusText}`);
     }
 
     return response.json();

@@ -674,13 +674,13 @@ export default function SocialPage() {
 
             <div className="flex items-center space-x-3">
               <Link to="/war">
-                <Button
+                {/* <Button
                   variant="outline"
                   className="bg-gradient-to-r from-[#3ebb9e]/10 to-[#2ea688]/10 hover:from-[#3ebb9e]/20 hover:to-[#2ea688]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] transition-all duration-300 rounded-lg"
                 >
                   <Swords className="h-4 w-4 mr-2" />
                   Battles
-                </Button>
+                </Button> */}
               </Link>
 
               {challenges.length > 0 && (
@@ -691,10 +691,10 @@ export default function SocialPage() {
                   className="relative p-2 hover:bg-[#3ebb9e]/10 dark:hover:bg-[#3ebb9e]/20 rounded-lg transition-colors duration-300"
                   title={`${challenges.filter((c) => c.status === "PENDING").length} pending challenges`}
                 >
-                  <Bell className="h-6 w-6 text-[#3ebb9e]" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center animate-pulse">
+                  {/* <Bell className="h-6 w-6 text-[#3ebb9e]" /> */}
+                  {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center animate-pulse">
                     {challenges.filter((c) => c.status === "PENDING").length}
-                  </span>
+                  </span> */}
                 </Button>
               )}
             </div>
