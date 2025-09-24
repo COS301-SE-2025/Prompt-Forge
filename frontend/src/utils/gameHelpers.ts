@@ -57,7 +57,7 @@ export function parseAIJudgment(text?: string | null) {
   // First, handle compact separators like "Relevance: - - Clarity:" where single hyphens separated by spaces
   // were used between headings. Convert the hyphen-run into a newline so headings split.
   const sepBetweenHeadings = new RegExp(
-    `(${headingKeywords.join('|')})\\s*:\\s*(?:-\\s*)+(?=(?:${headingKeywords.join('|')})\\s*:)`,
+    `(${headingKeywords.join('|')})\\s*[: -]?\\s*(?:[–—-]\\s*)+(?=(?:${headingKeywords.join('|')})\\s*[: -]?)`,
     'gi'
   )
   // Use a blank-line separator so later split('\n\n') yields distinct paragraphs
@@ -69,8 +69,8 @@ export function parseAIJudgment(text?: string | null) {
   // Insert a blank-line before headings to make them paragraph separators
   s = s.replace(headingInsert, (_m: string, p1: string, h: string) => `\n\n${h}:`)
 
-  // Normalize separators and whitespace
-  s = s.replace(/\s*[–—-]{2,}\s*/g, '\n')
+  // Normalize separators and whitespace. Treat runs of dashes or em/en-dashes as paragraph breaks
+  s = s.replace(/\s*[–—-]{2,}\s*/g, '\n\n')
   s = s.replace(/\r/g, '\n')
   s = s.replace(/\n{3,}/g, '\n\n')
 
@@ -88,32 +88,47 @@ export function parseAIJudgment(text?: string | null) {
   const structuredPattern = /^\s*(${headingKeywords.join('|')})\s*:/im
   if (structuredPattern.test(s)) {
     const sections: { [key: string]: string } = {}
-    const lines = s.split('\n')
-    let currentSection = ''
-    let currentContent = ''
+  const lines = s.split('\n')
+  let currentSection = ''
+  let currentContent = ''
+  // collect any text that appears outside the known heading sections
+  let freeText = ''
 
     for (const rawLine of lines) {
       const line = rawLine.trim()
+      // keep blank lines to separate sections but skip accidental whitespace-only lines
       if (!line) continue
       const sectionMatch = line.match(new RegExp(`^(${headingKeywords.join('|')})\\s*:\\s*(.*)$`, 'i'))
       if (sectionMatch) {
-        if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+        // Always store previous section (even if empty) so headings aren't dropped
+        if (currentSection !== '') sections[currentSection] = currentContent.trim()
         currentSection = sectionMatch[1]
         currentContent = sectionMatch[2] || ''
       } else if (currentSection) {
         currentContent += (currentContent ? ' ' : '') + line
+      } else {
+        // text before the first recognized heading: keep it as freeText
+        freeText += (freeText ? '\n' : '') + line
       }
     }
-    if (currentSection && currentContent.trim()) sections[currentSection] = currentContent.trim()
+    // store the final section (may be empty)
+    if (currentSection !== '') sections[currentSection] = currentContent.trim()
+
+    // If there was free-standing text (before the first heading), keep it to append later
+    const freeSummary = freeText.trim()
 
     const sectionOrder = headingKeywords
     const paragraphs: string[] = []
     for (const section of sectionOrder) {
-      if (sections[section]) {
-        const content = cleanText(sections[section])
-        if (content) paragraphs.push(`${section}: ${content}`)
-      }
+      // normalize and strip leftover hyphen placeholders like "- -" or sequences of dashes
+      const rawContent = (sections[section] ?? '').replace(/(?:\s*[–—-]{1,}\s*)+/g, ' ').trim()
+      const content = cleanText(rawContent)
+      // if content is empty or only punctuation/hyphens, provide a readable placeholder
+      const final = content && !/^[-\s]*$/.test(content) ? content : 'No comment.'
+      paragraphs.push(`${section}: ${final}`)
     }
+    // If there was free-standing explanatory text, append it as a Summary paragraph so it's not lost
+    if (freeSummary) paragraphs.push(`Summary: ${cleanText(freeSummary)}`)
     const cleanedExplanation = paragraphs.join('\n\n')
     return { explanation: cleanedExplanation, p1: null, p2: null, paragraphs }
   }
@@ -144,10 +159,10 @@ export function parseAIJudgment(text?: string | null) {
     const paragraphs: string[] = []
     for (const section of sectionOrder) {
       const key = Object.keys(sections).find(k => k.toLowerCase().includes(section.toLowerCase()))
-      if (key && sections[key]) {
-        const content = cleanText(sections[key])
-        if (content) paragraphs.push(`${section}: ${content}`)
-      }
+      const rawContent = key ? (sections[key] ?? '') : ''
+      const cleaned = cleanText(rawContent.replace(/(?:\s*[–—-]{1,}\s*)+/g, ' ')).trim()
+      const final = cleaned && !/^[-\s]*$/.test(cleaned) ? cleaned : 'No comment.'
+      paragraphs.push(`${section}: ${final}`)
     }
     const cleanedExplanation = paragraphs.join('\n\n')
     return { explanation: cleanedExplanation, p1: null, p2: null, paragraphs }
@@ -230,6 +245,14 @@ export function parseAIJudgment(text?: string | null) {
 
   for (let i = 0; i < paragraphs.length; i++) {
     paragraphs[i] = paragraphs[i].replace(/^\d+\.\s*/g, '').trim()
+  }
+
+  // If any paragraph is just a heading with no content (e.g. "Relevance:"), attach a placeholder
+  for (let i = 0; i < paragraphs.length; i++) {
+    const m = paragraphs[i].match(/^([A-Za-z][A-Za-z\s\-']*:)\s*$/)
+    if (m) paragraphs[i] = `${m[1]} No comment.`
+    // strip leftover dash placeholders inside paragraphs
+    paragraphs[i] = paragraphs[i].replace(/(?:\s*[–—-]{1,}\s*)+/g, ' ').trim()
   }
 
   const cleanedExplanation = paragraphs
