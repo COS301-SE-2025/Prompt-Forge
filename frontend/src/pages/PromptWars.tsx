@@ -490,11 +490,12 @@ const isMultiplayerGame = !!gameId;
           const action = data.action
           if (action === 'PLAYER_LEFT') {
             // Show a friendly in-app popup and redirect to social hub
-            setEndPopupMessage(data?.data?.message || 'The game ended because a player left.')
+            setEndPopupMessage('The other player left the match. The game has ended.')
             setShowEndPopup(true)
             // Leave the room locally to stop receiving further messages
             try { promptWarsWebSocket.leaveGameRoom(gameId) } catch (e) { /* ignore */ }
-            setTimeout(() => { window.location.href = '/social' }, 1600)
+            // Redirect immediately for consistency with handleReturnToSocial
+            window.location.href = '/social'
           }
         } catch (e) {
           console.warn('Failed to handle GAME_ACTION:', e)
@@ -600,6 +601,10 @@ const isMultiplayerGame = !!gameId;
         setPlayerScore(myScore)
         setOpponentScore(oppScore)
 
+        // Also set ratings for score card display
+        setPlayerRating(myScore)
+        setOpponentRating(oppScore)
+
         // Debug trace to help diagnose mapping issues
         console.debug('REVERSE_GAME_FINISHED mapping:', { currentUserId, p1Id, p2Id, p1, p2, myScore, oppScore, winnerId: data.winnerId })
 
@@ -617,7 +622,7 @@ const isMultiplayerGame = !!gameId;
           id: generateUniqueId(),
           user: "System",
           message: `🏆 Game Over! ${
-            result === 'player' ? 'You won!' : result === 'opponent' ? 'You lost!' : 'It\'s a draw!'} Final Score: ${myScore}-${oppScore}`,
+            result === 'player' ? 'You won!' : result === 'opponent' ? 'You lost!' : 'Draw!'} Final Score: ${myScore}-${oppScore}`,
           timestamp: new Date(),
         }])
       }
@@ -690,6 +695,23 @@ const isMultiplayerGame = !!gameId;
       if (game.scenario) {
         setScenario(normalizeScenario(game.scenario))
       }
+
+      // Compute remaining time for writing phase using server-side timestamp if available
+      try {
+        const writingStarted = game.writingStartedAt || (state && state.game && state.game.writingStartedAt) || null
+        if (writingStarted && (game.gameState === 'WRITING' || game.gameState === 'SCENARIO')) {
+          const started = new Date(writingStarted).getTime()
+          const now = Date.now()
+          // standard durations: classic writing = 120s, reverse = 60s
+          const total = (game.gameType === 'REVERSE_PROMPT') ? 60 : 120
+          const elapsed = Math.floor((now - started) / 1000)
+          const remaining = Math.max(0, total - elapsed)
+          console.debug('Computed remaining time from server:', { started: writingStarted, elapsed, remaining, total })
+          setTimeLeft(remaining)
+        }
+      } catch (e) {
+        console.warn('Failed to compute remaining time from writingStartedAt:', e)
+      }
       
       // Load current submissions
       const mySubmission = state.playerSubmissions.find(s => s.roundNumber === state.currentRound)
@@ -749,6 +771,8 @@ const isMultiplayerGame = !!gameId;
             if (myScore > theirScore) setWinner('player')
             else if (myScore < theirScore) setWinner('opponent')
             else setWinner('tie')
+            setPlayerScore(myScore || 0)
+            setOpponentScore(theirScore || 0)
           } else {
             setWinner('tie')
           }
@@ -760,11 +784,15 @@ const isMultiplayerGame = !!gameId;
         } else if (game.gameType === 'REVERSE_PROMPT') {
           // Reverse prompt: scores are correct-answer counts (out of 5)
           if (game.player1Id === currentUserId) {
-            setPlayerRating(game.player1Score || 0)
-            setOpponentRating(game.player2Score || 0)
+            setPlayerRating(game.player1CorrectAnswers || 0)
+            setOpponentRating(game.player2CorrectAnswers || 0)
+            setPlayerScore(game.player1CorrectAnswers || 0)
+            setOpponentScore(game.player2CorrectAnswers || 0)
           } else {
-            setPlayerRating(game.player2Score || 0)
-            setOpponentRating(game.player1Score || 0)
+            setPlayerRating(game.player2CorrectAnswers || 0)
+            setOpponentRating(game.player1CorrectAnswers || 0)
+            setPlayerScore(game.player2CorrectAnswers || 0)
+            setOpponentScore(game.player1CorrectAnswers || 0)
           }
 
           if (game.winnerId === currentUserId) {
@@ -1464,12 +1492,18 @@ Overall Analysis: [brief summary]`,
 
     setLoading(true)
     try {
-      // Ask server to force-finish this game so it will persist ratings/empty prompts
+      // Cancel the active game for this user (similar to social page)
       try {
-        await promptWarsGameAPI.forceFinishGame(gameId)
+        await fetch(`${API_BASE_URL}/prompt-wars/games/active`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
+            'X-User-Id': localStorage.getItem('userId') || '',
+          },
+        })
       } catch (e) {
-        // Not fatal — continue to notify peers and redirect
-        console.warn('forceFinishGame failed while returning to social:', e)
+        console.warn('Cancel active game failed:', e)
       }
 
       // Broadcast a game action so the opponent can show a friendly popup and redirect
@@ -1479,12 +1513,16 @@ Overall Analysis: [brief summary]`,
         console.warn('sendGameAction failed while returning to social:', e)
       }
 
-      setEndPopupMessage('The game ended because the other player left.')
+      // Show popup for the leaving player
+      setEndPopupMessage('You left the match. The game has ended.')
       setShowEndPopup(true)
 
-      // Ensure we leave the room locally then redirect after a short delay so the popup is visible
-      try { promptWarsWebSocket.leaveGameRoom(gameId) } catch (e) { /* ignore */ }
-      setTimeout(() => { window.location.href = '/social' }, 1600)
+      // Wait a moment for the WebSocket message to be sent and processed
+      setTimeout(() => {
+        // Ensure we leave the room locally then redirect
+        try { promptWarsWebSocket.leaveGameRoom(gameId) } catch (e) { /* ignore */ }
+        window.location.href = '/social'
+      }, 500)
     } finally {
       setLoading(false)
     }
@@ -2164,10 +2202,28 @@ Overall Analysis: [brief summary]`,
                             <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
                             AI Judge Analysis
                           </h3>
-                          <div className="text-slate-300 leading-relaxed space-y-4">
-                            {ratingExplanation.split(/\n\s*\n/).map((para, idx) => (
-                              <p key={idx} className="text-slate-300">{para}</p>
-                            ))}
+                          <div className="text-slate-300 leading-relaxed space-y-3">
+                            {ratingExplanation.split('\n\n').map((section, idx) => {
+                              const colonIndex = section.indexOf(':')
+                              if (colonIndex > 0) {
+                                const label = section.substring(0, colonIndex).trim()
+                                const content = section.substring(colonIndex + 1).trim()
+                                return (
+                                  <div key={idx} className="border-l-2 border-[#3ebb9e]/30 pl-4">
+                                    <div className="font-semibold text-[#3ebb9e] text-sm uppercase tracking-wide mb-1">
+                                      {label}
+                                    </div>
+                                    <div className="text-slate-300">
+                                      {content}
+                                    </div>
+                                  </div>
+                                )
+                              } else {
+                                return (
+                                  <p key={idx} className="text-slate-300">{section}</p>
+                                )
+                              }
+                            })}
                           </div>
                         </div>
                       )}
@@ -2183,7 +2239,7 @@ Overall Analysis: [brief summary]`,
 
                     {isMultiplayerGame && (
                       <Button
-                        onClick={() => (window.location.href = "/social")}
+                        onClick={handleReturnToSocial}
                         variant="outline"
                         className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white px-6 py-3 text-lg font-semibold rounded-xl"
                       >
@@ -2269,7 +2325,7 @@ Overall Analysis: [brief summary]`,
           {isMultiplayerGame && (
             <div className="fixed bottom-6 left-6 z-50">
               <Button
-                onClick={() => handleReturnToSocial()}
+                onClick={handleReturnToSocial}
                 variant="outline"
                 className="border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white bg-slate-900/90 backdrop-blur-sm border-2 font-semibold"
               >
@@ -2281,10 +2337,14 @@ Overall Analysis: [brief summary]`,
 
           {/* End-game non-blocking popup */}
           {showEndPopup && (
-            <div className="fixed bottom-6 right-6 z-60">
-              <div className="bg-slate-900/80 border border-slate-700/60 text-white rounded-lg px-6 py-4 shadow-lg backdrop-blur-md max-w-sm">
-                <div className="font-semibold mb-1">Match Ended</div>
-                <div className="text-sm text-slate-300">{endPopupMessage}</div>
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center">
+              <div className="bg-slate-900/95 border border-slate-700/60 text-white rounded-xl px-8 py-6 shadow-2xl max-w-md mx-4">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">⚔️</div>
+                  <div className="font-bold text-lg mb-2">Match Ended</div>
+                  <div className="text-slate-300">{endPopupMessage}</div>
+                  <div className="text-xs text-slate-400 mt-4">Redirecting to social hub...</div>
+                </div>
               </div>
             </div>
           )}
