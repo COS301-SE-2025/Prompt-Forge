@@ -2,6 +2,7 @@ import { Query } from "@/Models/Query";
 import HttpClient from "./httpClient";
 import { Prompt, Tag } from "@/Models/Prompt";
 import { Review, ReviewsApiResponse } from '@/Models/Reviews';
+import { IdObfuscator } from "@/utils/idObfuscator";
 
 export class PromptService {
   private httpClient = HttpClient;
@@ -254,8 +255,9 @@ export class PromptService {
 
   async getPromptReviews(promptId: string): Promise<Review[]> {
     try {
+      const actualId = IdObfuscator.reveal(promptId);
       const response = await this.httpClient.get(
-        `/store/prompts/${promptId}/reviews`
+        `/store/prompts/${actualId}/reviews`
       );
 
       if (!response.ok) {
@@ -308,7 +310,8 @@ export class PromptService {
   async postReview(promptId: string, reviewData: { rating: number; comment: string }) {
 
     try {
-      const response = await this.httpClient.post(`/store/prompts/${promptId}/reviews`, {
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.post(`/store/prompts/${actualId}/reviews`, {
         rating: reviewData.rating,
         comment: reviewData.comment,
       })
@@ -347,7 +350,8 @@ export class PromptService {
 
   async updateReview(promptId: string, reviewId: string, reviewData: { rating: number; comment: string }) {
     try {
-      const response = await this.httpClient.put(`/store/prompts/${promptId}/reviews/${reviewId}`, {
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.put(`/store/prompts/${actualId}/reviews/${reviewId}`, {
         rating: reviewData.rating,
         comment: reviewData.comment,
       })
@@ -383,7 +387,8 @@ export class PromptService {
 
   async deleteReview(promptId: string, reviewId: string): Promise<void> {
     try {
-      const response = await this.httpClient.delete(`/store/prompts/${promptId}/reviews/${reviewId}`)
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.delete(`/store/prompts/${actualId}/reviews/${reviewId}`)
 
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`

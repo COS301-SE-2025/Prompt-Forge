@@ -67,6 +67,16 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
        WHERE p.author_id = :authorId
        """,
       nativeQuery = true)
+  long countByAuthorId(@Param("authorId") UUID authorId);
+
+  @Query(
+      value =
+          """
+       SELECT COUNT(*)
+       FROM prompts p
+       WHERE p.author_id = :authorId
+       """,
+      nativeQuery = true)
   long countAuthoredPrompts(@Param("authorId") UUID authorId);
 
   @Query(

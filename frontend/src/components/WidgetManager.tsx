@@ -58,7 +58,7 @@ interface WidgetManagerProps {
   loadingTopUserPrompts?: boolean
 }
 
-const availableWidgets = [
+export const availableWidgets = [
   {
     id: "total-prompts",
     type: "stat",
