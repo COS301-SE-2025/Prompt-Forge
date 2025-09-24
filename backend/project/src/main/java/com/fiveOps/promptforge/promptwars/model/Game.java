@@ -85,6 +85,9 @@ public class Game {
   @Column(name = "question_number")
   private Integer questionNumber = 1;
 
+  @Column(name = "writing_started_at")
+  private Instant writingStartedAt;
+
   @Column(name = "started_at")
   private Instant startedAt;
 
@@ -165,6 +168,14 @@ public class Game {
 
   public void setStartedAt(Instant startedAt) {
     this.startedAt = startedAt;
+  }
+
+  public Instant getWritingStartedAt() {
+    return writingStartedAt;
+  }
+
+  public void setWritingStartedAt(Instant writingStartedAt) {
+    this.writingStartedAt = writingStartedAt;
   }
 
   public Instant getEndedAt() {
