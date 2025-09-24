@@ -62,7 +62,9 @@ public class BankDetailsServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class, () -> bankDetailsService.getSubaccountCodeByUserID(userId));
-    assertEquals("Failed to retrieve author payment details: Author payment details not found", ex.getMessage());
+    assertEquals(
+        "Failed to retrieve author payment details: Author payment details not found",
+        ex.getMessage());
   }
 
   @Test
