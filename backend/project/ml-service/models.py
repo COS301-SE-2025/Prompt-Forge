@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 from typing import List, Dict, Optional, Any
 
 # Base Request/Response Models
@@ -78,3 +79,17 @@ class ContextOptimizationResponse(BaseModel):
     enhancement_type: str
     current_metrics: Dict[str, float]
     used_ai: bool
+
+
+class WizardStepResult(BaseModel):
+    step_name: str
+    score: float
+    optimized_prompt: str
+    improvements: List[str]
+
+class WizardResults(BaseModel):
+    wizard_version: str
+    timestamp: datetime
+    steps: Dict[str, dict]
+    consistency_check: dict
+    overall_metrics: dict

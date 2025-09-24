@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, HTTPException
 from typing import List
+from datetime import datetime
 from config import Config, logger
 from models import (
     AnalysisResponse, OptimizationResponse, GoalOptimizationResponse,
     StructureOptimizationResponse, ContextOptimizationResponse, TokenValidationResponse,
-    PromptRequest, GoalBasedRequest, StructureBasedRequest, ContextBasedRequest
+    PromptRequest, GoalBasedRequest, StructureBasedRequest, ContextBasedRequest, WizardResults,WizardStepResult
 )
 from routes import (
     health_check, read_root, analyze_prompt_metrics, optimize_prompt,
@@ -293,6 +294,81 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("Enhanced Prompt Optimizer API v2.0 shutting down")
+
+# ...existing code...
+
+@app.get("/wizard-results", response_model=WizardResults)
+async def get_wizard_results():
+    """
+    Get comprehensive results for the entire optimization wizard cycle
+    """
+    try:
+        test_prompt = "Write an email to schedule a meeting"
+        
+        results = {
+            "wizard_version": "2.0.0",
+            "timestamp": datetime.now().isoformat(),
+            "steps": {
+                "1_basic_optimization": await optimize(
+                    PromptRequest(text=test_prompt)
+                ),
+                "2_goal_optimization": await optimize_goals(
+                    GoalBasedRequest(
+                        text=test_prompt,
+                        goals={
+                            "clarity": 0.8,
+                            "professionalism": 0.9
+                        }
+                    )
+                ),
+                "3_structure_optimization": await optimize_structure(
+                    StructureBasedRequest(
+                        text=test_prompt,
+                        structure={
+                            "format": "email",
+                            "components": ["greeting", "body", "closing"]
+                        }
+                    )
+                ),
+                "4_context_optimization": await optimize_context(
+                    ContextBasedRequest(
+                        text=test_prompt,
+                        context={
+                            "domain": "business",
+                            "audience": "professional"
+                        }
+                    )
+                )
+            },
+            "consistency_check": await test_consistency([test_prompt], num_runs=3),
+            "overall_metrics": {
+                "improvement_progression": [],
+                "final_score": 0.0,
+                "optimization_time": 0.0
+            }
+        }
+        
+        # Calculate metrics
+        for step, step_results in results["steps"].items():
+            score = step_results.get("improvement_score", 0.0)
+            results["overall_metrics"]["improvement_progression"].append({
+                "step": step,
+                "score": score
+            })
+        
+        results["overall_metrics"]["final_score"] = max(
+            score["score"] for score in results["overall_metrics"]["improvement_progression"]
+        )
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Wizard results generation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not generate wizard results: {str(e)}"
+        )
+# ...existing code...
 
 # ----------------------------
 # Application Run
