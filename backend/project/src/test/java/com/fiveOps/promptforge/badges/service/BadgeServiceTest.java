@@ -67,7 +67,7 @@ class BadgeServiceTest {
   void getAllActiveBadges_ShouldReturnAllActiveBadges() {
     // Arrange
     List<Badge> badges = Arrays.asList(testBadge);
-    when(badgeRepository.findByIsActiveTrue()).thenReturn(badges);
+    when(badgeRepository.findAllActiveOrderByRarity()).thenReturn(badges);
 
     // Act
     List<BadgeDto> result = badgeService.getAllActiveBadges();
@@ -78,14 +78,16 @@ class BadgeServiceTest {
     assertEquals("Test Badge", result.get(0).getName());
     assertEquals("A test badge for unit testing", result.get(0).getDescription());
     assertEquals("#3ebb9e", result.get(0).getColor());
-    verify(badgeRepository, times(1)).findByIsActiveTrue();
+    verify(badgeRepository, times(1)).findAllActiveOrderByRarity();
   }
 
   @Test
   void getUserBadges_ShouldReturnUserBadgesWithProgress() {
     // Arrange
     List<UserBadge> userBadges = Arrays.asList(testUserBadge);
+    List<Badge> allBadges = Arrays.asList(testBadge);
     when(userBadgeRepository.findByUserId(testUserId)).thenReturn(userBadges);
+    when(badgeRepository.findByIsActiveTrue()).thenReturn(allBadges);
 
     // Act
     List<BadgeDto> result = badgeService.getUserBadges(testUserId);
@@ -96,8 +98,9 @@ class BadgeServiceTest {
     BadgeDto badgeDto = result.get(0);
     assertEquals("Test Badge", badgeDto.getName());
     assertEquals(75, badgeDto.getProgress().intValue());
-    assertNotNull(badgeDto.getEarnedAt()); // Has earnedAt timestamp
+    assertNull(badgeDto.getEarnedAt()); // earnedAt is null because progress < 100
     verify(userBadgeRepository, times(1)).findByUserId(testUserId);
+    verify(badgeRepository, times(1)).findByIsActiveTrue();
   }
 
   @Test
@@ -107,6 +110,7 @@ class BadgeServiceTest {
     testUserBadge.setEarnedAt(LocalDateTime.now());
     List<UserBadge> earnedBadges = Arrays.asList(testUserBadge);
     when(userBadgeRepository.findEarnedVisibleBadgesByUserId(testUserId)).thenReturn(earnedBadges);
+    when(badgeRepository.findById(testBadgeId)).thenReturn(Optional.of(testBadge));
 
     // Act
     List<BadgeDto> result = badgeService.getUserEarnedBadges(testUserId);
@@ -152,20 +156,15 @@ class BadgeServiceTest {
   }
 
   @Test
-  void toggleBadgeVisibility_WithNonExistentBadge_ShouldThrowException() {
+  void toggleBadgeVisibility_WithNonExistentBadge_ShouldDoNothing() {
     // Arrange
     when(userBadgeRepository.findByUserIdAndBadgeId(testUserId, testBadgeId))
         .thenReturn(Optional.empty());
 
-    // Act & Assert
-    RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> {
-              badgeService.toggleBadgeVisibility(testUserId, testBadgeId);
-            });
+    // Act
+    badgeService.toggleBadgeVisibility(testUserId, testBadgeId);
 
-    assertEquals("User badge not found", exception.getMessage());
+    // Assert
     verify(userBadgeRepository, times(1)).findByUserIdAndBadgeId(testUserId, testBadgeId);
     verify(userBadgeRepository, never()).save(any(UserBadge.class));
   }
@@ -188,22 +187,17 @@ class BadgeServiceTest {
   }
 
   @Test
-  void updateBadgeProgress_WithNonExistentBadge_ShouldThrowException() {
+  void updateBadgeProgress_WithNonExistentBadge_ShouldCreateNewBadge() {
     // Arrange
     when(userBadgeRepository.findByUserIdAndBadgeId(testUserId, testBadgeId))
         .thenReturn(Optional.empty());
 
-    // Act & Assert
-    RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> {
-              badgeService.updateBadgeProgress(testUserId, testBadgeId, 50);
-            });
+    // Act
+    badgeService.updateBadgeProgress(testUserId, testBadgeId, 50);
 
-    assertEquals("User badge not found", exception.getMessage());
+    // Assert
     verify(userBadgeRepository, times(1)).findByUserIdAndBadgeId(testUserId, testBadgeId);
-    verify(userBadgeRepository, never()).save(any(UserBadge.class));
+    verify(userBadgeRepository, times(1)).save(any(UserBadge.class));
   }
 
   @Test
@@ -227,6 +221,8 @@ class BadgeServiceTest {
   @Test
   void awardBadge_WithExistingBadge_ShouldReturnFalse() {
     // Arrange
+    testUserBadge.setProgress(100); // Already fully earned
+    when(badgeRepository.findById(testBadgeId)).thenReturn(Optional.of(testBadge));
     when(userBadgeRepository.findByUserIdAndBadgeId(testUserId, testBadgeId))
         .thenReturn(Optional.of(testUserBadge));
 
@@ -235,16 +231,14 @@ class BadgeServiceTest {
 
     // Assert
     assertFalse(result);
+    verify(badgeRepository, times(1)).findById(testBadgeId);
     verify(userBadgeRepository, times(1)).findByUserIdAndBadgeId(testUserId, testBadgeId);
-    verify(badgeRepository, never()).findById(any(UUID.class));
     verify(userBadgeRepository, never()).save(any(UserBadge.class));
   }
 
   @Test
   void awardBadge_WithNonExistentBadge_ShouldReturnFalse() {
     // Arrange
-    when(userBadgeRepository.findByUserIdAndBadgeId(testUserId, testBadgeId))
-        .thenReturn(Optional.empty());
     when(badgeRepository.findById(testBadgeId)).thenReturn(Optional.empty());
 
     // Act
@@ -252,8 +246,8 @@ class BadgeServiceTest {
 
     // Assert
     assertFalse(result);
-    verify(userBadgeRepository, times(1)).findByUserIdAndBadgeId(testUserId, testBadgeId);
     verify(badgeRepository, times(1)).findById(testBadgeId);
+    verify(userBadgeRepository, never()).findByUserIdAndBadgeId(any(UUID.class), any(UUID.class));
     verify(userBadgeRepository, never()).save(any(UserBadge.class));
   }
 }
