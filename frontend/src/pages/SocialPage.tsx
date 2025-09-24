@@ -455,17 +455,14 @@ export default function SocialPage() {
   const loadPageData = async (tab: string, page: number) => {
     try {
       setTabLoading((prev) => ({ ...prev, [tab]: true }))
+      const userId = localStorage.getItem('userId')
 
       switch (tab) {
         case "discover": {
           // Changed from search to searchQuery
-          const usersResponse = await SocialAPI.getUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
-          // Add online status simulation and apply correct following status
-          const usersWithStatus = (usersResponse.content || []).map((user) => ({
-            ...user,
-            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
-          }))
-          const usersWithFollowingStatus = applyFollowingStatus(usersWithStatus)
+          const usersResponse = await SocialAPI.getDiscoverUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
+          // Add online status simulation and ensure isFollowing is properly set
+          const usersWithFollowingStatus = applyFollowingStatus(usersResponse.content)
           setUsers(usersWithFollowingStatus)
           setTotalPages((prev) => ({ ...prev, discover: usersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, discover: usersResponse.totalElements || 0 }))
@@ -478,7 +475,6 @@ export default function SocialPage() {
           // Add online status simulation - users in following are already being followed
           const followingWithOnlineStatus = (followingResponse.content || []).map((user) => ({
             ...user,
-            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
             isFollowing: true, // All users in following tab are being followed
           }))
           setFollowing(followingWithOnlineStatus)
@@ -503,11 +499,8 @@ export default function SocialPage() {
         case "followers": {
           const followersResponse = await SocialAPI.getFollowersPaginated(page - 1, USERS_PER_PAGE)
           // Add online status simulation and apply correct following status
-          const followersWithStatus = (followersResponse.content || []).map((user) => ({
-            ...user,
-            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
-          }))
-          const followersWithFollowingStatus = applyFollowingStatus(followersWithStatus)
+         
+          const followersWithFollowingStatus = applyFollowingStatus(followersResponse.content)
           setFollowers(followersWithFollowingStatus)
           setTotalPages((prev) => ({ ...prev, followers: followersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, followers: followersResponse.totalElements || 0 }))

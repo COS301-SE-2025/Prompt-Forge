@@ -27,11 +27,11 @@ interface SocialUser {
   userId: string
   username: string
   email?: string
-  profilePictureUrl?: string
+  profilePicture?: string
   bio?: string
   followers: string[] | number
   following: string[] | number
-  isActive: boolean
+  active: boolean
   createdAt: string
   updatedAt: string
   role: string
@@ -39,7 +39,6 @@ interface SocialUser {
   prompts?: Prompt[]
   totalPrompts?: number
   averageRating?: number
-  isOnline?: boolean
   isPopular?: boolean
   isFollowing?: boolean
 }
@@ -82,7 +81,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             <div className="relative">
               <Avatar className="w-16 h-16 border-2 border-border group-hover:border-[#3ebb9e] transition-all duration-300">
                 <AvatarImage
-                  src={!imageError ? user.profilePictureUrl : undefined}
+                  src={!imageError ? user.profilePicture : undefined}
                   alt={user.username}
                   onError={() => setImageError(true)}
                 />
@@ -92,7 +91,7 @@ export const UserCard: React.FC<UserCardProps> = ({
               </Avatar>
 
               {/* Fixed Online Status - properly aligned */}
-              {user.isOnline && (
+              {user.active && (
                 <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-background rounded-full shadow-sm" />
               )}
 
@@ -195,7 +194,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  if (user.isOnline) {
+                  if (user.active) {
                     setSelectedOpponent(user)
                     setShowChallengeModal(true)
                   } else {
@@ -203,14 +202,14 @@ export const UserCard: React.FC<UserCardProps> = ({
                   }
                 }}
                 className={`transition-all duration-300 flex items-center justify-center ${
-                  user.isOnline
+                  user.active
                     ? "bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30"
                     : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
                 }`}
-                disabled={!user.isOnline}
-                title={user.isOnline ? "Challenge to Prompt Wars" : "User is offline"}
+                disabled={!user.active}
+                title={user.active ? "Challenge to Prompt Wars" : "User is offline"}
               >
-                {user.isOnline ? (
+                {user.active ? (
                   <Swords className="h-4 w-4" />
                 ) : (
                   <Timer className="h-4 w-4" />

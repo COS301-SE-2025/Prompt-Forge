@@ -291,6 +291,17 @@ public class UserService {
     return usersPage.map(this::mapToDto);
   }
 
+  public org.springframework.data.domain.Page<UserDto> discoverUsersPaginated(
+      String search, UUID curretUserId, int page, int size) {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(page, size);
+
+    org.springframework.data.domain.Page<User> usersPage;
+    usersPage = userRepository.discover(search.trim(), curretUserId, pageable);
+
+    return usersPage.map(this::mapToDto);
+  }
+
   public org.springframework.data.domain.Page<UserDto> getFollowersPaginated(
       String email, int page, int size) {
     org.springframework.data.domain.Pageable pageable =
@@ -420,5 +431,15 @@ public class UserService {
     }
 
     return Arrays.asList(following).contains(targetUserId);
+  }
+
+  public void setActive(UUID userId, boolean activeStatus) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+    user.setIsActive(activeStatus);
+    userRepository.save(user);
   }
 }

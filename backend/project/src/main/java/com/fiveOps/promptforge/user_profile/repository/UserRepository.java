@@ -41,5 +41,17 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   // Paginated search methods using method naming convention
   Page<User> findByIsActiveTrueAndUsernameContainingIgnoreCase(String username, Pageable pageable);
 
+  @Query(
+      value =
+          """
+      SELECT *
+      FROM users u
+      WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))
+        AND NOT (:currentUserId = ANY(u.followers))
+        AND u.user_id <> :currentUserId
+  """,
+      nativeQuery = true)
+  Page<User> discover(String username, UUID currentUserId, Pageable pageable);
+
   Page<User> findByIsActiveTrue(Pageable pageable);
 }
