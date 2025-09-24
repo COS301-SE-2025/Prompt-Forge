@@ -7,6 +7,7 @@ export interface GameResponse {
   gameType?: 'PROMPT_CREATION' | 'REVERSE_PROMPT';
   gameState: 'WAITING' | 'SCENARIO' | 'WRITING' | 'RATING' | 'RESULTS' | 'FINISHED' | 'CANCELLED';
   scenario?: string;
+  writingStartedAt?: string;
   // Classic prompt battle fields
   startedAt?: string;
   endedAt?: string;
