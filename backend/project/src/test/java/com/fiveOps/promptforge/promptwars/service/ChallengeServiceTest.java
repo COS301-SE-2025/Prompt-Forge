@@ -147,8 +147,8 @@ public class ChallengeServiceTest {
     Challenge ch = new Challenge(UUID.randomUUID(), UUID.randomUUID(), GameType.PROMPT_CREATION);
     ch.setExpiresAt(Instant.now().minusSeconds(10));
 
-    when(challengeRepository.findExpiredChallenges(Instant.now()))
-        .thenReturn(java.util.List.of(ch));
+  when(challengeRepository.findExpiredChallenges(any(Instant.class)))
+    .thenReturn(java.util.List.of(ch));
 
     challengeServiceUnderTest.expireOldChallenges();
 
