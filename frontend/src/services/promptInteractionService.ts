@@ -1,5 +1,6 @@
 import HttpClient from "./httpClient";
 import { APIResponse } from "@/Models/APIResponse";
+import { IdObfuscator } from "@/utils/idObfuscator";
 
 export enum InteractionType {
   VIEW = "VIEW",
@@ -23,7 +24,8 @@ export class PromptInteractionService {
    */
   async recordInteraction(promptId: string, action: InteractionType): Promise<PromptInteractionResponse> {
     try {
-      const response = await this.httpClient.post(`/prompts/${promptId}/interact?action=${action}`, {});
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.post(`/prompts/${actualId}/interact?action=${action}`, {});
       
       if (!response.ok) {
         throw new Error(`Failed to record interaction: ${response.status}`);
@@ -47,7 +49,8 @@ export class PromptInteractionService {
    */
   async getBounceRate(promptId: string): Promise<number> {
     try {
-      const response = await this.httpClient.get(`/prompts/${promptId}/bounce-rate`);
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.get(`/prompts/${actualId}/bounce-rate`);
       
       if (!response.ok) {
         throw new Error(`Failed to get bounce rate: ${response.status}`);
@@ -68,7 +71,8 @@ export class PromptInteractionService {
    */
   async getViewCount(promptId: string): Promise<number> {
     try {
-      const response = await this.httpClient.get(`/prompts/${promptId}/views`);
+      const actualId = IdObfuscator.reveal(promptId);
+      const response = await this.httpClient.get(`/prompts/${actualId}/views`);
       
       if (!response.ok) {
         throw new Error(`Failed to get view count: ${response.status}`);
