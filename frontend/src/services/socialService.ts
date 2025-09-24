@@ -6,7 +6,7 @@ export interface SocialUser {
   userId: string;
   username: string;
   email?: string;
-  profilePictureUrl?: string;
+  profilePicture?: string;
   bio?: string;
   followers: string[] | number;
   following: string[] | number;
