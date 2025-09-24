@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge"
 import { Star, Swords, Timer, Crown, Gem, UserPlus, Sparkles } from "lucide-react"
 import type React from "react"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 interface Prompt {
   id: string
@@ -26,7 +27,7 @@ interface SocialUser {
   userId: string
   username: string
   email?: string
-  profilePictureUrl?: string
+  profilePicture?: string
   bio?: string
   followers: string[] | number
   following: string[] | number
@@ -58,9 +59,10 @@ export const UserCard: React.FC<UserCardProps> = ({
   showNotification,
 }) => {
   const [imageError, setImageError] = useState(false)
+  const navigate = useNavigate();
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col cursor-pointer group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
+    <Card onClick={()=>{navigate(`/user/${user.username}`)}} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col cursor-pointer group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
       {/* Header with Avatar and Status */}
       <div className="relative p-4 pb-3">
         <div className="flex items-start justify-between mb-3">
@@ -68,7 +70,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             <div className="relative">
               <Avatar className="w-16 h-16 border-2 border-border group-hover:border-[#3ebb9e] transition-all duration-300">
                 <AvatarImage
-                  src={!imageError ? user.profilePictureUrl : undefined}
+                  src={!imageError ? user.profilePicture : undefined}
                   alt={user.username}
                   onError={() => setImageError(true)}
                 />
