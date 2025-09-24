@@ -170,6 +170,19 @@ public class PromptWarsGameController {
     }
   }
 
+  @PostMapping("/{gameId}/timeout")
+  public ResponseEntity<?> handleTimeout(@PathVariable String gameId) {
+    try {
+      UUID id = UUID.fromString(gameId);
+      Game finished = gameService.handleTimeout(id);
+      return ResponseEntity.ok(Map.of("gameId", finished.getId().toString(), "gameState", finished.getGameState().toString()));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
   // Cancel the user's active game
   @DeleteMapping("/active")
   public ResponseEntity<?> cancelActiveGame(@RequestHeader("X-User-Id") String userIdHeader) {
