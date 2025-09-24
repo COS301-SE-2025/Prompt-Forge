@@ -409,15 +409,11 @@ export default function SocialPage() {
           // Changed from search to searchQuery
           const usersResponse = await SocialAPI.getDiscoverUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
           // Add online status simulation and ensure isFollowing is properly set
-          const usersWithOnlineStatus = (usersResponse.content || []).map((user) => {
-            console.log("user:",user);
-
-            return{
+          const usersWithOnlineStatus = (usersResponse.content || []).map((user) => ({
             ...user,
-            // isActive: user.active, // 70% chance of being online for demo
             isFollowing: user.isFollowing || false, // Ensure this field exists
-            }
-          })
+            
+          }))
           setUsers(usersWithOnlineStatus)
           setTotalPages((prev) => ({ ...prev, discover: usersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, discover: usersResponse.totalElements || 0 }))
