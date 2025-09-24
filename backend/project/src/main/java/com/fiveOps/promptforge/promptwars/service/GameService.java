@@ -54,10 +54,11 @@ public class GameService {
   }
 
   public Game startGame(UUID gameId) {
-    Game game =
-        gameRepository
-            .findById(gameId)
-            .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+  Game game =
+    gameRepository
+      .findById(gameId)
+      .orElseThrow(
+        () -> new IllegalArgumentException("Game not found"));
 
     if (game.getGameState() != GameState.WAITING) {
       throw new IllegalArgumentException("Game is not in waiting state");
@@ -147,8 +148,9 @@ public class GameService {
     }
 
     // Persist WRITING state and scenario
-    game.setGameState(GameState.WRITING);
-    Game savedGame = gameRepository.save(game);
+  game.setGameState(GameState.WRITING);
+  game.setWritingStartedAt(java.time.Instant.now());
+  Game savedGame = gameRepository.save(game);
     System.out.println(
         "Game saved with scenario. Final scenario: "
             + (savedGame.getScenario() != null ? "EXISTS" : "NULL"));
@@ -182,7 +184,7 @@ public class GameService {
       headers.set("X-Title", "Prompt Forge");
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
 
       List<Map<String, Object>> messages =
           List.of(
@@ -368,11 +370,6 @@ public class GameService {
   game.setPlayer2Score(Integer.valueOf(player2Score));
       game.setRatingExplanation((String) ratings.get("explanation"));
 
-  // Set the ratings (Note: in our system, players rate opponent's prompts)
-  // So player1's rating is actually the score given to player2's prompt
-  // Validate/clamp ratings to avoid DB check constraint violations. If the AI
-  // returned an out-of-range value (e.g. 0 when a prompt was missing), we
-  // should not write that into the playerX_rating columns which expect 1-10.
   Integer player1Rating = (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
   Integer player2Rating = (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
   game.setPlayer1Rating(player1Rating);
@@ -489,26 +486,35 @@ public class GameService {
                   + "SCENARIO: %s\n\n"
                   + "PROMPT 1: %s\n\n"
                   + "PROMPT 2: %s\n\n"
-                  + "Please evaluate both prompts based on:\n"
-                  + "1. Relevance to the scenario (25%%)\n"
-                  + "2. Clarity and specificity (25%%)\n"
-                  + "3. Creativity and innovation (25%%)\n"
-                  + "4. Practical effectiveness for AI (25%%)\n\n"
+                  + "IMPORTANT: Any prompt that is a direct copy-paste from the scenario should receive a score of 0.\n\n"
+                  + "Evaluate both prompts based on these criteria (total weight = 100%%):\n"
+                  + "• CLARITY (25%%): How clear and unambiguous the prompt is\n"
+                  + "• SPECIFICITY (25%%): Level of detail and concrete requirements\n"
+                  + "• STRUCTURE (25%%): Organization and logical flow\n"
+                  + "• CONTEXT (15%%): Background information and situational details\n"
+                  + "• ACTIONABILITY (10%%): How easy it is to act on the prompt\n\n"
+                  + "RELEVANCE TO SCENARIO: Both prompts must be highly relevant to the given scenario. "
+                  + "Irrelevant prompts should receive low scores regardless of other criteria.\n\n"
                   + "Provide:\n"
-                  + "1. A score for each prompt (1-10)\n"
-                  + "2. A brief explanation of your scoring\n"
+                  + "1. A score for each prompt (1-10, where 10 is exceptional)\n"
+                  + "2. A structured analysis with key strengths and weaknesses\n"
                   + "3. Declare the winner\n\n"
                   + "Format your response as:\n"
                   + "Prompt 1 Score: X/10\n"
                   + "Prompt 2 Score: Y/10\n"
                   + "Winner: [Prompt 1/Prompt 2/Tie]\n"
-                  + "Explanation: [Your detailed analysis]"
-                  +"NB: be very critical and judge based on how the prompt answers the scenario"
-                  +" and do not grade without critical evaluation. strictly",
+                  + "Analysis:\n"
+                  + "Relevance: [Brief assessment of how well each prompt addresses the scenario]\n"
+                  + "Clarity: [Assessment of clarity in both prompts]\n"
+                  + "Specificity: [Assessment of detail level in both prompts]\n"
+                  + "Structure: [Assessment of organization in both prompts]\n"
+                  + "Context: [Assessment of background information in both prompts]\n"
+                  + "Actionability: [Assessment of usability in both prompts]\n"
+                  + "Overall: [Brief conclusion on which prompt is better and why]",
               scenario, player1Prompt, player2Prompt);
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
 
       List<Map<String, Object>> messages = List.of(Map.of("role", "user", "content", ratingPrompt));
       requestBody.put("messages", messages);
@@ -648,6 +654,7 @@ public class GameService {
     // Reset game state for a new round
     game.setGameState(GameState.WAITING);
     game.setScenario(null);
+  game.setWritingStartedAt(null);
     game.setPlayer1Prompt(null);
     game.setPlayer2Prompt(null);
     game.setPlayer1Rating(null);
@@ -722,6 +729,7 @@ public class GameService {
         saved.setWinnerId(winner);
         saved.setGameState(GameState.FINISHED);
         saved.setEndedAt(java.time.Instant.now());
+  saved.setWritingStartedAt(null);
         gameRepository.save(saved);
       }
 
@@ -729,6 +737,70 @@ public class GameService {
     }
 
     throw new IllegalArgumentException("Game cannot be force-finished from its current state");
+  }
+
+  /**
+   * Handle timeout when neither player submits a prompt within the time limit.
+   * Automatically assigns 0-0 scores and finishes the game.
+   */
+  public Game handleTimeout(UUID gameId) {
+    Game game = getGame(gameId);
+
+    System.out.println("Handling timeout for game: " + gameId);
+    System.out.println("Current game state: " + game.getGameState());
+    System.out.println("Player 1 prompt submitted: " + (game.getPlayer1Prompt() != null));
+    System.out.println("Player 2 prompt submitted: " + (game.getPlayer2Prompt() != null));
+
+    if (!game.isActive()) {
+      throw new IllegalArgumentException("Game is not active");
+    }
+
+    if (game.getGameState() != GameState.WRITING) {
+      throw new IllegalArgumentException("Game is not in writing phase - cannot handle timeout");
+    }
+
+    // Check if neither player has submitted
+    if (game.getPlayer1Prompt() == null && game.getPlayer2Prompt() == null) {
+      System.out.println("Neither player submitted - assigning automatic 0-0 scores");
+
+      // Set both scores to 0
+      game.setPlayer1Score(0);
+      game.setPlayer2Score(0);
+      game.setPlayer1Rating(null);
+      game.setPlayer2Rating(null);
+      game.setRatingExplanation("Neither player submitted a prompt within the time limit. Automatic 0-0 result.");
+
+      // No winner in a tie
+      game.setWinnerId(null);
+      game.setGameState(GameState.FINISHED);
+      game.setEndedAt(java.time.Instant.now());
+  game.setWritingStartedAt(null);
+
+      Game savedGame = gameRepository.save(game);
+
+      // Send timeout results to both players
+      Map<String, Object> gameUpdate = new HashMap<>();
+      gameUpdate.put("type", "GAME_FINISHED");
+      gameUpdate.put("gameId", gameId.toString());
+      gameUpdate.put("gameState", "FINISHED");
+      gameUpdate.put("player1Score", 0);
+      gameUpdate.put("player2Score", 0);
+      gameUpdate.put("winnerId", null);
+      gameUpdate.put("explanation", "Neither player submitted a prompt within the time limit. Automatic 0-0 result.");
+      gameUpdate.put("timeout", true);
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
+
+      System.out.println("Sent timeout game finished update to both players for game: " + gameId);
+
+      return savedGame;
+    } else {
+      // At least one player submitted - let the normal flow handle it
+      // This shouldn't happen if called correctly, but handle gracefully
+      System.out.println("At least one player submitted - letting normal flow handle");
+      return game;
+    }
   }
 
   // Reverse Prompt Battle methods
@@ -739,11 +811,13 @@ public class GameService {
       throw new IllegalStateException("Question generation already in progress");
     }
 
-    Game game =
-        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
+  Game game =
+    gameRepository.findById(gameId)
+      .orElseThrow(() -> new RuntimeException("Game not found"));
 
-    System.out.println("Generating question for reverse prompt battle: " + gameId);
-    System.out.println("Current game state: " + game.getGameState());
+  System.out.println(
+    "Generating question for reverse prompt battle: " + gameId);
+  System.out.println("Current game state: " + game.getGameState());
 
     if (game.getGameType() != GameType.REVERSE_PROMPT) {
       generationLocks.remove(gameId);
@@ -760,23 +834,26 @@ public class GameService {
         gameRepository.updateGameStateIf(game.getId(), GameState.WAITING, GameState.WRITING);
     if (updated == 0) {
       generationLocks.remove(gameId);
-      String reservationMsg =
-          "Round reservation failed for game " + gameId + ". Current state: " + game.getGameState();
-      System.out.println(reservationMsg);
+    String reservationMsg =
+      "Round reservation failed for game " + gameId
+        + ". Current state: " + game.getGameState();
+    System.out.println(reservationMsg);
       throw new IllegalStateException(
           "Question generation already in progress or game not waiting");
     }
 
-    // Reload the game after reservation to ensure fresh entity
-    game =
-        gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
+  // Reload the game after reservation to ensure fresh entity
+  game =
+    gameRepository.findById(gameId)
+      .orElseThrow(() -> new RuntimeException("Game not found"));
 
     // Persist WRITING state explicitly so submit flows see it
-    game.setGameState(GameState.WRITING);
-    gameRepository.save(game);
+  game.setGameState(GameState.WRITING);
+  game.setWritingStartedAt(java.time.Instant.now());
+  gameRepository.save(game);
 
-    Map<String, Object> questionData = null;
-    try {
+  Map<String, Object> questionData = null;
+  try {
       // Generate question and options using AI
       questionData = generateAIQuestion();
 
@@ -802,11 +879,14 @@ public class GameService {
       webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
       webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
 
-      System.out.println("Sent question update to both players for game: " + gameId);
+    System.out.println(
+        "Sent question update to both players for game: " + gameId);
 
       return savedGame;
     } catch (Exception e) {
-      String errMsg = "Error generating question for game " + gameId + ": " + e.getMessage();
+      String errMsg =
+          "Error generating question for game " + gameId + ": "
+              + e.getMessage();
       System.err.println(errMsg);
       e.printStackTrace();
       // Revert game state back to WAITING so players can retry
@@ -824,7 +904,8 @@ public class GameService {
           webSocketService.sendGameUpdate(reload.getPlayer2Id(), failUpdate);
         }
       } catch (Exception ex) {
-        String revertMsg = "Failed to revert game state after generation error: " + ex.getMessage();
+        String revertMsg =
+            "Failed to revert game state after generation error: " + ex.getMessage();
         System.err.println(revertMsg);
         ex.printStackTrace();
       }
@@ -849,7 +930,7 @@ public class GameService {
       headers.set("X-Title", "Prompt Forge");
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", "deepseek/deepseek-r1-0528-qwen3-8b:free");
+      requestBody.put("model", "meta-llama/llama-4-scout");
 
       List<Map<String, Object>> messages =
           List.of(
@@ -875,10 +956,8 @@ public class GameService {
                       + "\nD) [short prompt option D - max 10 words]"
                       + "\nCORRECT: [A, B, C, or D]"
                       + "\n\nMake it challenging but fair. Keep everything SHORT."
-                      + "\nE) [prompt option E]"
-                      + "\nCORRECT: [A, B, C, D, or E]"
-                      + "\n\nMake it challenging but fair. The output should be unique enough "
-                      + "that only one prompt makes sense."));
+                      + "\nRandom seed: " + new java.util.Random().nextInt(10000)
+                      + "\n\nThe output should be unique enough that only one prompt makes sense."));
       requestBody.put("messages", messages);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
@@ -992,8 +1071,9 @@ public class GameService {
     }
 
     // Treat null/empty as NO_ANSWER for auto-submits
-    String normalizedAnswer =
-        (answer == null || answer.trim().isEmpty()) ? "NO_ANSWER" : answer.trim().toUpperCase();
+    String normalizedAnswer = (answer == null || answer.trim().isEmpty())
+        ? "NO_ANSWER"
+        : answer.trim().toUpperCase();
 
     // Validate answer format (A, B, C, D) or NO_ANSWER
     if (!(normalizedAnswer.matches("[A-D]") || "NO_ANSWER".equals(normalizedAnswer))) {
@@ -1048,6 +1128,7 @@ public class GameService {
         game.setPlayer2CorrectAnswers(game.getPlayer2CorrectAnswers() + 1);
       }
 
+
       // Only end the game if a player reaches 5 points, or after 5 questions
       int player1Score = game.getPlayer1CorrectAnswers();
       int player2Score = game.getPlayer2CorrectAnswers();
@@ -1087,6 +1168,8 @@ public class GameService {
       gameUpdate.put("player2Correct", player2Correct);
       gameUpdate.put("player1Score", player1Score);
       gameUpdate.put("player2Score", player2Score);
+      gameUpdate.put("player1Id", game.getPlayer1Id().toString());
+      gameUpdate.put("player2Id", game.getPlayer2Id().toString());
       gameUpdate.put("questionNumber", game.getQuestionNumber());
       gameUpdate.put("gameState", game.getGameState().toString());
 
@@ -1108,8 +1191,7 @@ public class GameService {
         // Small delay to allow frontend to show results before next question
         try {
           Thread.sleep(1200);
-        } catch (InterruptedException ignored) {
-        }
+        } catch (InterruptedException ignored) {}
         generateQuestion(game.getId());
       }
 
