@@ -19,7 +19,6 @@ import {
   API_BASE_URL,
   cancelActiveGame,
 } from "../services/socialService"
-import { promptWarsWebSocket } from "@/services/promptWarsWebSocket"
 
 // WebSocket connection
 let socket: any = null
