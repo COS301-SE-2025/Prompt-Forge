@@ -365,6 +365,9 @@ export default function SocialPage() {
       setLoading(true)
       setError(null)
 
+      // Load cached counts first
+      await loadCachedCounts()
+
       // Load initial page for discover tab
       await loadPageData("discover", 1)
 
@@ -375,6 +378,33 @@ export default function SocialPage() {
       setError("Failed to load data. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Add function to load cached counts
+  const loadCachedCounts = async () => {
+    try {
+      // Load following count
+      const followingResponse = await SocialAPI.getFollowingPaginated(0, 1)
+      const followingCount = followingResponse.totalElements || 0
+
+      // Load followers count  
+      const followersResponse = await SocialAPI.getFollowersPaginated(0, 1)
+      const followersCount = followersResponse.totalElements || 0
+
+      setCachedCounts({
+        following: followingCount,
+        followers: followersCount
+      })
+
+      // Update totalElements state as well
+      setTotalElements(prev => ({
+        ...prev,
+        following: followingCount,
+        followers: followersCount
+      }))
+    } catch (error) {
+      console.error("Failed to load cached counts:", error)
     }
   }
 
@@ -432,6 +462,12 @@ export default function SocialPage() {
           setTotalPages((prev) => ({ ...prev, following: followingResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, following: followingResponse.totalElements || 0 }))
           setCurrentPage((prev) => ({ ...prev, following: page }))
+          
+          // Update cached count
+          setCachedCounts(prev => ({
+            ...prev,
+            following: followingResponse.totalElements || 0
+          }))
           break
         }
 
@@ -447,6 +483,12 @@ export default function SocialPage() {
           setTotalPages((prev) => ({ ...prev, followers: followersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, followers: followersResponse.totalElements || 0 }))
           setCurrentPage((prev) => ({ ...prev, followers: page }))
+          
+          // Update cached count
+          setCachedCounts(prev => ({
+            ...prev,
+            followers: followersResponse.totalElements || 0
+          }))
           break
         }
       }
@@ -534,12 +576,40 @@ export default function SocialPage() {
     }
   }
 
+  const [cachedCounts, setCachedCounts] = useState<{
+    following: number
+    followers: number
+  }>({
+    following: 0,
+    followers: 0
+  })
+
   const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
     try {
       if (isCurrentlyFollowing) {
         await SocialAPI.unfollowUser(userId)
+        // Update cached following count
+        setCachedCounts(prev => ({
+          ...prev,
+          following: Math.max(0, prev.following - 1)
+        }))
+        // Update totalElements
+        setTotalElements(prev => ({
+          ...prev,
+          following: Math.max(0, prev.following - 1)
+        }))
       } else {
         await SocialAPI.followUser(userId)
+        // Update cached following count
+        setCachedCounts(prev => ({
+          ...prev,
+          following: prev.following + 1
+        }))
+        // Update totalElements
+        setTotalElements(prev => ({
+          ...prev,
+          following: prev.following + 1
+        }))
       }
 
       // Update the user's following status in local state
@@ -738,14 +808,14 @@ export default function SocialPage() {
               className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
             >
               <Users className="h-4 w-4 mr-2" />
-              Following ({following.length})
+              Following ({totalElements.following})
             </TabsTrigger>
             <TabsTrigger
               value="followers"
               className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              Followers ({followers.length})
+              Followers ({totalElements.followers})
             </TabsTrigger>
             <TabsTrigger
               value="challenges"
