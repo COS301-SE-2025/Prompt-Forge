@@ -162,7 +162,10 @@ public class PromptWarsGameController {
     try {
       UUID id = UUID.fromString(gameId);
       Game finished = gameService.forceFinishGame(id);
-      return ResponseEntity.ok(Map.of("gameId", finished.getId().toString(), "gameState", finished.getGameState().toString()));
+      java.util.Map<String, Object> resp = new java.util.HashMap<>();
+      resp.put("gameId", finished.getId().toString());
+      resp.put("gameState", finished.getGameState().toString());
+      return ResponseEntity.ok(resp);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     } catch (Exception e) {
@@ -175,7 +178,10 @@ public class PromptWarsGameController {
     try {
       UUID id = UUID.fromString(gameId);
       Game finished = gameService.handleTimeout(id);
-      return ResponseEntity.ok(Map.of("gameId", finished.getId().toString(), "gameState", finished.getGameState().toString()));
+      java.util.Map<String, Object> resp = new java.util.HashMap<>();
+      resp.put("gameId", finished.getId().toString());
+      resp.put("gameState", finished.getGameState().toString());
+      return ResponseEntity.ok(resp);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     } catch (Exception e) {

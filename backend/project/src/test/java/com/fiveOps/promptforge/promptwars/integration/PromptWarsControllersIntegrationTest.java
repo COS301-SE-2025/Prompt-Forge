@@ -1,8 +1,8 @@
 package com.fiveOps.promptforge.promptwars.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -15,10 +15,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
 import com.fiveOps.promptforge.promptwars.model.Game;
-import com.fiveOps.promptforge.promptwars.service.GameService;
 import com.fiveOps.promptforge.promptwars.service.ChallengeService;
-
-import static org.mockito.Mockito.when;
+import com.fiveOps.promptforge.promptwars.service.GameService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class PromptWarsControllersIntegrationTest {
@@ -35,7 +33,8 @@ public class PromptWarsControllersIntegrationTest {
     g.setId(id);
     when(gameService.getGame(id)).thenReturn(g);
 
-    ResponseEntity<Game> resp = restTemplate.getForEntity("/api/prompt-wars/games/" + id.toString(), Game.class);
+    ResponseEntity<Game> resp =
+        restTemplate.getForEntity("/api/prompt-wars/games/" + id.toString(), Game.class);
     assertEquals(200, resp.getStatusCode().value());
     assertEquals(id, resp.getBody().getId());
   }
@@ -48,11 +47,14 @@ public class PromptWarsControllersIntegrationTest {
     g.setScenario("int scenario");
     when(gameService.generateScenario(id)).thenReturn(g);
 
-  ResponseEntity<String> resp = restTemplate.postForEntity("/api/prompt-wars/games/" + id + "/generate-scenario", null, String.class);
-  assertEquals(200, resp.getStatusCode().value());
-  com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-  java.util.Map<?,?> body = om.readValue(resp.getBody(), java.util.Map.class);
-  assertEquals("int scenario", body.get("scenario"));
+    ResponseEntity<String> resp =
+        restTemplate.postForEntity(
+            "/api/prompt-wars/games/" + id + "/generate-scenario", null, String.class);
+    assertEquals(200, resp.getStatusCode().value());
+    com.fasterxml.jackson.databind.ObjectMapper om =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    java.util.Map<?, ?> body = om.readValue(resp.getBody(), java.util.Map.class);
+    assertEquals("int scenario", body.get("scenario"));
   }
 
   @Test
@@ -61,7 +63,8 @@ public class PromptWarsControllersIntegrationTest {
     when(gameService.cancelActiveGameForUser(userId)).thenReturn(true);
 
     HttpEntity<Void> entity = new HttpEntity<>(null);
-  restTemplate.exchange("/api/prompt-wars/games/active", HttpMethod.DELETE, entity, String.class);
-  // status will likely be 500 because controller expects header parsing; this integration primarily ensures the context loads
+    restTemplate.exchange("/api/prompt-wars/games/active", HttpMethod.DELETE, entity, String.class);
+    // status will likely be 500 because controller expects header parsing; this integration
+    // primarily ensures the context loads
   }
 }

@@ -1,9 +1,9 @@
 package com.fiveOps.promptforge.promptwars.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,9 +44,9 @@ public class PromptWarsChallengeControllerTest {
 
     when(challengeService.sendChallenge(any(), any(), any(), any())).thenReturn(c);
 
-  ResponseEntity<?> resp = controller.sendChallenge(challenger, req);
+    ResponseEntity<?> resp = controller.sendChallenge(challenger, req);
 
-  assertEquals(200, resp.getStatusCode().value());
+    assertEquals(200, resp.getStatusCode().value());
     assertTrue(resp.getBody() instanceof Challenge);
   }
 
@@ -56,7 +56,8 @@ public class PromptWarsChallengeControllerTest {
     UUID challengeId = UUID.randomUUID();
     UUID playerId = UUID.randomUUID();
 
-    when(challengeService.acceptChallenge(any(), any())).thenThrow(new IllegalArgumentException("no"));
+    when(challengeService.acceptChallenge(any(), any()))
+        .thenThrow(new IllegalArgumentException("no"));
 
     ResponseEntity<?> resp = controller.acceptChallenge(challengeId, playerId);
     assertTrue(resp.getStatusCode().is4xxClientError());
@@ -68,11 +69,11 @@ public class PromptWarsChallengeControllerTest {
     UUID playerId = UUID.randomUUID();
 
     // make service throw
-  doThrow(new RuntimeException("boom")).when(challengeService).declineChallenge(any(), any());
+    doThrow(new RuntimeException("boom")).when(challengeService).declineChallenge(any(), any());
 
-  // The controller method wraps exceptions, call and assert 500
-  ResponseEntity<?> resp = controller.declineChallenge(challengeId, playerId);
-  assertEquals(500, resp.getStatusCode().value());
+    // The controller method wraps exceptions, call and assert 500
+    ResponseEntity<?> resp = controller.declineChallenge(challengeId, playerId);
+    assertEquals(500, resp.getStatusCode().value());
   }
 
   @Test

@@ -1,9 +1,9 @@
 package com.fiveOps.promptforge.promptwars.service;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -59,10 +59,10 @@ public class GameServiceTest {
 
     Game started = gameService.startGame(id);
 
-  // Accept either WRITING or SCENARIO as valid post-start states (depends on implementation)
-  assertTrue(
-    started.getGameState() == GameState.WRITING || started.getGameState() == GameState.SCENARIO,
-    "Expected WRITING or SCENARIO after start, got: " + started.getGameState());
+    // Accept either WRITING or SCENARIO as valid post-start states (depends on implementation)
+    assertTrue(
+        started.getGameState() == GameState.WRITING || started.getGameState() == GameState.SCENARIO,
+        "Expected WRITING or SCENARIO after start, got: " + started.getGameState());
   }
 
   @Test
@@ -94,9 +94,12 @@ public class GameServiceTest {
 
     when(gameRepository.findById(id)).thenReturn(Optional.of(g));
 
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-      gameService.submitPrompt(id, player1, "prompt");
-    });
+    IllegalArgumentException ex =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              gameService.submitPrompt(id, player1, "prompt");
+            });
 
     assertTrue(ex.getMessage().toLowerCase().contains("writing"));
   }
@@ -112,10 +115,12 @@ public class GameServiceTest {
     g.setGameState(GameState.WAITING);
     g.setScenario("Pre-existing scenario");
 
-    when(gameRepository.findById(id)).thenReturn(Optional.of(g));
-    when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+  when(gameRepository.findById(id)).thenReturn(Optional.of(g));
+  // Reserve the game state in DB (service uses updateGameStateIf to atomically reserve)
+  when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
+  when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    Game saved = gameService.generateScenario(id);
+  Game saved = gameService.generateScenario(id);
 
     assertNotNull(saved.getScenario());
     verify(gameRepository).save(any());
@@ -154,7 +159,8 @@ public class GameServiceTest {
 
     when(gameRepository.findById(id)).thenReturn(Optional.of(g));
 
-    assertThrows(IllegalArgumentException.class, () -> gameService.finishGame(id, UUID.randomUUID()));
+    assertThrows(
+        IllegalArgumentException.class, () -> gameService.finishGame(id, UUID.randomUUID()));
   }
 
   @Test
@@ -219,7 +225,8 @@ public class GameServiceTest {
     when(gameRepository.findRecentGamesByPlayer(user)).thenReturn(java.util.List.of(new Game()));
     when(gameRepository.findActiveGamesByPlayer(user, GameState.FINISHED, GameState.CANCELLED))
         .thenReturn(java.util.List.of(new Game()));
-    when(gameRepository.isPlayerInActiveGame(user, GameState.FINISHED, GameState.CANCELLED)).thenReturn(true);
+    when(gameRepository.isPlayerInActiveGame(user, GameState.FINISHED, GameState.CANCELLED))
+        .thenReturn(true);
 
     assertFalse(gameService.getUserGames(user).isEmpty());
     assertFalse(gameService.getActiveGames(user).isEmpty());
@@ -285,45 +292,52 @@ public class GameServiceTest {
     g.setGameState(GameState.WAITING);
     g.setScenario(null);
 
-    when(gameRepository.findById(id)).thenReturn(Optional.of(g));
-    when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-    when(env.getProperty("OPENROUTER_API_KEY")).thenReturn(null);
+  when(gameRepository.findById(id)).thenReturn(Optional.of(g));
+  // Service now uses DB-level reservation; mock it to succeed
+  when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
+  when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+  when(env.getProperty("OPENROUTER_API_KEY")).thenReturn(null);
 
-    Game saved = gameService.generateScenario(id);
+  Game saved = gameService.generateScenario(id);
     assertNotNull(saved.getScenario());
     assertEquals(com.fiveOps.promptforge.promptwars.model.GameState.WRITING, saved.getGameState());
   }
 
   @Test
   public void parseRatingResult_handlesTypicalResponse() throws Exception {
-    String sample = "Prompt 1 Score: 8/10\nPrompt 2 Score: 5/10\nWinner: Prompt 1\nExplanation: Good";
+    String sample =
+        "Prompt 1 Score: 8/10\nPrompt 2 Score: 5/10\nWinner: Prompt 1\nExplanation: Good";
 
-    java.lang.reflect.Method m = GameService.class.getDeclaredMethod("parseRatingResult", String.class);
+    java.lang.reflect.Method m =
+        GameService.class.getDeclaredMethod("parseRatingResult", String.class);
     m.setAccessible(true);
     Object res = m.invoke(gameService, sample);
-    java.util.Map<?,?> map = (java.util.Map<?,?>) res;
-    assertEquals(8, ((Number)map.get("player1Score")).intValue());
-    assertEquals(5, ((Number)map.get("player2Score")).intValue());
+    java.util.Map<?, ?> map = (java.util.Map<?, ?>) res;
+    assertEquals(8, ((Number) map.get("player1Score")).intValue());
+    assertEquals(5, ((Number) map.get("player2Score")).intValue());
   }
 
   @Test
   public void parseQuestionResult_parsesOptionsAndCorrect() throws Exception {
-    String sample = "QUESTION: Test\nOUTPUT: hello world\nA) optA\nB) optB\nC) optC\nD) optD\nCORRECT: B";
-    java.lang.reflect.Method m = GameService.class.getDeclaredMethod("parseQuestionResult", String.class);
+    String sample =
+        "QUESTION: Test\nOUTPUT: hello world\nA) optA\nB) optB\nC) optC\nD) optD\nCORRECT: B";
+    java.lang.reflect.Method m =
+        GameService.class.getDeclaredMethod("parseQuestionResult", String.class);
     m.setAccessible(true);
     Object res = m.invoke(gameService, sample);
-    java.util.Map<?,?> map = (java.util.Map<?,?>) res;
+    java.util.Map<?, ?> map = (java.util.Map<?, ?>) res;
     assertEquals("B", map.get("correctAnswer"));
-    assertTrue(((String)map.get("options")).contains("optB"));
+    assertTrue(((String) map.get("options")).contains("optB"));
   }
 
   @Test
   public void parseQuestionResult_handlesDifferentFormat() throws Exception {
     String sample = "Q: Something?\nChoices:\n1) A\n2) B\n3) C\nAnswer: 2";
-    java.lang.reflect.Method m = GameService.class.getDeclaredMethod("parseQuestionResult", String.class);
+    java.lang.reflect.Method m =
+        GameService.class.getDeclaredMethod("parseQuestionResult", String.class);
     m.setAccessible(true);
     Object res = m.invoke(gameService, sample);
-    java.util.Map<?,?> map = (java.util.Map<?,?>) res;
+    java.util.Map<?, ?> map = (java.util.Map<?, ?>) res;
     assertNotNull(map.get("correctAnswer"));
     assertNotNull(map.get("options"));
   }
@@ -348,12 +362,16 @@ public class GameServiceTest {
     // Mock RestTemplate exchange to return a JSON payload with choices -> message -> content
     org.springframework.http.ResponseEntity<String> fakeResp =
         org.springframework.http.ResponseEntity.ok(
-            "{\"choices\":[{\"message\":{\"content\":\"Prompt 1 Score: 8\\nPrompt 2 Score: 6\\nWinner: Prompt 1\\nExplanation: ok\"}}]}"
-        );
+            "{\"choices\":[{\"message\":{\"content\":\"Prompt 1 Score: 8\\nPrompt 2 Score: 6\\nWinner: Prompt 1\\nExplanation: ok\"}}]}");
 
     // create mock RestTemplate and inject into gameService
-    org.springframework.web.client.RestTemplate mockRt = org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
-    when(mockRt.exchange(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(String.class)))
+    org.springframework.web.client.RestTemplate mockRt =
+        org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
+    when(mockRt.exchange(
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.eq(String.class)))
         .thenReturn(fakeResp);
 
     java.lang.reflect.Field rtField = GameService.class.getDeclaredField("restTemplate");
@@ -369,7 +387,7 @@ public class GameServiceTest {
     m.invoke(gameService, g);
 
     // After rating, game should be finished and have scores set
-  // Since our mocked save returns same game, check state on g
+    // Since our mocked save returns same game, check state on g
     assertEquals(com.fiveOps.promptforge.promptwars.model.GameState.FINISHED, g.getGameState());
     assertNotNull(g.getPlayer1Score());
     assertNotNull(g.getPlayer2Score());

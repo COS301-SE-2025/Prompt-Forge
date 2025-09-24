@@ -1,8 +1,8 @@
 package com.fiveOps.promptforge.promptwars.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 import java.util.UUID;
@@ -75,14 +75,14 @@ public class PromptWarsGameControllerTest {
   @Test
   public void submitPrompt_missingHeader_returns500() {
     UUID id = UUID.randomUUID();
-    ResponseEntity<Void> resp = controller.submitPrompt(id.toString(), Map.of("prompt","x"), null);
+    ResponseEntity<Void> resp = controller.submitPrompt(id.toString(), Map.of("prompt", "x"), null);
     assertEquals(500, resp.getStatusCode().value());
   }
 
   @Test
   public void ratePrompt_missingHeader_returns500() {
     UUID id = UUID.randomUUID();
-    ResponseEntity<Void> resp = controller.ratePrompt(id.toString(), Map.of("rating",5), null);
+    ResponseEntity<Void> resp = controller.ratePrompt(id.toString(), Map.of("rating", 5), null);
     assertEquals(500, resp.getStatusCode().value());
   }
 
@@ -171,11 +171,13 @@ public class PromptWarsGameControllerTest {
     g.setQuestionNumber(1);
     when(gameService.submitAnswer(id, player, "A")).thenReturn(g);
 
-    ResponseEntity<Map<String, Object>> resp = controller.submitAnswer(id.toString(), Map.of("answer","A"), player.toString());
+    ResponseEntity<Map<String, Object>> resp =
+        controller.submitAnswer(id.toString(), Map.of("answer", "A"), player.toString());
     assertEquals(200, resp.getStatusCode().value());
 
     when(gameService.submitAnswer(id, player, "A")).thenThrow(new IllegalArgumentException("bad"));
-    ResponseEntity<Map<String, Object>> resp2 = controller.submitAnswer(id.toString(), Map.of("answer","A"), player.toString());
+    ResponseEntity<Map<String, Object>> resp2 =
+        controller.submitAnswer(id.toString(), Map.of("answer", "A"), player.toString());
     assertEquals(400, resp2.getStatusCode().value());
   }
 
@@ -195,9 +197,11 @@ public class PromptWarsGameControllerTest {
   @Test
   public void submitPrompt_missingUser_500() {
     UUID id = UUID.randomUUID();
-    when(gameService.submitPrompt(any(), any(), any())).thenThrow(new RuntimeException("no user header"));
+    when(gameService.submitPrompt(any(), any(), any()))
+        .thenThrow(new RuntimeException("no user header"));
 
-    ResponseEntity<Void> resp = controller.submitPrompt(id.toString(), Map.of("prompt", "hello"), null);
+    ResponseEntity<Void> resp =
+        controller.submitPrompt(id.toString(), Map.of("prompt", "hello"), null);
     assertEquals(500, resp.getStatusCode().value());
   }
 }

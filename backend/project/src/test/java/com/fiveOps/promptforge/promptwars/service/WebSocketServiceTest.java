@@ -1,9 +1,9 @@
 package com.fiveOps.promptforge.promptwars.service;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 import java.util.Map;
 import java.util.UUID;
@@ -40,13 +40,24 @@ public class WebSocketServiceTest {
 
     webSocketService.sendChallengeNotification(userId, c, u);
 
-  verify(messagingTemplate)
-    .convertAndSendToUser(eq(userId.toString()), eq("/queue/challenges"),
-      argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_RECEIVED") && ((java.util.Map<?,?>)obj).containsKey("challenge")));
+    verify(messagingTemplate)
+        .convertAndSendToUser(
+            eq(userId.toString()),
+            eq("/queue/challenges"),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_RECEIVED")
+                        && ((java.util.Map<?, ?>) obj).containsKey("challenge")));
 
-  verify(simpleWebSocketHandler)
-    .sendMessageToUser(eq(userId.toString()),
-      argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_RECEIVED") && ((java.util.Map<?,?>)obj).containsKey("challenge")));
+    verify(simpleWebSocketHandler)
+        .sendMessageToUser(
+            eq(userId.toString()),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_RECEIVED")
+                        && ((java.util.Map<?, ?>) obj).containsKey("challenge")));
   }
 
   @Test
@@ -55,8 +66,12 @@ public class WebSocketServiceTest {
     Map<String, Object> update = Map.of("type", "GAME_UPDATE");
 
     // simulate STOMP failure - use matchers for all args to avoid mixing raw values and matchers
-    doThrow(new RuntimeException("stomp fail")).when(messagingTemplate)
-      .convertAndSendToUser(org.mockito.ArgumentMatchers.eq(userId.toString()), org.mockito.ArgumentMatchers.eq("/queue/games"), org.mockito.ArgumentMatchers.eq(update));
+    doThrow(new RuntimeException("stomp fail"))
+        .when(messagingTemplate)
+        .convertAndSendToUser(
+            org.mockito.ArgumentMatchers.eq(userId.toString()),
+            org.mockito.ArgumentMatchers.eq("/queue/games"),
+            org.mockito.ArgumentMatchers.eq(update));
 
     webSocketService.sendGameUpdate(userId, update);
 
@@ -72,12 +87,27 @@ public class WebSocketServiceTest {
     webSocketService.sendChallengeDeclined(challenger, challengeId);
 
     verify(messagingTemplate)
-      .convertAndSendToUser(eq(challenger.toString()), eq("/queue/challenges"),
-        argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_DECLINED") && ((java.util.Map<?,?>)obj).get("challengeId").equals(challengeId.toString())));
+        .convertAndSendToUser(
+            eq(challenger.toString()),
+            eq("/queue/challenges"),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_DECLINED")
+                        && ((java.util.Map<?, ?>) obj)
+                            .get("challengeId")
+                            .equals(challengeId.toString())));
 
     verify(simpleWebSocketHandler)
-      .sendMessageToUser(eq(challenger.toString()),
-        argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_DECLINED") && ((java.util.Map<?,?>)obj).get("challengeId").equals(challengeId.toString())));
+        .sendMessageToUser(
+            eq(challenger.toString()),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_DECLINED")
+                        && ((java.util.Map<?, ?>) obj)
+                            .get("challengeId")
+                            .equals(challengeId.toString())));
   }
 
   @Test
@@ -88,12 +118,27 @@ public class WebSocketServiceTest {
     webSocketService.sendChallengeExpired(challenger, challengeId);
 
     verify(messagingTemplate)
-      .convertAndSendToUser(eq(challenger.toString()), eq("/queue/challenges"),
-        argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_EXPIRED") && ((java.util.Map<?,?>)obj).get("challengeId").equals(challengeId.toString())));
+        .convertAndSendToUser(
+            eq(challenger.toString()),
+            eq("/queue/challenges"),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_EXPIRED")
+                        && ((java.util.Map<?, ?>) obj)
+                            .get("challengeId")
+                            .equals(challengeId.toString())));
 
     verify(simpleWebSocketHandler)
-      .sendMessageToUser(eq(challenger.toString()),
-        argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("CHALLENGE_EXPIRED") && ((java.util.Map<?,?>)obj).get("challengeId").equals(challengeId.toString())));
+        .sendMessageToUser(
+            eq(challenger.toString()),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("CHALLENGE_EXPIRED")
+                        && ((java.util.Map<?, ?>) obj)
+                            .get("challengeId")
+                            .equals(challengeId.toString())));
   }
 
   @Test
@@ -102,11 +147,21 @@ public class WebSocketServiceTest {
     UUID gameId = UUID.randomUUID();
 
     // Simulate STOMP throw - use matchers for all args to avoid mixing raw values and matchers
-    doThrow(new RuntimeException("stomp fail")).when(messagingTemplate)
-      .convertAndSendToUser(org.mockito.ArgumentMatchers.eq(player.toString()), org.mockito.ArgumentMatchers.eq("/queue/games"), org.mockito.ArgumentMatchers.any());
+    doThrow(new RuntimeException("stomp fail"))
+        .when(messagingTemplate)
+        .convertAndSendToUser(
+            org.mockito.ArgumentMatchers.eq(player.toString()),
+            org.mockito.ArgumentMatchers.eq("/queue/games"),
+            org.mockito.ArgumentMatchers.any());
 
     webSocketService.sendGameStartNotification(player, gameId, "Alice", "Bob");
 
-    verify(simpleWebSocketHandler).sendMessageToUser(eq(player.toString()), argThat(obj -> obj instanceof java.util.Map && ((java.util.Map<?,?>)obj).get("type").equals("GAME_STARTING")));
+    verify(simpleWebSocketHandler)
+        .sendMessageToUser(
+            eq(player.toString()),
+            argThat(
+                obj ->
+                    obj instanceof java.util.Map
+                        && ((java.util.Map<?, ?>) obj).get("type").equals("GAME_STARTING")));
   }
 }

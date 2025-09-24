@@ -1,11 +1,11 @@
 package com.fiveOps.promptforge.promptwars.service;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -48,8 +48,8 @@ public class ChallengeServiceTest {
 
     when(userRepository.existsById(challenger)).thenReturn(true);
     when(userRepository.existsById(opponent)).thenReturn(true);
-  when(challengeRepository.existsPendingChallengeBetweenUsers(any(), any(), any()))
-    .thenReturn(false);
+    when(challengeRepository.existsPendingChallengeBetweenUsers(any(), any(), any()))
+        .thenReturn(false);
 
     // Make save return the passed challenge
     when(challengeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -60,7 +60,9 @@ public class ChallengeServiceTest {
 
     doNothing().when(webSocketService).sendChallengeNotification(eq(opponent), any(), any());
 
-    Challenge saved = challengeServiceUnderTest.sendChallenge(challenger, opponent, "yo", GameType.PROMPT_CREATION);
+    Challenge saved =
+        challengeServiceUnderTest.sendChallenge(
+            challenger, opponent, "yo", GameType.PROMPT_CREATION);
 
     assertNotNull(saved);
     verify(challengeRepository).save(any());
@@ -70,9 +72,12 @@ public class ChallengeServiceTest {
   @Test
   public void sendChallenge_sameUser_throws() {
     UUID id = UUID.randomUUID();
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-      challengeServiceUnderTest.sendChallenge(id, id, "hi");
-    });
+    IllegalArgumentException ex =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              challengeServiceUnderTest.sendChallenge(id, id, "hi");
+            });
     assertTrue(ex.getMessage().toLowerCase().contains("cannot challenge yourself"));
   }
 
@@ -84,9 +89,9 @@ public class ChallengeServiceTest {
     when(userRepository.existsById(challenger)).thenReturn(true);
     when(userRepository.existsById(opponent)).thenReturn(false);
 
-    assertThrows(IllegalArgumentException.class, () ->
-        challengeServiceUnderTest.sendChallenge(challenger, opponent, "msg")
-    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> challengeServiceUnderTest.sendChallenge(challenger, opponent, "msg"));
   }
 
   @Test
@@ -96,15 +101,15 @@ public class ChallengeServiceTest {
 
     when(userRepository.existsById(challenger)).thenReturn(true);
     when(userRepository.existsById(opponent)).thenReturn(true);
-  when(challengeRepository.existsPendingChallengeBetweenUsers(any(), any(), any()))
-    .thenReturn(true);
+    when(challengeRepository.existsPendingChallengeBetweenUsers(any(), any(), any()))
+        .thenReturn(true);
 
-  // Ensure findById returns something so service doesn't NPE while handling the check
-  when(userRepository.findById(challenger)).thenReturn(Optional.of(Mockito.mock(User.class)));
+    // Ensure findById returns something so service doesn't NPE while handling the check
+    when(userRepository.findById(challenger)).thenReturn(Optional.of(Mockito.mock(User.class)));
 
-    assertThrows(IllegalArgumentException.class, () ->
-        challengeServiceUnderTest.sendChallenge(challenger, opponent, "msg")
-    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> challengeServiceUnderTest.sendChallenge(challenger, opponent, "msg"));
   }
 
   @Test
@@ -117,9 +122,9 @@ public class ChallengeServiceTest {
     Challenge ch = new Challenge(challenger, opponent, GameType.PROMPT_CREATION);
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(ch));
 
-    assertThrows(IllegalArgumentException.class, () ->
-        challengeServiceUnderTest.acceptChallenge(challengeId, other)
-    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> challengeServiceUnderTest.acceptChallenge(challengeId, other));
   }
 
   @Test
@@ -132,9 +137,9 @@ public class ChallengeServiceTest {
     Challenge ch = new Challenge(challenger, opponent, GameType.PROMPT_CREATION);
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(ch));
 
-    assertThrows(IllegalArgumentException.class, () ->
-        challengeServiceUnderTest.declineChallenge(challengeId, other)
-    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> challengeServiceUnderTest.declineChallenge(challengeId, other));
   }
 
   @Test
@@ -142,7 +147,8 @@ public class ChallengeServiceTest {
     Challenge ch = new Challenge(UUID.randomUUID(), UUID.randomUUID(), GameType.PROMPT_CREATION);
     ch.setExpiresAt(Instant.now().minusSeconds(10));
 
-    when(challengeRepository.findExpiredChallenges(Instant.now())).thenReturn(java.util.List.of(ch));
+    when(challengeRepository.findExpiredChallenges(Instant.now()))
+        .thenReturn(java.util.List.of(ch));
 
     challengeServiceUnderTest.expireOldChallenges();
 
@@ -164,7 +170,8 @@ public class ChallengeServiceTest {
     when(gameRepository.isPlayerInActiveGame(any(), any(), any())).thenReturn(false);
 
     Game g = new Game();
-    when(gameService.createGame(ch.getChallengerId(), ch.getOpponentId(), ch.getGameType())).thenReturn(g);
+    when(gameService.createGame(ch.getChallengerId(), ch.getOpponentId(), ch.getGameType()))
+        .thenReturn(g);
 
     User u1 = Mockito.mock(User.class);
     User u2 = Mockito.mock(User.class);
@@ -177,7 +184,8 @@ public class ChallengeServiceTest {
 
     assertSame(g, result);
     // The service notifies both players -> should be called twice
-    verify(webSocketService, Mockito.times(2)).sendGameStartNotification(any(), any(), any(), any());
+    verify(webSocketService, Mockito.times(2))
+        .sendGameStartNotification(any(), any(), any(), any());
   }
 
   @Test
