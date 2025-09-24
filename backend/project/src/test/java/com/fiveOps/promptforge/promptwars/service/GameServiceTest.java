@@ -115,12 +115,12 @@ public class GameServiceTest {
     g.setGameState(GameState.WAITING);
     g.setScenario("Pre-existing scenario");
 
-  when(gameRepository.findById(id)).thenReturn(Optional.of(g));
-  // Reserve the game state in DB (service uses updateGameStateIf to atomically reserve)
-  when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
-  when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(gameRepository.findById(id)).thenReturn(Optional.of(g));
+    // Reserve the game state in DB (service uses updateGameStateIf to atomically reserve)
+    when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
+    when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-  Game saved = gameService.generateScenario(id);
+    Game saved = gameService.generateScenario(id);
 
     assertNotNull(saved.getScenario());
     verify(gameRepository).save(any());
@@ -292,13 +292,13 @@ public class GameServiceTest {
     g.setGameState(GameState.WAITING);
     g.setScenario(null);
 
-  when(gameRepository.findById(id)).thenReturn(Optional.of(g));
-  // Service now uses DB-level reservation; mock it to succeed
-  when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
-  when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-  when(env.getProperty("OPENROUTER_API_KEY")).thenReturn(null);
+    when(gameRepository.findById(id)).thenReturn(Optional.of(g));
+    // Service now uses DB-level reservation; mock it to succeed
+    when(gameRepository.updateGameStateIf(id, GameState.WAITING, GameState.WRITING)).thenReturn(1);
+    when(gameRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(env.getProperty("OPENROUTER_API_KEY")).thenReturn(null);
 
-  Game saved = gameService.generateScenario(id);
+    Game saved = gameService.generateScenario(id);
     assertNotNull(saved.getScenario());
     assertEquals(com.fiveOps.promptforge.promptwars.model.GameState.WRITING, saved.getGameState());
   }
