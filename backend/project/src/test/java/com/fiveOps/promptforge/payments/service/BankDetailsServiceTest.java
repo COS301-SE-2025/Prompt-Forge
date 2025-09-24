@@ -17,20 +17,28 @@ import com.fiveOps.promptforge.payments.dto.PayoutCardWithSubaccountCodeDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.model.BankAccount;
 import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
+import com.fiveOps.promptforge.user_profile.repository.UserRepository;
+import com.fiveOps.promptforge.user_profile.model.User;
+
+import java.util.Optional;
 
 public class BankDetailsServiceTest {
 
   @Mock private BankDetailsRepository bankDetailsRepository;
+  @Mock private UserRepository userRepository;
   @Mock private EncryptionService encryptionService;
 
   @InjectMocks private BankDetailsService bankDetailsService;
 
   private UUID userId;
+  private User mockUser;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
     userId = UUID.randomUUID();
+    mockUser = new User();
+    mockUser.setUserId(userId);
   }
 
   @Test
@@ -58,7 +66,7 @@ public class BankDetailsServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class, () -> bankDetailsService.getSubaccountCodeByUserID(userId));
-    assertEquals("Author payment details not found", ex.getMessage());
+    assertEquals("Failed to retrieve author payment details: Author payment details not found", ex.getMessage());
   }
 
   @Test
@@ -91,12 +99,14 @@ public class BankDetailsServiceTest {
     PaystackAddSubaccountResponseDTO subaccountResponse =
         new PaystackAddSubaccountResponseDTO(true, "SUB123");
 
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
     when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act
     bankDetailsService.addPayoutDetails(userId, payoutCard, subaccountResponse);
 
     // Assert
+    verify(userRepository).findById(userId);
     verify(encryptionService).encrypt("12345678");
     verify(bankDetailsRepository, times(1)).save(any(BankAccount.class));
   }
@@ -119,12 +129,14 @@ public class BankDetailsServiceTest {
     PayoutCardDTO payoutCard = new PayoutCardDTO("TB01", "Test Bank", "12345678", "Jane Doe");
     String encryptedAccountNumber = "encryptedAccountNumber";
 
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
     when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act
     bankDetailsService.updatePayoutDetails(userId, payoutCard, "SUB123");
 
     // Assert
+    verify(userRepository).findById(userId);
     verify(encryptionService).encrypt("12345678");
     verify(bankDetailsRepository).deleteByUserUserId(userId);
     verify(bankDetailsRepository).save(any(BankAccount.class));

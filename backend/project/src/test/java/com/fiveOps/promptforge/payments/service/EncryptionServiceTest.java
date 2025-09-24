@@ -14,7 +14,7 @@ public class EncryptionServiceTest {
   void setUp() {
     encryptionService = new EncryptionService();
     ReflectionTestUtils.setField(
-        encryptionService, "encryptionKey", "MyTestEncryptionKey32Chars!!");
+        encryptionService, "encryptionKey", "MyTestEncryptionKey32Chars1234!!");
   }
 
   @Test
