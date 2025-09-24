@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,10 +18,8 @@ import com.fiveOps.promptforge.payments.dto.PayoutCardWithSubaccountCodeDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.model.BankAccount;
 import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
-import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 import com.fiveOps.promptforge.user_profile.model.User;
-
-import java.util.Optional;
+import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 public class BankDetailsServiceTest {
 
@@ -66,7 +65,9 @@ public class BankDetailsServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class, () -> bankDetailsService.getSubaccountCodeByUserID(userId));
-    assertEquals("Failed to retrieve author payment details: Author payment details not found", ex.getMessage());
+    assertEquals(
+        "Failed to retrieve author payment details: Author payment details not found",
+        ex.getMessage());
   }
 
   @Test

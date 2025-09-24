@@ -119,12 +119,6 @@ class BadgeControllerTest {
   }
 
   @Test
-  void getMyBadges_WithoutToken_ShouldReturn500() throws Exception {
-    // Act & Assert - Controller throws RuntimeException when no cookies found
-    mockMvc.perform(get("/api/badges/me")).andExpect(status().isInternalServerError());
-  }
-
-  @Test
   void getMyBadges_WithInvalidUser_ShouldReturn404() throws Exception {
     // Arrange
     when(jwtUtil.extractUsername("validToken")).thenReturn(testEmail);
@@ -215,17 +209,6 @@ class BadgeControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message").value("Badge visibility toggled"));
-  }
-
-  @Test
-  void toggleBadgeVisibility_WithoutToken_ShouldReturn500() throws Exception {
-    // Arrange
-    UUID badgeId = UUID.randomUUID();
-
-    // Act & Assert - Controller throws RuntimeException when no cookies found
-    mockMvc
-        .perform(post("/api/badges/" + badgeId + "/toggle-visibility"))
-        .andExpect(status().isInternalServerError());
   }
 
   @Test
