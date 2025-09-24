@@ -10,7 +10,7 @@ export interface SocialUser {
   bio?: string;
   followers: string[] | number;
   following: string[] | number;
-  isActive: boolean;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
   role: string;
@@ -196,11 +196,9 @@ export class SocialAPI {
     return response.json();
   }
 
-  static async getUsersPaginated(page: number, size: number, search?: string): Promise<PaginatedResponse<SocialUser>> {
-    let url = `${API_BASE_URL}/user/paginated?page=${page}&size=${size}`;
-    if (search?.trim()) {
-      url += `&search=${encodeURIComponent(search.trim())}`;
-    }
+  static async getDiscoverUsersPaginated(page: number, size: number, search: string): Promise<PaginatedResponse<SocialUser>> {
+    let url = `${API_BASE_URL}/user/discover?search=${encodeURIComponent(search.trim())}&page=${page}&size=${size}`;
+    
     const response = await fetch(url, {
       headers: this.getAuthHeaders()
     });
