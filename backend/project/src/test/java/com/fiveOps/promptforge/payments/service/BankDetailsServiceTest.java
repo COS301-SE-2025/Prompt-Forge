@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,10 +18,13 @@ import com.fiveOps.promptforge.payments.dto.PayoutCardWithSubaccountCodeDTO;
 import com.fiveOps.promptforge.payments.dto.PaystackAddSubaccountResponseDTO;
 import com.fiveOps.promptforge.payments.model.BankAccount;
 import com.fiveOps.promptforge.payments.repository.BankDetailsRepository;
+import com.fiveOps.promptforge.user_profile.model.User;
+import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 
 public class BankDetailsServiceTest {
 
   @Mock private BankDetailsRepository bankDetailsRepository;
+  @Mock private UserRepository userRepository;
   @Mock private EncryptionService encryptionService;
 
   @InjectMocks private BankDetailsService bankDetailsService;
@@ -37,7 +41,7 @@ public class BankDetailsServiceTest {
   void getSubaccountCodeByUserID_ShouldReturnCode_WhenBankDetailsExist() {
     // Arrange
     PayoutCardWithSubaccountCodeDTO dto =
-        new PayoutCardWithSubaccountCodeDTO("", "", "", "", "SUB123");
+        new PayoutCardWithSubaccountCodeDTO("", "", "", "", "12345678");
 
     when(bankDetailsRepository.findByUserUserId(userId)).thenReturn(dto);
 
@@ -45,7 +49,7 @@ public class BankDetailsServiceTest {
     String code = bankDetailsService.getSubaccountCodeByUserID(userId);
 
     // Assert
-    assertEquals("SUB123", code);
+    assertEquals("12345678", code);
     verify(bankDetailsRepository).findByUserUserId(userId);
   }
 
@@ -58,13 +62,13 @@ public class BankDetailsServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class, () -> bankDetailsService.getSubaccountCodeByUserID(userId));
-    assertEquals("Author payment details not found", ex.getMessage());
+    assertEquals("Failed to retrieve author payment details: Author payment details not found", ex.getMessage());
   }
 
   @Test
   void getBankDetails_ShouldReturnDecryptedDto() {
     // Arrange
-    String encryptedAccountNumber = "encryptedAccountNumber";
+    String encryptedAccountNumber = "A".repeat(120); // 120 char encrypted
     String decryptedAccountNumber = "1234567890";
 
     PayoutCardWithSubaccountCodeDTO dto =
@@ -86,11 +90,13 @@ public class BankDetailsServiceTest {
   void addPayoutDetails_ShouldSaveBankAccountWithEncryptedNumber() {
     // Arrange
     PayoutCardDTO payoutCard = new PayoutCardDTO("TB01", "Test Bank", "12345678", "John Doe");
-    String encryptedAccountNumber = "encryptedAccountNumber";
+    String encryptedAccountNumber = "A".repeat(120);
 
     PaystackAddSubaccountResponseDTO subaccountResponse =
         new PaystackAddSubaccountResponseDTO(true, "SUB123");
 
+    User user = new User();
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act
@@ -117,8 +123,10 @@ public class BankDetailsServiceTest {
   void updatePayoutDetails_ShouldDeleteAndSaveWithEncryptedNumber() {
     // Arrange
     PayoutCardDTO payoutCard = new PayoutCardDTO("TB01", "Test Bank", "12345678", "Jane Doe");
-    String encryptedAccountNumber = "encryptedAccountNumber";
+    String encryptedAccountNumber = "A".repeat(120);
 
+    User user = new User();
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(encryptionService.encrypt("12345678")).thenReturn(encryptedAccountNumber);
 
     // Act

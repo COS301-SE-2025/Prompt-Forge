@@ -32,11 +32,9 @@ import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.user_profile.dto.UpdateProfileDto;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.fiveOps.promptforge.user_profile.repository.UserRepository;
-import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserControllerIntegrationTest {
