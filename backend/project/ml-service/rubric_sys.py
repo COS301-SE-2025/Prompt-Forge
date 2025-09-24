@@ -19,18 +19,20 @@ class RubricCriteria:
     name: str
     description: str
     weight: float
-    scoring_rules: Dict[RubricLevel, str]
-    measurement_function: callable
-    
+    evaluation_guidelines: str
+    focus_areas: List[str]
+
 class StandardizedRubric:
     """
     Standardized rubric system for consistent prompt evaluation
     Uses deterministic rules and measurable criteria to ensure consistency
     """
     
-    def __init__(self):
+    def __init__(self, qwen_api_endpoint: str = None, qwen_api_key: str = None):
         self.criteria = self._initialize_criteria()
         self.consistency_cache = {}
+        self.qwen_endpoint = qwen_api_endpoint
+        self.qwen_api_key = qwen_api_key
         
     def _initialize_criteria(self) -> Dict[str, RubricCriteria]:
         """Initialize all evaluation criteria with specific, measurable rules"""
@@ -40,76 +42,235 @@ class StandardizedRubric:
         # 1. CLARITY CRITERIA
         criteria["clarity"] = RubricCriteria(
             name="Clarity",
-            description="How clear and unambiguous the prompt is",
+            description="How clear, unambiguous, and easy to understand the prompt is",
             weight=0.25,
-            scoring_rules={
-                RubricLevel.POOR: "Vague, ambiguous, contains 3+ unclear terms",
-                RubricLevel.BELOW_AVERAGE: "Some ambiguity, 2 unclear terms",
-                RubricLevel.AVERAGE: "Generally clear, 1 minor ambiguity",
-                RubricLevel.GOOD: "Clear instructions, specific language",
-                RubricLevel.EXCELLENT: "Crystal clear, no ambiguity, precise language"
-            },
-            measurement_function=self._measure_clarity
+            evaluation_guidelines="""
+            CLARITY SCORING RANGES:
+            
+            SCORE 0-20 (POOR): 
+            - Contains 4+ vague or ambiguous terms (something, stuff, things, good, nice, etc.)
+            - No clear action verbs or instructions
+            - Heavy use of pronouns without clear antecedents (>15% of text)
+            - Complex sentences averaging >30 words
+            - Multiple interpretations possible
+            
+            SCORE 21-40 (BELOW AVERAGE):
+            - Contains 2-3 vague terms
+            - Weak or implied action words
+            - Some ambiguous pronouns (10-15% of text)
+            - Average sentence length 25-30 words
+            - Some confusion possible but generally understandable
+            
+            SCORE 41-60 (AVERAGE):
+            - Contains 1-2 vague terms
+            - Has clear action word but may lack precision
+            - Moderate pronoun use (5-10% of text)
+            - Average sentence length 20-25 words
+            - Generally clear with minor ambiguities
+            
+            SCORE 61-80 (GOOD):
+            - Contains 0-1 vague terms
+            - Clear, specific action verbs present
+            - Minimal ambiguous pronouns (<5% of text)
+            - Average sentence length 15-20 words
+            - Clear instructions with specific language
+            
+            SCORE 81-100 (EXCELLENT):
+            - No vague or ambiguous terms
+            - Crystal clear, specific action verbs and instructions
+            - Precise language throughout
+            - Optimal sentence length (<15 words average)
+            - Unambiguous and immediately comprehensible
+            """,
+            focus_areas=["vague_terms", "action_clarity", "pronoun_usage", "sentence_length", "overall_clarity"]
         )
         
         # 2. SPECIFICITY CRITERIA
         criteria["specificity"] = RubricCriteria(
             name="Specificity",
-            description="Level of detail and concrete requirements",
+            description="Level of detail, concrete requirements, and precise expectations",
             weight=0.25,
-            scoring_rules={
-                RubricLevel.POOR: "No specific requirements, completely generic",
-                RubricLevel.BELOW_AVERAGE: "1-2 specific elements mentioned",
-                RubricLevel.AVERAGE: "3-4 specific requirements or constraints",
-                RubricLevel.GOOD: "5-6 detailed specifications",
-                RubricLevel.EXCELLENT: "7+ comprehensive, detailed specifications"
-            },
-            measurement_function=self._measure_specificity
+            evaluation_guidelines="""
+            SPECIFICITY SCORING RANGES:
+            
+            SCORE 0-20 (POOR):
+            - No specific requirements or constraints mentioned
+            - No format specifications
+            - No quantifiable elements (numbers, metrics, lengths)
+            - Generic, one-size-fits-all language
+            - No audience or context specified
+            
+            SCORE 21-40 (BELOW AVERAGE):
+            - 1-2 specific elements present
+            - Vague format mentions without details
+            - Minimal quantifiable elements
+            - Some attempt at specificity but lacks depth
+            - Audience implied but not explicitly stated
+            
+            SCORE 41-60 (AVERAGE):
+            - 3-4 specific requirements or constraints
+            - Basic format specifications mentioned
+            - Some quantifiable elements present
+            - Moderate level of detail provided
+            - General audience or context mentioned
+            
+            SCORE 61-80 (GOOD):
+            - 5-6 detailed specifications
+            - Clear format requirements with details
+            - Multiple quantifiable elements (word counts, time limits, etc.)
+            - Specific constraints and requirements outlined
+            - Target audience clearly defined
+            
+            SCORE 81-100 (EXCELLENT):
+            - 7+ comprehensive, detailed specifications
+            - Precise format requirements with examples
+            - Multiple quantifiable metrics specified
+            - Comprehensive constraints and success criteria
+            - Detailed audience, tone, and style specifications
+            - Examples or templates provided
+            """,
+            focus_areas=["requirement_count", "format_specs", "quantifiable_elements", "constraints", "audience_definition"]
         )
         
         # 3. STRUCTURE CRITERIA
         criteria["structure"] = RubricCriteria(
             name="Structure",
-            description="Organization and logical flow",
+            description="Organization, logical flow, and presentation format",
             weight=0.25,
-            scoring_rules={
-                RubricLevel.POOR: "No structure, stream of consciousness",
-                RubricLevel.BELOW_AVERAGE: "Basic structure, some organization",
-                RubricLevel.AVERAGE: "Clear sections or logical flow",
-                RubricLevel.GOOD: "Well-organized with clear hierarchy",
-                RubricLevel.EXCELLENT: "Perfect structure with headers, lists, clear progression"
-            },
-            measurement_function=self._measure_structure
+            evaluation_guidelines="""
+            STRUCTURE SCORING RANGES:
+            
+            SCORE 0-20 (POOR):
+            - No apparent organization or structure
+            - Stream of consciousness writing
+            - No headers, sections, or formatting
+            - No logical flow between ideas
+            - Single paragraph or wall of text
+            
+            SCORE 21-40 (BELOW AVERAGE):
+            - Basic organization present
+            - 2-3 distinct ideas but poorly connected
+            - Minimal formatting or structure
+            - Some attempt at logical flow
+            - Basic paragraph separation
+            
+            SCORE 41-60 (AVERAGE):
+            - Clear sections or logical divisions
+            - 3-4 organized ideas with reasonable flow
+            - Some use of formatting (bullets or numbers)
+            - Logical progression mostly evident
+            - Proper paragraph structure
+            
+            SCORE 61-80 (GOOD):
+            - Well-organized with clear hierarchy
+            - Strong logical flow between sections
+            - Good use of formatting (headers, lists, etc.)
+            - Clear introduction and conclusion
+            - Professional presentation
+            
+            SCORE 81-100 (EXCELLENT):
+            - Perfect structural organization
+            - Clear headers, sections, and subsections
+            - Excellent use of formatting and visual hierarchy
+            - Seamless logical progression
+            - Professional, polished presentation
+            - Clear beginning, middle, and end structure
+            """,
+            focus_areas=["organization_level", "formatting_usage", "logical_flow", "visual_hierarchy", "professional_presentation"]
         )
         
         # 4. CONTEXT CRITERIA
         criteria["context"] = RubricCriteria(
             name="Context",
-            description="Background information and situational details",
+            description="Background information, situational awareness, and domain understanding",
             weight=0.15,
-            scoring_rules={
-                RubricLevel.POOR: "No context provided",
-                RubricLevel.BELOW_AVERAGE: "Minimal context, missing key background",
-                RubricLevel.AVERAGE: "Some context provided",
-                RubricLevel.GOOD: "Good context with relevant background",
-                RubricLevel.EXCELLENT: "Comprehensive context with all necessary background"
-            },
-            measurement_function=self._measure_context
+            evaluation_guidelines="""
+            CONTEXT SCORING RANGES:
+            
+            SCORE 0-20 (POOR):
+            - No background information provided
+            - No purpose or goal explanation
+            - No domain or situational context
+            - Missing essential context for understanding
+            - Assumes reader has all necessary knowledge
+            
+            SCORE 21-40 (BELOW AVERAGE):
+            - Minimal context provided
+            - Purpose implied but not explicitly stated
+            - Limited background information
+            - Some domain awareness but incomplete
+            - Missing key contextual elements
+            
+            SCORE 41-60 (AVERAGE):
+            - Basic context and background provided
+            - Purpose generally clear
+            - Some domain-specific information included
+            - Adequate situational awareness
+            - Most necessary context present
+            
+            SCORE 61-80 (GOOD):
+            - Good contextual foundation provided
+            - Clear purpose and goal explanation
+            - Relevant domain-specific context
+            - Strong situational awareness
+            - Appropriate constraints and limitations mentioned
+            
+            SCORE 81-100 (EXCELLENT):
+            - Comprehensive contextual framework
+            - Detailed purpose, goals, and rationale
+            - Rich domain and situational context
+            - Complete background information
+            - Thorough constraint and limitation awareness
+            - Anticipates reader's knowledge level
+            """,
+            focus_areas=["background_completeness", "purpose_clarity", "domain_awareness", "situational_context", "constraint_awareness"]
         )
         
         # 5. ACTIONABILITY CRITERIA
         criteria["actionability"] = RubricCriteria(
             name="Actionability",
-            description="How easy it is to act on the prompt",
+            description="How easily the prompt can be acted upon and executed",
             weight=0.10,
-            scoring_rules={
-                RubricLevel.POOR: "Unclear what action to take",
-                RubricLevel.BELOW_AVERAGE: "Action implied but not explicit",
-                RubricLevel.AVERAGE: "Clear action with some guidance",
-                RubricLevel.GOOD: "Clear action with specific steps",
-                RubricLevel.EXCELLENT: "Crystal clear actionable instructions with examples"
-            },
-            measurement_function=self._measure_actionability
+            evaluation_guidelines="""
+            ACTIONABILITY SCORING RANGES:
+            
+            SCORE 0-20 (POOR):
+            - No clear action verbs or instructions
+            - Unclear what specific action to take
+            - No deliverables or outcomes specified
+            - Abstract or theoretical language only
+            - No guidance on how to proceed
+            
+            SCORE 21-40 (BELOW AVERAGE):
+            - Weak action verbs present
+            - Action implied but not explicit
+            - Vague deliverables mentioned
+            - Some guidance but lacks clarity
+            - Requires significant interpretation
+            
+            SCORE 41-60 (AVERAGE):
+            - Clear action verbs present
+            - Specific action requested
+            - Basic deliverables identified
+            - Some implementation guidance
+            - Generally actionable with minor gaps
+            
+            SCORE 61-80 (GOOD):
+            - Strong, specific action verbs
+            - Clear, executable instructions
+            - Well-defined deliverables
+            - Step-by-step guidance provided
+            - Easy to act upon immediately
+            
+            SCORE 81-100 (EXCELLENT):
+            - Crystal clear action verbs and instructions
+            - Comprehensive step-by-step guidance
+            - Specific, measurable deliverables
+            - Examples and templates provided
+            - Complete implementation roadmap
+            - No ambiguity about next steps
+            """,
+            focus_areas=["action_verb_clarity", "instruction_specificity", "deliverable_definition", "implementation_guidance", "execution_clarity"]
         )
         
         return criteria

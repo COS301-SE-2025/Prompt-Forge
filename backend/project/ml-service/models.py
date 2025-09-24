@@ -93,3 +93,14 @@ class WizardResults(BaseModel):
     steps: Dict[str, dict]
     consistency_check: dict
     overall_metrics: dict
+
+class EvaluationResponse(BaseModel):
+    text: str
+    text_hash: str
+    evaluation_timestamp: str
+    evaluation_method: str
+    criteria_scores: Dict[str, CriterionScore]
+    detailed_analysis: Dict[str, DetailedAnalysis]
+    overall_metrics: OverallMetrics
+    consolidated_suggestions: List[ConsolidatedSuggestion]
+    rubric_version: str
