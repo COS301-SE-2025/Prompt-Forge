@@ -229,6 +229,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @AutoConfigureMockMvc
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@org.springframework.test.context.ActiveProfiles("test")
 class PromptAnalyticsControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;

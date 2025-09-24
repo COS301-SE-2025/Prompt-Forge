@@ -19,6 +19,7 @@ import com.fiveOps.promptforge.promptwars.service.ChallengeService;
 import com.fiveOps.promptforge.promptwars.service.GameService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@org.springframework.test.context.ActiveProfiles("test")
 public class PromptWarsControllersIntegrationTest {
 
   @Autowired private TestRestTemplate restTemplate;

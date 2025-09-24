@@ -27,6 +27,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@org.springframework.test.context.ActiveProfiles("test")
 class AuthControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;

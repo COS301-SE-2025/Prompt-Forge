@@ -32,6 +32,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @AutoConfigureMockMvc
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // <--- Add this to allow non-static @BeforeAll
+@org.springframework.test.context.ActiveProfiles("test")
 class PromptControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;

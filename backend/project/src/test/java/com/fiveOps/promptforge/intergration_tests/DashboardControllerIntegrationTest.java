@@ -41,6 +41,7 @@ import com.fiveOps.promptforge.user_profile.repository.UserRepository;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@org.springframework.test.context.ActiveProfiles("test")
 class DashboardControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
