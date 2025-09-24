@@ -34,7 +34,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
     if (userId != null) {
       sessions.put(userId, session);
       System.out.println("WebSocket connection established for user: " + userId);
-      userService.setActive(UUID.fromString(userId),true);
+      userService.setActive(UUID.fromString(userId), true);
       // Send connection confirmation
       Map<String, Object> response = Map.of("type", "CONNECTED", "userId", userId);
       session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));

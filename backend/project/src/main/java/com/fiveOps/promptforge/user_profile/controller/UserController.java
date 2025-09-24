@@ -156,15 +156,16 @@ public class UserController {
   }
 
   @GetMapping("/discover")
-  public ResponseEntity<Map<String, Object>> getDiscoverUsersPaginated(Authentication authentication,
+  public ResponseEntity<Map<String, Object>> getDiscoverUsersPaginated(
+      Authentication authentication,
       HttpServletRequest request,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "12") int size,
       @RequestParam(required = false) String search) {
 
     String email;
-    
-    search = (search == null)? "" : search;
+
+    search = (search == null) ? "" : search;
 
     if (authentication != null
         && authentication.getName() != null
@@ -173,8 +174,8 @@ public class UserController {
     } else {
       email = extractEmailFromCookie(request);
     }
-      
-    if(email.trim() == ""){
+
+    if (email.trim().equals("")) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Unauthenticated"));
     }
 
