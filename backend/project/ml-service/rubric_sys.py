@@ -15,12 +15,67 @@ class RubricLevel(Enum):
 
 @dataclass
 class RubricCriteria:
-    """Individual criteria for prompt evaluation"""
-    name: str
-    description: str
-    weight: float
-    evaluation_guidelines: str
-    focus_areas: List[str]
+    def __init__(self, name: str, description: str, weight: float = 1.0):
+        self.name = name
+        self.description = description
+        self.weight = weight
+        self.measurement_function = self._default_measurement
+        self.evaluation_cache = {}
+
+    def _default_measurement(self, text: str) -> Tuple[Level, Dict[str, Any]]:
+        """Default measurement function if none is specified"""
+        # Basic evaluation logic
+        if not text or len(text.strip()) == 0:
+            return Level.POOR, {
+                "reason": "Empty or whitespace-only text",
+                "score": 0.0,
+                "suggestions": ["Add meaningful content"]
+            }
+        
+        # Simple length-based scoring
+        word_count = len(text.split())
+        if word_count < 10:
+            return Level.FAIR, {
+                "reason": "Text is too short",
+                "score": 0.4,
+                "word_count": word_count,
+                "suggestions": ["Expand the content"]
+            }
+        elif word_count < 50:
+            return Level.GOOD, {
+                "reason": "Moderate length",
+                "score": 0.7,
+                "word_count": word_count,
+                "suggestions": ["Consider adding more detail"]
+            }
+        else:
+            return Level.EXCELLENT, {
+                "reason": "Good length",
+                "score": 0.9,
+                "word_count": word_count,
+                "suggestions": []
+            }
+
+    def set_measurement_function(self, func: Callable[[str], Tuple[Level, Dict[str, Any]]]):
+        """Set custom measurement function"""
+        self.measurement_function = func
+
+    def measure(self, text: str) -> Tuple[Level, Dict[str, Any]]:
+        """Measure text using the defined measurement function"""
+        try:
+            if text in self.evaluation_cache:
+                return self.evaluation_cache[text]
+            
+            result = self.measurement_function(text)
+            self.evaluation_cache[text] = result
+            return result
+        except Exception as e:
+            logger.error(f"Measurement failed for criterion {self.name}: {e}")
+            return Level.POOR, {
+                "reason": f"Measurement error: {str(e)}",
+                "score": 0.0,
+                "suggestions": ["System error occurred"]
+            }
 
 class StandardizedRubric:
     """
@@ -274,7 +329,230 @@ class StandardizedRubric:
         )
         
         return criteria
+
+    async def _call_qwen_api(self, messages: List[Dict[str, str]], temperature: float = 0.3) -> str:
+        """Make API call to Qwen model"""
+        if not self.qwen_endpoint:
+            raise Exception("Qwen API endpoint not configured")
+            
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        if self.qwen_api_key:
+            headers["Authorization"] = f"Bearer {self.qwen_api_key}"
+        
+        payload = {
+            "model": "Qwen2.5-72B-Instruct",
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": 1000,
+            "response_format": {"type": "json_object"}
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(self.qwen_endpoint, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return result["choices"][0]["message"]["content"]
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Qwen API error: {response.status} - {error_text}")
+                        raise Exception(f"API call failed: {response.status}")
+        except Exception as e:
+            logger.error(f"Error calling Qwen API: {str(e)}")
+            raise
     
+    async def _evaluate_criterion_with_llm(self, text: str, criterion: RubricCriteria) -> Tuple[RubricLevel, Dict[str, Any]]:
+        """Use Qwen to evaluate a specific criterion with defined score ranges"""
+        
+        system_prompt = f"""You are an expert prompt evaluation specialist. Evaluate the given prompt for the criterion: {criterion.name}.
+
+        CRITERION: {criterion.name}
+        DESCRIPTION: {criterion.description}
+        
+        DETAILED SCORING GUIDELINES WITH DEFINED RANGES:
+        {criterion.evaluation_guidelines}
+        
+        FOCUS AREAS TO ANALYZE: {', '.join(criterion.focus_areas)}
+
+        CRITICAL INSTRUCTIONS:
+        1. You MUST provide a numerical score from 0-100 based on the defined ranges above
+        2. Justify your score by referencing specific elements from the scoring ranges
+        3. Provide concrete evidence from the prompt text
+        4. Be consistent with the defined scoring criteria
+
+        Provide your evaluation as a JSON object with the following structure:
+        {{
+            "numerical_score": <0-100>,
+            "score_range": "<0-20|21-40|41-60|61-80|81-100>",
+            "level": "<POOR|BELOW_AVERAGE|AVERAGE|GOOD|EXCELLENT>",
+            "reasoning": "<detailed explanation referencing the specific scoring range criteria>",
+            "strengths": ["<specific strengths with evidence from prompt>"],
+            "weaknesses": ["<specific weaknesses with evidence from prompt>"],
+            "specific_suggestions": ["<actionable suggestions based on the scoring range>"],
+            "evidence": ["<direct quotes or examples from the prompt>"],
+            "scoring_factors": {{
+                "{criterion.focus_areas[0]}": "<assessment>",
+                "{criterion.focus_areas[1] if len(criterion.focus_areas) > 1 else 'additional_factor'}": "<assessment>"
+            }}
+        }}
+
+        IMPORTANT: Your numerical_score must align with the defined ranges and your reasoning must explicitly reference which range criteria the prompt meets or fails to meet."""
+
+        user_prompt = f"""Evaluate this prompt for {criterion.name} using the defined scoring ranges:
+
+        PROMPT TO EVALUATE:
+        "{text}"
+
+        Analyze each focus area: {', '.join(criterion.focus_areas)}
+        
+        Provide your score (0-100) and justify it by explaining which range criteria are met/not met."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        try:
+            response = await self._call_qwen_api(messages)
+            evaluation = json.loads(response)
+            
+            # Extract numerical score and validate range
+            numerical_score = evaluation.get("numerical_score", 50)
+            numerical_score = max(0, min(100, numerical_score))
+            
+            # Map numerical score to RubricLevel
+            if numerical_score >= 81:
+                level = RubricLevel.EXCELLENT
+            elif numerical_score >= 61:
+                level = RubricLevel.GOOD
+            elif numerical_score >= 41:
+                level = RubricLevel.AVERAGE
+            elif numerical_score >= 21:
+                level = RubricLevel.BELOW_AVERAGE
+            else:
+                level = RubricLevel.POOR
+            
+            details = {
+                "numerical_score": numerical_score,
+                "score_range": evaluation.get("score_range", f"{numerical_score//20*20}-{min(100, (numerical_score//20 + 1)*20)}"),
+                "reasoning": evaluation.get("reasoning", ""),
+                "strengths": evaluation.get("strengths", []),
+                "weaknesses": evaluation.get("weaknesses", []),
+                "specific_suggestions": evaluation.get("specific_suggestions", []),
+                "evidence": evaluation.get("evidence", []),
+                "scoring_factors": evaluation.get("scoring_factors", {}),
+                "llm_confidence": "high",
+                "range_compliance": True
+            }
+            
+            return level, details
+            
+        except Exception as e:
+            logger.error(f"Error in LLM evaluation for {criterion.name}: {str(e)}")
+            # Fallback to rule-based evaluation
+            return await self._evaluate_criterion_fallback(text, criterion)
+
+    async def _evaluate_criterion_fallback(self, text: str, criterion: RubricCriteria) -> Tuple[RubricLevel, Dict[str, Any]]:
+        """Fallback evaluation when LLM is unavailable"""
+        # Use existing rule-based evaluation methods as fallback
+        if criterion.name == "clarity":
+            return self._measure_clarity(text)
+        elif criterion.name == "specificity":
+            return self._measure_specificity(text)
+        elif criterion.name == "structure":
+            return self._measure_structure(text)
+        elif criterion.name == "context":
+            return self._measure_context(text)
+        elif criterion.name == "actionability":
+            return self._measure_actionability(text)
+        else:
+            # Default fallback
+            return RubricLevel.AVERAGE, {
+                "numerical_score": 50,
+                "score_range": "41-60",
+                "reasoning": "Fallback evaluation used",
+                "strengths": [],
+                "weaknesses": ["LLM evaluation unavailable"],
+                "specific_suggestions": ["Retry with LLM service available"],
+                "evidence": [],
+                "scoring_factors": {},
+                "llm_confidence": "low",
+                "range_compliance": False
+            }
+
+    async def evaluate_prompt(self, text: str, use_llm: bool = True, generate_hash: bool = True) -> Dict[str, Any]:
+        """
+        Evaluate a prompt using the standardized rubric
+        Returns consistent results for the same input
+        """
+        if not text or not text.strip():
+            return self._empty_prompt_result()
+        
+        # Generate hash for consistency checking
+        text_hash = hashlib.md5(text.encode()).hexdigest() if generate_hash else None
+        
+        # Check cache for consistency
+        if text_hash and text_hash in self.consistency_cache:
+            logger.info(f"Using cached evaluation for consistent results")
+            return self.consistency_cache[text_hash]
+        
+        results = {
+            "text": text,
+            "text_hash": text_hash,
+            "evaluation_method": "llm" if use_llm else "rule_based",
+            "criteria_scores": {},
+            "detailed_analysis": {},
+            "overall_metrics": {},
+            "rubric_version": "2.0"
+        }
+        
+        total_weighted_score = 0
+        max_possible_score = 0
+        
+        # Evaluate each criterion
+        for criterion_name, criterion in self.criteria.items():
+            if use_llm and self.qwen_endpoint:
+                level, details = await self._evaluate_criterion_with_llm(text, criterion)
+            else:
+                level, details = await self._evaluate_criterion_fallback(text, criterion)
+                
+            score = details.get("numerical_score", level.value * 20)  # Use numerical score if available
+            weighted_score = score * criterion.weight
+            
+            results["criteria_scores"][criterion_name] = {
+                "level": level.name,
+                "score": score,
+                "weight": criterion.weight,
+                "weighted_score": weighted_score,
+                "numerical_score": score,
+                "evaluation_method": "llm" if use_llm and self.qwen_endpoint else "rule_based"
+            }
+            
+            results["detailed_analysis"][criterion_name] = details
+            
+            total_weighted_score += weighted_score
+            max_possible_score += 100 * criterion.weight
+        
+        # Calculate overall metrics
+        overall_score = (total_weighted_score / max_possible_score) * 100 if max_possible_score > 0 else 0
+        results["overall_metrics"] = {
+            "weighted_score": round(overall_score, 1),
+            "letter_grade": self._score_to_letter_grade(overall_score),
+            "improvement_needed": overall_score < 70,
+            "excellence_achieved": overall_score >= 85,
+            "consistency_hash": text_hash
+        }
+        
+        # Add to cache for consistency
+        if text_hash:
+            self.consistency_cache[text_hash] = results
+        
+        return results
+
+   
     def _measure_clarity(self, text: str) -> Tuple[RubricLevel, Dict[str, Any]]:
         """Measure clarity using deterministic rules"""
         issues = []

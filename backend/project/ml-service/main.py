@@ -5,7 +5,7 @@ from config import Config, logger
 from models import (
     AnalysisResponse, OptimizationResponse, GoalOptimizationResponse,
     StructureOptimizationResponse, ContextOptimizationResponse, TokenValidationResponse,
-    PromptRequest, GoalBasedRequest, StructureBasedRequest, ContextBasedRequest, WizardResults,
+    PromptRequest, GoalBasedRequest, StructureBasedRequest, ContextBasedRequest, WizardResults
 )
 from routes import (
     health_check, read_root, analyze_prompt_metrics, optimize_prompt,
