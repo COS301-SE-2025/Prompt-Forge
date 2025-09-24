@@ -297,7 +297,6 @@ public class UserService {
         org.springframework.data.domain.PageRequest.of(page, size);
 
     org.springframework.data.domain.Page<User> usersPage;
-    // if (search != null && !search.trim().isEmpty()) {
       usersPage =
           userRepository.discover(search.trim(), 
               curretUserId, pageable);
