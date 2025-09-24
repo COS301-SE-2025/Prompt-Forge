@@ -59,13 +59,24 @@ export const UserCard: React.FC<UserCardProps> = ({
   showNotification,
 }) => {
   const [imageError, setImageError] = useState(false)
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return
+    }
+    navigate(`/user/${user.username}`)
+  }
 
   return (
-    <Card onClick={()=>{navigate(`/user/${user.username}`)}} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col cursor-pointer group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col cursor-pointer group hover:shadow-[0_0_20px_rgba(62,187,158,0.4)] hover:border-[#3ebb9e]/50"
+      onClick={handleCardClick}
+    >
       {/* Header with Avatar and Status */}
       <div className="relative p-4 pb-3">
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex flex-col items-center mb-3">
           <div className="relative">
             <div className="relative">
               <Avatar className="w-16 h-16 border-2 border-border group-hover:border-[#3ebb9e] transition-all duration-300">
@@ -92,25 +103,11 @@ export const UserCard: React.FC<UserCardProps> = ({
               )}
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {user.isFollowing && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-border text-muted-foreground hover:border-[#3ebb9e] hover:text-[#3ebb9e] transition-colors duration-300"
-                onClick={() => handleFollow(user.userId, user.isFollowing || false)}
-              >
-                Following
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* User Info */}
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
+        <div className="space-y-2 text-center">
+          <div className="flex items-center justify-center space-x-2">
             <h3 className="font-medium text-sm line-clamp-1 text-[#3ebb9e] transition-colors duration-300 cursor-pointer">
               {user.username}
             </h3>
@@ -127,7 +124,7 @@ export const UserCard: React.FC<UserCardProps> = ({
 
           {/* Badges */}
           {user.badges && user.badges.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap justify-center gap-1">
               {user.badges.slice(0, 2).map((badge, index) => (
                 <Badge
                   key={index}
@@ -169,8 +166,28 @@ export const UserCard: React.FC<UserCardProps> = ({
 
       {/* Action Buttons */}
       <div className="border-t border-border flex bg-gradient-to-r from-transparent to-transparent group-hover:from-[#3ebb9e]/5 group-hover:to-[#3ebb9e]/10 transition-all duration-300">
-        <div className="flex-1 flex items-center justify-end p-3">
-          <div className="flex space-x-2">
+        <div className="flex-1 flex items-center justify-center p-3">
+          <div className="flex space-x-2 w-full max-w-xs">
+            {/* Follow/Following Button */}
+            {user.isFollowing ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="px-6 flex-1 hover:border-[#3ebb9e] hover:text-[#3ebb9e] transition-colors duration-300"
+                onClick={() => handleFollow(user.userId, user.isFollowing || false)}
+              >
+                Following
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="px-6 flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white transition-colors duration-300"
+                onClick={() => handleFollow(user.userId, user.isFollowing || false)}
+              >
+                Follow
+              </Button>
+            )}
+
             {/* Challenge Button - only for following users */}
             {user.isFollowing && (
               <Button
@@ -184,37 +201,19 @@ export const UserCard: React.FC<UserCardProps> = ({
                     showNotification(`${user.username} is currently offline. Try again when they're online!`)
                   }
                 }}
-                className={`transition-all duration-300 group-hover:shadow-sm ${
+                className={`transition-all duration-300 flex items-center justify-center ${
                   user.active
-                    ? "border-[#3ebb9e] text-[#3ebb9e] hover:bg-[#3ebb9e] hover:text-white group-hover:shadow-[#3ebb9e]/20"
-                    : "border-border text-muted-foreground cursor-not-allowed opacity-60"
+                    ? "bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30"
+                    : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
                 }`}
                 disabled={!user.active}
                 title={user.active ? "Challenge to Prompt Wars" : "User is offline"}
               >
                 {user.active ? (
-                  <>
-                    <Swords className="h-4 w-4 mr-2" />
-                    Challenge
-                  </>
+                  <Swords className="h-4 w-4" />
                 ) : (
-                  <>
-                    <Timer className="h-4 w-4 mr-2" />
-                    Offline
-                  </>
+                  <Timer className="h-4 w-4" />
                 )}
-              </Button>
-            )}
-
-            {/* Follow Button - only for non-following users */}
-            {!user.isFollowing && (
-              <Button
-                size="sm"
-                className="bg-[#3ebb9e] hover:bg-[#00674f] text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25"
-                onClick={() => handleFollow(user.userId, user.isFollowing || false)}
-              >
-                <UserPlus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                Follow
               </Button>
             )}
           </div>
