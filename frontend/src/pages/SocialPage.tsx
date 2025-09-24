@@ -19,6 +19,7 @@ import {
   API_BASE_URL,
   cancelActiveGame,
 } from "../services/socialService"
+import { promptWarsWebSocket } from "@/services/promptWarsWebSocket"
 
 // WebSocket connection
 let socket: any = null
@@ -402,17 +403,22 @@ export default function SocialPage() {
   const loadPageData = async (tab: string, page: number) => {
     try {
       setTabLoading((prev) => ({ ...prev, [tab]: true }))
+      const userId = localStorage.getItem('userId')
 
       switch (tab) {
         case "discover": {
           // Changed from search to searchQuery
-          const usersResponse = await SocialAPI.getUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
+          const usersResponse = await SocialAPI.getDiscoverUsersPaginated(page - 1, USERS_PER_PAGE, searchQuery)
           // Add online status simulation and ensure isFollowing is properly set
-          const usersWithOnlineStatus = (usersResponse.content || []).map((user) => ({
+          const usersWithOnlineStatus = (usersResponse.content || []).map((user) => {
+            console.log("user:",user);
+
+            return{
             ...user,
-            isOnline: Math.random() > 0.3, // 70% chance of being online for demo
+            // isActive: user.active, // 70% chance of being online for demo
             isFollowing: user.isFollowing || false, // Ensure this field exists
-          }))
+            }
+          })
           setUsers(usersWithOnlineStatus)
           setTotalPages((prev) => ({ ...prev, discover: usersResponse.totalPages || 1 }))
           setTotalElements((prev) => ({ ...prev, discover: usersResponse.totalElements || 0 }))
