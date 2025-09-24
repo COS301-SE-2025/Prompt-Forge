@@ -291,6 +291,20 @@ public class UserService {
     return usersPage.map(this::mapToDto);
   }
 
+  public org.springframework.data.domain.Page<UserDto> discoverUsersPaginated(
+      String search, UUID curretUserId, int page, int size) {
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(page, size);
+
+    org.springframework.data.domain.Page<User> usersPage;
+    // if (search != null && !search.trim().isEmpty()) {
+      usersPage =
+          userRepository.discover(search.trim(), 
+              curretUserId, pageable);
+
+    return usersPage.map(this::mapToDto);
+  }
+
   public org.springframework.data.domain.Page<UserDto> getFollowersPaginated(
       String email, int page, int size) {
     org.springframework.data.domain.Pageable pageable =
