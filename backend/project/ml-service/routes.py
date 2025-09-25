@@ -6,7 +6,7 @@ from models import (
     GoalBasedRequest, GoalOptimizationResponse, StructureBasedRequest, StructureOptimizationResponse,
     ContextBasedRequest, ContextOptimizationResponse, TokenValidationResponse
 )
-from metrics_analyzer import EnhancedPromptMetricsAnalyzer
+from analyzer import EnhancedPromptMetricsAnalyzer
 
 # Initialize enhanced analyzer with rubric system
 analyzer = EnhancedPromptMetricsAnalyzer()
