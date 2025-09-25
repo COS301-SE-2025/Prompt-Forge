@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple, Optional
 from sentence_transformers import SentenceTransformer
 from config import Config, logger
 from qwen_client import QwenClient
-from rubric_sys import StandardizedRubric, RubricLevel
+from rubric import StandardizedRubric, RubricLevel
 
 class EnhancedPromptMetricsAnalyzer:
     """
