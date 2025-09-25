@@ -38,7 +38,7 @@ class EnhancedPromptMetricsAnalyzer:
         
         logger.info("Enhanced Prompt Metrics Analyzer with Standardized Rubric initialized")
     
-    def analyze_prompt_comprehensive(self, text: str, validate_consistency: bool = False, 
+    async def analyze_prompt_comprehensive(self, text: str, validate_consistency: bool = False, 
                                    num_consistency_runs: int = 3) -> Dict:
         """
         Comprehensive analysis using standardized rubric system
@@ -67,8 +67,8 @@ class EnhancedPromptMetricsAnalyzer:
                 "consistency_validation": None
             }
         
-        # Use standardized rubric for evaluation
-        rubric_evaluation = self.rubric.evaluate_prompt(text)
+        # FIXED: Use await for async rubric evaluation
+        rubric_evaluation = await self.rubric.evaluate_prompt(text)
         
         # Extract standardized metrics
         metrics = self._extract_metrics_from_rubric(rubric_evaluation)
@@ -143,7 +143,7 @@ class EnhancedPromptMetricsAnalyzer:
         """Generate issues and suggestions based on rubric analysis"""
         issues = []
         suggestions = []
-        
+    
         for criterion_name, criterion_data in rubric_evaluation["criteria_scores"].items():
             level_name = criterion_data["level"]
             score = criterion_data["score"]
@@ -243,7 +243,7 @@ class EnhancedPromptMetricsAnalyzer:
         else:
             return "Rubric scoring shows poor consistency - may indicate prompt ambiguity"
     
-    def compare_prompts_with_validation(self, original_text: str, optimized_text: str,
+    async def compare_prompts_with_validation(self, original_text: str, optimized_text: str,
                                       validate_consistency: bool = True) -> Dict:
         """
         Compare two prompts using rubric system with optional consistency validation
@@ -258,8 +258,8 @@ class EnhancedPromptMetricsAnalyzer:
         """
         logger.info("Comparing prompts using standardized rubric with consistency validation")
         
-        # Get rubric-based comparison
-        comparison = self.rubric.compare_prompts(original_text, optimized_text)
+        # FIXED: Use await for async comparison
+        comparison = await self.rubric.compare_prompts(original_text, optimized_text)
         
         # Add consistency validation if requested
         if validate_consistency:
@@ -318,7 +318,7 @@ class EnhancedPromptMetricsAnalyzer:
         """Get information about the rubric system for transparency"""
         return self.rubric.get_rubric_summary()
     
-    def test_system_consistency(self, test_prompts: List[str], num_runs: int = 5) -> Dict:
+    async def test_system_consistency(self, test_prompts: List[str], num_runs: int = 5) -> Dict:
         """
         Test system consistency with a set of test prompts
         Useful for validating rubric reliability

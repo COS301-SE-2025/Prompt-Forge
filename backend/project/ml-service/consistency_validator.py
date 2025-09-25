@@ -35,7 +35,7 @@ class ConsistencyValidator:
             "poor": 0.20        # CV < 20%
         }
         
-    def test_prompt_consistency(self, text: str, num_runs: int = 5, delay_ms: int = 100) -> ConsistencyTestResult:
+    async def test_prompt_consistency(self, text: str, num_runs: int = 5, delay_ms: int = 100) -> ConsistencyTestResult:
         """
         Test a prompt multiple times to validate consistency
         
@@ -56,8 +56,8 @@ class ConsistencyValidator:
             if run > 0 and delay_ms > 0:
                 time.sleep(delay_ms / 1000)  # Convert to seconds
             
-            # Force fresh evaluation by not using cache
-            evaluation = self.rubric.evaluate_prompt(text, generate_hash=False)
+            # Force fresh evaluation by not using cache - AWAIT the coroutine
+            evaluation = await self.rubric.evaluate_prompt(text, generate_hash=False)
             
             score = evaluation["overall_metrics"]["weighted_score"]
             scores.append(score)
@@ -109,7 +109,7 @@ class ConsistencyValidator:
         else:
             return "poor"
     
-    def batch_consistency_test(self, prompts: List[str], num_runs: int = 3) -> Dict[str, ConsistencyTestResult]:
+    async def batch_consistency_test(self, prompts: List[str], num_runs: int = 3) -> Dict[str, ConsistencyTestResult]:
         """
         Test multiple prompts for consistency
         
@@ -124,12 +124,12 @@ class ConsistencyValidator:
         
         for i, prompt in enumerate(prompts):
             logger.info(f"Testing prompt {i+1}/{len(prompts)}")
-            result = self.test_prompt_consistency(prompt, num_runs)
+            result = await self.test_prompt_consistency(prompt, num_runs)
             results[result.prompt_hash] = result
         
         return results
     
-    def validate_optimization_consistency(self, original_prompt: str, optimized_prompt: str, 
+    async def validate_optimization_consistency(self, original_prompt: str, optimized_prompt: str, 
                                         num_runs: int = 3) -> Dict[str, Any]:
         """
         Validate that optimization results are consistent across multiple runs
@@ -144,9 +144,9 @@ class ConsistencyValidator:
         """
         logger.info("Validating optimization consistency")
         
-        # Test both prompts for consistency
-        original_consistency = self.test_prompt_consistency(original_prompt, num_runs)
-        optimized_consistency = self.test_prompt_consistency(optimized_prompt, num_runs)
+        # Test both prompts for consistency - AWAIT both calls
+        original_consistency = await self.test_prompt_consistency(original_prompt, num_runs)
+        optimized_consistency = await self.test_prompt_consistency(optimized_prompt, num_runs)
         
         # Compare improvement consistency across runs
         improvement_scores = []

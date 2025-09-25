@@ -1,7 +1,8 @@
+import aiohttp
 import re
 import json
 import hashlib
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Callable
 from dataclasses import dataclass
 from enum import Enum
 from config import logger
@@ -15,18 +16,25 @@ class RubricLevel(Enum):
 
 @dataclass
 class RubricCriteria:
-    def __init__(self, name: str, description: str, weight: float = 1.0):
+    def __init__(self, 
+                 name: str, 
+                 description: str, 
+                 weight: float = 1.0,
+                 evaluation_guidelines: str = "",
+                 focus_areas: List[str] = None):
         self.name = name
         self.description = description
         self.weight = weight
+        self.evaluation_guidelines = evaluation_guidelines
+        self.focus_areas = focus_areas or []
         self.measurement_function = self._default_measurement
         self.evaluation_cache = {}
-
-    def _default_measurement(self, text: str) -> Tuple[Level, Dict[str, Any]]:
+        
+    def _default_measurement(self, text: str) -> Tuple[RubricLevel, Dict[str, Any]]:
         """Default measurement function if none is specified"""
         # Basic evaluation logic
         if not text or len(text.strip()) == 0:
-            return Level.POOR, {
+            return RubricLevel.POOR, {
                 "reason": "Empty or whitespace-only text",
                 "score": 0.0,
                 "suggestions": ["Add meaningful content"]
@@ -35,32 +43,32 @@ class RubricCriteria:
         # Simple length-based scoring
         word_count = len(text.split())
         if word_count < 10:
-            return Level.FAIR, {
+            return RubricLevel.BELOW_AVERAGE, {
                 "reason": "Text is too short",
                 "score": 0.4,
                 "word_count": word_count,
                 "suggestions": ["Expand the content"]
             }
         elif word_count < 50:
-            return Level.GOOD, {
+            return RubricLevel.GOOD, {
                 "reason": "Moderate length",
                 "score": 0.7,
                 "word_count": word_count,
                 "suggestions": ["Consider adding more detail"]
             }
         else:
-            return Level.EXCELLENT, {
+            return RubricLevel.EXCELLENT, {
                 "reason": "Good length",
                 "score": 0.9,
                 "word_count": word_count,
                 "suggestions": []
             }
 
-    def set_measurement_function(self, func: Callable[[str], Tuple[Level, Dict[str, Any]]]):
+    def set_measurement_function(self, func: Callable[[str], Tuple[RubricLevel, Dict[str, Any]]]):
         """Set custom measurement function"""
         self.measurement_function = func
 
-    def measure(self, text: str) -> Tuple[Level, Dict[str, Any]]:
+    def measure(self, text: str) -> Tuple[RubricLevel, Dict[str, Any]]:
         """Measure text using the defined measurement function"""
         try:
             if text in self.evaluation_cache:
@@ -71,7 +79,7 @@ class RubricCriteria:
             return result
         except Exception as e:
             logger.error(f"Measurement failed for criterion {self.name}: {e}")
-            return Level.POOR, {
+            return RubricLevel.POOR, {
                 "reason": f"Measurement error: {str(e)}",
                 "score": 0.0,
                 "suggestions": ["System error occurred"]
@@ -95,7 +103,7 @@ class StandardizedRubric:
         criteria = {}
         
         # 1. CLARITY CRITERIA
-        criteria["clarity"] = RubricCriteria(
+        clarity_criteria = RubricCriteria(
             name="Clarity",
             description="How clear, unambiguous, and easy to understand the prompt is",
             weight=0.25,
@@ -139,9 +147,11 @@ class StandardizedRubric:
             """,
             focus_areas=["vague_terms", "action_clarity", "pronoun_usage", "sentence_length", "overall_clarity"]
         )
+        clarity_criteria.set_measurement_function(self._measure_clarity)
+        criteria["clarity"] = clarity_criteria
         
         # 2. SPECIFICITY CRITERIA
-        criteria["specificity"] = RubricCriteria(
+        specificity_criteria = RubricCriteria(
             name="Specificity",
             description="Level of detail, concrete requirements, and precise expectations",
             weight=0.25,
@@ -186,9 +196,11 @@ class StandardizedRubric:
             """,
             focus_areas=["requirement_count", "format_specs", "quantifiable_elements", "constraints", "audience_definition"]
         )
+        specificity_criteria.set_measurement_function(self._measure_specificity)
+        criteria["specificity"] = specificity_criteria
         
         # 3. STRUCTURE CRITERIA
-        criteria["structure"] = RubricCriteria(
+        structure_criteria = RubricCriteria(
             name="Structure",
             description="Organization, logical flow, and presentation format",
             weight=0.25,
@@ -233,9 +245,11 @@ class StandardizedRubric:
             """,
             focus_areas=["organization_level", "formatting_usage", "logical_flow", "visual_hierarchy", "professional_presentation"]
         )
+        structure_criteria.set_measurement_function(self._measure_structure)
+        criteria["structure"] = structure_criteria
         
         # 4. CONTEXT CRITERIA
-        criteria["context"] = RubricCriteria(
+        context_criteria = RubricCriteria(
             name="Context",
             description="Background information, situational awareness, and domain understanding",
             weight=0.15,
@@ -280,9 +294,11 @@ class StandardizedRubric:
             """,
             focus_areas=["background_completeness", "purpose_clarity", "domain_awareness", "situational_context", "constraint_awareness"]
         )
+        context_criteria.set_measurement_function(self._measure_context)
+        criteria["context"] = context_criteria
         
         # 5. ACTIONABILITY CRITERIA
-        criteria["actionability"] = RubricCriteria(
+        actionability_criteria = RubricCriteria(
             name="Actionability",
             description="How easily the prompt can be acted upon and executed",
             weight=0.10,
@@ -327,6 +343,8 @@ class StandardizedRubric:
             """,
             focus_areas=["action_verb_clarity", "instruction_specificity", "deliverable_definition", "implementation_guidance", "execution_clarity"]
         )
+        actionability_criteria.set_measurement_function(self._measure_actionability)
+        criteria["actionability"] = actionability_criteria
         
         return criteria
 
@@ -522,12 +540,16 @@ class StandardizedRubric:
             score = details.get("numerical_score", level.value * 20)  # Use numerical score if available
             weighted_score = score * criterion.weight
             
+            # FIXED: Use level description instead of scoring_rules
+            level_description = self._get_level_description(level, criterion_name)
+            
             results["criteria_scores"][criterion_name] = {
                 "level": level.name,
                 "score": score,
                 "weight": criterion.weight,
                 "weighted_score": weighted_score,
                 "numerical_score": score,
+                "rationale": level_description,  # Use level description instead of scoring_rules
                 "evaluation_method": "llm" if use_llm and self.qwen_endpoint else "rule_based"
             }
             
@@ -551,8 +573,49 @@ class StandardizedRubric:
             self.consistency_cache[text_hash] = results
         
         return results
+    
+    def _get_level_description(self, level: RubricLevel, criterion_name: str) -> str:
+        """Get description for a specific level based on the new criteria structure"""
+        level_descriptions = {
+            "clarity": {
+                RubricLevel.POOR: "Vague, ambiguous, contains 4+ unclear terms",
+                RubricLevel.BELOW_AVERAGE: "Some ambiguity, 2-3 unclear terms", 
+                RubricLevel.AVERAGE: "Generally clear, 1-2 minor ambiguities",
+                RubricLevel.GOOD: "Clear instructions, specific language",
+                RubricLevel.EXCELLENT: "Crystal clear, no ambiguity, precise language"
+            },
+            "specificity": {
+                RubricLevel.POOR: "No specific requirements, completely generic",
+                RubricLevel.BELOW_AVERAGE: "1-2 specific elements mentioned",
+                RubricLevel.AVERAGE: "3-4 specific requirements or constraints", 
+                RubricLevel.GOOD: "5-6 detailed specifications",
+                RubricLevel.EXCELLENT: "7+ comprehensive, detailed specifications"
+            },
+            "structure": {
+                RubricLevel.POOR: "No structure, stream of consciousness",
+                RubricLevel.BELOW_AVERAGE: "Basic structure, some organization",
+                RubricLevel.AVERAGE: "Clear sections or logical flow",
+                RubricLevel.GOOD: "Well-organized with clear hierarchy", 
+                RubricLevel.EXCELLENT: "Perfect structure with headers, lists, clear progression"
+            },
+            "context": {
+                RubricLevel.POOR: "No context provided",
+                RubricLevel.BELOW_AVERAGE: "Minimal context, missing key background",
+                RubricLevel.AVERAGE: "Some context provided",
+                RubricLevel.GOOD: "Good context with relevant background",
+                RubricLevel.EXCELLENT: "Comprehensive context with all necessary background"
+            },
+            "actionability": {
+                RubricLevel.POOR: "Unclear what action to take", 
+                RubricLevel.BELOW_AVERAGE: "Action implied but not explicit",
+                RubricLevel.AVERAGE: "Clear action with some guidance",
+                RubricLevel.GOOD: "Clear action with specific steps",
+                RubricLevel.EXCELLENT: "Crystal clear actionable instructions with examples"
+            }
+        }
+    
+        return level_descriptions.get(criterion_name, {}).get(level, "Level description not available")
 
-   
     def _measure_clarity(self, text: str) -> Tuple[RubricLevel, Dict[str, Any]]:
         """Measure clarity using deterministic rules"""
         issues = []
@@ -873,70 +936,6 @@ class StandardizedRubric:
             "examples_requested": example_count > 0
         }
     
-    def evaluate_prompt(self, text: str, generate_hash: bool = True) -> Dict[str, Any]:
-        """
-        Evaluate a prompt using the standardized rubric
-        Returns consistent results for the same input
-        """
-        if not text or not text.strip():
-            return self._empty_prompt_result()
-        
-        # Generate hash for consistency checking
-        text_hash = hashlib.md5(text.encode()).hexdigest() if generate_hash else None
-        
-        # Check cache for consistency
-        if text_hash and text_hash in self.consistency_cache:
-            logger.info(f"Using cached evaluation for consistent results")
-            return self.consistency_cache[text_hash]
-        
-        results = {
-            "text": text,
-            "text_hash": text_hash,
-            "evaluation_timestamp": None,  # Would be set in production
-            "criteria_scores": {},
-            "detailed_analysis": {},
-            "overall_metrics": {},
-            "rubric_version": "1.0"
-        }
-        
-        total_weighted_score = 0
-        max_possible_score = 0
-        
-        # Evaluate each criterion
-        for criterion_name, criterion in self.criteria.items():
-            level, details = criterion.measurement_function(text)
-            score = level.value * 20  # Convert 1-5 to 0-100 scale
-            weighted_score = score * criterion.weight
-            
-            results["criteria_scores"][criterion_name] = {
-                "level": level.name,
-                "score": score,
-                "weight": criterion.weight,
-                "weighted_score": weighted_score,
-                "rationale": criterion.scoring_rules[level]
-            }
-            
-            results["detailed_analysis"][criterion_name] = details
-            
-            total_weighted_score += weighted_score
-            max_possible_score += 100 * criterion.weight
-        
-        # Calculate overall metrics
-        overall_score = (total_weighted_score / max_possible_score) * 100
-        results["overall_metrics"] = {
-            "weighted_score": round(overall_score, 1),
-            "letter_grade": self._score_to_letter_grade(overall_score),
-            "improvement_needed": overall_score < 70,
-            "excellence_achieved": overall_score >= 85,
-            "consistency_hash": text_hash
-        }
-        
-        # Add to cache for consistency
-        if text_hash:
-            self.consistency_cache[text_hash] = results
-        
-        return results
-    
     def _empty_prompt_result(self) -> Dict[str, Any]:
         """Return standardized result for empty prompts"""
         return {
@@ -951,7 +950,7 @@ class StandardizedRubric:
                 "excellence_achieved": False,
                 "consistency_hash": None
             },
-            "rubric_version": "1.0",
+            "rubric_version": "2.0",
             "error": "Empty prompt provided"
         }
     
@@ -968,13 +967,13 @@ class StandardizedRubric:
         else:
             return "F"
     
-    def compare_prompts(self, original_text: str, optimized_text: str) -> Dict[str, Any]:
+    async def compare_prompts(self, original_text: str, optimized_text: str, use_llm: bool = True) -> Dict[str, Any]:
         """
         Compare two prompts using the standardized rubric
         Ensures consistent comparison results
         """
-        original_eval = self.evaluate_prompt(original_text)
-        optimized_eval = self.evaluate_prompt(optimized_text)
+        original_eval = await self.evaluate_prompt(original_text, use_llm=use_llm)
+        optimized_eval = await self.evaluate_prompt(optimized_text, use_llm=use_llm)
         
         comparison = {
             "original_evaluation": original_eval,
@@ -1023,15 +1022,16 @@ class StandardizedRubric:
     def get_rubric_summary(self) -> Dict[str, Any]:
         """Get a summary of the rubric for transparency"""
         summary = {
-            "version": "1.0",
+            "version": "2.0",
             "total_criteria": len(self.criteria),
             "criteria_details": {},
-            "scoring_methodology": "Deterministic rules-based evaluation",
+            "scoring_methodology": "LLM-enhanced evaluation with fallback rules",
             "consistency_features": [
                 "Cached evaluations for identical inputs",
-                "Quantifiable measurement criteria",
+                "Quantifiable measurement criteria", 
                 "Standardized scoring rubric",
-                "Reproducible hash-based tracking"
+                "Reproducible hash-based tracking",
+                "LLM-powered analysis with rule-based fallback"
             ]
         }
         
@@ -1039,7 +1039,8 @@ class StandardizedRubric:
             summary["criteria_details"][name] = {
                 "description": criterion.description,
                 "weight": criterion.weight,
-                "scoring_levels": {level.name: rule for level, rule in criterion.scoring_rules.items()}
+                "focus_areas": criterion.focus_areas,
+                "evaluation_method": "LLM with scoring ranges"
             }
         
         return summary

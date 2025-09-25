@@ -262,7 +262,6 @@ async def system_status():
 # ----------------------------
 # Application Startup Events
 # ----------------------------
-
 @app.on_event("startup")
 async def startup_event():
     """Initialize system on startup"""
@@ -275,7 +274,8 @@ async def startup_event():
         
         # Test rubric system
         test_prompt = "Write a good email"
-        analysis = analyzer.analyze_prompt_comprehensive(test_prompt)
+        # FIXED: Use await for async call
+        analysis = await analyzer.analyze_prompt_comprehensive(test_prompt)
         logger.info(f"✅ Rubric system operational - test score: {analysis['metrics']['overall']}")
         
         # Test AI availability

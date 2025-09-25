@@ -27,6 +27,8 @@ def read_root():
         ]
     }
 
+# In routes.py, update the analyze_prompt_metrics function:
+
 async def analyze_prompt_metrics(request: PromptRequest):
     """Analyze prompt metrics using standardized rubric system"""
     try:
@@ -35,9 +37,8 @@ async def analyze_prompt_metrics(request: PromptRequest):
         
         logger.info(f"Analyzing prompt with rubric system: {request.text[:100]}...")
         
-        # Use enhanced analyzer with rubric system
-        # Enable consistency validation for analysis endpoint
-        analysis = analyzer.analyze_prompt_comprehensive(
+        # FIXED: Make this an async call
+        analysis = await analyzer.analyze_prompt_comprehensive(
             request.text, 
             validate_consistency=True,
             num_consistency_runs=3
