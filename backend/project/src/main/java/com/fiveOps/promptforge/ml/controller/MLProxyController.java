@@ -22,7 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class MLProxyController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MLProxyController.class);
-  private final String mlServiceUrl = "http://localhost:8000";
+  private final String mlServiceUrl = "http://localhost:8001";
   private final RestTemplate restTemplate = new RestTemplate();
 
   @GetMapping("/health")
