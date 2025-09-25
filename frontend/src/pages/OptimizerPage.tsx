@@ -132,7 +132,7 @@ export default function OptimizerPage() {
     }
 
     if (serviceStatus !== "online") {
-      showNotification("error", "Service Unavailable", "ML optimization service is currently offline")
+      showNotification("error", "Service Unavailable", "ML enhancement service is currently offline")
       return
     }
 
@@ -141,7 +141,7 @@ export default function OptimizerPage() {
     setOptimizationResult(null)
 
     try {
-      // Use the simple optimization endpoint
+      // Use the simple enhancement endpoint
       const result = await promptOptimizerService.optimizeSimple({
         text: originalPrompt,
       })
@@ -172,10 +172,10 @@ export default function OptimizerPage() {
 
       setOptimizationResult(mapped)
       setTimeout(() => setShowSuggestions(true), 100)
-      showNotification("success", "Optimization Complete", "Your prompt has been optimized with AI suggestions!")
+      showNotification("success", "Enhancement Complete", "Your prompt has been enhanced with AI suggestions!")
     } catch (error) {
-      console.error("Optimization failed:", error)
-      showNotification("error", "Optimization Failed", "Unable to optimize prompt. Please try again.")
+      console.error("Enhancement failed:", error)
+      showNotification("error", "Enhancement Failed", "Unable to enhance prompt. Please try again.")
     } finally {
       setIsGenerating(false)
     }
@@ -228,7 +228,7 @@ export default function OptimizerPage() {
 
   const suggestions = formatSuggestions()
 
-  // Compact optimization tips for the main page
+  // Compact enhancement tips for the main page
   const quickTips = [
     {
       icon: <Target className="h-4 w-4 text-[#40ffaa]" />,
@@ -350,7 +350,7 @@ export default function OptimizerPage() {
                   AI Recommendations
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-                  Transform your prompts with AI-powered optimization
+                  Enhance your prompts with AI-powered suggestions
                 </p>
               </div>
             </div>
@@ -426,7 +426,7 @@ export default function OptimizerPage() {
               <Textarea
                 value={originalPrompt}
                 onChange={(e) => setOriginalPrompt(e.target.value)}
-                placeholder="Enter your prompt here to get AI-powered optimization suggestions..."
+                placeholder="Enter your prompt here to get AI-powered enhancement suggestions..."
                 className="min-h-[150px] sm:min-h-[200px] resize-none border-border dark:border-border focus:border-[#40ffaa] dark:focus:border-[#4079ff] transition-colors bg-muted dark:bg-muted placeholder:text-white-400/50 text-sm sm:text-base"
               />
 
@@ -445,14 +445,14 @@ export default function OptimizerPage() {
                   {isGenerating ? (
                     <>
                       <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
-                      <span className="hidden sm:inline">Optimizing...</span>
-                      <span className="sm:hidden">Optimizing...</span>
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">Generating...</span>
                     </>
                   ) : (
                     <>
                       <Wand2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Optimize Prompt</span>
-                      <span className="sm:hidden">Optimize</span>
+                      <span className="hidden sm:inline">Get AI Recommendations</span>
+                      <span className="sm:hidden">Get Recommendations</span>
                     </>
                   )}
                 </Button>
@@ -465,7 +465,7 @@ export default function OptimizerPage() {
                     <p className="text-sm text-red-700 dark:text-red-400 font-medium">ML Service Unavailable</p>
                   </div>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                    Please ensure the optimization service is running to use this feature.
+                    Please ensure the enhancement service is running to use this feature.
                   </p>
                 </div>
               )}
@@ -479,7 +479,7 @@ export default function OptimizerPage() {
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff] dark:text-[#40ffaa]" />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-foreground dark:text-foreground">
-                AI Optimization Results
+                AI Recommendations
               </h2>
             </div>
 
@@ -642,11 +642,11 @@ export default function OptimizerPage() {
               <Card className="p-6 sm:p-8 bg-card/80 dark:bg-card/80 backdrop-blur-sm border-border text-center">
                 <Wand2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-[#4079ff] dark:text-[#40ffaa] mx-auto mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-medium text-foreground dark:text-foreground mb-2">
-                  Ready to Optimize
+                  Ready for AI Enhancement
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
                   {serviceStatus === "online"
-                    ? "Enter your prompt above and click 'Optimize Prompt' to get AI-powered suggestions"
+                    ? "Enter your prompt above and click 'Get AI Recommendations' to get AI-powered suggestions"
                     : "Waiting for ML service to come online..."}
                 </p>
               </Card>
@@ -655,13 +655,13 @@ export default function OptimizerPage() {
         </div>
       </div>
 
-      {/* Compact Optimization Tips Section */}
+      {/* Compact Enhancement Tips Section */}
       <div className="bg-gradient-to-br from-muted/20 to-muted/30 border-t border-border">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
               <Lightbulb className="h-5 w-5 text-[#40ffaa]" />
-              Quick Optimization Tips
+              Quick Enhancement Tips
             </h3>
             <p className="text-sm text-muted-foreground">
               Essential tips for better prompts •{" "}
@@ -693,7 +693,7 @@ export default function OptimizerPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
           <div className="bg-background border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">AI Optimizer Complete Guide</h2>
+              <h2 className="text-xl font-bold text-foreground">AI Recommendations Complete Guide</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -710,12 +710,12 @@ export default function OptimizerPage() {
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
                   <BookOpen className="h-5 w-5 mr-2 text-[#40ffaa]" />
-                  How to Use the AI Prompt Optimizer
+                  How to Use AI Recommendations
                 </h3>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                   <li>Enter your prompt in the text area on the left side.</li>
                   <li>
-                    Click <span className="font-semibold text-[#4079ff]">Optimize Prompt</span> to get AI-powered
+                    Click <span className="font-semibold text-[#4079ff]">Get AI Recommendations</span> to get AI-powered
                     suggestions.
                   </li>
                   <li>Review the suggestions and click on any card to see detailed improvements.</li>
@@ -728,7 +728,7 @@ export default function OptimizerPage() {
               <section>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
                   <Lightbulb className="h-5 w-5 mr-2 text-[#4079ff]" />
-                  Detailed Optimization Tips
+                  Detailed Enhancement Tips
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {detailedTips.map((tip, index) => (
@@ -789,7 +789,7 @@ export default function OptimizerPage() {
                           <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-4 border border-red-200 dark:border-red-800">
                             <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 text-sm flex items-center">
                               <AlertCircle className="h-4 w-4 mr-2" />
-                              Before Optimization
+                              Before Enhancement
                             </h4>
                             <p className="text-sm text-red-600 dark:text-red-300 italic">"{example.before}"</p>
                           </div>
@@ -797,14 +797,14 @@ export default function OptimizerPage() {
                           <div className="bg-green-50 dark:bg-green-900/10 rounded-lg p-4 border border-green-200 dark:border-green-800">
                             <h4 className="font-medium text-green-700 dark:text-green-400 mb-2 text-sm flex items-center">
                               <Check className="h-4 w-4 mr-2" />
-                              After Optimization
+                              After Enhancement
                             </h4>
                             <p className="text-sm text-green-600 dark:text-green-300">"{example.after}"</p>
                           </div>
 
                           <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
                             <p className="text-xs text-blue-600 dark:text-blue-300">
-                              <strong>Key Improvement:</strong> {example.improvement}
+                              <strong>Key Enhancement:</strong> {example.improvement}
                             </p>
                           </div>
                         </div>

@@ -1856,37 +1856,34 @@ export default function OptimizerWizard() {
                       <Sparkles className="h-5 w-5 text-[#3ebb9e]" />
                       Improvements Made:
                     </h4>
-                    <div className="space-y-2">
-                      {wizardData.goals.primaryObjective && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-2">
+                      {[
+                        wizardData.goals.primaryObjective && {
+                          text: `Defined clear objective: ${wizardData.goals.primaryObjective}`,
+                          key: 'objective'
+                        },
+                        wizardData.goals.targetAudience && {
+                          text: `Specified target audience: ${wizardData.goals.targetAudience}`,
+                          key: 'audience'
+                        },
+                        wizardData.structureOptimization.usedAI && wizardData.structureOptimization.structuralImprovements.length > 0 && {
+                          text: 'AI-powered structure optimization applied',
+                          key: 'ai-structure'
+                        },
+                        ...wizardData.structureOptimization.structuralImprovements.map((improvement, index) => ({
+                          text: improvement,
+                          key: `structure-${index}`
+                        })),
+                        wizardData.context.additionalContext && {
+                          text: 'Added helpful context and background',
+                          key: 'context'
+                        }
+                      ].filter((item): item is { text: string; key: string } => Boolean(item)).slice(0, 4).map((improvement) => (
+                        <div key={improvement.key} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
                           <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Defined clear objective: {wizardData.goals.primaryObjective}</span>
-                        </div>
-                      )}
-                      {wizardData.goals.targetAudience && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Specified target audience: {wizardData.goals.targetAudience}</span>
-                        </div>
-                      )}
-                      {wizardData.structureOptimization.usedAI && wizardData.structureOptimization.structuralImprovements.length > 0 && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">AI-powered structure optimization applied</span>
-                        </div>
-                      )}
-                      {wizardData.structureOptimization.structuralImprovements.map((improvement, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">{improvement}</span>
+                          <span className="text-sm">{improvement.text}</span>
                         </div>
                       ))}
-                      {wizardData.context.additionalContext && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Added helpful context and background</span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -2377,6 +2374,24 @@ export default function OptimizerWizard() {
         }
         .animate-slide-out {
           animation: slide-out 0.3s ease-out;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgb(59 130 246 / 0.5) rgb(243 244 246);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgb(243 244 246);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgb(59 130 246 / 0.5);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgb(59 130 246 / 0.7);
         }
       `}</style>
     </div>
