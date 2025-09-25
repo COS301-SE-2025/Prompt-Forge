@@ -1,7 +1,11 @@
 # main.py
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
 from typing import List
 from datetime import datetime
+import numpy as np  # Added missing import
+import uvicorn
+
 from config import Config, logger
 from models import (
     AnalysisResponse, OptimizationResponse, GoalOptimizationResponse,
@@ -15,6 +19,44 @@ from routes import (
 )
 
 # ----------------------------
+# Enhanced Lifespan Management
+# ----------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Modern lifespan handler replacing deprecated on_event decorators"""
+    # Startup code
+    logger.info("=== Enhanced Prompt Optimizer API v2.0 Starting ===")
+    logger.info("Features: Standardized Rubric + AI Optimization")
+    
+    # Test system components
+    try:
+        from routes import analyzer
+        
+        # Test rubric system
+        test_prompt = "Write a good email"
+        analysis = await analyzer.analyze_prompt_comprehensive(test_prompt)
+        logger.info(f"✅ Rubric system operational - test score: {analysis['metrics']['overall']}")
+        
+        # Test AI availability
+        if analyzer.qwen_client.validate_token():
+            logger.info("✅ Qwen API token is valid")
+            logger.info("✅ AI optimization services available")
+        else:
+            logger.info("ℹ️  AI services unavailable - fallback optimization active")
+        
+        logger.info("🚀 Enhanced Prompt Optimizer API v2.0 Ready")
+        
+    except Exception as e:
+        logger.error(f"❌ Startup validation failed: {e}")
+        logger.info("⚠️  System running in degraded mode")
+    
+    yield  # App runs here
+    
+    # Shutdown code
+    logger.info("Enhanced Prompt Optimizer API v2.0 shutting down")
+
+# ----------------------------
 # Enhanced FastAPI Application
 # ----------------------------
 app = FastAPI(
@@ -22,7 +64,8 @@ app = FastAPI(
     description="Advanced prompt optimization with standardized rubric system",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan  # Modern lifespan handler
 )
 
 # ----------------------------
@@ -204,51 +247,60 @@ async def get_wizard_results():
         )
 
 # ----------------------------
-# Application Startup Events
+# Error Handling
 # ----------------------------
-@app.on_event("startup")
-async def startup_event():
-    """Initialize system on startup"""
-    logger.info("=== Enhanced Prompt Optimizer API v2.0 Starting ===")
-    logger.info("Features: Standardized Rubric + AI Optimization")
-    
-    # Test system components
-    try:
-        from routes import analyzer
-        
-        # Test rubric system
-        test_prompt = "Write a good email"
-        # Use await for async call
-        analysis = await analyzer.analyze_prompt_comprehensive(test_prompt)
-        logger.info(f"✅ Rubric system operational - test score: {analysis['metrics']['overall']}")
-        
-        # Test AI availability
-        if analyzer.qwen_client.validate_token():
-            logger.info("✅ AI optimization services available")
-        else:
-            logger.info("ℹ️  AI services unavailable - fallback optimization active")
-        
-        logger.info("🚀 Enhanced Prompt Optimizer API v2.0 Ready")
-        
-    except Exception as e:
-        logger.error(f"❌ Startup validation failed: {e}")
-        logger.info("⚠️  System running in degraded mode")
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    logger.info("Enhanced Prompt Optimizer API v2.0 shutting down")
+@app.exception_handler(500)
+async def internal_server_error_handler(request, exc):
+    """Handle internal server errors gracefully"""
+    logger.error(f"Internal server error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "error": str(exc)}
+    )
+
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    """Handle 404 errors"""
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Endpoint not found"}
+    )
 
 # ----------------------------
 # Application Run
 # ----------------------------
 if __name__ == "__main__":
-    import uvicorn
-    logger.info(f"Starting Enhanced Prompt Optimizer API v2.0 on {Config.API_HOST}:{Config.API_PORT}")
+    import socket
+    import sys
+    
+    # Check if port is available
+    def is_port_in_use(port: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex((Config.API_HOST, port)) == 0
+    
+    # Try alternative ports if default is occupied
+    ports_to_try = [Config.API_PORT, 8002, 8003, 8004, 8005]
+    selected_port = Config.API_PORT
+    
+    for port in ports_to_try:
+        if not is_port_in_use(port):
+            selected_port = port
+            break
+    else:
+        logger.error("All ports are occupied. Please free up a port.")
+        sys.exit(1)
+    
+    if selected_port != Config.API_PORT:
+        logger.warning(f"Port {Config.API_PORT} occupied, using port {selected_port} instead")
+    
+    logger.info(f"Starting Enhanced Prompt Optimizer API v2.0 on {Config.API_HOST}:{selected_port}")
+    
     uvicorn.run(
         app, 
         host=Config.API_HOST, 
-        port=Config.API_PORT,
+        port=selected_port,
         log_level="info",
-        access_log=True
+        access_log=True,
+        reload=True  # Enable auto-reload for development
     )
