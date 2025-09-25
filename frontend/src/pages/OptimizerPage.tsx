@@ -30,6 +30,7 @@ import {
   Brain,
   FileText,
   ChevronDown,
+  X,
 } from "lucide-react"
 
 interface OptimizationResult {
@@ -140,7 +141,8 @@ export default function OptimizerPage() {
     setOptimizationResult(null)
 
     try {
-      const result = await promptOptimizerService.optimizePrompt({
+      // Use the simple optimization endpoint
+      const result = await promptOptimizerService.optimizeSimple({
         text: originalPrompt,
       })
 
@@ -313,12 +315,25 @@ export default function OptimizerPage() {
     },
   ]
 
+  // Page load animation state
+  const [pageLoaded, setPageLoaded] = useState(false)
+
+  useEffect(() => {
+    // Trigger page load animation
+    setTimeout(() => setPageLoaded(true), 10)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={`min-h-screen bg-background transition-all duration-700 ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
+        pageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      }`}
+      style={{ willChange: 'opacity, transform' }}
+    >
       {/* Header - Larger and with Help button */}
-      <div className="relative overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#40ffaa]/10 via-[#4079ff]/10 to-[#40ffaa]/10"></div>
+      <div className="relative bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-7">
+          {/* Remove separate back button, add X next to Help button below */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -379,6 +394,15 @@ export default function OptimizerPage() {
                 title="Help & Tips"
               >
                 <HelpCircle className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/editor")}
+                className="h-10 w-10 flex items-center justify-center rounded-lg transition-all duration-300"
+                title="Back to Testing Ground"
+              >
+                <X className="h-10 w-10" />
               </Button>
             </div>
           </div>
@@ -821,7 +845,6 @@ export default function OptimizerPage() {
             transform: translateY(0);
           }
         }
-        
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -830,7 +853,6 @@ export default function OptimizerPage() {
             opacity: 1;
           }
         }
-        
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }

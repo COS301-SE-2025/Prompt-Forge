@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EncryptionService {
 
-  @Value("${app.encryption.key:defaultEncryptionKey123456}")
+  @Value("${ENCRYPTION_KEY:defaultEncryptionKey123456}")
   private String encryptionKey;
 
   private static final String ALGORITHM = "AES";

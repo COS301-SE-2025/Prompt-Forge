@@ -171,6 +171,140 @@ class StandardizedRubric:
         
         return criteria
 
+    async def _get_qwen_validation(self, prompt: str, criterion: str, linguistic_score: float, issues: List[str]) -> Dict[str, Any]:
+        """Get Qwen validation of linguistic analysis results"""
+        if not self.ai_client:
+            return {
+                "qwen_score": linguistic_score,
+                "agreement_level": "no_ai_available",
+                "qwen_reasoning": "AI validation not available",
+                "final_score": linguistic_score,
+                "confidence": 0.5
+            }
+        
+        try:
+            validation_prompt = f"""
+            As a prompt engineering expert, evaluate this prompt for {criterion} and provide your assessment.
+            
+            PROMPT TO EVALUATE: "{prompt}"
+            
+            LINGUISTIC ANALYSIS RESULTS:
+            - Score: {linguistic_score}/100
+            - Issues found: {', '.join(issues) if issues else 'None'}
+            
+            Please provide your evaluation in this EXACT format:
+            SCORE: [your score 0-100]
+            REASONING: [brief explanation of your scoring]
+            AGREEMENT: [AGREE/DISAGREE/PARTIAL - whether you agree with linguistic analysis]
+            CONFIDENCE: [0.1-1.0 - how confident you are in your assessment]
+            
+            Focus specifically on {criterion}. Be objective and consistent with prompt engineering best practices.
+            """
+            
+            response = self.ai_client.chat.completions.create(
+                model="Qwen/Qwen2.5-7B-Instruct",
+                messages=[
+                    {"role": "system", "content": "You are a prompt engineering expert. Provide accurate, consistent evaluations."},
+                    {"role": "user", "content": validation_prompt}
+                ],
+                max_tokens=300,
+                temperature=0.3,  # Lower temperature for consistency
+                timeout=15
+            )
+            
+            if response and response.choices:
+                content = response.choices[0].message.content.strip()
+                return self._parse_qwen_validation(content, linguistic_score)
+                
+        except Exception as e:
+            logger.warning(f"Qwen validation failed for {criterion}: {e}")
+        
+        # Fallback to linguistic score
+        return {
+            "qwen_score": linguistic_score,
+            "agreement_level": "validation_failed",
+            "qwen_reasoning": "AI validation failed",
+            "final_score": linguistic_score,
+            "confidence": 0.5
+        }
+    
+    def _parse_qwen_validation(self, content: str, linguistic_score: float) -> Dict[str, Any]:
+        """Parse Qwen validation response"""
+        result = {
+            "qwen_score": linguistic_score,
+            "agreement_level": "partial",
+            "qwen_reasoning": "Could not parse response",
+            "final_score": linguistic_score,
+            "confidence": 0.5
+        }
+        
+        try:
+            # Extract score
+            score_match = re.search(r'SCORE:\s*(\d+(?:\.\d+)?)', content, re.IGNORECASE)
+            if score_match:
+                qwen_score = float(score_match.group(1))
+                result["qwen_score"] = min(100, max(0, qwen_score))
+            
+            # Extract reasoning
+            reasoning_match = re.search(r'REASONING:\s*(.+?)(?=\n\w+:|$)', content, re.IGNORECASE | re.DOTALL)
+            if reasoning_match:
+                result["qwen_reasoning"] = reasoning_match.group(1).strip()
+            
+            # Extract agreement
+            agreement_match = re.search(r'AGREEMENT:\s*(AGREE|DISAGREE|PARTIAL)', content, re.IGNORECASE)
+            if agreement_match:
+                result["agreement_level"] = agreement_match.group(1).lower()
+            
+            # Extract confidence
+            confidence_match = re.search(r'CONFIDENCE:\s*(\d*\.?\d+)', content, re.IGNORECASE)
+            if confidence_match:
+                confidence = float(confidence_match.group(1))
+                result["confidence"] = min(1.0, max(0.1, confidence))
+            
+            # Calculate final score based on agreement and confidence
+            result["final_score"] = self._calculate_combined_score(
+                linguistic_score, 
+                result["qwen_score"], 
+                result["agreement_level"], 
+                result["confidence"]
+            )
+            
+        except Exception as e:
+            logger.warning(f"Error parsing Qwen validation: {e}")
+        
+        return result
+    
+    def _calculate_combined_score(self, linguistic_score: float, qwen_score: float, agreement: str, confidence: float) -> float:
+        """Calculate final score combining linguistic and Qwen analysis"""
+        
+        # Base weights: linguistic has slight preference as it's more consistent
+        linguistic_weight = 0.6
+        qwen_weight = 0.4
+        
+        # Adjust weights based on agreement
+        if agreement == "agree":
+            # High agreement - trust both equally
+            linguistic_weight = 0.5
+            qwen_weight = 0.5
+        elif agreement == "disagree":
+            # Strong disagreement - favor linguistic but consider Qwen more
+            linguistic_weight = 0.7
+            qwen_weight = 0.3
+        else:  # partial
+            # Default weights
+            pass
+        
+        # Adjust based on confidence
+        confidence_factor = min(confidence, 0.9)  # Cap confidence impact
+        qwen_weight *= confidence_factor
+        linguistic_weight = 1.0 - qwen_weight
+        
+        # Calculate weighted average
+        final_score = (linguistic_score * linguistic_weight) + (qwen_score * qwen_weight)
+        
+        # Ensure score is within bounds
+        return min(100, max(0, final_score))
+
     async def _generate_ai_suggestions(self, prompt: str, criterion: str, score: int, issues: List[str]) -> List[str]:
         """Generate AI-powered suggestions using Qwen"""
         if not self.ai_client:
@@ -215,6 +349,20 @@ class StandardizedRubric:
             logger.warning(f"AI suggestion generation failed for {criterion}: {e}")
         
         return self._get_fallback_suggestions(criterion, score, issues)
+    
+    def _score_to_level(self, score: float) -> RubricLevel:
+        """Convert numeric score to RubricLevel"""
+        score = float(score)  # Ensure it's a float
+        if score >= 85:
+            return RubricLevel.EXCELLENT
+        elif score >= 70:
+            return RubricLevel.GOOD
+        elif score >= 50:
+            return RubricLevel.AVERAGE
+        elif score >= 30:
+            return RubricLevel.BELOW_AVERAGE
+        else:
+            return RubricLevel.POOR
     
     def _parse_ai_suggestions(self, content: str) -> List[str]:
         """Parse AI response to extract suggestions"""
@@ -590,19 +738,6 @@ class StandardizedRubric:
             "issues": issues
         }
 
-    def _score_to_level(self, score: int) -> RubricLevel:
-        """Convert score to level"""
-        if score >= 81:
-            return RubricLevel.EXCELLENT
-        elif score >= 61:
-            return RubricLevel.GOOD
-        elif score >= 41:
-            return RubricLevel.AVERAGE
-        elif score >= 21:
-            return RubricLevel.BELOW_AVERAGE
-        else:
-            return RubricLevel.POOR
-
     async def evaluate_prompt(self, text: str, use_llm: bool = False, generate_hash: bool = True) -> Dict[str, Any]:
         """Evaluate prompt using all criteria with AI-generated suggestions"""
         logger.info(f"🎯 Qwen starting comprehensive evaluation of prompt: '{text[:50]}...'")
@@ -621,30 +756,56 @@ class StandardizedRubric:
         total_weighted_score = 0
         total_weight = sum(c.weight for c in self.criteria.values())
         
-        logger.info("📝 Qwen evaluation in progress...")
+        logger.info("📝 Starting dual evaluation: Linguistic → Qwen validation → Final scoring...")
         
-        # First pass: calculate all scores
+        # Phase 1: Linguistic Analysis
+        logger.info("🔍 Phase 1: Linguistic analysis in progress...")
         for name, criterion in self.criteria.items():
             level, analysis = criterion.measure(text)
-            actual_score = analysis.get("score", 0)
+            linguistic_score = analysis.get("score", 0)
+            issues = analysis.get("issues", [])
+            
+            logger.info(f"📊 {name} linguistic score: {linguistic_score:.1f}/100")
+            
+            # Phase 2: Qwen Validation for this criterion
+            logger.info(f"🤖 Phase 2: Qwen validating {name}...")
+            qwen_validation = await self._get_qwen_validation(text, name, linguistic_score, issues)
+            
+            # Combine results
+            final_score = qwen_validation["final_score"]
             
             criteria_scores[name] = {
-                "level": level.name,
-                "score": actual_score,
-                "weight": criterion.weight
+                "level": self._score_to_level(final_score).name,
+                "score": final_score,
+                "weight": criterion.weight,
+                "linguistic_score": linguistic_score,
+                "qwen_score": qwen_validation["qwen_score"],
+                "agreement": qwen_validation["agreement_level"],
+                "confidence": qwen_validation["confidence"],
+                "qwen_reasoning": qwen_validation["qwen_reasoning"]
             }
             
+            # Enhanced analysis with dual validation info
+            analysis.update({
+                "score": final_score,
+                "linguistic_score": linguistic_score,
+                "qwen_validation": qwen_validation,
+                "validation_summary": f"Linguistic: {linguistic_score:.1f}, Qwen: {qwen_validation['qwen_score']:.1f}, Final: {final_score:.1f} ({qwen_validation['agreement_level']})"
+            })
+            
             detailed_analysis[name] = analysis
-            total_weighted_score += actual_score * criterion.weight
+            total_weighted_score += final_score * criterion.weight
+            
+            logger.info(f"✅ {name} final score: {final_score:.1f}/100 (L:{linguistic_score:.1f} + Q:{qwen_validation['qwen_score']:.1f}, {qwen_validation['agreement_level']})")
         
-        # Second pass: generate AI suggestions for each criterion
-        logger.info("🤖 Qwen generating AI-powered suggestions...")
+        # Phase 3: Generate AI suggestions for each criterion
+        logger.info("💡 Phase 3: Generating AI-powered suggestions...")
         for name, analysis in detailed_analysis.items():
             score = analysis.get("score", 0)
             issues = analysis.get("issues", [])
             
             # Generate AI suggestions for this criterion
-            ai_suggestions = await self._generate_ai_suggestions(text, name, score, issues)
+            ai_suggestions = await self._generate_ai_suggestions(text, name, int(score), issues)
             analysis["ai_suggestions"] = ai_suggestions
             analysis["suggestions"] = ai_suggestions  # Replace with AI suggestions
         
@@ -664,6 +825,9 @@ class StandardizedRubric:
                 seen.add(suggestion)
                 unique_suggestions.append(suggestion)
         
+        # Calculate validation summary
+        validation_summary = self._generate_validation_summary(criteria_scores)
+        
         result = {
             "text": text,
             "metrics": {
@@ -679,9 +843,19 @@ class StandardizedRubric:
                 "excellence_achieved": weighted_score >= 90,
                 "consistency_hash": text_hash
             },
+            "validation_info": {
+                "dual_validation_used": self.ai_client is not None,
+                "validation_summary": validation_summary,
+                "linguistic_vs_qwen": {name: {
+                    "linguistic": data.get("linguistic_score", data["score"]),
+                    "qwen": data.get("qwen_score", data["score"]),
+                    "final": data["score"],
+                    "agreement": data.get("agreement", "n/a")
+                } for name, data in criteria_scores.items()}
+            },
             "suggestions": unique_suggestions[:5],
             "ai_generated": True,
-            "rubric_version": "2.0"
+            "rubric_version": "2.1-dual-validation"
         }
         
         # Cache result
@@ -694,6 +868,32 @@ class StandardizedRubric:
             logger.info(f"   {i}. {suggestion}")
         
         return result
+
+    def _generate_validation_summary(self, criteria_scores: Dict) -> Dict[str, Any]:
+        """Generate summary of validation process"""
+        agreements = []
+        confidence_scores = []
+        
+        for name, data in criteria_scores.items():
+            if "agreement" in data:
+                agreements.append(data["agreement"])
+            if "confidence" in data:
+                confidence_scores.append(data["confidence"])
+        
+        agreement_counts = {
+            "agree": agreements.count("agree"),
+            "partial": agreements.count("partial"), 
+            "disagree": agreements.count("disagree")
+        }
+        
+        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
+        
+        return {
+            "total_criteria_validated": len(agreements),
+            "agreement_distribution": agreement_counts,
+            "average_confidence": round(avg_confidence, 2),
+            "validation_quality": "high" if avg_confidence > 0.7 else "medium" if avg_confidence > 0.5 else "low"
+        }
 
     def _level_to_score(self, level: RubricLevel) -> float:
         """Convert level to score - FALLBACK ONLY"""

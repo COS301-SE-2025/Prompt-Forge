@@ -1,5 +1,6 @@
 # main.py
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from typing import List
 from datetime import datetime
@@ -15,7 +16,7 @@ from models import (
 from routes import (
     health_check, read_root, analyze_prompt_metrics, optimize_prompt,
     optimize_prompt_with_goals, optimize_prompt_with_structure,
-    optimize_prompt_with_context, validate_token
+    optimize_prompt_with_context, validate_token, analyzer
 )
 
 # ----------------------------
@@ -146,6 +147,158 @@ def optimize_context(request: ContextBasedRequest):
     - Domain-specific improvements
     """
     return optimize_prompt_with_context(request)
+
+@app.post("/optimize-wizard", response_model=dict)
+async def optimize_wizard(request: PromptRequest):
+    """
+    Complete Optimizer Wizard: Analyze → Improve → Re-analyze → Compare
+    
+    Workflow:
+    1. Analyze: Use sentence transformers and linguistic analyzers
+    2. Improve: Use Qwen model for optimization
+    3. Re-analyze: Analyze the improved prompt 
+    4. Compare: Compare before/after analytics
+    5. Feedback: Provide user feedback on improvements
+    """
+    try:
+        if not request.text or request.text.strip() == "":
+            raise HTTPException(status_code=400, detail="Prompt text cannot be empty")
+        
+        logger.info(f"Starting optimizer wizard for: {request.text[:100]}...")
+        
+        # Step 1: ANALYZE - Initial comprehensive analysis
+        logger.info("Step 1: Analyzing original prompt...")
+        initial_analysis = await analyzer.analyze_prompt_comprehensive(request.text)
+        
+        # Step 2: IMPROVE - Use Qwen model for optimization
+        logger.info("Step 2: Optimizing prompt with AI...")
+        optimization_result = analyzer.qwen_client.optimize_prompt_simple(request.text)
+        
+        if not optimization_result["success"]:
+            # Fallback to goal-based optimization if simple fails
+            logger.info("Simple optimization failed, trying goal-based...")
+            fallback_result = analyzer.generate_goal_optimization(
+                request.text, 
+                {"clarity": True, "specificity": True, "actionability": True}, 
+                initial_analysis["metrics"]
+            )
+            optimized_text = fallback_result.get("optimized_prompt", request.text)
+            optimization_explanation = fallback_result.get("improvement_explanation", "Applied rule-based optimization")
+            used_ai = fallback_result.get("success", False)
+        else:
+            optimized_text = optimization_result["optimized_prompt"]
+            optimization_explanation = optimization_result["explanation"]
+            used_ai = True
+        
+        # Step 3: RE-ANALYZE - Analyze the improved prompt
+        logger.info("Step 3: Re-analyzing optimized prompt...")
+        improved_analysis = await analyzer.analyze_prompt_comprehensive(optimized_text)
+        
+        # Step 4: COMPARE - Compare initial and improved analytics
+        logger.info("Step 4: Comparing analytics...")
+        comparison = {
+            "metrics_comparison": {},
+            "improvements": [],
+            "regressions": [],
+            "overall_improvement": 0
+        }
+        
+        # Compare metrics
+        for metric, initial_score in initial_analysis["metrics"].items():
+            improved_score = improved_analysis["metrics"].get(metric, initial_score)
+            difference = improved_score - initial_score
+            
+            comparison["metrics_comparison"][metric] = {
+                "before": initial_score,
+                "after": improved_score,
+                "change": difference,
+                "improvement": difference > 0
+            }
+            
+            if difference > 0:
+                comparison["improvements"].append({
+                    "metric": metric,
+                    "improvement": difference,
+                    "description": f"{metric.title()} improved by {difference:.1f} points"
+                })
+            elif difference < 0:
+                comparison["regressions"].append({
+                    "metric": metric,
+                    "regression": abs(difference),
+                    "description": f"{metric.title()} decreased by {abs(difference):.1f} points"
+                })
+        
+        # Calculate overall improvement
+        initial_overall = initial_analysis["metrics"].get("overall", 0)
+        improved_overall = improved_analysis["metrics"].get("overall", 0)
+        comparison["overall_improvement"] = improved_overall - initial_overall
+        
+        # Step 5: FEEDBACK - Generate user feedback
+        logger.info("Step 5: Generating user feedback...")
+        
+        if comparison["overall_improvement"] < 2 and len(comparison["improvements"]) < 2:
+            feedback_type = "minimal_improvement"
+            feedback_message = "Your prompt is already well-structured. Only minor refinements were possible."
+        elif comparison["overall_improvement"] >= 10:
+            feedback_type = "significant_improvement"
+            feedback_message = f"Excellent! Your prompt has been significantly improved by {comparison['overall_improvement']:.1f} points overall."
+        else:
+            feedback_type = "moderate_improvement"
+            feedback_message = f"Good! Your prompt has been improved by {comparison['overall_improvement']:.1f} points overall."
+        
+        # Prepare improvement highlights
+        improvement_highlights = []
+        for improvement in comparison["improvements"][:3]:  # Top 3 improvements
+            improvement_highlights.append(improvement["description"])
+        
+        # Check for consistency between AI optimization and linguistic analysis
+        consistency_check = {
+            "consistent": len(comparison["regressions"]) == 0,
+            "ai_vs_linguistic_alignment": "good" if comparison["overall_improvement"] > 0 else "mixed",
+            "recommendation": "The AI optimization aligns well with linguistic analysis recommendations." if len(comparison["regressions"]) == 0 else "Some metrics showed regression - consider manual review."
+        }
+        
+        return {
+            "wizard_steps": {
+                "step1_initial_analysis": {
+                    "metrics": initial_analysis["metrics"],
+                    "issues": initial_analysis.get("issues", []),
+                    "rating": initial_analysis.get("rating", 0),
+                    "rating_explanation": initial_analysis.get("rating_explanation", "")
+                },
+                "step2_optimization": {
+                    "original_prompt": request.text,
+                    "optimized_prompt": optimized_text,
+                    "explanation": optimization_explanation,
+                    "used_ai": used_ai
+                },
+                "step3_reanalysis": {
+                    "metrics": improved_analysis["metrics"],
+                    "issues": improved_analysis.get("issues", []),
+                    "rating": improved_analysis.get("rating", 0),
+                    "rating_explanation": improved_analysis.get("rating_explanation", "")
+                },
+                "step4_comparison": comparison,
+                "step5_feedback": {
+                    "type": feedback_type,
+                    "message": feedback_message,
+                    "improvement_highlights": improvement_highlights,
+                    "consistency_check": consistency_check
+                }
+            },
+            "summary": {
+                "overall_improvement": comparison["overall_improvement"],
+                "key_improvements": improvement_highlights,
+                "final_recommendation": consistency_check["recommendation"],
+                "optimization_success": used_ai and comparison["overall_improvement"] > 0
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Optimizer wizard failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Optimizer wizard service temporarily unavailable")
 
 # ----------------------------
 # Validation and Information Routes

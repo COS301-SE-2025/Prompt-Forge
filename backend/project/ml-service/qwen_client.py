@@ -10,6 +10,7 @@ class QwenClient:
     def __init__(self):
         self.api_token = Config.HF_TOKEN
         self.model_endpoints = Config.QWEN_MODEL_ENDPOINTS
+        self.model = Config.QWEN_MODEL_ENDPOINTS[0] if Config.QWEN_MODEL_ENDPOINTS else "Qwen/Qwen2.5-72B-Instruct"
         self.token_validated = False
         self.client = None
 
@@ -23,10 +24,14 @@ class QwenClient:
 
     def validate_token(self) -> bool:
         """Validate the Hugging Face API token"""
+        logger.info(f"🔍 Token validation check - token_validated: {self.token_validated}, api_token length: {len(self.api_token) if self.api_token else 0}, client exists: {self.client is not None}")
+        
         if self.token_validated:
+            logger.info("✅ Using cached token validation")
             return True
             
         if not self.api_token or not self.client:
+            logger.info("❌ No token or client - validation failed")
             return False
             
         try:
@@ -447,3 +452,240 @@ Respond with ONLY valid JSON in this exact format:
                 "enhancement_type": "basic",
                 "success": False
             }
+
+    def optimize_prompt_simple(self, prompt: str) -> dict:
+        """
+        Simple prompt optimization using Qwen models.
+        Returns dict with suggestions and source information.
+        """
+        logger.info(f"🔧 Starting simple prompt optimization with Qwen")
+        
+        try:
+            # Validate token first
+            if not self.validate_token():
+                logger.warning("⚠️ Qwen service unavailable, using fallback optimization")
+                suggestions = self._fallback_simple_optimization_suggestions(prompt)
+                return {"suggestions": suggestions, "source": "fallback"}
+            
+            # Build optimization prompt
+            optimization_prompt = self._build_simple_optimization_prompt_v2(prompt)
+            
+            # Make API call to Qwen
+            logger.info("📡 Calling Qwen API for simple optimization...")
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert prompt engineer. Analyze the given prompt and provide specific, actionable suggestions for improvement."},
+                    {"role": "user", "content": optimization_prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.3
+            )
+            
+            # Parse response
+            qwen_response = response.choices[0].message.content.strip()
+            logger.info(f"✅ Received Qwen simple optimization response ({len(qwen_response)} chars)")
+            
+            # Parse the response to extract suggestions
+            suggestions = self._parse_simple_optimization_suggestions(qwen_response, prompt)
+            
+            return {"suggestions": suggestions, "source": "ai"}
+            
+        except Exception as e:
+            logger.error(f"❌ Error in Qwen simple optimization: {str(e)}")
+            suggestions = self._fallback_simple_optimization_suggestions(prompt)
+            return {"suggestions": suggestions, "source": "fallback"}
+    
+    def _build_simple_optimization_prompt_v2(self, original_prompt: str) -> str:
+        """Build optimization prompt for suggestion generation."""
+        return f"""
+Analyze this prompt and provide 3-5 specific improvement suggestions:
+
+**Prompt to analyze:**
+{original_prompt}
+
+**Instructions:**
+For each suggestion, provide:
+1. A clear description of what to improve
+2. The specific part that needs changing (before)
+3. The improved version (after)
+4. The expected impact/benefit
+
+**Response Format:**
+SUGGESTION 1:
+Description: [what to improve]
+Before: [original text/section]
+After: [improved version]
+Impact: [expected benefit]
+
+SUGGESTION 2:
+Description: [what to improve]
+Before: [original text/section]  
+After: [improved version]
+Impact: [expected benefit]
+
+[Continue for 3-5 suggestions total]
+
+Focus on practical improvements like clarity, specificity, structure, and actionability.
+"""
+    
+    def _parse_simple_optimization_suggestions(self, response: str, original_prompt: str) -> list:
+        """Parse Qwen's simple optimization response into suggestion list."""
+        suggestions = []
+        
+        try:
+            # Split response into suggestion blocks
+            suggestion_blocks = []
+            current_block = ""
+            
+            for line in response.split('\n'):
+                if line.strip().startswith('SUGGESTION'):
+                    if current_block.strip():
+                        suggestion_blocks.append(current_block.strip())
+                    current_block = line + '\n'
+                else:
+                    current_block += line + '\n'
+            
+            if current_block.strip():
+                suggestion_blocks.append(current_block.strip())
+            
+            # Parse each suggestion block
+            for block in suggestion_blocks:
+                suggestion = self._parse_suggestion_block(block, original_prompt)
+                if suggestion:
+                    suggestions.append(suggestion)
+            
+            # If no structured suggestions found, create generic ones
+            if not suggestions:
+                suggestions = self._create_generic_suggestions(original_prompt)
+            
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"❌ Error parsing suggestions: {str(e)}")
+            return self._create_generic_suggestions(original_prompt)
+    
+    def _parse_suggestion_block(self, block: str, original_prompt: str) -> dict:
+        """Parse individual suggestion block."""
+        try:
+            suggestion = "Improve prompt clarity and effectiveness"
+            before = original_prompt[:50] + "..." if len(original_prompt) > 50 else original_prompt
+            after = "Enhanced version of the prompt"
+            impact = "Better results and clarity"
+            
+            # Extract description/suggestion
+            if "Description:" in block:
+                desc_line = block.split("Description:")[1].split('\n')[0].strip()
+                if desc_line:
+                    suggestion = desc_line
+            
+            # Extract before
+            if "Before:" in block:
+                before_line = block.split("Before:")[1].split('\n')[0].strip()
+                if before_line:
+                    before = before_line
+            
+            # Extract after
+            if "After:" in block:
+                after_line = block.split("After:")[1].split('\n')[0].strip()
+                if after_line:
+                    after = after_line
+            
+            # Extract impact
+            if "Impact:" in block:
+                impact_line = block.split("Impact:")[1].split('\n')[0].strip()
+                if impact_line:
+                    impact = impact_line
+            
+            return {
+                "suggestion": suggestion,
+                "before": before,
+                "after": after,
+                "impact": impact
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error parsing suggestion block: {str(e)}")
+            return None
+    
+    def _create_generic_suggestions(self, prompt: str) -> list:
+        """Create generic suggestions when parsing fails."""
+        return [
+            {
+                "suggestion": "Add more specific details and context",
+                "before": prompt[:100] + "..." if len(prompt) > 100 else prompt,
+                "after": "Enhanced prompt with specific examples and clearer instructions",
+                "impact": "More precise and actionable responses"
+            },
+            {
+                "suggestion": "Improve clarity and structure",
+                "before": "Current prompt structure",
+                "after": "Well-organized prompt with clear sections and bullet points",
+                "impact": "Better comprehension and execution"
+            },
+            {
+                "suggestion": "Enhance actionability",
+                "before": "General instructions",
+                "after": "Step-by-step instructions with specific requirements",
+                "impact": "More consistent and reliable outputs"
+            }
+        ]
+    
+    def _fallback_simple_optimization_suggestions(self, prompt: str) -> list:
+        """Fallback optimization suggestions when Qwen is unavailable."""
+        logger.info("🔄 Using fallback simple optimization suggestions")
+        
+        try:
+            suggestions = []
+            
+            # Analyze prompt length and structure
+            is_short = len(prompt) < 50
+            has_questions = '?' in prompt
+            has_examples = any(word in prompt.lower() for word in ['example', 'like', 'such as'])
+            
+            # Add relevant suggestions based on analysis
+            if is_short:
+                suggestions.append({
+                    "suggestion": "Add more detailed context and requirements",
+                    "before": prompt,
+                    "after": f"{prompt}\n\nPlease provide specific details about [relevant context] and include examples where appropriate.",
+                    "impact": "More comprehensive and targeted responses"
+                })
+            
+            if not has_questions and not prompt.endswith('?'):
+                suggestions.append({
+                    "suggestion": "Make the request more specific with targeted questions",
+                    "before": prompt,
+                    "after": f"{prompt}\n\nSpecifically: What are the key considerations? What should be prioritized?",
+                    "impact": "More focused and actionable responses"
+                })
+            
+            if not has_examples:
+                suggestions.append({
+                    "suggestion": "Include examples or use cases for clarity",
+                    "before": prompt,
+                    "after": f"{prompt}\n\nFor example: [provide relevant example or scenario]",
+                    "impact": "Better understanding and more relevant responses"
+                })
+            
+            # Always add structure improvement
+            suggestions.append({
+                "suggestion": "Improve overall structure and formatting",
+                "before": "Current unstructured format",
+                "after": "**Objective:** [clear goal]\n**Context:** [background info]\n**Requirements:** [specific needs]",
+                "impact": "Clearer communication and better results"
+            })
+            
+            # Limit to 4 suggestions max
+            return suggestions[:4]
+            
+        except Exception as e:
+            logger.error(f"❌ Error in fallback suggestions: {str(e)}")
+            return [
+                {
+                    "suggestion": "Enhance prompt clarity and structure",
+                    "before": prompt,
+                    "after": f"Please provide a clear and detailed response to: {prompt}",
+                    "impact": "More reliable and comprehensive responses"
+                }
+            ]
