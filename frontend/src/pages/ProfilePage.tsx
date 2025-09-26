@@ -9,8 +9,10 @@ import { dashProfileService } from '../services/dashprofileService';
 import { PromptCard } from '@/components/PromptCard';
 import { SocialAPI } from '@/services/socialService';
 import { FullScreenSpinner } from '@/components/FullScreenSpinner';
-import { Swords } from 'lucide-react';
+import { Swords, Award } from 'lucide-react';
 import { promptWarsWebSocket } from '@/services/promptWarsWebSocket';
+import { BadgeCollection } from '@/components/BadgeCollection';
+import { BadgeCount } from '@/components/BadgeCount';
 
 
 type UserProfile = {
@@ -149,7 +151,7 @@ export default function ProfilePage() {
           return
         }
 
-        const response = await fetch(`${API_BASE_URL}/prompts/public/author/${username}?page=${currentPage - 1}&size=12`, {
+        const response = await fetch(`${API_BASE_URL}/prompts/public/author/${username}?page=${currentPage - 1}&size=9`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -325,7 +327,7 @@ export default function ProfilePage() {
     <div className="flex-1 flex flex-col w-full h-full">
       <div className="flex flex-col lg:flex-row flex-1">
         {/* Sidebar */}
-        <div className="w-full lg:w-64 bg-card border-r border-border p-6">
+        <div className="w-full lg:w-96 bg-card border-r border-border p-6">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-2">
               <img
@@ -340,7 +342,7 @@ export default function ProfilePage() {
               }
             </div>
             <h3
-              className="font-medium cursor-pointer hover:text-[#3ebb9e]"
+              className="font-bold cursor-pointer hover:text-[#3ebb9e]"
               onClick={() => navigate(`/profile-settings`)}
             >
               {username}
@@ -362,20 +364,20 @@ export default function ProfilePage() {
                 size="sm"
                 variant="outline"
                 
-                className={`transition-all duration-300 w-full 
+                className={`transition-all duration-300 w-full flex items-center justify-center
                   bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
                   `}
                 title={ "Challenge to Prompt Wars" }
               >
                 
-                <Swords className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-300" />
+                <Swords className="h-4 w-4" />
                 {/* Challenge */}
                
 
               </Button>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 w-full mt-4">
+            <div className="grid grid-cols-4 gap-2 w-full mt-4">
               <div className="text-center">
                 <div className="font-semibold">{publicPromptCount}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
@@ -394,24 +396,39 @@ export default function ProfilePage() {
                 <div className="font-semibold">{userProfile.followingCount}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>
+              <div className="text-center">
+                <div className="font-semibold flex items-center justify-center">
+                  <BadgeCount username={username} />
+                </div>
+                <div className="text-xs text-muted-foreground">Badges</div>
+              </div>
             </div>
           </div>
-          <div className="space-y-4">
+            <div className="space-y-4">
             <p className="font-medium">Bio</p>
-            <p className="mt-0 max-h-[340px] overflow-auto text-muted-foreground">{userProfile.bio}</p>
+            <p className="mt-0 max-h-[200px] overflow-auto text-muted-foreground">{userProfile.bio}</p>
           </div>
-        </div>
 
-        {/* Main Content */}
+          {/* Badges Section in Sidebar */}
+          <div className="mt-6">
+            <p className="font-medium mb-3">Badges</p>
+            <BadgeCollection
+              username={username}
+              showProgress={false}
+              isOwnProfile={false}
+              maxDisplay={12}
+              title=""
+              circularDisplay={true}
+            />
+          </div>
+        </div>        {/* Main Content */}
         <div className="flex-1 p-6 overflow-auto">
-          <h1 className="text-xl font-semibold mb-6">{`${userProfile.username}'s Profile`}</h1>
-
           {/* My Prompts Section */}
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium">Public Prompts</h2>
+            <div className="mb-4">
+              <h2 className="text-lg font-bold">{userProfile.username}'s Public Prompts</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {loadingPrompts ? (
                 <div className="flex justify-center items-center h-32 col-span-full">
                   <div className="text-center">

@@ -164,9 +164,18 @@ public class PaymentService {
       if (authorShares.size() == 1) {
         Map.Entry<UUID, Integer> authorShareEntry = authorShares.entrySet().iterator().next();
         UUID authorId = authorShareEntry.getKey();
-        String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(authorId);
-        return inititalizeSingleAuthorPayment(
-            customerEmail, subaccountCode, authorId, roundedTotalInCents);
+        try {
+          String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(authorId);
+          return inititalizeSingleAuthorPayment(
+              customerEmail, subaccountCode, authorId, roundedTotalInCents);
+        } catch (RuntimeException e) {
+          if (e.getMessage() != null && e.getMessage().contains("decrypting data")) {
+            throw new RuntimeException(
+                "Payment setup issue. The prompt author needs to update their payout details. "
+                    + "Please contact support.");
+          }
+          throw e;
+        }
       } else {
         // Prepare Paystack subaccounts payload
         List<Map<String, Object>> subaccounts = new ArrayList<>();
@@ -176,11 +185,20 @@ public class PaymentService {
           UUID authorId = entry.getKey();
           Integer authorShare = entry.getValue();
           totalCalculated += authorShare;
-          String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(authorId);
-          Map<String, Object> sub = new HashMap<>();
-          sub.put("subaccount", subaccountCode);
-          sub.put("share", authorShare); // share in kobo
-          subaccounts.add(sub);
+          try {
+            String subaccountCode = bankDetailsService.getSubaccountCodeByUserID(authorId);
+            Map<String, Object> sub = new HashMap<>();
+            sub.put("subaccount", subaccountCode);
+            sub.put("share", authorShare); // share in kobo
+            subaccounts.add(sub);
+          } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("decrypting data")) {
+              throw new RuntimeException(
+                  "Payment setup issue. One or more prompt authors need to update their payout "
+                      + "details. Please contact support.");
+            }
+            throw e;
+          }
         }
         return initializeSplitPayment(customerEmail, subaccounts, roundedTotalInCents);
       }

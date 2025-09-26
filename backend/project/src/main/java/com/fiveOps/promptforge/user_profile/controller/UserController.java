@@ -155,6 +155,46 @@ public class UserController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/discover")
+  public ResponseEntity<Map<String, Object>> getDiscoverUsersPaginated(
+      Authentication authentication,
+      HttpServletRequest request,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size,
+      @RequestParam(required = false) String search) {
+
+    String email;
+
+    search = (search == null) ? "" : search;
+
+    if (authentication != null
+        && authentication.getName() != null
+        && !authentication.getName().trim().isEmpty()) {
+      email = authentication.getName();
+    } else {
+      email = extractEmailFromCookie(request);
+    }
+
+    if (email.trim().equals("")) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Unauthenticated"));
+    }
+
+    UUID currentUserId = userService.getUserIdByEmail(email);
+
+    org.springframework.data.domain.Page<UserDto> usersPage =
+        userService.discoverUsersPaginated(search, currentUserId, page, size);
+
+    Map<String, Object> response =
+        Map.of(
+            "content", usersPage.getContent(),
+            "totalPages", usersPage.getTotalPages(),
+            "totalElements", usersPage.getTotalElements(),
+            "size", usersPage.getSize(),
+            "number", usersPage.getNumber());
+
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping("/me/followers")
   public List<UserDto> getFollowers(Authentication authentication, HttpServletRequest request) {
     String email;
@@ -326,9 +366,9 @@ public class UserController {
             "badges",
             user.getBadges() == null ? List.of() : user.getBadges(),
             "isFollowing",
-            user.getFollowers().indexOf(currentUserId) != -1,
+            user.getFollowers().contains(currentUserId),
             "isFollowedBy",
-            user.getFollowing().indexOf(currentUserId) != -1);
+            user.getFollowing().contains(currentUserId));
 
     return ResponseEntity.ok(cardData);
   }
