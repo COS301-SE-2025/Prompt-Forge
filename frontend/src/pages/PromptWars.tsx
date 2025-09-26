@@ -928,6 +928,7 @@ const isMultiplayerGame = !!gameId;
 
     try {
       const requestBody = {
+        model: "anthropic/claude-3-haiku",
         messages: [
           {
             role: "user",
@@ -1149,6 +1150,7 @@ const isMultiplayerGame = !!gameId;
       // Generate opponent prompt using AI
       try {
         const requestBody = {
+          model: "anthropic/claude-3-haiku",
           messages: [
             {
               role: "user",
@@ -1234,6 +1236,7 @@ Please provide only the prompt itself, nothing else.`,
       
       try {
         const requestBody = {
+          model: "anthropic/claude-3-haiku",
           messages: [
             {
               role: "user",
