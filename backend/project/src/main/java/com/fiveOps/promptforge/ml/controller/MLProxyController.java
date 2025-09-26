@@ -22,7 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class MLProxyController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MLProxyController.class);
-  private final String mlServiceUrl = "http://localhost:8000";
+  private final String mlServiceUrl = "http://localhost:8001";
   private final RestTemplate restTemplate = new RestTemplate();
 
   @GetMapping("/health")
@@ -138,6 +138,198 @@ public class MLProxyController {
 
     try {
       String url = mlServiceUrl + "/optimize-with-context";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/optimize-simple")
+  public ResponseEntity<String> optimizeSimple(@RequestBody String body) {
+    LOGGER.info("=== SIMPLE OPTIMIZATION PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/optimize-simple";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/wizard-analyze")
+  public ResponseEntity<String> wizardAnalyze(@RequestBody String body) {
+    LOGGER.info("=== WIZARD ANALYZE PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/wizard-analyze";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/wizard-goals")
+  public ResponseEntity<String> wizardGoals(@RequestBody String body) {
+    LOGGER.info("=== WIZARD GOALS PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/wizard-goals";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/wizard-structure")
+  public ResponseEntity<String> wizardStructure(@RequestBody String body) {
+    LOGGER.info("=== WIZARD STRUCTURE PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/wizard-structure";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/wizard-context")
+  public ResponseEntity<String> wizardContext(@RequestBody String body) {
+    LOGGER.info("=== WIZARD CONTEXT PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/wizard-context";
+      LOGGER.info("Proxying request to ML service: {}", url);
+
+      HttpEntity<String> entity = createHttpEntity(body);
+      LOGGER.info("Sending request to ML service...");
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+      return handleSuccessfulResponse(response);
+
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      return handleHttpClientError(e);
+    } catch (org.springframework.web.client.HttpServerErrorException e) {
+      return handleHttpServerError(e);
+    } catch (org.springframework.web.client.ResourceAccessException e) {
+      return handleResourceAccessError(e);
+    } catch (Exception e) {
+      return handleUnexpectedError(e);
+    }
+  }
+
+  @PostMapping("/wizard-comprehensive")
+  public ResponseEntity<String> wizardComprehensive(@RequestBody String body) {
+    LOGGER.info("=== WIZARD COMPREHENSIVE PROXY START ===");
+    LOGGER.info("Request body length: {}", body != null ? body.length() : 0);
+    LOGGER.debug(
+        "Request body preview: {}",
+        body != null && body.length() > 100 ? body.substring(0, 100) + "..." : body);
+
+    validateRequestBody(body);
+
+    try {
+      String url = mlServiceUrl + "/wizard-comprehensive";
       LOGGER.info("Proxying request to ML service: {}", url);
 
       HttpEntity<String> entity = createHttpEntity(body);
