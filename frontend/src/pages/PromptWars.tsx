@@ -928,6 +928,7 @@ const isMultiplayerGame = !!gameId;
 
     try {
       const requestBody = {
+        model: "meta-llama/llama-4-scout",
         messages: [
           {
             role: "user",
@@ -1149,6 +1150,7 @@ const isMultiplayerGame = !!gameId;
       // Generate opponent prompt using AI
       try {
         const requestBody = {
+          model: "meta-llama/llama-4-scout",
           messages: [
             {
               role: "user",
@@ -1234,6 +1236,7 @@ Please provide only the prompt itself, nothing else.`,
       
       try {
         const requestBody = {
+          model: "meta-llama/llama-4-scout",
           messages: [
             {
               role: "user",
