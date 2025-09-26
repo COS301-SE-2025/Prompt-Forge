@@ -282,6 +282,8 @@ export default function SubmitPromptPage() {
   const [cryptoAddress, setCryptoAddress] = useState("")
   const [cryptoNetwork, setCryptoNetwork] = useState("")
 
+  // Add this state at the top of the component with other useState declarations
+  const [isPaymentOverlayOpen, setIsPaymentOverlayOpen] = useState(false)
 
   const handleInputChange = (field: keyof PromptSubmission, value: string | boolean|number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -1230,7 +1232,21 @@ export default function SubmitPromptPage() {
                       </p>
                     </div>
                     <div className="flex justify-center mt-3">
-                      <PaymentOverlay process="add" bankList={bankList} currentPayoutCard={payoutDetails} setPaymentCard={setPayoutDetails} />
+                      <Button 
+                        onClick={() => setIsPaymentOverlayOpen(true)} 
+                        variant="outline" 
+                        className="w-full mt-3"
+                      >
+                        Add Payment Method
+                      </Button>
+                      <PaymentOverlay 
+                        process="add" 
+                        bankList={bankList} 
+                        currentPayoutCard={payoutDetails} 
+                        setPaymentCard={setPayoutDetails}
+                        isOpen={isPaymentOverlayOpen}
+                        onOpenChange={setIsPaymentOverlayOpen}
+                      />
                     </div>
                   </>
                   :

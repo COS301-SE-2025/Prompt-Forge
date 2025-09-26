@@ -63,7 +63,7 @@ export const CartItem = ({
     <div className="flex items-center mt-4 md:mt-0">
       <span className="font-medium text-lg mr-6">
         {typeof promptPrice === 'number' 
-          ? (promptPrice === 0 ? 'Free' : `$${promptPrice.toFixed(2)}`)
+          ? (promptPrice === 0 ? 'Free' : `ZAR ${promptPrice.toFixed(2)}`)
           : 'Free'}
       </span>
       <button onClick={handleRemove} className="text-gray-400 hover:text-red-500 transition-colors p-1">

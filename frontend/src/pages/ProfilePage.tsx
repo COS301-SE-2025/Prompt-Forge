@@ -1,528 +1,523 @@
-"use client"
+import { API_BASE_URL } from '../config/api';
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
+import { MyPrompt } from '@/Models/MyPrompt';
+import { dashProfileService } from '../services/dashprofileService';
 
-import UnderConstructionPage from "./UnderConstructionPage"
 
-export default function CommunityPage() {
-  return <UnderConstructionPage />
+import { PromptCard } from '@/components/PromptCard';
+import { SocialAPI } from '@/services/socialService';
+import { FullScreenSpinner } from '@/components/FullScreenSpinner';
+import { Swords, Award } from 'lucide-react';
+import { promptWarsWebSocket } from '@/services/promptWarsWebSocket';
+import { BadgeCollection } from '@/components/BadgeCollection';
+import { BadgeCount } from '@/components/BadgeCount';
+
+
+type UserProfile = {
+  userId: string
+  username: string
+  bio: string
+  badges: any[]
+  followingCount: number
+  followersCount: number
+  profilePicture?: string
+  isFollowing: boolean
+  isFollowedBy: boolean
+  isActive?:boolean
 }
-// "use client"
 
-// import { API_BASE_URL } from '../config/api';
-// import { useState, useEffect } from "react"
-// import { useParams, useNavigate } from "react-router-dom"
-// import { Button } from "@/components/ui/Button"
-// import { Card } from "@/components/ui/Card"
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
-// import {
-//   User,
-//   Star,
-//   Calendar,
-//   MapPin,
-//   LinkIcon,
-//   UserPlus,
-//   UserMinus,
-//   MessageCircle,
-//   Share,
-//   MoreHorizontal,
-// } from "lucide-react"
-// import { StandardPromptCard } from "@/components/StandardPromptCard"
 
-// interface UserProfile {
-//   id: string
-//   username: string
-//   email: string
-//   profilePicture?: string
-//   bio?: string
-//   location?: string
-//   website?: string
-//   joinedAt: string
-//   followers: number
-//   following: number
-//   totalPrompts: number
-//   averageRating: number
-//   isFollowing: boolean
-//   isCurrentUser: boolean
-// }
+export default function ProfilePage() {
+  const { username } = useParams<{ username: string }>()
+  // Category breakdown state
+  const [categoryBreakdown, setCategoryBreakdown] = useState<Record<string, number>>({});
+  const [loadingCategoryBreakdown, setLoadingCategoryBreakdown] = useState(true);
+  const navigate = useNavigate()
 
-// interface UserPrompt {
-//   id: string
-//   title: string
-//   description: string
-//   rating: number
-//   uses: number
-//   price: number
-//   featured: boolean
-//   tags: string[]
-//   category: string
-//   createdAt: string
-// }
+  // Auth and profile
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    userId: "",
+    username: username || "",
+    bio: "",
+    badges: [],
+    followingCount: 0,
+    followersCount: 0,
+    isFollowing: false,
+    isFollowedBy: false
+  })
 
-// export default function UserProfilePage() {
-//   const { userId } = useParams<{ userId: string }>()
-//   const navigate = useNavigate()
+  // Prompts and ratings
+  const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([])
+  const [loadingPrompts, setLoadingPrompts] = useState(true)
+  const [avgRatingMap, setAvgRatingMap] = useState<Record<string, number>>({})
+  const [publicPromptCount, setPublicPromptCount] = useState<number>(0)
+  // Dashboard
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-//   const [profile, setProfile] = useState<UserProfile | null>(null)
-//   const [prompts, setPrompts] = useState<UserPrompt[]>([])
-//   const [followers, setFollowers] = useState<UserProfile[]>([])
-//   const [following, setFollowing] = useState<UserProfile[]>([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-//   const [isFollowLoading, setIsFollowLoading] = useState(false)
-//   const [activeTab, setActiveTab] = useState("prompts")
+  //Pagination
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
-//   useEffect(() => {
-//     const fetchUserProfile = async () => {
-//       if (!userId) return
+  useEffect(() => {
+    const checkAuth = () => {
+      const username = localStorage.getItem("username")
+      const userId = localStorage.getItem("userId")
+      if (username && username !== "Guest" && userId) {
+        setIsAuthenticated(true)
+        setCurrentUserId(userId)
+      } else {
+        setIsAuthenticated(false)
+        navigate("/login")
+      }
+      setAuthLoading(false)
+    }
+    checkAuth()
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "username" || e.key === "userId") checkAuth()
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [navigate])
 
-//       setLoading(true)
-//       setError(null)
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!isAuthenticated) return
 
-//       try {
-//         // Fetch user profile
-//         const profileResponse = await fetch(`${API_BASE_URL}/users/${userId}`, {
-//           method: "GET",
-//           credentials: "include",
-//           headers: { "Content-Type": "application/json" },
-//         })
+      try {
+        const profile: UserProfile = await dashProfileService.getDashboardProfileByUsername(username || "")
+        setUserProfile(profile)
+        setLoading(false);
+        return profile;
+      }
+      catch (error) {
+        console.error('Failed to fetch user profile:', error)
+        // Check if it's an authentication error
+        if (error instanceof Error && error.message.includes('401')) {
+          setIsAuthenticated(false)
+          navigate("/login")
+        }
+      }
+    }
 
-//         if (!profileResponse.ok) {
-//           throw new Error("User not found")
-//         }
+    fetchUserProfile()
+    .then((profile) =>{
+      const userId = localStorage.getItem('userId')
+      
+      if (profile && userId) {
+        promptWarsWebSocket.connect(userId)
+        .then(()=>{
+          promptWarsWebSocket.getUserOnlineStatus({"userId":userId,"otherUserId":profile.userId})
+        })
+      }
 
-//         const profileData = await profileResponse.json()
-//         const currentUserId = localStorage.getItem("userId")
+    })
 
-//         setProfile({
-//           ...profileData,
-//           isCurrentUser: profileData.id === currentUserId,
-//           isFollowing: profileData.isFollowing || false,
-//         })
+    const subscribeActivity = promptWarsWebSocket.on('USER_ONLINE_STATUS', (data: any) => {
+      setUserProfile(prev => ({
+        ...prev,
+        isActive: data.isActive,
+      }))
 
-//         // Fetch user's public prompts
-//         const promptsResponse = await fetch(`${API_BASE_URL}/prompts/author/${userId}/public`, {
-//           method: "GET",
-//           credentials: "include",
-//           headers: { "Content-Type": "application/json" },
-//         })
+      
+    })
 
-//         if (promptsResponse.ok) {
-//           const promptsData = await promptsResponse.json()
-//           setPrompts(promptsData || [])
-//         }
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to load profile")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
+    return () => {
+      subscribeActivity();
+    }
 
-//     fetchUserProfile()
-//   }, [userId])
-
-//   const fetchFollowers = async () => {
-//     if (!userId) return
-
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/users/${userId}/followers`, {
-//         method: "GET",
-//         credentials: "include",
-//         headers: { "Content-Type": "application/json" },
-//       })
-
-//       if (response.ok) {
-//         const data = await response.json()
-//         setFollowers(data || [])
-//       }
-//     } catch (err) {
-//       console.error("Failed to fetch followers:", err)
-//     }
-//   }
-
-//   const fetchFollowing = async () => {
-//     if (!userId) return
-
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/users/${userId}/following`, {
-//         method: "GET",
-//         credentials: "include",
-//         headers: { "Content-Type": "application/json" },
-//       })
-
-//       if (response.ok) {
-//         const data = await response.json()
-//         setFollowing(data || [])
-//       }
-//     } catch (err) {
-//       console.error("Failed to fetch following:", err)
-//     }
-//   }
-
-//   const handleFollow = async () => {
-//     if (!profile || isFollowLoading) return
-
-//     setIsFollowLoading(true)
-
-//     try {
-//       const endpoint = profile.isFollowing ? "unfollow" : "follow"
-//       const response = await fetch(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
-//         method: "POST",
-//         credentials: "include",
-//         headers: { "Content-Type": "application/json" },
-//       })
-
-//       if (response.ok) {
-//         setProfile((prev) =>
-//           prev
-//             ? {
-//                 ...prev,
-//                 isFollowing: !prev.isFollowing,
-//                 followers: prev.isFollowing ? prev.followers - 1 : prev.followers + 1,
-//               }
-//             : null,
-//         )
-//       }
-//     } catch (err) {
-//       console.error("Failed to follow/unfollow:", err)
-//     } finally {
-//       setIsFollowLoading(false)
-//     }
-//   }
-
-//   const handleMessage = () => {
-//     // Navigate to messaging page or open chat
-//     navigate(`/messages/${userId}`)
-//   }
-
-//   const handleShare = async () => {
-//     try {
-//       await navigator.share({
-//         title: `${profile?.username}'s Profile`,
-//         url: window.location.href,
-//       })
-//     } catch (err) {
-//       // Fallback to clipboard
-//       navigator.clipboard.writeText(window.location.href)
-//     }
-//   }
-
-//   // Update the allowedTags array to match the actual Category type
-//   const allowedTags = [
-//     "default",
-//     "Business", 
-//     "Development", 
-//     "Coding", 
-//     "Science", 
-//     "Problem Solving", 
-//     "Technical", 
-//     "Health", 
-//     "Creative Writing",  // Changed from "Writing"
-//     "Research", 
-//     "Education", 
-//     "Marketing", 
-//     "Data Analysis", 
-//     "Content Creation",  // Changed from "Content"
-//     "Gaming", 
-//     "Environment", 
-//     "null"
-//   ] as const;
-
-//   // Create a mapping function to handle tag conversion
-//   const mapTagToCategory = (tag: string): typeof allowedTags[number] => {
-//     const tagMap: Record<string, typeof allowedTags[number]> = {
-//       "Writing": "Creative Writing",
-//       "Content": "Content Creation", 
-//       "Design": "default",  // Map to default since "Design" isn't in Category type
-//       "SEO": "Marketing",
-//       // Add other mappings as needed
-//     };
     
-//     const mappedTag = tagMap[tag] || tag;
-//     return allowedTags.includes(mappedTag as typeof allowedTags[number]) 
-//       ? (mappedTag as typeof allowedTags[number])
-//       : "default";
-//   };
+  }, [isAuthenticated, navigate])
 
-//   if (loading) {
-//     return (
-//       <div className="flex justify-center items-center h-screen">
-//         <div className="text-center">
-//           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-//           <p className="text-muted-foreground">Loading profile...</p>
-//         </div>
-//       </div>
-//     )
-//   }
+  // Fetch user's prompts
+  useEffect(() => {
+    const fetchMyPrompts = async () => {
+      if (!isAuthenticated) {
+        setLoadingPrompts(false)
+        return
+      }
+      setLoadingPrompts(true)
+      try {
+        const userId = localStorage.getItem("userId")
+        if (!userId) {
+          setMyPrompts([])
+          setLoadingPrompts(false)
+          return
+        }
 
-//   if (error || !profile) {
-//     return (
-//       <div className="flex justify-center items-center h-screen">
-//         <div className="text-center">
-//           <div className="text-red-500 mb-4">
-//             <User className="h-12 w-12 mx-auto mb-4" />
-//           </div>
-//           <h3 className="text-lg font-medium mb-2">Profile Not Found</h3>
-//           <p className="text-muted-foreground mb-4">{error || "This user profile could not be found"}</p>
-//           <Button onClick={() => navigate("/marketplace")} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
-//             Back to Marketplace
-//           </Button>
-//         </div>
-//       </div>
-//     )
-//   }
+        const response = await fetch(`${API_BASE_URL}/prompts/public/author/${username}?page=${currentPage - 1}&size=9`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
 
-//   return (
-//     <div className="flex-1 flex flex-col w-full h-full bg-background">
-//       <div className="max-w-6xl mx-auto p-6">
-//         {/* Profile Header */}
-//         <Card className="p-6 mb-6">
-//           <div className="flex flex-col md:flex-row gap-6">
-//             {/* Profile Image and Basic Info */}
-//             <div className="flex flex-col items-center md:items-start">
-//               <div className="relative mb-4">
-//                 <img
-//                   src={profile.profilePicture || "/placeholder.svg?height=120&width=120"}
-//                   alt={profile.username}
-//                   className="w-32 h-32 rounded-full object-cover border-4 border-border"
-//                 />
-//                 <div className="absolute bottom-2 right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-background"></div>
-//               </div>
+        });
+        if (response.ok) {
+          let page = (await response.json());
 
-//               {/* Action Buttons */}
-//               {!profile.isCurrentUser && (
-//                 <div className="flex gap-2 mb-4">
-//                   <Button
-//                     onClick={handleFollow}
-//                     disabled={isFollowLoading}
-//                     className={
-//                       profile.isFollowing
-//                         ? "bg-muted text-foreground hover:bg-red-500 hover:text-white"
-//                         : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-//                     }
-//                   >
-//                     {isFollowLoading ? (
-//                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-//                     ) : profile.isFollowing ? (
-//                       <UserMinus className="h-4 w-4 mr-2" />
-//                     ) : (
-//                       <UserPlus className="h-4 w-4 mr-2" />
-//                     )}
-//                     {profile.isFollowing ? "Unfollow" : "Follow"}
-//                   </Button>
+          setTotalPages(page.totalPages)
+          setPublicPromptCount(page.totalElements)
+          let prompts = page.content;
 
-//                   <Button variant="outline" onClick={handleMessage}>
-//                     <MessageCircle className="h-4 w-4 mr-2" />
-//                     Message
-//                   </Button>
+          if (!Array.isArray(prompts)) prompts = [];
+          console.log("propmts:",prompts);
 
-//                   <Button variant="outline" size="icon" onClick={handleShare}>
-//                     <Share className="h-4 w-4" />
-//                   </Button>
+          const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description || "",
+            content: p.content || "",
+            category: p.category || "General",
+            tags: [...new Set(p.tagNames)],
+            createdAt: p.createdAt,
+            updatedAt: p.publishedAt || p.createdAt,
+            rating: 0,
+            uses: p.uses || 0,
+            featured: p.featured || false,
+            price: p.price || 0,
+            isPrivate: p.visibility === "private",
+            isFavorite: p.isFavorite || false,
+            source: p.source
+          }));
+          setMyPrompts(mappedPrompts);
+        } else if (response.status === 401) {
+          localStorage.removeItem("username")
+          localStorage.removeItem("userId")
+          setIsAuthenticated(false)
+          navigate("/login")
+        } else {
+          setMyPrompts([])
+        }
+      } catch {
+        setMyPrompts([])
+      }
+      setLoadingPrompts(false)
+    }
+    fetchMyPrompts()
+  }, [isAuthenticated, navigate, currentPage])
 
-//                   <Button variant="outline" size="icon">
-//                     <MoreHorizontal className="h-4 w-4" />
-//                   </Button>
-//                 </div>
-//               )}
-//             </div>
+  // Fetch avgRating for each prompt
+  useEffect(() => {
+    const fetchRatings = async () => {
+      if (!myPrompts.length) return
+      const newMap: Record<string, number> = {}
+      await Promise.all(
+        myPrompts.map(async (prompt) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/store/prompts/${prompt.id}/reviews`, {
+              method: "GET",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+            })
+            if (response.ok) {
+              const data = await response.json()
+              const reviews = data?.content || []
+              const avg =
+                reviews.length > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length : 0
+              newMap[prompt.id] = avg
+            } else {
+              newMap[prompt.id] = 0
+            }
+          } catch {
+            newMap[prompt.id] = 0
+          }
+        }),
+      )
+      setAvgRatingMap(newMap)
+    }
+    fetchRatings()
+  }, [myPrompts])
 
-//             {/* Profile Details */}
-//             <div className="flex-1">
-//               <div className="flex items-center gap-2 mb-2">
-//                 <h1 className="text-3xl font-bold">{profile.username}</h1>
-//                 {profile.isCurrentUser && (
-//                   <Button variant="outline" size="sm" onClick={() => navigate("/profile/settings")}>
-//                     Edit Profile
-//                   </Button>
-//                 )}
-//               </div>
+  const handleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
+    try {
+      if (isCurrentlyFollowing) {
+        await SocialAPI.unfollowUser(userId);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: !prev.isFollowing,
+          followersCount: prev.followersCount - 1
+        }));
+      } else {
+        await SocialAPI.followUser(userId);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: !prev.isFollowing,
+          followersCount: prev.followersCount + 1
+        }));
+      }
+    }
+    catch (error) {
+      console.error('Failed to follow/unfollow user:', error);
+      setError('Failed to update follow status. Please try again.');
+    }
+  }
 
-//               {profile.bio && <p className="text-muted-foreground mb-4 max-w-2xl">{profile.bio}</p>}
 
-//               {/* Profile Meta */}
-//               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-//                 {profile.location && (
-//                   <div className="flex items-center gap-1">
-//                     <MapPin className="h-4 w-4" />
-//                     {profile.location}
-//                   </div>
-//                 )}
+  if (authLoading) {
+    return (
+      <FullScreenSpinner content="Checking authentication"/>
+    )
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <FullScreenSpinner content="Redirecting to login"/>
+    )
+  }
 
-//                 {profile.website && (
-//                   <div className="flex items-center gap-1">
-//                     <LinkIcon className="h-4 w-4" />
-//                     <a
-//                       href={profile.website}
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                       className="hover:text-[#3ebb9e]"
-//                     >
-//                       {profile.website}
-//                     </a>
-//                   </div>
-//                 )}
+  if (loading) {
+    return (
+      <FullScreenSpinner content="Loading profile"/>
+    )
+  }
 
-//                 <div className="flex items-center gap-1">
-//                   <Calendar className="h-4 w-4" />
-//                   Joined{" "}
-//                   {new Date(profile.joinedAt).toLocaleDateString("en-US", {
-//                     month: "long",
-//                     year: "numeric",
-//                   })}
-//                 </div>
-//               </div>
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">Error Loading Profile</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
-//               {/* Stats */}
-//               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-//                 <div className="text-center p-3 bg-muted rounded-lg">
-//                   <div className="text-2xl font-bold">{profile.totalPrompts}</div>
-//                   <div className="text-sm text-muted-foreground">Prompts</div>
-//                 </div>
+  if (userProfile.userId === "") {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <svg className="h-12 w-12 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium mb-2">No Profile Data</h3>
+          <p className="text-muted-foreground mb-4">Unable to load dashboard information</p>
+          <Button onClick={() => window.location.reload()} className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex-1 flex flex-col w-full h-full">
+      <div className="flex flex-col lg:flex-row flex-1">
+        {/* Sidebar */}
+        <div className="w-full lg:w-96 bg-card border-r border-border p-6">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="relative mb-2">
+              <img
+                src={userProfile.profilePicture || "/placeholder.svg?height=80&width=80"}
+                alt="Profile"
+                className="w-20 h-20 rounded-full object-cover cursor-pointer"
+                onClick={() => navigate(`/profile-settings`)}
+              />
+              {
+                userProfile.isActive &&
+                <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
+              }
+            </div>
+            <h3
+              className="font-bold cursor-pointer hover:text-[#3ebb9e]"
+              onClick={() => navigate(`/profile-settings`)}
+            >
+              {username}
+            </h3>
 
-//                 <div className="text-center p-3 bg-muted rounded-lg">
-//                   <div className="text-2xl font-bold flex items-center justify-center gap-1">
-//                     <Star className="h-5 w-5 text-yellow-400" />
-//                     {profile.averageRating.toFixed(1)}
-//                   </div>
-//                   <div className="text-sm text-muted-foreground">Rating</div>
-//                 </div>
+            <div className="flex space-x-2 my-3">
+              <Button
+                size="sm"
+                variant={userProfile.isFollowing ? "outline" : "default"}
+                className={`px-6 flex-1 ${userProfile.isFollowing
+                  ? "hover:border-[#3ebb9e] hover:text-[#3ebb9e]"
+                  : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                  } transition-colors duration-300`}
+                onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
+              >
+                {userProfile.isFollowing ? "Following" : "Follow"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                
+                className={`transition-all duration-300 w-full flex items-center justify-center
+                  bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
+                  `}
+                title={ "Challenge to Prompt Wars" }
+              >
+                
+                <Swords className="h-4 w-4" />
+                {/* Challenge */}
+               
 
-//                 <div
-//                   className="text-center p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
-//                   onClick={() => {
-//                     setActiveTab("followers")
-//                     fetchFollowers()
-//                   }}
-//                 >
-//                   <div className="text-2xl font-bold">{profile.followers}</div>
-//                   <div className="text-sm text-muted-foreground">Followers</div>
-//                 </div>
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-2 w-full mt-4">
+              <div className="text-center">
+                <div className="font-semibold">{publicPromptCount}</div>
+                <div className="text-xs text-muted-foreground">Prompts</div>
+              </div>
+              <div
+                className="text-center cursor-pointer hover:text-[#3ebb9e]"
+                onClick={() => navigate(`/profile/${currentUserId}`)}
+              >
+                <div className="font-semibold">{userProfile.followersCount}</div>
+                <div className="text-xs text-muted-foreground">Followers</div>
+              </div>
+              <div
+                className="text-center cursor-pointer hover:text-[#3ebb9e]"
+                onClick={() => navigate(`/profile/${currentUserId}`)}
+              >
+                <div className="font-semibold">{userProfile.followingCount}</div>
+                <div className="text-xs text-muted-foreground">Following</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold flex items-center justify-center">
+                  <BadgeCount username={username} />
+                </div>
+                <div className="text-xs text-muted-foreground">Badges</div>
+              </div>
+            </div>
+          </div>
+            <div className="space-y-4">
+            <p className="font-medium">Bio</p>
+            <p className="mt-0 max-h-[200px] overflow-auto text-muted-foreground">{userProfile.bio}</p>
+          </div>
 
-//                 <div
-//                   className="text-center p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
-//                   onClick={() => {
-//                     setActiveTab("following")
-//                     fetchFollowing()
-//                   }}
-//                 >
-//                   <div className="text-2xl font-bold">{profile.following}</div>
-//                   <div className="text-sm text-muted-foreground">Following</div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </Card>
+          {/* Badges Section in Sidebar */}
+          <div className="mt-6">
+            <p className="font-medium mb-3">Badges</p>
+            <BadgeCollection
+              username={username}
+              showProgress={false}
+              isOwnProfile={false}
+              maxDisplay={12}
+              title=""
+              circularDisplay={true}
+            />
+          </div>
+        </div>        {/* Main Content */}
+        <div className="flex-1 p-6 overflow-auto">
+          {/* My Prompts Section */}
+          <div>
+            <div className="mb-4">
+              <h2 className="text-lg font-bold">{userProfile.username}'s Public Prompts</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {loadingPrompts ? (
+                <div className="flex justify-center items-center h-32 col-span-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3ebb9e] mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Loading prompts...</p>
+                  </div>
+                </div>
+              ) : myPrompts.length === 0 ? (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground mb-4">No Prompts Yet.</p>
+                </div>
+              ) : (
+                myPrompts.map((prompt, idx) => {
+                  
+                  return (
+                    <div key={prompt.id + '-' + idx}>
+                      <PromptCard
+                        id={prompt.id}
+                        title={prompt.title}
+                        description={prompt.description}
+                        rating={avgRatingMap[prompt.id] ?? 0}
+                        price={prompt.price}
+                        tags={prompt.tags}
+                        authorname={username || ""}
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
-//         {/* Profile Content Tabs */}
-//         <Tabs value={activeTab} onValueChange={setActiveTab}>
-//           <TabsList className="mb-6">
-//             <TabsTrigger value="prompts">Prompts ({prompts.length})</TabsTrigger>
-//             <TabsTrigger value="followers">Followers ({profile.followers})</TabsTrigger>
-//             <TabsTrigger value="following">Following ({profile.following})</TabsTrigger>
-//           </TabsList>
+          {/* Pagination - Responsive */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-1 sm:space-x-2 mt-6 sm:mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 sm:h-9 sm:px-3"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
+              </Button>
 
-//           <TabsContent value="prompts">
-//             {prompts.length > 0 ? (
-//               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-//                 {prompts.map((prompt) => (
-//                   <StandardPromptCard
-//                     key={prompt.id}
-//                     id={prompt.id}
-//                     title={prompt.title}
-//                     description={prompt.description}
-//                     rating={prompt.rating}
-//                     uses={prompt.uses}
-//                     price={prompt.price}
-//                     featured={prompt.featured}
-//                     isPrivate={false}
-//                     isFavorite={false}
-//                     tags={prompt.tags.map(mapTagToCategory)}
-//                     category={prompt.category}
-//                     authorName={profile.username}
-//                     isOwned={false}
-//                     source="authored" // Use source instead of isBought
-//                     content=""
-//                     copiedId={null}
-//                   />
-//                 ))}
-//               </div>
-//             ) : (
-//               <div className="text-center py-12">
-//                 <div className="text-muted-foreground mb-4">
-//                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                   <h3 className="text-lg font-medium mb-2">No Public Prompts</h3>
-//                   <p>{profile.username} hasn't shared any public prompts yet.</p>
-//                 </div>
-//               </div>
-//             )}
-//           </TabsContent>
+              {/* Show fewer page numbers on mobile */}
+              {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 3 : 5) }).map((_, i) => {
+                let pageNumber
+                const maxPages = window.innerWidth < 640 ? 3 : 5
 
-//           <TabsContent value="followers">
-//             {followers.length > 0 ? (
-//               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-//                 {followers.map((follower) => (
-//                   <Card key={follower.id} className="p-4 hover:shadow-md transition-shadow">
-//                     <div className="flex items-center space-x-3">
-//                       <img
-//                         src={follower.profilePicture || "/placeholder.svg?height=40&width=40"}
-//                         alt={follower.username}
-//                         className="w-10 h-10 rounded-full object-cover"
-//                       />
-//                       <div className="flex-1">
-//                         <h3 className="font-medium">{follower.username}</h3>
-//                         {follower.bio && <p className="text-sm text-muted-foreground truncate">{follower.bio}</p>}
-//                       </div>
-//                       <Button variant="outline" size="sm" onClick={() => navigate(`/profile/${follower.id}`)}>
-//                         View
-//                       </Button>
-//                     </div>
-//                   </Card>
-//                 ))}
-//               </div>
-//             ) : (
-//               <div className="text-center py-12">
-//                 <div className="text-muted-foreground">
-//                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                   <h3 className="text-lg font-medium mb-2">No Followers</h3>
-//                   <p>{profile.username} doesn't have any followers yet.</p>
-//                 </div>
-//               </div>
-//             )}
-//           </TabsContent>
+                if (totalPages <= maxPages) {
+                  pageNumber = i + 1
+                } else if (currentPage <= Math.ceil(maxPages / 2)) {
+                  pageNumber = i + 1
+                } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                  pageNumber = totalPages - maxPages + 1 + i
+                } else {
+                  pageNumber = currentPage - Math.floor(maxPages / 2) + i
+                }
 
-//           <TabsContent value="following">
-//             {following.length > 0 ? (
-//               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-//                 {following.map((user) => (
-//                   <Card key={user.id} className="p-4 hover:shadow-md transition-shadow">
-//                     <div className="flex items-center space-x-3">
-//                       <img
-//                         src={user.profilePicture || "/placeholder.svg?height=40&width=40"}
-//                         alt={user.username}
-//                         className="w-10 h-10 rounded-full object-cover"
-//                       />
-//                       <div className="flex-1">
-//                         <h3 className="font-medium">{user.username}</h3>
-//                         {user.bio && <p className="text-sm text-muted-foreground truncate">{user.bio}</p>}
-//                       </div>
-//                       <Button variant="outline" size="sm" onClick={() => navigate(`/profile/${user.id}`)}>
-//                         View
-//                       </Button>
-//                     </div>
-//                   </Card>
-//                 ))}
-//               </div>
-//             ) : (
-//               <div className="text-center py-12">
-//                 <div className="text-muted-foreground">
-//                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                   <h3 className="text-lg font-medium mb-2">Not Following Anyone</h3>
-//                   <p>{profile.username} isn't following anyone yet.</p>
-//                 </div>
-//               </div>
-//             )}
-//           </TabsContent>
-//         </Tabs>
-//       </div>
-//     </div>
-//   )
-// }
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    size="sm"
+                    className={`min-w-[2rem] h-8 sm:min-w-[2.5rem] sm:h-9 text-xs sm:text-sm ${currentPage === pageNumber ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                      }`}
+                    onClick={() => setCurrentPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                )
+              })}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 sm:h-9 sm:px-3"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">Next</span>
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

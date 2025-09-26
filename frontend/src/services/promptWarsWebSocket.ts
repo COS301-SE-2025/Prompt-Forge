@@ -33,20 +33,22 @@ class PromptWarsWebSocketService {
         const wsUrl = `${baseUrl}/api/simple-ws?userId=${userId}`;
         
         console.log('Connecting to WebSocket:', wsUrl);
-        this.socket = new (window as any).WebSocket(wsUrl);
+        if(this.socket === null){
+          this.socket = new (window as any).WebSocket(wsUrl);
 
-        this.socket.onopen = () => {
-          console.log('WebSocket connected');
-          this.reconnectAttempts = 0;
-          
-          // Send user identification
-          this.send({
-            type: 'USER_CONNECT',
-            userId: userId
-          });
-          
-          resolve();
-        };
+          this.socket.onopen = () => {
+            console.log('WebSocket connected');
+            this.reconnectAttempts = 0;
+            
+            // Send user identification
+            this.send({
+              type: 'USER_CONNECT',
+              userId: userId
+            });
+            
+            resolve();
+          };
+        }
 
         this.socket.onmessage = (event: any) => {
           try {
@@ -208,6 +210,14 @@ class PromptWarsWebSocketService {
     this.send({
       type: 'DECLINE_CHALLENGE',
       challengeId
+    });
+  }
+  
+  getUserOnlineStatus({ userId, otherUserId }:{userId: string, otherUserId:string}) {
+    this.send({
+      type: 'GET_USER_ONLINE_STATUS',
+      userId,
+      otherUserId
     });
   }
 }

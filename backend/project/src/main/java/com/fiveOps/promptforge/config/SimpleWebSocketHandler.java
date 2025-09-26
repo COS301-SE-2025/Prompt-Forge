@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
@@ -14,13 +15,18 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiveOps.promptforge.user_profile.service.UserService;
 
 @Component
 public class SimpleWebSocketHandler extends TextWebSocketHandler {
-
+  private final UserService userService;
   private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
   private final Map<String, Set<String>> gameRooms = new ConcurrentHashMap<>();
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  public SimpleWebSocketHandler(UserService userService) {
+    this.userService = userService;
+  }
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -28,7 +34,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
     if (userId != null) {
       sessions.put(userId, session);
       System.out.println("WebSocket connection established for user: " + userId);
-
+      userService.setActive(UUID.fromString(userId), true);
       // Send connection confirmation
       Map<String, Object> response = Map.of("type", "CONNECTED", "userId", userId);
       session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
@@ -41,6 +47,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
     if (userId != null) {
       sessions.remove(userId);
       System.out.println("WebSocket connection closed for user: " + userId);
+      userService.setActive(UUID.fromString(userId), false);
     }
   }
 
@@ -56,6 +63,9 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
       switch (type) {
         case "USER_CONNECT":
           handleUserConnect(session, payload);
+          break;
+        case "GET_USER_ONLINE_STATUS":
+          getUserOnlineStatus(payload);
           break;
         case "JOIN_GAME_ROOM":
           handleJoinGameRoom(session, payload);
@@ -80,6 +90,7 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
   private void handleUserConnect(WebSocketSession session, Map<String, Object> payload)
       throws IOException {
     String userId = (String) payload.get("userId");
+
     if (userId != null) {
       sessions.put(userId, session);
 
@@ -190,5 +201,15 @@ public class SimpleWebSocketHandler extends TextWebSocketHandler {
         }
       }
     }
+  }
+
+  private void getUserOnlineStatus(Map<String, Object> payload) {
+    String userId = (String) payload.get("userId");
+    String otherUserId = (String) payload.get("otherUserId");
+    Map<String, Object> actionMessage = new HashMap<>();
+    actionMessage.put("type", "USER_ONLINE_STATUS");
+    actionMessage.put("userId", otherUserId);
+    actionMessage.put("isActive", sessions.get(otherUserId) != null);
+    sendMessageToUser(userId, actionMessage);
   }
 }

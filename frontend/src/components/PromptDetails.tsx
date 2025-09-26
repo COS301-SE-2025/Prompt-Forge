@@ -190,14 +190,14 @@ export const PromptDetails = () => {
 
     try {
       // Add to cart
-      const res = await cartService.addToCart(id)
+      const actualId = IdObfuscator.reveal(id||"")
+      const res = await cartService.addToCart(actualId)
       showNotification("success", "Added to cart", res.message)
       setUserAddedToCart(true)
 
       // Record ADD_TO_CART interaction
       if (id) {
         try {
-          const actualId = IdObfuscator.reveal(id)
           await interactionService.recordAddToCart(actualId)
         } catch (error) {
           console.warn("Failed to record add to cart interaction:", error)

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card"
 import { BarChart3, Scale, ShoppingBag, TestTube, Trophy, FileText, HelpCircle } from "lucide-react"
 import InteractiveBackground from "@/components/InteractiveBackground"
 import GradientText from "@/components/GradientText"
+import { promptWarsWebSocket } from "@/services/promptWarsWebSocket"
 
 export default function HomePage() {
   const [leftLoaded, setLeftLoaded] = useState(false)
@@ -14,6 +15,11 @@ export default function HomePage() {
   useEffect(() => {
     const leftTimer = setTimeout(() => setLeftLoaded(true), 150)
     const cardsTimer = setTimeout(() => setCardsLoaded(true), 300)
+    const userId = localStorage.getItem('userId')
+    
+    if (userId)
+      promptWarsWebSocket.connect(userId)
+
     return () => {
       clearTimeout(leftTimer)
       clearTimeout(cardsTimer)

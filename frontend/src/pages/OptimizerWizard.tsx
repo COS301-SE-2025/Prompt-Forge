@@ -68,6 +68,7 @@ interface WizardData {
     improvement_potential?: string
     rating?: number
     rating_explanation?: string
+    overall_score?: number
   }
   goals: {
     primaryObjective: string
@@ -122,6 +123,12 @@ interface WizardData {
     usedAI?: boolean
   }
   finalPrompt: string
+  // Additional properties for wizard functionality
+  improvementAreas?: string[]
+  recommendedGoals?: Record<string, string>
+  optimizationSteps?: any[]
+  overallComparison?: any
+  initialAnalysis?: any
 }
 
 const WIZARD_STEPS = [
@@ -163,15 +170,31 @@ const WIZARD_STEPS = [
 ]
 
 export default function OptimizerWizard() {
+  // Declare currentStep before any useEffect or code that references it
+  const [currentStep, setCurrentStep] = useState(1)
+  // Animation state for page load and section transitions
+  const [pageLoaded, setPageLoaded] = useState(false)
+  const [sectionTransitioning, setSectionTransitioning] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPageLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Animate section transitions when currentStep changes
+  useEffect(() => {
+    setSectionTransitioning(true)
+    const timer = setTimeout(() => setSectionTransitioning(false), 350)
+    return () => clearTimeout(timer)
+  }, [currentStep])
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-
-  const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [serviceStatus, setServiceStatus] = useState<"checking" | "online" | "offline">("checking")
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
+  const [finalAnalysis, setFinalAnalysis] = useState<any>(null)
   const [wizardData, setWizardData] = useState<WizardData>({
     originalPrompt: "",
     analysisResults: {
@@ -316,9 +339,27 @@ export default function OptimizerWizard() {
     })
   }
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < WIZARD_STEPS.length) {
-      setCurrentStep(currentStep + 1)
+      const newStep = currentStep + 1
+      setCurrentStep(newStep)
+      
+      // If we're moving to the Review step (step 5), analyze the final prompt
+      if (newStep === 5 && wizardData.finalPrompt) {
+        setIsLoading(true)
+        try {
+          const analysis = await analyzeFinalPrompt()
+          if (analysis) {
+            setFinalAnalysis(analysis)
+            showNotification("success", "Final Analysis Complete", "Your optimized prompt has been analyzed!")
+          }
+        } catch (error) {
+          console.error("Failed to analyze final prompt:", error)
+          showNotification("error", "Analysis Failed", "Could not analyze final prompt, but optimization is complete.")
+        } finally {
+          setIsLoading(false)
+        }
+      }
     }
   }
 
@@ -336,37 +377,42 @@ export default function OptimizerWizard() {
 
     setIsLoading(true)
     try {
-      // Use the Spring Boot backend endpoint that proxies to the ML service
-      const response = await fetch('/api/ml/analyze', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ text: wizardData.originalPrompt })
+      // Use the new wizard analyze endpoint
+      const result = await promptOptimizerService.wizardAnalyze({ 
+        text: wizardData.originalPrompt 
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // Check if prompt cannot be improved
+      if (result.cannot_improve) {
+        showNotification("error", "Cannot Optimize", "This prompt is either too basic (like '1+1') or already excellent and cannot be meaningfully improved.")
+        setIsLoading(false)
+        return
       }
 
-      const result = await response.json()
-
-      // Update wizard data with real metrics
+      // Update wizard data with comprehensive analysis
       updateWizardData("analysisResults", {
-        clarity: result.metrics?.clarity || 0,
-        specificity: result.metrics?.specificity || 0,
-        structure: result.metrics?.structure || 0,
-        context: result.metrics?.context || 0,
-        issues: result.issues || [],
-        suggestions: result.suggestions || [],
-        is_excellent: result.is_excellent || false,
-        improvement_potential: result.improvement_potential || "Unknown"
+        clarity: result.analysis.metrics?.clarity || 0,
+        specificity: result.analysis.metrics?.specificity || 0,
+        structure: result.analysis.metrics?.structure || 0,
+        context: result.analysis.metrics?.context || 0,
+        issues: result.analysis.issues || [],
+        suggestions: result.analysis.suggestions || [],
+        is_excellent: result.analysis.is_excellent || false,
+        improvement_potential: result.analysis.improvement_potential || "Unknown",
+        rating: result.analysis.rating || 0,
+        rating_explanation: result.analysis.rating_explanation || ""
       })
 
-      const message = result.is_excellent 
+      // Store improvement areas and recommended goals for next steps
+      setWizardData(prev => ({
+        ...prev,
+        improvementAreas: result.improvement_areas || [],
+        recommendedGoals: result.recommended_goals || {}
+      }))
+
+      const message = result.analysis.is_excellent 
         ? "Your prompt is already excellent! Only minor refinements possible."
-        : `Analysis complete! Improvement potential: ${result.improvement_potential || 'Moderate'}`
+        : `Analysis complete! Improvement potential: ${result.analysis.improvement_potential || 'Moderate'}`
         
       showNotification("success", "Analysis Complete", message)
     } catch (error) {
@@ -451,49 +497,50 @@ export default function OptimizerWizard() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/ml/optimize-with-structure', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          text: wizardData.originalPrompt,
-          structure_options: {
-            hasIntroduction: wizardData.structure.hasIntroduction,
-            usesBulletPoints: wizardData.structure.usesBulletPoints,
-            usesNumberedList: wizardData.structure.usesNumberedList,
-            hasExamples: wizardData.structure.hasExamples,
-            hasConclusion: wizardData.structure.hasConclusion
-          }
-        })
+      // Use the current prompt (might be optimized from previous steps)
+      const currentPrompt = wizardData.finalPrompt || wizardData.goalOptimization.optimizedPrompt || wizardData.originalPrompt
+
+      const result = await promptOptimizerService.wizardStructure({
+        text: currentPrompt,
+        structure_options: {
+          hasIntroduction: wizardData.structure.hasIntroduction,
+          usesBulletPoints: wizardData.structure.usesBulletPoints,
+          usesNumberedList: wizardData.structure.usesNumberedList,
+          hasExamples: wizardData.structure.hasExamples,
+          hasConclusion: wizardData.structure.hasConclusion
+        }
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
 
       // Update wizard data with structure optimization results
       updateWizardData("structureOptimization", {
-        structuredPrompt: result.structured_prompt,
-        structureExplanation: result.structure_explanation,
-        structureScore: result.structure_score,
-        structuralImprovements: result.structural_improvements,
-        organizationType: result.organization_type,
-        usedAI: result.used_ai
+        structuredPrompt: result.optimized_prompt,
+        structureExplanation: result.structure_details?.structure_explanation || "Structure applied successfully",
+        structureScore: result.post_analysis?.metrics?.structure || 0,
+        structuralImprovements: result.structure_details?.structural_improvements || [],
+        organizationType: result.structure_details?.organization_type || "optimized",
+        usedAI: result.structure_details?.used_ai || false
       })
 
       // Also update the structure.structuredPrompt for backwards compatibility
-      updateWizardData("structure", { structuredPrompt: result.structured_prompt })
+      updateWizardData("structure", { structuredPrompt: result.optimized_prompt })
+
+      // Update analysis results with new metrics from post-optimization analysis
+      updateWizardData("analysisResults", {
+        ...wizardData.analysisResults,
+        ...result.post_analysis?.metrics,
+        issues: result.post_analysis?.issues || [],
+        suggestions: result.post_analysis?.suggestions || []
+      })
 
       // Update final prompt
-      updateWizardData("finalPrompt", result.structured_prompt)
+      updateWizardData("finalPrompt", result.optimized_prompt)
 
-      const message = result.used_ai 
-        ? `AI structure optimization complete! Structure score: ${result.structure_score}%`
-        : `Rule-based structure applied! Score: ${result.structure_score}%`
+      // Show improvement comparison
+      const improvement = result.comparison?.overall_improvement || 0
+      const structureImprovement = result.comparison?.metrics_comparison?.structure?.change || 0
+      const message = result.structure_details?.used_ai 
+        ? `AI structure optimization complete! Structure improved by ${structureImprovement.toFixed(1)} points`
+        : `Rule-based structure applied! Structure improved by ${structureImprovement.toFixed(1)} points`
         
       showNotification("success", "Structure Optimization Complete", message)
     } catch (error) {
@@ -523,63 +570,52 @@ export default function OptimizerWizard() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/ml/optimize-with-goals', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          text: wizardData.originalPrompt,
-          goals: {
-            primaryObjective: wizardData.goals.primaryObjective,
-            targetAudience: wizardData.goals.targetAudience,
-            outputFormat: wizardData.goals.outputFormat,
-            tone: wizardData.goals.tone,
-            length: wizardData.goals.length,
-            complexity: wizardData.goals.complexity
-          }
-        })
+      // Use the current prompt (might be optimized from previous steps)
+      const currentPrompt = wizardData.finalPrompt || wizardData.originalPrompt
+
+      const result = await promptOptimizerService.wizardGoals({
+        text: currentPrompt,
+        goals: {
+          primaryObjective: wizardData.goals.primaryObjective,
+          targetAudience: wizardData.goals.targetAudience,
+          outputFormat: wizardData.goals.outputFormat,
+          tone: wizardData.goals.tone,
+          length: wizardData.goals.length,
+          complexity: wizardData.goals.complexity
+        }
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
 
       // Update wizard data with goal optimization results
       updateWizardData("goalOptimization", {
         optimizedPrompt: result.optimized_prompt,
-        improvementExplanation: result.improvement_explanation,
-        goalAlignmentScore: result.goal_alignment_score,
-        predictedMetrics: result.predicted_metrics || {
-          clarity: result.goal_alignment_score || wizardData.analysisResults.clarity,
-          specificity: result.goal_alignment_score || wizardData.analysisResults.specificity,
-          structure: result.goal_alignment_score || wizardData.analysisResults.structure,
-          context: result.goal_alignment_score || wizardData.analysisResults.context
+        improvementExplanation: result.optimization_details?.improvement_explanation || "Goals applied successfully",
+        goalAlignmentScore: result.post_analysis?.metrics?.overall || 0,
+        predictedMetrics: result.post_analysis?.metrics || {
+          clarity: result.post_analysis?.metrics?.clarity || wizardData.analysisResults.clarity,
+          specificity: result.post_analysis?.metrics?.specificity || wizardData.analysisResults.specificity,
+          structure: result.post_analysis?.metrics?.structure || wizardData.analysisResults.structure,
+          context: result.post_analysis?.metrics?.context || wizardData.analysisResults.context
         },
-        keyChanges: result.key_changes,
-        usedAI: result.used_ai
+        keyChanges: result.optimization_details?.key_changes || [],
+        usedAI: result.optimization_details?.used_ai || false
       })
 
-      // Also update the analysis results with the new predicted metrics if available
-      if (result.predicted_metrics) {
-        updateWizardData("analysisResults", {
-          ...wizardData.analysisResults,
-          clarity: result.predicted_metrics.clarity || wizardData.analysisResults.clarity,
-          specificity: result.predicted_metrics.specificity || wizardData.analysisResults.specificity,
-          structure: result.predicted_metrics.structure || wizardData.analysisResults.structure,
-          context: result.predicted_metrics.context || wizardData.analysisResults.context
-        })
-      }
+      // Update analysis results with new metrics from post-optimization analysis
+      updateWizardData("analysisResults", {
+        ...wizardData.analysisResults,
+        ...result.post_analysis?.metrics,
+        issues: result.post_analysis?.issues || [],
+        suggestions: result.post_analysis?.suggestions || []
+      })
 
       // Update final prompt
       updateWizardData("finalPrompt", result.optimized_prompt)
 
-      const message = result.used_ai 
-        ? `AI goal optimization complete! Alignment score: ${result.goal_alignment_score}%`
-        : `Rule-based goal optimization applied! Score: ${result.goal_alignment_score}%`
+      // Show improvement comparison
+      const improvement = result.comparison?.overall_improvement || 0
+      const message = result.optimization_details?.used_ai 
+        ? `AI goal optimization complete! Overall improvement: ${improvement.toFixed(1)} points`
+        : `Rule-based goal optimization applied! Improvement: ${improvement.toFixed(1)} points`
         
       showNotification("success", "Goal Optimization Complete", message)
     } catch (error) {
@@ -610,46 +646,50 @@ export default function OptimizerWizard() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/ml/optimize-with-context', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          text: wizardData.finalPrompt || wizardData.structureOptimization.structuredPrompt || wizardData.goalOptimization.optimizedPrompt || wizardData.originalPrompt,
-          context_options: {
-            domain: wizardData.context.domain,
-            useCase: wizardData.context.useCase,
-            additionalContext: wizardData.context.additionalContext,
-            requirements: wizardData.context.requirements
-          }
-        })
+      // Use the current prompt (might be optimized from previous steps)
+      const currentPrompt = wizardData.finalPrompt || 
+                           wizardData.structureOptimization.structuredPrompt || 
+                           wizardData.goalOptimization.optimizedPrompt || 
+                           wizardData.originalPrompt
+
+      const result = await promptOptimizerService.wizardContext({
+        text: currentPrompt,
+        context_options: {
+          domain: wizardData.context.domain,
+          useCase: wizardData.context.useCase,
+          additionalContext: wizardData.context.additionalContext,
+          requirements: wizardData.context.requirements.join(', ')
+        }
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
 
       // Update wizard data with context optimization results
       updateWizardData("context", {
         ...wizardData.context,
-        contextEnhancedPrompt: result.context_enhanced_prompt,
-        contextExplanation: result.context_explanation,
-        contextScore: result.context_score,
-        contextImprovements: result.context_improvements,
-        enhancementType: result.enhancement_type,
-        usedAI: result.used_ai
+        contextEnhancedPrompt: result.optimized_prompt,
+        contextExplanation: result.context_details?.context_explanation || "Context applied successfully",
+        contextScore: result.post_analysis?.metrics?.context || 0,
+        contextImprovements: result.context_details?.context_improvements || [],
+        enhancementType: result.context_details?.enhancement_type || "optimized",
+        usedAI: result.context_details?.used_ai || false
+      })
+
+      // Update analysis results with new metrics from post-optimization analysis
+      updateWizardData("analysisResults", {
+        ...wizardData.analysisResults,
+        ...result.post_analysis?.metrics,
+        issues: result.post_analysis?.issues || [],
+        suggestions: result.post_analysis?.suggestions || []
       })
 
       // Update final prompt
-      updateWizardData("finalPrompt", result.context_enhanced_prompt)
+      updateWizardData("finalPrompt", result.optimized_prompt)
 
-      const message = result.used_ai 
-        ? `AI context optimization complete! Context score: ${result.context_score}%`
-        : `Rule-based context applied! Score: ${result.context_score}%`
+      // Show improvement comparison
+      const improvement = result.comparison?.overall_improvement || 0
+      const contextImprovement = result.comparison?.metrics_comparison?.context?.change || 0
+      const message = result.context_details?.used_ai 
+        ? `AI context optimization complete! Context improved by ${contextImprovement.toFixed(1)} points`
+        : `Rule-based context applied! Context improved by ${contextImprovement.toFixed(1)} points`
         
       showNotification("success", "Context Optimization Complete", message)
     } catch (error) {
@@ -657,6 +697,23 @@ export default function OptimizerWizard() {
       showNotification("error", "Context Optimization Failed", "Unable to optimize context. Please try again.")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Add function to analyze final optimized prompt
+  const analyzeFinalPrompt = async () => {
+    if (!wizardData.finalPrompt) {
+      return null
+    }
+
+    try {
+      const result = await promptOptimizerService.analyzePrompt({ 
+        prompt: wizardData.finalPrompt 
+      })
+      return result
+    } catch (error) {
+      console.error("Failed to analyze final prompt:", error)
+      return null
     }
   }
 
@@ -668,122 +725,97 @@ export default function OptimizerWizard() {
     }
 
     setIsLoading(true)
-    let currentPrompt = wizardData.originalPrompt
 
     try {
-      // Step 1: Goals optimization (if goals are provided)
+      showNotification("success", "Processing", "Generating comprehensive optimization with all improvements...")
+      
+      // Prepare comprehensive request with all user inputs
+      const comprehensiveRequest = {
+        text: wizardData.originalPrompt,
+        goals: undefined as any,
+        structure_options: undefined as any,
+        context_options: undefined as any
+      }
+
+      // Include goals if provided
       const hasGoals = Object.values(wizardData.goals).some(value => 
         typeof value === 'string' && value.trim() !== ''
       )
-
       if (hasGoals) {
-        showNotification("success", "Processing", "Applying goal-based optimization...")
-        
-        const goalResponse = await fetch('/api/ml/optimize-with-goals', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text: currentPrompt,
-            goals: wizardData.goals
-          })
-        })
-
-        if (goalResponse.ok) {
-          const goalResult = await goalResponse.json()
-          currentPrompt = goalResult.optimized_prompt
-          updateWizardData("goalOptimization", {
-            optimizedPrompt: goalResult.optimized_prompt,
-            improvementExplanation: goalResult.improvement_explanation,
-            goalAlignmentScore: goalResult.goal_alignment_score,
-            predictedMetrics: goalResult.predicted_metrics || {
-              clarity: goalResult.goal_alignment_score || wizardData.analysisResults.clarity,
-              specificity: goalResult.goal_alignment_score || wizardData.analysisResults.specificity,
-              structure: goalResult.goal_alignment_score || wizardData.analysisResults.structure,
-              context: goalResult.goal_alignment_score || wizardData.analysisResults.context
-            },
-            keyChanges: goalResult.key_changes,
-            usedAI: goalResult.used_ai
-          })
+        comprehensiveRequest.goals = {
+          primaryObjective: wizardData.goals.primaryObjective,
+          targetAudience: wizardData.goals.targetAudience,
+          outputFormat: wizardData.goals.outputFormat,
+          tone: wizardData.goals.tone,
+          length: wizardData.goals.length,
+          complexity: wizardData.goals.complexity
         }
       }
 
-      // Step 2: Structure optimization (if structure options are selected)
+      // Include structure options if selected
       const hasStructureOptions = Object.values(wizardData.structure).some(value => 
         typeof value === 'boolean' && value === true
       )
-
       if (hasStructureOptions) {
-        showNotification("success", "Processing", "Applying structure optimization...")
-        
-        const structureResponse = await fetch('/api/ml/optimize-with-structure', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text: currentPrompt,
-            structure_options: {
-              hasIntroduction: wizardData.structure.hasIntroduction,
-              usesBulletPoints: wizardData.structure.usesBulletPoints,
-              usesNumberedList: wizardData.structure.usesNumberedList,
-              hasExamples: wizardData.structure.hasExamples,
-              hasConclusion: wizardData.structure.hasConclusion
-            }
-          })
-        })
-
-        if (structureResponse.ok) {
-          const structureResult = await structureResponse.json()
-          currentPrompt = structureResult.structured_prompt
-          updateWizardData("structureOptimization", {
-            structuredPrompt: structureResult.structured_prompt,
-            structureExplanation: structureResult.structure_explanation,
-            structureScore: structureResult.structure_score,
-            structuralImprovements: structureResult.structural_improvements,
-            organizationType: structureResult.organization_type,
-            usedAI: structureResult.used_ai
-          })
+        comprehensiveRequest.structure_options = {
+          hasIntroduction: wizardData.structure.hasIntroduction,
+          usesBulletPoints: wizardData.structure.usesBulletPoints,
+          usesNumberedList: wizardData.structure.usesNumberedList,
+          hasExamples: wizardData.structure.hasExamples,
+          hasConclusion: wizardData.structure.hasConclusion
         }
       }
 
-      // Step 3: Context optimization (if context is provided)
+      // Include context if provided
       const hasContext = wizardData.context.domain || 
                         wizardData.context.useCase || 
                         wizardData.context.additionalContext ||
                         wizardData.context.requirements.length > 0
-
       if (hasContext) {
-        showNotification("success", "Processing", "Applying context enhancement...")
-        
-        const contextResponse = await fetch('/api/ml/optimize-with-context', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text: currentPrompt,
-            context_options: {
-              domain: wizardData.context.domain,
-              useCase: wizardData.context.useCase,
-              additionalContext: wizardData.context.additionalContext,
-              requirements: wizardData.context.requirements
-            }
-          })
-        })
-
-        if (contextResponse.ok) {
-          const contextResult = await contextResponse.json()
-          currentPrompt = contextResult.context_enhanced_prompt
+        comprehensiveRequest.context_options = {
+          domain: wizardData.context.domain,
+          useCase: wizardData.context.useCase,
+          additionalContext: wizardData.context.additionalContext,
+          requirements: wizardData.context.requirements.join(', ')
         }
       }
 
-      // Update final prompt
-      updateWizardData("finalPrompt", currentPrompt)
-      
-      showNotification("success", "Optimization Complete", "Your prompt has been fully optimized with AI!")
+      // Call comprehensive optimization endpoint
+      const result = await promptOptimizerService.wizardComprehensive(comprehensiveRequest)
+
+      // Update wizard data with comprehensive results
+      updateWizardData("finalPrompt", result.final_optimized_prompt)
+
+      // Update analysis results with final analysis
+      updateWizardData("analysisResults", {
+        ...wizardData.analysisResults,
+        ...result.final_analysis?.metrics,
+        issues: result.final_analysis?.issues || [],
+        suggestions: result.final_analysis?.suggestions || []
+      })
+
+      // Store optimization steps for review
+      setWizardData(prev => ({
+        ...prev,
+        optimizationSteps: result.optimization_steps || [],
+        overallComparison: result.overall_comparison || {},
+        initialAnalysis: result.initial_analysis || {}
+      }))
+
+      // Show success message with improvement details
+      const improvement = result.overall_comparison?.overall_improvement || 0
+      const successMessage = improvement > 0 
+        ? `Comprehensive optimization complete! Overall improvement: ${improvement.toFixed(1)} points`
+        : "Optimization complete! Your prompt has been processed through all enhancement steps."
+        
+      showNotification("success", "Comprehensive Optimization Complete", successMessage)
       
       // Auto-advance to review step
       setCurrentStep(5)
 
     } catch (error) {
       console.error("Comprehensive optimization failed:", error)
-      showNotification("error", "Optimization Failed", "Unable to complete full optimization. Please try individual steps.")
+      showNotification("error", "Optimization Failed", "Unable to complete comprehensive optimization. Please try individual steps.")
     } finally {
       setIsLoading(false)
     }
@@ -1720,74 +1752,138 @@ export default function OptimizerWizard() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                      <div className="text-3xl font-bold text-red-600">{wizardData.analysisResults.clarity}%</div>
+                      <div className="text-3xl font-bold text-red-600">
+                        {Math.round(wizardData.analysisResults.overall_score || wizardData.analysisResults.clarity || 0)}%
+                      </div>
                       <div className="text-sm text-red-600 font-medium">Original Score</div>
                     </div>
                     <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
                       <div className="text-3xl font-bold text-green-600">
-                        {(() => {
-                          // Calculate actual optimized score based on available optimizations
-                          let optimizedScore = wizardData.analysisResults.clarity;
-                          
-                          // Add goal optimization score if available
-                          if (wizardData.goalOptimization.goalAlignmentScore > 0) {
-                            optimizedScore = Math.max(optimizedScore, wizardData.goalOptimization.goalAlignmentScore);
-                          }
-                          
-                          // Add structure optimization score if available
-                          if (wizardData.structureOptimization.structureScore > 0) {
-                            optimizedScore = Math.max(optimizedScore, wizardData.structureOptimization.structureScore);
-                          }
-                          
-                          // Add context optimization score if available
-                          if (wizardData.context.contextScore && wizardData.context.contextScore > 0) {
-                            optimizedScore = Math.max(optimizedScore, wizardData.context.contextScore);
-                          }
-                          
-                          // If no optimizations were applied, show original score
-                          return optimizedScore;
-                        })()}%
+                        {finalAnalysis ? 
+                          Math.round(finalAnalysis.overall_score || 0) : 
+                          (() => {
+                            // Fallback calculation if final analysis isn't available
+                            let optimizedScore = wizardData.analysisResults.overall_score || wizardData.analysisResults.clarity || 0;
+                            
+                            // Add goal optimization score if available
+                            if (wizardData.goalOptimization.goalAlignmentScore > 0) {
+                              optimizedScore = Math.max(optimizedScore, wizardData.goalOptimization.goalAlignmentScore);
+                            }
+                            
+                            // Add structure optimization score if available
+                            if (wizardData.structureOptimization.structureScore > 0) {
+                              optimizedScore = Math.max(optimizedScore, wizardData.structureOptimization.structureScore);
+                            }
+                            
+                            // Add context optimization score if available
+                            if (wizardData.context.contextScore && wizardData.context.contextScore > 0) {
+                              optimizedScore = Math.max(optimizedScore, wizardData.context.contextScore);
+                            }
+                            
+                            return Math.round(optimizedScore);
+                          })()
+                        }%
                       </div>
-                      <div className="text-sm text-green-600 font-medium">Optimized Score</div>
+                      <div className="text-sm text-green-600 font-medium">
+                        {finalAnalysis ? "Analyzed Score" : "Estimated Score"}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Final Analysis Details */}
+                  {isLoading && !finalAnalysis && (
+                    <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <RefreshCw className="h-5 w-5 text-[#4079ff] animate-spin" />
+                        Analyzing Optimized Prompt...
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Running final analysis to measure improvements...
+                      </p>
+                    </div>
+                  )}
+                  {finalAnalysis && (
+                    <div className="space-y-3 p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-[#4079ff]" />
+                        Final Analysis Results:
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div className="flex justify-between">
+                          <span>Readability:</span>
+                          <span className="font-medium">{Math.round(finalAnalysis.readability_score || 0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Effectiveness:</span>
+                          <span className="font-medium">{Math.round(finalAnalysis.effectiveness_score || 0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Overall:</span>
+                          <span className="font-medium">{Math.round(finalAnalysis.overall_score || 0)}%</span>
+                        </div>
+                      </div>
+                      {finalAnalysis.strengths && finalAnalysis.strengths.length > 0 && (
+                        <div>
+                          <h5 className="font-medium text-green-600 mb-2">Strengths:</h5>
+                          <ul className="text-sm space-y-1">
+                            {finalAnalysis.strengths.slice(0, 3).map((strength: string, index: number) => (
+                              <li key={index} className="flex items-center gap-2">
+                                <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+                                {strength}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {finalAnalysis.suggestions && finalAnalysis.suggestions.length > 0 && (
+                        <div>
+                          <h5 className="font-medium text-blue-600 mb-2">Additional Suggestions:</h5>
+                          <ul className="text-sm space-y-1">
+                            {finalAnalysis.suggestions.slice(0, 2).map((suggestion: string, index: number) => (
+                              <li key={index} className="flex items-center gap-2">
+                                <Lightbulb className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                                {suggestion}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     <h4 className="font-semibold flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-[#3ebb9e]" />
                       Improvements Made:
                     </h4>
-                    <div className="space-y-2">
-                      {wizardData.goals.primaryObjective && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-2">
+                      {[
+                        wizardData.goals.primaryObjective && {
+                          text: `Defined clear objective: ${wizardData.goals.primaryObjective}`,
+                          key: 'objective'
+                        },
+                        wizardData.goals.targetAudience && {
+                          text: `Specified target audience: ${wizardData.goals.targetAudience}`,
+                          key: 'audience'
+                        },
+                        wizardData.structureOptimization.usedAI && wizardData.structureOptimization.structuralImprovements.length > 0 && {
+                          text: 'AI-powered structure optimization applied',
+                          key: 'ai-structure'
+                        },
+                        ...wizardData.structureOptimization.structuralImprovements.map((improvement, index) => ({
+                          text: improvement,
+                          key: `structure-${index}`
+                        })),
+                        wizardData.context.additionalContext && {
+                          text: 'Added helpful context and background',
+                          key: 'context'
+                        }
+                      ].filter((item): item is { text: string; key: string } => Boolean(item)).slice(0, 4).map((improvement) => (
+                        <div key={improvement.key} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
                           <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Defined clear objective: {wizardData.goals.primaryObjective}</span>
-                        </div>
-                      )}
-                      {wizardData.goals.targetAudience && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Specified target audience: {wizardData.goals.targetAudience}</span>
-                        </div>
-                      )}
-                      {wizardData.structureOptimization.usedAI && wizardData.structureOptimization.structuralImprovements.length > 0 && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">AI-powered structure optimization applied</span>
-                        </div>
-                      )}
-                      {wizardData.structureOptimization.structuralImprovements.map((improvement, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">{improvement}</span>
+                          <span className="text-sm">{improvement.text}</span>
                         </div>
                       ))}
-                      {wizardData.context.additionalContext && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Added helpful context and background</span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -1813,7 +1909,10 @@ export default function OptimizerWizard() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
+  <div
+    className={`min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+    style={{ willChange: "opacity, transform" }}
+  >
       {/* Subtle Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 bg-[#3ebb9e]/5 rounded-full blur-xl"></div>
@@ -1822,66 +1921,56 @@ export default function OptimizerWizard() {
         <div className="absolute bottom-20 right-20 w-28 h-28 bg-pink-400/5 rounded-full blur-xl"></div>
       </div>
 
-      {/* Header */}
-      <div className="relative overflow-hidden bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#3ebb9e]/20 shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#3ebb9e]/5 via-[#4079ff]/5 to-[#3ebb9e]/5"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex-1" />
-            <div className="flex-1 flex flex-col items-center">
-              <div className="flex items-center justify-center gap-4 mb-3">
-                <div className="relative">
-                  <Sparkles className="h-8 w-8 text-[#3ebb9e]" />
-                  <Star
-                    className="absolute -top-1 -right-1 h-3 w-3 text-[#4079ff]"
-                    style={{
-                      filter: "drop-shadow(0 0 4px #3ebb9e)",
-                    }}
-                  />
-                </div>
-                <h1 className="sm:text-4xl font-medium bg-gradient-to-r from-[#3ebb9e] via-[#4079ff] to-purple-600 bg-clip-text text-transparent tracking-tight text-left">
+      {/* Integrated Header & Progress Bar */}
+      <div className="relative border-b border-border">
+      <div className="relative max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="relative">
+                <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-[#40ffaa] dark:text-[#4079ff] animate-pulse" />
+                <Star
+                  className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#40ffaa] dark:text-[#4079ff] animate-pulse"
+                  style={{
+                    filter: "drop-shadow(0 0 6px #40ffaa)",
+                  }}
+                />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl md:text-4xl font-medium bg-gradient-to-r from-[#40ffaa] via-[#4079ff] to-[#40ffaa] bg-clip-text text-transparent tracking-tight">
                   Prompt Optimizer Wizard
                 </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-xs sm:max-w-2xl">
+                  Transform your prompts into high-performance masterpieces
+                </p>
               </div>
-              <p className="text-muted-foreground text-sm font-medium">
-                Transform your prompts into high-performance masterpieces
-              </p>
             </div>
-            <div className="flex-1 flex justify-end">
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowHelpModal(true)}
-                  className="border border-[#3ebb9e]/30 hover:border-[#3ebb9e] hover:bg-[#3ebb9e]/10 h-10 px-4 rounded-lg transition-all duration-300"
-                  title="Need Help?"
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Help
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/editor")}
-                  className="border border-gray-600 hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 h-10 px-4 rounded-lg transition-all duration-300"
-                  title="Back to Editor"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+            <div className="flex items-center space-x-1 sm:space-x-2 mt-2 sm:mt-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHelpModal(true)}
+                className="border-gray-300 dark:border-gray-600 h-8"
+                title="Help & Tips"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/editor")}
+                className="border border-gray-600 hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 h-8 px-4 rounded-lg transition-all duration-300"
+                title="Back to Editor"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="bg-white/80 dark:bg-gray-900/80 border-b border-[#3ebb9e]/20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
+          {/* Progress Bar below heading, inside same background */}
+          <div className="h-8 sm:h-16" />
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-6">
             {WIZARD_STEPS.map((step, index) => {
-              const isActive = step.id === currentStep
-              const isCompleted = step.id < currentStep
-
+              const isActive = step.id === currentStep;
+              const isCompleted = step.id < currentStep;
               return (
                 <div key={step.id} className="flex items-center">
                   <div className="flex flex-col items-center">
@@ -1896,7 +1985,7 @@ export default function OptimizerWizard() {
                     >
                       {isCompleted ? <Check className="h-6 w-6" /> : <step.icon className="h-6 w-6" />}
                     </div>
-                    <div className="mt-3 text-center">
+                    <div className="mt-2 text-center">
                       <div
                         className={`text-sm font-semibold ${
                           isActive
@@ -1907,9 +1996,6 @@ export default function OptimizerWizard() {
                         }`}
                       >
                         {step.name}
-                      </div>
-                      <div className="text-xs text-gray-400 hidden sm:block max-w-20 text-center">
-                        {step.description}
                       </div>
                     </div>
                   </div>
@@ -1923,20 +2009,25 @@ export default function OptimizerWizard() {
                     />
                   )}
                 </div>
-              )
+              );
             })}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-[#3ebb9e]/20 rounded-2xl shadow-xl p-12">
-          {renderStepContent()}
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-[#3ebb9e]/20 rounded-xl sm:rounded-2xl shadow-xl p-2 sm:p-6">
+          <div
+            className={`transition-all duration-500 ${sectionTransitioning ? "animate-fade-section" : ""}`}
+            key={currentStep}
+          >
+            {renderStepContent()}
+          </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center mt-12">
+  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
           <Button
             variant="outline"
             onClick={prevStep}
@@ -2263,22 +2354,44 @@ export default function OptimizerWizard() {
       )}
 
       <style>{`
+        @keyframes fade-section {
+          from { opacity: 0; transform: translateY(32px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-section {
+          animation: fade-section 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
         @keyframes slide-in {
           from { opacity: 0; transform: translateX(100%); }
           to { opacity: 1; transform: translateX(0); }
         }
-        
         @keyframes slide-out {
           from { opacity: 1; transform: translateX(0); }
           to { opacity: 0; transform: translateX(100%); }
         }
-        
         .animate-slide-in {
           animation: slide-in 0.3s ease-out;
         }
-        
         .animate-slide-out {
           animation: slide-out 0.3s ease-out;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgb(59 130 246 / 0.5) rgb(243 244 246);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgb(243 244 246);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgb(59 130 246 / 0.5);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgb(59 130 246 / 0.7);
         }
       `}</style>
     </div>
