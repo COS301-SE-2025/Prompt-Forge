@@ -273,7 +273,13 @@ public class GameService {
             + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
     if (game.getGameState() != GameState.WRITING) {
-      throw new IllegalArgumentException("Game is not in writing phase");
+      // Allow submission if player hasn't submitted yet, even if game is in different state
+      // This handles race conditions where AI rating completes before second player submits
+      boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
+      if (hasPlayerSubmitted) {
+        throw new IllegalArgumentException("Game is not in writing phase and you have already submitted");
+      }
+      // Allow the submission to proceed if player hasn't submitted yet
     }
 
     if (!game.isPlayerInGame(playerId)) {
@@ -282,6 +288,12 @@ public class GameService {
 
     if (prompt == null || prompt.trim().isEmpty()) {
       throw new IllegalArgumentException("Prompt cannot be empty");
+    }
+
+    // Validate prompt content - reject if it contains log messages or other invalid data
+    if (prompt.contains("Nothing to write") || prompt.contains("Completed") ||
+        prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+      throw new IllegalArgumentException("Invalid prompt content detected");
     }
 
     game.submitPrompt(playerId, prompt.trim());
@@ -350,21 +362,13 @@ public class GameService {
     try {
       System.out.println("Starting AI rating for game: " + gameId);
 
-      // Reload fresh game entity to get the latest state
-      Game fresh = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
-
-      System.out.println(
-          "Game state: " + fresh.getGameState() + ", Both submitted: " + fresh.bothPlayersSubmittedPrompts());
-
-      // Ensure both prompts are present before rating
-      if (!fresh.bothPlayersSubmittedPrompts()) {
-        System.out.println("Not both players submitted, aborting rating");
-        return;
-      }
+      // Use the passed game object directly (already verified both players submitted)
+      System.out.println("Game state: " + game.getGameState());
+      System.out.println("Both submitted: " + game.bothPlayersSubmittedPrompts());
 
       // Move game into RATING phase and notify clients
-      fresh.setGameState(GameState.RATING);
-      gameRepository.save(fresh);
+      game.setGameState(GameState.RATING);
+      gameRepository.save(game);
 
       Map<String, Object> ratingStart = new HashMap<>();
       ratingStart.put("type", "AI_RATING_STARTED");
@@ -378,14 +382,15 @@ public class GameService {
       phaseChange.put("gameState", GameState.RATING.toString());
   phaseChange.put("newPhase", GameState.RATING.toString());
 
-      webSocketService.sendGameUpdate(fresh.getPlayer1Id(), ratingStart);
-      webSocketService.sendGameUpdate(fresh.getPlayer2Id(), ratingStart);
-      webSocketService.sendGameUpdate(fresh.getPlayer1Id(), phaseChange);
-      webSocketService.sendGameUpdate(fresh.getPlayer2Id(), phaseChange);
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), ratingStart);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), ratingStart);
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), phaseChange);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), phaseChange);
 
       System.out.println("Calling AI rating API...");
       // Get AI rating for both prompts
-      Map<String, Object> ratings = getAIRating(fresh.getScenario(), fresh.getPlayer1Prompt(), fresh.getPlayer2Prompt());
+      Map<String, Object> ratings = getAIRating(game.getScenario(),
+          game.getPlayer1Prompt(), game.getPlayer2Prompt());
 
       System.out.println("AI rating completed, processing results...");
       int player1Score = (Integer) ratings.get("player1Score");
@@ -396,39 +401,39 @@ public class GameService {
       System.out.println("Player 1 score: " + player1Score + ", Player 2 score: " + player2Score);
 
       // Set the AI scores (clamped to 0-10)
-  fresh.setPlayer1Score(player1Score);
-  fresh.setPlayer2Score(player2Score);
-      fresh.setRatingExplanation((String) ratings.get("explanation"));
+  game.setPlayer1Score(player1Score);
+  game.setPlayer2Score(player2Score);
+      game.setRatingExplanation((String) ratings.get("explanation"));
 
   // Player rating should correspond to their own score.
   // Note: DB check constraint disallows 0 for player*_rating, so store null when score == 0
   Integer player1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
   Integer player2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
-  fresh.setPlayer1Rating(player1Rating);
-  fresh.setPlayer2Rating(player2Rating);
+  game.setPlayer1Rating(player1Rating);
+  game.setPlayer2Rating(player2Rating);
 
       // Calculate winner and finish game
-      UUID winner = fresh.calculateWinner();
-      fresh.setWinnerId(winner);
-      fresh.setGameState(GameState.FINISHED);
-      fresh.setEndedAt(java.time.Instant.now());
+      UUID winner = game.calculateWinner();
+      game.setWinnerId(winner);
+      game.setGameState(GameState.FINISHED);
+      game.setEndedAt(java.time.Instant.now());
 
-      gameRepository.save(fresh);
+      gameRepository.save(game);
 
       // Send results to both players
       Map<String, Object> gameUpdate = new HashMap<>();
       gameUpdate.put("type", "GAME_FINISHED");
-      gameUpdate.put("gameId", fresh.getId().toString());
+      gameUpdate.put("gameId", game.getId().toString());
       gameUpdate.put("gameState", "FINISHED");
       gameUpdate.put("player1Score", player1Score);
       gameUpdate.put("player2Score", player2Score);
       gameUpdate.put("winnerId", winner != null ? winner.toString() : null);
       gameUpdate.put("explanation", ratings.get("explanation"));
 
-      webSocketService.sendGameUpdate(fresh.getPlayer1Id(), gameUpdate);
-      webSocketService.sendGameUpdate(fresh.getPlayer2Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), gameUpdate);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), gameUpdate);
 
-      System.out.println("Sent game finished update to both players for game: " + fresh.getId());
+      System.out.println("Sent game finished update to both players for game: " + game.getId());
 
     } catch (Exception e) {
       System.err.println("Error in performAIRating: " + e.getMessage());
@@ -617,23 +622,31 @@ public class GameService {
     Map<String, Object> ratings = new HashMap<>();
 
     try {
-      // Robust parsing: try multiple common patterns (Prompt 1 Score, Rating 1, Prompt1:, compact inline formats)
+      // Robust parsing: try multiple patterns (Prompt 1 Score, Rating 1, Prompt1:, compact)
       int player1Score = 5; // Default fallback
       int player2Score = 5; // Default fallback
 
       // Patterns to attempt, in order
       java.util.regex.Pattern[] p1Patterns = new java.util.regex.Pattern[] {
-        java.util.regex.Pattern.compile("Prompt\\s*1\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Rating\\s*1\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Prompt1\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Player\\s*1\\s*score\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE)
+        java.util.regex.Pattern.compile("Prompt\\s*1\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Rating\\s*1\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Prompt1\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Player\\s*1\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
       };
 
       java.util.regex.Pattern[] p2Patterns = new java.util.regex.Pattern[] {
-        java.util.regex.Pattern.compile("Prompt\\s*2\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Rating\\s*2\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Prompt2\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Player\\s*2\\s*score\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE)
+        java.util.regex.Pattern.compile("Prompt\\s*2\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Rating\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Prompt2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Player\\s*2\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
       };
 
       // Try each pattern until we find a match
@@ -663,7 +676,9 @@ public class GameService {
 
       // Compact inline pattern like: "Prompt 1: X, Prompt 2: Y" or "Prompt1: X Prompt2: Y"
       if ((player1Score == 5 || player2Score == 5)) {
-        java.util.regex.Pattern compact = java.util.regex.Pattern.compile("Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Pattern compact = java.util.regex.Pattern.compile(
+            "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher cm = compact.matcher(result);
         if (cm.find()) {
           try {
@@ -683,7 +698,8 @@ public class GameService {
       ratings.put("player2Score", player2Score);
       ratings.put("explanation", result);
 
-      System.out.println("parseRatingResult extracted scores -> p1: " + player1Score + ", p2: " + player2Score);
+      System.out.println("parseRatingResult extracted scores -> p1: " + player1Score +
+          ", p2: " + player2Score);
 
     } catch (Exception e) {
       System.err.println("Error parsing rating result: " + e.getMessage());
