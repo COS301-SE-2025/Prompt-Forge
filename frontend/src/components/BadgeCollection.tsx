@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { RefreshCw } from "lucide-react"
 import { BadgeComponent, BadgeData } from "./BadgeComponent"
+import { BadgeService } from "@/services/badgeService"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
@@ -208,19 +209,10 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
     
     setRefreshing(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/badges/me/check`, {
-        method: 'POST',
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Badge check result:', result)
-        // Refresh badges after check
-        await fetchBadges()
-      } else {
-        console.error('Badge check failed:', response.status)
-      }
+      const result = await BadgeService.checkAndAssignBadges()
+      console.log('Badge check result:', result)
+      // Refresh badges after check
+      await fetchBadges()
     } catch (error) {
       console.error('Error checking badges:', error)
     } finally {

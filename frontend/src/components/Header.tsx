@@ -12,8 +12,8 @@ export default function Header() {
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const pathname = location.pathname
-  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [username, setUsername] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -54,6 +54,10 @@ export default function Header() {
         setDropdownOpen(false)
       }
     }
+    let localUsername = localStorage.getItem("username")
+    if(localUsername)
+      setUsername(localUsername);
+
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
@@ -162,6 +166,14 @@ export default function Header() {
                     <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b border-border">
                       My Account
                     </div>
+                    <Link
+                      to={`/user/${username}`}
+                      className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-muted"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <User className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <span>Profile</span>
+                    </Link>
                     <Link
                       to="/profile-settings"
                       className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-muted"

@@ -424,4 +424,15 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
       nativeQuery = true)
   long countPopularAuthoredPromptsByUserIdAndOptionalTag(
       @Param("authorId") UUID authorId, @Param("tagId") UUID tagId);
+
+  @Query(
+      value =
+          """
+       SELECT COUNT(DISTINCT t.category)
+       FROM prompts p
+       JOIN tags t ON t.tag_id = ANY(p.prompt_tags)
+       WHERE p.author_id = :authorId AND t.category IS NOT NULL
+       """,
+      nativeQuery = true)
+  long countDistinctCategoriesByAuthorId(@Param("authorId") UUID authorId);
 }

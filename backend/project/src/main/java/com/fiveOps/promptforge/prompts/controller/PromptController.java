@@ -216,49 +216,9 @@ public class PromptController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<?> deletePrompt(@PathVariable UUID id, Authentication authentication) {
-    // Check if user is authenticated
-    if (authentication == null || authentication.getName() == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body("{\"error\": \"Authentication required\"}");
-    }
-
-    // Get the prompt to check ownership and visibility
-    Prompt prompt = promptService.getPromptById(id);
-    if (prompt == null) {
-      return ResponseEntity.notFound().build();
-    }
-
-    // Get current user
-    String userEmail = authentication.getName();
-    User user = userService.findByEmail(userEmail);
-    if (user == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\": \"User not found\"}");
-    }
-
-    UUID userId = user.getUserId();
-    boolean isOwner = prompt.getAuthorId().equals(userId);
-
-    if (isOwner) {
-      // Owner can only delete private prompts
-      if ("public".equals(prompt.getVisibility())) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body("{\"error\": \"Cannot delete public prompts. Please unpublish first.\"}");
-      }
-
-      // Delete the prompt (hard delete for private prompts)
-      boolean deleted = promptService.deletePrompt(id);
-      return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
-    } else {
-      // Non-owner can only remove from purchased prompts
-      boolean removedFromPurchases = promptService.removePurchasedPrompt(userId, id);
-      if (removedFromPurchases) {
-        return ResponseEntity.ok().body("{\"message\": \"Prompt removed from your library\"}");
-      } else {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body("{\"error\": \"You can only remove prompts you have purchased\"}");
-      }
-    }
+  public ResponseEntity<?> deletePrompt(@PathVariable UUID id) {
+    boolean deleted = promptService.deletePrompt(id);
+    return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
   }
 
   @GetMapping("/by-tag/{tagName}")

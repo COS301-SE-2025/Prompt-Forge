@@ -444,118 +444,18 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
     return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
-  // Notification helper
-  const showNotification = (type: "success" | "error", title: string, message: string) => {
-    const bg =
-      type === "success"
-        ? "bg-green-100 dark:bg-green-900/50 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200"
-        : "bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200"
-    const icon =
-      type === "success"
-        ? `<svg class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>`
-        : `<svg class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>`
-    const notification = document.createElement("div")
-    notification.className = `fixed bottom-4 right-4 ${bg} border p-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in transition-all duration-300`
-    notification.innerHTML = `
-      <div class="flex items-start">
-        <div class="flex-shrink-0 mt-0.5">${icon}</div>
-        <div class="ml-3 flex-1">
-          <h3 class="text-sm font-medium">${title}</h3>
-          <div class="mt-1 text-xs opacity-90">${message}</div>
-        </div>
-        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 flex-shrink-0 text-current hover:opacity-70 transition-opacity">
-          <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-    `
-    document.body.appendChild(notification)
-    
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
-      if (document.body.contains(notification)) {
-        notification.style.opacity = '0'
-        notification.style.transform = 'translateX(100%)'
-        setTimeout(() => {
-          if (document.body.contains(notification)) {
-            document.body.removeChild(notification)
-          }
-        }, 300)
-      }
-    }, 5000)
-  }
-
   // Handlers for StandardPromptCard
   const handleDeletePrompt = async (id: string) => {
     try {
-      // Let the backend handle the deletion logic (it knows whether user is owner or not)
       const response = await fetch(`${API_BASE_URL}/prompts/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       })
-      
       if (response.ok) {
-        // Handle successful responses
-        try {
-          const responseData = await response.json()
-          if (responseData.message) {
-            // Non-owner removal from purchased library
-            setMyPrompts((prev) => prev.filter((p) => p.id !== id))
-            showNotification("success", "Prompt removed", responseData.message)
-          } else {
-            // Owner deletion of private prompt
-            setMyPrompts((prev) => prev.filter((p) => p.id !== id))
-            showNotification("success", "Prompt deleted", "Your prompt has been successfully deleted.")
-          }
-        } catch {
-          // Empty response body for successful deletion
-          setMyPrompts((prev) => prev.filter((p) => p.id !== id))
-          showNotification("success", "Prompt deleted", "Your prompt has been successfully deleted.")
-        }
-      } else {
-        // Handle different error status codes
-        let errorMessage = "An error occurred while deleting the prompt."
-        let errorTitle = "Delete failed"
-        
-        try {
-          const errorData = await response.json()
-          if (errorData.error) {
-            errorMessage = errorData.error
-          }
-        } catch {
-          // No JSON response body
-        }
-        
-        switch (response.status) {
-          case 401:
-            errorTitle = "Authentication required"
-            errorMessage = errorMessage || "Please log in to delete prompts."
-            break
-          case 403:
-            errorTitle = "Access denied"
-            if (errorMessage.includes("Cannot delete public prompts")) {
-              errorMessage = "Cannot delete public prompts. Please unpublish the prompt first to make it private."
-            } else if (errorMessage.includes("You can only remove prompts you have purchased")) {
-              errorMessage = "You can only remove prompts from your purchased library."
-            }
-            break
-          case 404:
-            errorTitle = "Prompt not found"
-            errorMessage = "The prompt you're trying to delete no longer exists."
-            break
-          default:
-            errorTitle = "Delete failed"
-            errorMessage = errorMessage || `Failed to delete prompt (Status: ${response.status})`
-        }
-        
-        showNotification("error", errorTitle, errorMessage)
+        setMyPrompts((prev) => prev.filter((p) => p.id !== id))
       }
-    } catch (error) {
-      console.error("Error deleting prompt:", error)
-      showNotification("error", "Network error", "Could not delete prompt. Please check your connection and try again.")
-    }
+    } catch {}
   }
 
   const handleToggleFavorite = async (id: string) => {
@@ -737,31 +637,45 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
                 src={profileImage || "/placeholder.svg?height=80&width=80"}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                onClick={() => navigate(`/profile-settings`)}
+                onClick={() => navigate(`/user/${username}`)}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
             <h3
               className="font-medium cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile-settings`)}
+              onClick={() => navigate(`/user/${username}`)}
             >
               {username}
             </h3>
+            <div className="flex space-x-2 my-3">
+              <Button
+                size="sm"
+             
+                className={`transition-all duration-300 w-full flex items-center justify-center
+                  bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
+                  `}
+                onClick={() => navigate(`/user/${username}`)}
+              >
+                View Profile
+              </Button>
+            </div>
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
-              <div className="text-center">
+              <div className="text-center cursor-pointer hover:text-[#3ebb9e]"
+                onClick={() => navigate(`/my-prompts`)}
+              >
                 <div className="font-semibold">{myPrompts.length}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div
                 className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
+                onClick={() => navigate(`/social`)}
               >
                 <div className="font-semibold">{followers}</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
               <div
                 className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
+                onClick={() => navigate(`/social`)}
               >
                 <div className="font-semibold">{following}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
