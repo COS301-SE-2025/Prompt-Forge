@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar"
 import { MyPrompt } from '@/Models/MyPrompt';
 import { dashProfileService } from '../services/dashprofileService';
 
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [imageError, setImageError] = useState(false)
   const [userProfile, setUserProfile] = useState<UserProfile>({
     userId: "",
     username: username || "",
@@ -330,12 +332,16 @@ export default function ProfilePage() {
         <div className="w-full lg:w-96 bg-card border-r border-border p-6">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-2">
-              <img
-                src={userProfile.profilePicture || "/placeholder.svg?height=80&width=80"}
-                alt="Profile"
-                className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                onClick={() => navigate(`/profile-settings`)}
-              />
+              <Avatar className="w-20 h-20 border-2 border-border cursor-pointer" onClick={() => navigate(`/profile-settings`)}>
+                <AvatarImage
+                  src={!imageError ? userProfile.profilePicture : undefined}
+                  alt="Profile"
+                  onError={() => setImageError(true)}
+                />
+                <AvatarFallback className="bg-[#3ebb9e] text-white font-semibold text-lg">
+                  {username?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               {
                 userProfile.isActive &&
                 <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
@@ -357,6 +363,7 @@ export default function ProfilePage() {
                   : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
                   } transition-colors duration-300`}
                 onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
+                disabled={currentUserId === userProfile.userId}
               >
                 {userProfile.isFollowing ? "Following" : "Follow"}
               </Button>
@@ -366,18 +373,20 @@ export default function ProfilePage() {
                 
                 className={`transition-all duration-300 w-full flex items-center justify-center
                   bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
+                  ${currentUserId === userProfile.userId ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 title={ "Challenge to Prompt Wars" }
+                disabled={currentUserId === userProfile.userId}
               >
                 
-                <Swords className="h-4 w-4" />
-                {/* Challenge */}
+                Challenge
+                <Swords className="h-4 w-4 ml-2" />
                
 
               </Button>
             </div>
             
-            <div className="grid grid-cols-4 gap-2 w-full mt-4">
+            <div className="grid grid-cols-3 gap-2 w-full mt-4">
               <div className="text-center">
                 <div className="font-semibold">{publicPromptCount}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
@@ -396,12 +405,6 @@ export default function ProfilePage() {
                 <div className="font-semibold">{userProfile.followingCount}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>
-              <div className="text-center">
-                <div className="font-semibold flex items-center justify-center">
-                  <BadgeCount username={username} />
-                </div>
-                <div className="text-xs text-muted-foreground">Badges</div>
-              </div>
             </div>
           </div>
             <div className="space-y-4">
@@ -411,7 +414,10 @@ export default function ProfilePage() {
 
           {/* Badges Section in Sidebar */}
           <div className="mt-6">
-            <p className="font-medium mb-3">Badges</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-medium">Badges</p>
+              <BadgeCount username={username} />
+            </div>
             <BadgeCollection
               username={username}
               showProgress={false}

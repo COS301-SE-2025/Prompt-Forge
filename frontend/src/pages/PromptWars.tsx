@@ -31,6 +31,7 @@ import { normalizeScenario, parseAIJudgment } from "../utils/gameHelpers"
 import { useParams } from "react-router-dom"
 import { promptWarsGameAPI, GameResponse, GameStateDetails, PromptSubmission } from "../services/promptWarsGameAPI"
 import { promptWarsWebSocket, GameUpdate } from "../services/promptWarsWebSocket"
+import { StreamingService } from "../services/streamingService"
 
 type GameState = "waiting" | "scenario" | "writing" | "rating" | "results" | "finished" | "cancelled"
 
@@ -43,6 +44,9 @@ interface ChatMessage {
 }
 
 export default function PromptWars() {
+  // Initialize services
+  const streamingService = new StreamingService();
+  
   // Helper to generate unique IDs for chat messages
   function generateUniqueId() {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
@@ -960,10 +964,8 @@ const isMultiplayerGame = !!gameId;
       const data = await response.json()
 
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        const scenarioText = data.choices[0].message.content
-          .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
-          .replace(/\\n/g, "\n")
-          .replace(/\\/g, "")
+        const rawScenarioText = data.choices[0].message.content;
+        const scenarioText = streamingService.keepMarkdownFormatting(rawScenarioText);
 
         setScenario(scenarioText)
 
@@ -1179,11 +1181,8 @@ Please provide only the prompt itself, nothing else.`,
         const data = await response.json()
 
         if (data.choices && data.choices[0] && data.choices[0].message) {
-          const aiOpponentPrompt = data.choices[0].message.content
-            .replace(/\\u[\dA-F]{4}/gi, (match: string) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
-            .replace(/\\n/g, "\n")
-            .replace(/\\/g, "")
-            .trim()
+          const rawOpponentPrompt = data.choices[0].message.content;
+          const aiOpponentPrompt = streamingService.keepMarkdownFormatting(rawOpponentPrompt).trim();
 
           setOpponentPrompt(aiOpponentPrompt)
         } else {
@@ -1274,7 +1273,8 @@ Overall Analysis: [brief summary]`,
         const data = await response.json()
 
         if (data.choices && data.choices[0] && data.choices[0].message) {
-          const ratingText = data.choices[0].message.content
+          const rawRatingText = data.choices[0].message.content;
+          const ratingText = streamingService.keepMarkdownFormatting(rawRatingText);
           
           // Parse the AI response to extract ratings and a cleaned explanation
           const rating1Match = ratingText.match(/Rating 1:\s*(\d+)/i)
