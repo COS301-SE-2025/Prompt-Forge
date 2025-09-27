@@ -333,14 +333,7 @@ public class GameService {
 
   private void validateGameStateForSubmission(Game game, UUID playerId) {
     if (game.getGameState() != GameState.WRITING) {
-      // Allow submission if player hasn't submitted yet, even if game is in different state
-      // This handles race conditions where AI rating completes before second player submits
-      boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
-      if (hasPlayerSubmitted) {
-        throw new IllegalArgumentException(
-            "Game is not in writing phase and you have already submitted");
-      }
-      // Allow the submission to proceed if player hasn't submitted yet
+      throw new IllegalArgumentException("Game is not in writing phase");
     }
   }
 
