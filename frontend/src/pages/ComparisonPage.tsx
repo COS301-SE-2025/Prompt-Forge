@@ -176,6 +176,14 @@ export default function ComparisonPage() {
         streamingEnabled,
         {
           onContent: (content: string) => {
+            if (side === "A" && !editorACollapsed){
+              setEditorACollapsed(true)
+            }
+            
+            if (side === "B" && !editorBCollapsed){
+              setEditorBCollapsed(true)
+            }
+
             if (streamingEnabled) {
               typingEffect.addText(content);
             } else {
@@ -480,10 +488,11 @@ Please provide:
                   </Button>
                 </div>
                 {!editorACollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
-                    <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
-                      placeholder="Write your first prompt here...
+                  <>
+                    <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                      <textarea
+                        className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                        placeholder="Write your first prompt here...
 
 Example:
 When writing a prompt, always follow these guidelines:
@@ -492,13 +501,16 @@ When writing a prompt, always follow these guidelines:
 3. [Include relevant context, constraints, or examples to guide the output.]
 4. [If your prompt involves a specific topic or style, mention it explicitly and 
 explain how the response should be adapted to fit.]"
-                      value={promptTextA}
-                      onChange={(e) => setPromptTextA(e.target.value)}
-                    />
-                  </div>
-                )}
+                        value={promptTextA}
+                        onChange={(e) => setPromptTextA(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-1 mb-2 sm:mt-3">
+                      <div className="text-xs text-muted-foreground">{promptTextA.length} chars</div>
+                    </div>
+                  </>
+                  )}
               </div>
-
               {/* Response A */}
               <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${responseACollapsed ? "flex-none h-auto" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -523,7 +535,7 @@ explain how the response should be adapted to fit.]"
                   </div>
                 </div>
                 {!responseACollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 max-h-[550px] relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
                       <StreamingDisplay
                         content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
@@ -537,9 +549,6 @@ explain how the response should be adapted to fit.]"
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-2 sm:mt-3">
-                <div className="text-xs text-muted-foreground">{promptTextA.length} chars</div>
-              </div>
             </div>
 
             {/* Right Panel - Prompt B - Apply similar responsive classes */}
@@ -587,10 +596,11 @@ explain how the response should be adapted to fit.]"
                   </Button>
                 </div>
                 {!editorBCollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
-                    <textarea
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
-                      placeholder="Write your second prompt here...
+                  <>
+                    <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                      <textarea
+                        className="w-full h-full bg-transparent resize-none focus:outline-none text-xs sm:text-xs lg:text-sm text-gray-800 dark:text-foreground placeholder:text-white-400/50 custom-scrollbar"
+                        placeholder="Write your second prompt here...
 
 Example:
 When writing a prompt, always follow these guidelines:
@@ -599,10 +609,14 @@ When writing a prompt, always follow these guidelines:
 3. [Include relevant context, constraints, or examples to guide the output.]
 4. [If your prompt involves a specific topic or style, mention it explicitly and 
 explain how the response should be adapted to fit.]"
-                      value={promptTextB}
-                      onChange={(e) => setPromptTextB(e.target.value)}
-                    />
+                        value={promptTextB}
+                        onChange={(e) => setPromptTextB(e.target.value)}
+                      />
+                    </div>
+                  <div className="flex items-center justify-between mx-2 mt-1 mb-2 sm:mt-3">
+                    <div className="text-xs text-muted-foreground">{promptTextB.length} chars</div>
                   </div>
+                </>
                 )}
               </div>
 
@@ -630,25 +644,18 @@ explain how the response should be adapted to fit.]"
                   </div>
                 </div>
                 {!responseBCollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 max-h-[550px] relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
-                      {isLoadingB ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating response...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                          {aiResponseB}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={streamingEnabled ? typingEffectB.displayText : aiResponseB}
+                        isLoading={isLoadingB}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="AI response to prompt B will appear here..."
+                        className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 )}
-              </div>
-
-              <div className="flex items-center justify-between mt-2 sm:mt-3">
-                <div className="text-xs text-muted-foreground">{promptTextB.length} chars</div>
               </div>
             </div>
           </div>
