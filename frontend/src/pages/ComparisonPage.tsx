@@ -139,14 +139,8 @@ export default function ComparisonPage() {
     },
   ]
 
-  const decodeUnicode = (str: string) => {
-    return str
-      .replace(/\\u[\dA-F]{4}/gi, (match) => String.fromCharCode(Number.parseInt(match.replace(/\\u/g, ""), 16)))
-      .replace(/\\n/g, "\n")
-      .replace(/\\/g, "")
-      .replace(/\*\*/g, "")
-      .replace(/\*([^*]+)\*/g, "$1")
-  }
+  // Use streamingService for response formatting
+  const formatResponse = (content: string) => streamingService.keepMarkdownFormatting(content);
 
   // Update the testPrompt function to support streaming
   const testPrompt = async (side: "A" | "B") => {
@@ -185,7 +179,7 @@ export default function ComparisonPage() {
             if (streamingEnabled) {
               typingEffect.addText(content);
             } else {
-              setAiResponse(streamingService.decodeUnicode(content));
+              setAiResponse(formatResponse(content));
             }
           },
           onComplete: () => {
@@ -287,7 +281,7 @@ Please provide:
       const data = await response.json();
       
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        setRatingResponse(decodeUnicode(data.choices[0].message.content));
+        setRatingResponse(formatResponse(data.choices[0].message.content));
       } else if (data.error) {
         let errorMessage = data.error.userMessage || data.error.message;
         
@@ -317,7 +311,7 @@ Please provide:
             const fallbackData = await fallbackResponse.json();
             
             if (fallbackData.choices && fallbackData.choices[0] && fallbackData.choices[0].message) {
-              setRatingResponse(decodeUnicode(fallbackData.choices[0].message.content) + 
+              setRatingResponse(formatResponse(fallbackData.choices[0].message.content) + 
                 "\n\n(Rating provided by " + aiModels[alternativeIndex].name + ")");
             } else {
               setRatingResponse(`Error: Could not generate comparison with any model. ${errorMessage}`);
