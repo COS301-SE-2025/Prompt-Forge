@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fiveOps.promptforge.prompts.model.Prompt;
 import com.fiveOps.promptforge.prompts.model.PromptWithSourceDTO;
 import com.fiveOps.promptforge.prompts.repository.PromptRepository;
-import com.fiveOps.promptforge.promptstore.repository.PromptPurchaseRepository;
 import com.fiveOps.promptforge.user_profile.dto.UserDto;
 import com.fiveOps.promptforge.user_profile.service.UserService;
 
@@ -24,19 +23,16 @@ public class PromptService {
   private final TagService tagService;
   private final UserService userService;
   private final UniversalTaggingService taggingService;
-  private final PromptPurchaseRepository purchaseRepository;
 
   public PromptService(
       PromptRepository promptRepository,
       TagService tagService,
       UserService userService,
-      UniversalTaggingService taggingService,
-      PromptPurchaseRepository purchaseRepository) {
+      UniversalTaggingService taggingService) {
     this.promptRepository = promptRepository;
     this.tagService = tagService;
     this.userService = userService;
     this.taggingService = taggingService;
-    this.purchaseRepository = purchaseRepository;
   }
 
   public List<Prompt> getAllPrompts() {
@@ -371,19 +367,5 @@ public class PromptService {
     System.out.println("\n\n//invaliddddddddddddddd filterrrrrrrrrrrrrrrrrrrrrrrrrrrr:" + filter);
 
     throw new RuntimeException("invalid filter");
-  }
-
-  @Transactional
-  public boolean removePurchasedPrompt(UUID userId, UUID promptId) {
-    // Check if the user has purchased this prompt
-    boolean hasPurchased = purchaseRepository.existsByPromptIdAndUserId(promptId, userId);
-
-    if (hasPurchased) {
-      // Remove from purchased prompts (this doesn't delete the actual prompt)
-      purchaseRepository.deleteByPromptIdAndUserId(promptId, userId);
-      return true;
-    }
-
-    return false;
   }
 }

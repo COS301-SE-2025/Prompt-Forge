@@ -272,103 +272,29 @@ class PromptControllerTest {
   }
 
   @Test
-  void deletePrompt_ShouldReturnUnauthorized_WhenNotAuthenticated() {
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, null);
-
-    // Assert
-    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    verify(promptService, never()).deletePrompt(any());
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnNotFound_WhenPromptNotExists() {
+  void deletePrompt_ShouldReturnNotFound_WhenNotExists() {
     // Arrange
-    Authentication auth = mock(Authentication.class);
-    when(auth.getName()).thenReturn(userEmail);
-    when(promptService.getPromptById(testPromptId)).thenReturn(null);
+    when(promptService.deletePrompt(testPromptId)).thenReturn(false);
 
     // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, auth);
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
 
     // Assert
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    verify(promptService, never()).deletePrompt(any());
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnForbidden_WhenOwnerTriesToDeletePublicPrompt() {
-    // Arrange
-    Authentication auth = mock(Authentication.class);
-    when(auth.getName()).thenReturn(userEmail);
-    testPrompt.setVisibility("public");
-    when(promptService.getPromptById(testPromptId)).thenReturn(testPrompt);
-    when(userService.findByEmail(userEmail)).thenReturn(testUser);
-
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, auth);
-
-    // Assert
-    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    verify(promptService, never()).deletePrompt(any());
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnOk_WhenOwnerDeletesPrivatePrompt() {
-    // Arrange
-    Authentication auth = mock(Authentication.class);
-    when(auth.getName()).thenReturn(userEmail);
-    testPrompt.setVisibility("private");
-    when(promptService.getPromptById(testPromptId)).thenReturn(testPrompt);
-    when(userService.findByEmail(userEmail)).thenReturn(testUser);
-    when(promptService.deletePrompt(testPromptId)).thenReturn(true);
-
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, auth);
-
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
     verify(promptService).deletePrompt(testPromptId);
   }
 
   @Test
-  void deletePrompt_ShouldReturnOk_WhenNonOwnerRemovesPurchasedPrompt() {
+  void deletePrompt_ShouldReturnOk_WhenDeleted() {
     // Arrange
-    Authentication auth = mock(Authentication.class);
-    when(auth.getName()).thenReturn(userEmail);
-    UUID differentOwnerId = UUID.randomUUID();
-    testPrompt.setAuthorId(differentOwnerId); // Different owner
-    when(promptService.getPromptById(testPromptId)).thenReturn(testPrompt);
-    when(userService.findByEmail(userEmail)).thenReturn(testUser);
-    when(promptService.removePurchasedPrompt(testAuthorId, testPromptId)).thenReturn(true);
+    when(promptService.deletePrompt(testPromptId)).thenReturn(true);
 
     // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, auth);
+    ResponseEntity<?> response = promptController.deletePrompt(testPromptId);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(promptService).removePurchasedPrompt(testAuthorId, testPromptId);
-    verify(promptService, never()).deletePrompt(any());
-  }
-
-  @Test
-  void deletePrompt_ShouldReturnForbidden_WhenNonOwnerTriesToRemoveNonPurchasedPrompt() {
-    // Arrange
-    Authentication auth = mock(Authentication.class);
-    when(auth.getName()).thenReturn(userEmail);
-    UUID differentOwnerId = UUID.randomUUID();
-    testPrompt.setAuthorId(differentOwnerId); // Different owner
-    when(promptService.getPromptById(testPromptId)).thenReturn(testPrompt);
-    when(userService.findByEmail(userEmail)).thenReturn(testUser);
-    when(promptService.removePurchasedPrompt(testAuthorId, testPromptId)).thenReturn(false);
-
-    // Act
-    ResponseEntity<?> response = promptController.deletePrompt(testPromptId, auth);
-
-    // Assert
-    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    verify(promptService).removePurchasedPrompt(testAuthorId, testPromptId);
-    verify(promptService, never()).deletePrompt(any());
+    verify(promptService).deletePrompt(testPromptId);
   }
 
   @Test

@@ -40,6 +40,9 @@ public class GameService {
   // In-memory guard to avoid duplicate simultaneous generation requests in this JVM
   private final java.util.Set<java.util.UUID> generationLocks =
       java.util.concurrent.ConcurrentHashMap.newKeySet();
+  // In-memory guard to avoid duplicate simultaneous finalization/rating requests
+  private final java.util.Set<java.util.UUID> finalizationLocks =
+    java.util.concurrent.ConcurrentHashMap.newKeySet();
 
   @Value("${openrouter.base.url:https://openrouter.ai/api/v1}")
   private String openRouterBaseUrl;
@@ -195,17 +198,18 @@ public class GameService {
       sb.append("• Clear and easy to understand\n");
       sb.append("• Perfect for AI prompt writing\n\n");
       sb.append("Just give me ONE short scenario (1-2 sentences max). Examples:\n");
-      sb.append("'🚀 You're designing an AI assistant for Mars colonists who speak in emoji. ");
+      sb.append("' You're designing an AI assistant for Mars colonists who speak in emoji. ");
       sb.append("Write the perfect prompt!'\n");
-      sb.append("'🎭 Create a prompt for an AI that helps shy people become confident public ");
+      sb.append("' Create a prompt for an AI that helps shy people become confident public ");
       sb.append("speakers in 30 days.'\n");
-      sb.append("'🌟 Design a prompt for an AI chef that creates meals based on your current ");
+      sb.append("' Design a prompt for an AI chef that creates meals based on your current ");
       sb.append("mood and the weather.'\n\n");
       sb.append("Now create something totally new and exciting: explicitly say what the ");
       sb.append("players need to prompt within the scenario or what kind of prompt they need ");
       sb.append("to generate without giving the actual prompt. This prompt battle shows who ");
       sb.append("can prompt better, given a scenario. Keep the scenario very brief - 1-2 ");
-      sb.append("sentences max.");
+      sb.append("sentences max. Make the scenario practical realistic ");
+      // sb.append("fun and creative");
 
       List<Map<String, Object>> messages =
           List.of(Map.of("role", "user", "content", sb.toString()));
@@ -269,7 +273,13 @@ public class GameService {
             + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
     if (game.getGameState() != GameState.WRITING) {
-      throw new IllegalArgumentException("Game is not in writing phase");
+      // Allow submission if player hasn't submitted yet, even if game is in different state
+      // This handles race conditions where AI rating completes before second player submits
+      boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
+      if (hasPlayerSubmitted) {
+        throw new IllegalArgumentException("Game is not in writing phase and you have already submitted");
+      }
+      // Allow the submission to proceed if player hasn't submitted yet
     }
 
     if (!game.isPlayerInGame(playerId)) {
@@ -278,6 +288,12 @@ public class GameService {
 
     if (prompt == null || prompt.trim().isEmpty()) {
       throw new IllegalArgumentException("Prompt cannot be empty");
+    }
+
+    // Validate prompt content - reject if it contains log messages or other invalid data
+    if (prompt.contains("Nothing to write") || prompt.contains("Completed") ||
+        prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+      throw new IllegalArgumentException("Invalid prompt content detected");
     }
 
     game.submitPrompt(playerId, prompt.trim());
@@ -336,27 +352,45 @@ public class GameService {
   }
 
   private void performAIRating(Game game) {
-    System.out.println("Starting AI rating for game: " + game.getId());
-    try {
-      System.out.println(
-          "Game state: "
-              + game.getGameState()
-              + ", Both submitted: "
-              + game.bothPlayersSubmittedPrompts());
-      System.out.println(
-          "Game data - Player1 prompt: " + (game.getPlayer1Prompt() != null ? "EXISTS" : "NULL"));
-      System.out.println(
-          "Game data - Player2 prompt: " + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
+    UUID gameId = game.getId();
+    // Prevent duplicate rating/finalization in this JVM
+    if (!finalizationLocks.add(gameId)) {
+      System.out.println("AI rating already in progress for game: " + gameId);
+      return;
+    }
 
-      if (!game.bothPlayersSubmittedPrompts()) {
-        System.out.println("Not both players submitted, aborting rating");
-        return;
-      }
+    try {
+      System.out.println("Starting AI rating for game: " + gameId);
+
+      // Use the passed game object directly (already verified both players submitted)
+      System.out.println("Game state: " + game.getGameState());
+      System.out.println("Both submitted: " + game.bothPlayersSubmittedPrompts());
+
+      // Move game into RATING phase and notify clients
+      game.setGameState(GameState.RATING);
+      gameRepository.save(game);
+
+      Map<String, Object> ratingStart = new HashMap<>();
+      ratingStart.put("type", "AI_RATING_STARTED");
+      ratingStart.put("gameId", gameId.toString());
+      ratingStart.put("message", "AI judge is evaluating the prompts...");
+  ratingStart.put("newPhase", GameState.RATING.toString());
+
+      Map<String, Object> phaseChange = new HashMap<>();
+      phaseChange.put("type", "PHASE_CHANGE");
+      phaseChange.put("gameId", gameId.toString());
+      phaseChange.put("gameState", GameState.RATING.toString());
+  phaseChange.put("newPhase", GameState.RATING.toString());
+
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), ratingStart);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), ratingStart);
+      webSocketService.sendGameUpdate(game.getPlayer1Id(), phaseChange);
+      webSocketService.sendGameUpdate(game.getPlayer2Id(), phaseChange);
 
       System.out.println("Calling AI rating API...");
       // Get AI rating for both prompts
-      Map<String, Object> ratings =
-          getAIRating(game.getScenario(), game.getPlayer1Prompt(), game.getPlayer2Prompt());
+      Map<String, Object> ratings = getAIRating(game.getScenario(),
+          game.getPlayer1Prompt(), game.getPlayer2Prompt());
 
       System.out.println("AI rating completed, processing results...");
       int player1Score = (Integer) ratings.get("player1Score");
@@ -367,18 +401,18 @@ public class GameService {
       System.out.println("Player 1 score: " + player1Score + ", Player 2 score: " + player2Score);
 
       // Set the AI scores (clamped to 0-10)
-      game.setPlayer1Score(Integer.valueOf(player1Score));
-      game.setPlayer2Score(Integer.valueOf(player2Score));
+  game.setPlayer1Score(player1Score);
+  game.setPlayer2Score(player2Score);
       game.setRatingExplanation((String) ratings.get("explanation"));
 
-      Integer player1Rating =
-          (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
-      Integer player2Rating =
-          (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
-      game.setPlayer1Rating(player1Rating);
-      game.setPlayer2Rating(player2Rating);
+  // Player rating should correspond to their own score.
+  // Note: DB check constraint disallows 0 for player*_rating, so store null when score == 0
+  Integer player1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
+  Integer player2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
+  game.setPlayer1Rating(player1Rating);
+  game.setPlayer2Rating(player2Rating);
 
-      // Calculate winner
+      // Calculate winner and finish game
       UUID winner = game.calculateWinner();
       game.setWinnerId(winner);
       game.setGameState(GameState.FINISHED);
@@ -405,16 +439,37 @@ public class GameService {
       System.err.println("Error in performAIRating: " + e.getMessage());
       e.printStackTrace();
       applyFallbackRating(game.getId());
+    } finally {
+      finalizationLocks.remove(gameId);
     }
   }
 
   // Helper to keep performAIRating simpler and reduce cyclomatic complexity
   private void applyFallbackRating(UUID gameId) {
+    // Prevent duplicate finalization
+    if (!finalizationLocks.add(gameId)) {
+      System.out.println("Fallback rating already in progress for game: " + gameId);
+      return;
+    }
+
     try {
       Game fallbackGame = getGame(gameId);
       if (fallbackGame.getGameState() == GameState.FINISHED) {
         return;
       }
+
+      // Move to RATING phase to notify clients
+      fallbackGame.setGameState(GameState.RATING);
+      gameRepository.save(fallbackGame);
+
+  Map<String, Object> phaseChange = new HashMap<>();
+  phaseChange.put("type", "PHASE_CHANGE");
+  phaseChange.put("gameId", gameId.toString());
+  phaseChange.put("gameState", GameState.RATING.toString());
+  phaseChange.put("newPhase", GameState.RATING.toString());
+
+  webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), phaseChange);
+  webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), phaseChange);
 
       Map<String, Object> fallbackRatings = getFallbackRating();
       int player1Score = (Integer) fallbackRatings.get("player1Score");
@@ -422,17 +477,16 @@ public class GameService {
       player1Score = Math.max(0, Math.min(10, player1Score));
       player2Score = Math.max(0, Math.min(10, player2Score));
 
-      fallbackGame.setPlayer1Score(player1Score);
-      fallbackGame.setPlayer2Score(player2Score);
+  fallbackGame.setPlayer1Score(player1Score);
+  fallbackGame.setPlayer2Score(player2Score);
       fallbackGame.setRatingExplanation(
           "AI rating service temporarily unavailable. Random scores assigned.");
 
-      Integer fbPlayer1Rating =
-          (player2Score >= 1 && player2Score <= 10) ? Integer.valueOf(player2Score) : null;
-      Integer fbPlayer2Rating =
-          (player1Score >= 1 && player1Score <= 10) ? Integer.valueOf(player1Score) : null;
-      fallbackGame.setPlayer1Rating(fbPlayer1Rating);
-      fallbackGame.setPlayer2Rating(fbPlayer2Rating);
+  // Do not write 0 into the player rating columns because DB constraint disallows 0.
+  Integer fbPlayer1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
+  Integer fbPlayer2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
+  fallbackGame.setPlayer1Rating(fbPlayer1Rating);
+  fallbackGame.setPlayer2Rating(fbPlayer2Rating);
 
       UUID winner = fallbackGame.calculateWinner();
       fallbackGame.setWinnerId(winner);
@@ -458,6 +512,8 @@ public class GameService {
           "Sent fallback game results to both players for game: " + fallbackGame.getId());
     } catch (Exception fallbackError) {
       System.err.println("Fallback rating also failed: " + fallbackError.getMessage());
+    } finally {
+      finalizationLocks.remove(gameId);
     }
   }
 
@@ -520,6 +576,7 @@ public class GameService {
       rp.append("Context: [Assessment of background information in both prompts]\n");
       rp.append("Actionability: [Assessment of usability in both prompts]\n");
       rp.append("Overall: [Brief conclusion on which prompt is better and why]");
+      rp.append("NB: if no prompt is provided or it is null, give that promp 0");
 
       String ratingPrompt = String.format(rp.toString(), scenario, player1Prompt, player2Prompt);
 
@@ -565,31 +622,84 @@ public class GameService {
     Map<String, Object> ratings = new HashMap<>();
 
     try {
-      // Parse the scores
-      java.util.regex.Pattern player1ScorePattern =
-          java.util.regex.Pattern.compile(
-              "Prompt 1 Score:\\s*(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE);
-      java.util.regex.Pattern player2ScorePattern =
-          java.util.regex.Pattern.compile(
-              "Prompt 2 Score:\\s*(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE);
+      // Robust parsing: try multiple patterns (Prompt 1 Score, Rating 1, Prompt1:, compact)
+      int player1Score = 5; // Default fallback
+      int player2Score = 5; // Default fallback
 
-      java.util.regex.Matcher player1Matcher = player1ScorePattern.matcher(result);
-      java.util.regex.Matcher player2Matcher = player2ScorePattern.matcher(result);
+      // Patterns to attempt, in order
+      java.util.regex.Pattern[] p1Patterns = new java.util.regex.Pattern[] {
+        java.util.regex.Pattern.compile("Prompt\\s*1\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Rating\\s*1\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Prompt1\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Player\\s*1\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+      };
 
-      int player1Score = 5; // Default
-      int player2Score = 5; // Default
+      java.util.regex.Pattern[] p2Patterns = new java.util.regex.Pattern[] {
+        java.util.regex.Pattern.compile("Prompt\\s*2\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Rating\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Prompt2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+        java.util.regex.Pattern.compile("Player\\s*2\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE),
+      };
 
-      if (player1Matcher.find()) {
-        player1Score = Integer.parseInt(player1Matcher.group(1));
+      // Try each pattern until we find a match
+      for (java.util.regex.Pattern p : p1Patterns) {
+        java.util.regex.Matcher m = p.matcher(result);
+        if (m.find()) {
+          try {
+            player1Score = Integer.parseInt(m.group(1));
+            break;
+          } catch (NumberFormatException nfe) {
+            // ignore and continue
+          }
+        }
       }
 
-      if (player2Matcher.find()) {
-        player2Score = Integer.parseInt(player2Matcher.group(1));
+      for (java.util.regex.Pattern p : p2Patterns) {
+        java.util.regex.Matcher m = p.matcher(result);
+        if (m.find()) {
+          try {
+            player2Score = Integer.parseInt(m.group(1));
+            break;
+          } catch (NumberFormatException nfe) {
+            // ignore and continue
+          }
+        }
       }
+
+      // Compact inline pattern like: "Prompt 1: X, Prompt 2: Y" or "Prompt1: X Prompt2: Y"
+      if ((player1Score == 5 || player2Score == 5)) {
+        java.util.regex.Pattern compact = java.util.regex.Pattern.compile(
+            "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+            java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Matcher cm = compact.matcher(result);
+        if (cm.find()) {
+          try {
+            if (player1Score == 5) player1Score = Integer.parseInt(cm.group(1));
+            if (player2Score == 5) player2Score = Integer.parseInt(cm.group(2));
+          } catch (NumberFormatException nfe) {
+            // ignore
+          }
+        }
+      }
+
+      // Clamp to 0-10 and ensure integer
+      player1Score = Math.max(0, Math.min(10, player1Score));
+      player2Score = Math.max(0, Math.min(10, player2Score));
 
       ratings.put("player1Score", player1Score);
       ratings.put("player2Score", player2Score);
       ratings.put("explanation", result);
+
+      System.out.println("parseRatingResult extracted scores -> p1: " + player1Score +
+          ", p2: " + player2Score);
 
     } catch (Exception e) {
       System.err.println("Error parsing rating result: " + e.getMessage());
@@ -721,6 +831,22 @@ public class GameService {
     // If writing phase, move to finished by assigning missing prompts as empty and letting rating
     // run.
     if (game.getGameState() == GameState.WRITING || game.getGameState() == GameState.WAITING) {
+      // Safety: do not allow force-finish to run early. If both players already submitted prompts,
+      // we can proceed immediately. Otherwise require the configured writing duration to have
+      // elapsed based on writingStartedAt to avoid premature forcing when a client timer is
+      // slightly ahead.
+      if (!game.bothPlayersSubmittedPrompts()) {
+        java.time.Instant started = game.getWritingStartedAt();
+        if (started == null) {
+          throw new IllegalArgumentException("Writing window has not started yet");
+        }
+        long elapsed = java.time.Duration.between(started, java.time.Instant.now()).getSeconds();
+        int required = (game.getGameType() == GameType.REVERSE_PROMPT) ? 60 : 120;
+        // Allow a small grace of 1 second to account for minor clock skew
+        if (elapsed < Math.max(0, required - 1)) {
+          throw new IllegalArgumentException("Writing period has not yet expired");
+        }
+      }
       // Assign auto-empty prompts where missing
       if (game.getPlayer1Prompt() == null) {
         // Use a non-empty placeholder so hasPlayerSubmittedPrompt considers this a submission
@@ -813,10 +939,16 @@ public class GameService {
 
       return savedGame;
     } else {
-      // At least one player submitted - let the normal flow handle it
-      // This shouldn't happen if called correctly, but handle gracefully
-      System.out.println("At least one player submitted - letting normal flow handle");
-      return game;
+      // At least one player submitted - force finish the game so AI rating runs and
+      // both players receive GAME_FINISHED with AI judgment.
+      System.out.println("At least one player submitted - forcing finish to trigger AI rating");
+      try {
+        return forceFinishGame(gameId);
+      } catch (Exception e) {
+        System.err.println("Error while forcing finish during timeout handling: " + e.getMessage());
+        // As a fallback, return the current game state without modifying it
+        return game;
+      }
     }
   }
 

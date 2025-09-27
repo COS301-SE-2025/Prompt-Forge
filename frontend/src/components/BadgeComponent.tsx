@@ -37,11 +37,11 @@ const iconMap: Record<string, React.ComponentType<any>> = {
 }
 
 const rarityStyles: Record<string, string> = {
-  common: "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300",
-  uncommon: "bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-600 text-green-700 dark:text-green-300",
-  rare: "bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300",
-  epic: "bg-purple-100 dark:bg-purple-900 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300",
-  legendary: "bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300"
+  common: "bg-gray-100 border-gray-300 text-gray-700",
+  uncommon: "bg-green-100 border-green-300 text-green-700",
+  rare: "bg-blue-100 border-blue-300 text-blue-700",
+  epic: "bg-purple-100 border-purple-300 text-purple-700",
+  legendary: "bg-yellow-100 border-yellow-300 text-yellow-700"
 }
 
 const progressColors: Record<string, string> = {
@@ -124,24 +124,25 @@ export const BadgeComponent: React.FC<BadgeProps> = ({
           ${className}
           transition-all duration-200 cursor-pointer
           border-2 font-medium
-          text-black dark:text-white
           ${isCircular ? 'flex items-center justify-center' : ''}
         `}
         style={{ 
           borderColor: badge.color,
-          backgroundColor: isEarned ? `${badge.color}20` : `${badge.color}10`
+          backgroundColor: isEarned ? `${badge.color}20` : `${badge.color}10`,
+          color: badge.color
         }}
       >
         <IconComponent 
           size={isCircular ? iconSizes[size] - 2 : iconSizes[size]} 
           className={isCircular ? "" : "mr-1.5"} 
+          style={{ color: badge.color }}
         />
         {!isCircular && badge.name}
       </UIBadge>
       
       {/* Progress bar for badges in progress */}
       {showProgress && badge.progress !== undefined && badge.progress < 100 && (
-        <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
           <div 
             className="h-full transition-all duration-500 ease-out rounded-full"
             style={{ 
@@ -164,21 +165,21 @@ export const BadgeComponent: React.FC<BadgeProps> = ({
       
       {/* Tooltip */}
       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-        <div className="bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded-lg px-3 py-2 whitespace-nowrap max-w-xs shadow-lg border border-gray-700 dark:border-gray-600">
+        <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap max-w-xs">
           <div className="font-semibold">{badge.name}</div>
-          <div className="text-gray-300 dark:text-gray-400 mt-1">{badge.description}</div>
+          <div className="text-gray-300 mt-1">{badge.description}</div>
           {badge.earnedAt && (
-            <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+            <div className="text-gray-400 text-xs mt-1">
               Earned on {new Date(badge.earnedAt).toLocaleDateString()}
             </div>
           )}
           {badge.progress !== undefined && badge.progress < 100 && (
-            <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+            <div className="text-gray-400 text-xs mt-1">
               Progress: {badge.progress}% ({getProgressDetails(badge)})
             </div>
           )}
           {/* Arrow */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
         </div>
       </div>
     </div>
