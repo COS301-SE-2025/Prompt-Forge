@@ -307,7 +307,7 @@ export class StreamingService {
     } else {
       // Remove additional markdown formatting if requested
       return formatted
-        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')  // Remove links but keep text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // Remove links but keep text
         .replace(/`([^`]+)`/g, '$1')  // Remove inline code but keep content
         .trim();
     }
