@@ -272,31 +272,9 @@ public class GameService {
         "Before submission - Player2 prompt: "
             + (game.getPlayer2Prompt() != null ? "EXISTS" : "NULL"));
 
-    if (game.getGameState() != GameState.WRITING) {
-      // Allow submission if player hasn't submitted yet, even if game is in different state
-      // This handles race conditions where AI rating completes before second player submits
-      boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
-      if (hasPlayerSubmitted) {
-        throw new IllegalArgumentException(
-            "Game is not in writing phase and you have already submitted");
-      }
-      // Allow the submission to proceed if player hasn't submitted yet
-    }
-
-    if (!game.isPlayerInGame(playerId)) {
-      throw new IllegalArgumentException("Player is not in this game");
-    }
-
-    if (prompt == null || prompt.trim().isEmpty()) {
-      throw new IllegalArgumentException("Prompt cannot be empty");
-    }
-
-    // Validate prompt content - reject if it contains log messages or other invalid data
-    if (prompt.contains("Nothing to write")
-        || prompt.contains("Completed")
-        || prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
-      throw new IllegalArgumentException("Invalid prompt content detected");
-    }
+    validateGameStateForSubmission(game, playerId);
+    validatePlayerEligibility(game, playerId);
+    validatePromptContent(prompt);
 
     game.submitPrompt(playerId, prompt.trim());
 
@@ -351,6 +329,38 @@ public class GameService {
     System.out.println("Sent prompt submission update to both players for game: " + gameId);
 
     return savedGame;
+  }
+
+  private void validateGameStateForSubmission(Game game, UUID playerId) {
+    if (game.getGameState() != GameState.WRITING) {
+      // Allow submission if player hasn't submitted yet, even if game is in different state
+      // This handles race conditions where AI rating completes before second player submits
+      boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
+      if (hasPlayerSubmitted) {
+        throw new IllegalArgumentException(
+            "Game is not in writing phase and you have already submitted");
+      }
+      // Allow the submission to proceed if player hasn't submitted yet
+    }
+  }
+
+  private void validatePlayerEligibility(Game game, UUID playerId) {
+    if (!game.isPlayerInGame(playerId)) {
+      throw new IllegalArgumentException("Player is not in this game");
+    }
+  }
+
+  private void validatePromptContent(String prompt) {
+    if (prompt == null || prompt.trim().isEmpty()) {
+      throw new IllegalArgumentException("Prompt cannot be empty");
+    }
+
+    // Validate prompt content - reject if it contains log messages or other invalid data
+    if (prompt.contains("Nothing to write")
+        || prompt.contains("Completed")
+        || prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+      throw new IllegalArgumentException("Invalid prompt content detected");
+    }
   }
 
   private void performAIRating(Game game) {
@@ -686,7 +696,8 @@ public class GameService {
       if ((player1Score == 5 || player2Score == 5)) {
         java.util.regex.Pattern compact =
             java.util.regex.Pattern.compile(
-                "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+                "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+"
+                    + "Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
                 java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher cm = compact.matcher(result);
         if (cm.find()) {
