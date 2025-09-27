@@ -777,9 +777,8 @@ const isMultiplayerGame = !!gameId;
             setWinner('tie')
           }
 
-          // Use parsed explanation paragraphs only (strip score lines). Keep as multiline text joined by blank lines.
-          const parsedExplanation = (parsed && (parsed.paragraphs && parsed.paragraphs.length > 0)) ? parsed.paragraphs.join('\n\n') : (parsed.explanation || '')
-          setRatingExplanation(parsedExplanation || (game.ratingExplanation || ''))
+          // Keep parsed numeric extraction for scores, but display the raw AI text as provided by the backend
+          setRatingExplanation(game.ratingExplanation || '')
 
         } else if (game.gameType === 'REVERSE_PROMPT') {
           // Reverse prompt: scores are correct-answer counts (out of 5)
@@ -1304,33 +1303,17 @@ Overall Analysis: [brief summary]`,
           setWinner(gameWinner as "player" | "opponent" | "tie")
           setGameState("results")
 
-          // Use the shared parser to clean the AI judgement text for display
-          try {
-            const parsed = parseAIJudgment(ratingText)
-            const parsedExplanation = (parsed && parsed.paragraphs && parsed.paragraphs.length > 0) ? parsed.paragraphs.join('\n\n') : (parsed.explanation || '')
-            setRatingExplanation(parsedExplanation)
-            setChatMessages(prev => [
-              ...prev,
-              {
-                id: generateUniqueId(),
-                user: "AI Judge",
-                message: `🏆 AI Analysis Complete!\n\n${parsedExplanation}`,
-                timestamp: new Date(),
-              },
-            ])
-          } catch (e) {
-            // Fallback to raw text if parsing fails
-            setRatingExplanation(ratingText)
-            setChatMessages(prev => [
-              ...prev,
-              {
-                id: generateUniqueId(),
-                user: "AI Judge",
-                message: `🏆 AI Analysis Complete!\n\n${ratingText}`,
-                timestamp: new Date(),
-              },
-            ])
-          }
+          // Preserve the raw AI response for display (don't alter or parse it for presentation)
+          setRatingExplanation(ratingText)
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: generateUniqueId(),
+              user: "AI Judge",
+              message: `🏆 AI Analysis Complete!\n\n${ratingText}`,
+              timestamp: new Date(),
+            },
+          ])
         }
       } catch (error) {
         console.error('AI rating failed, using fallback:', error)
@@ -2205,28 +2188,8 @@ Overall Analysis: [brief summary]`,
                             <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
                             AI Judge Analysis
                           </h3>
-                          <div className="text-slate-300 leading-relaxed space-y-3">
-                            {ratingExplanation.split('\n\n').map((section, idx) => {
-                              const colonIndex = section.indexOf(':')
-                              if (colonIndex > 0) {
-                                const label = section.substring(0, colonIndex).trim()
-                                const content = section.substring(colonIndex + 1).trim()
-                                return (
-                                  <div key={idx} className="border-l-2 border-[#3ebb9e]/30 pl-4">
-                                    <div className="font-semibold text-[#3ebb9e] text-sm uppercase tracking-wide mb-1">
-                                      {label}
-                                    </div>
-                                    <div className="text-slate-300">
-                                      {content}
-                                    </div>
-                                  </div>
-                                )
-                              } else {
-                                return (
-                                  <p key={idx} className="text-slate-300">{section}</p>
-                                )
-                              }
-                            })}
+                          <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                            {ratingExplanation}
                           </div>
                         </div>
                       )}
