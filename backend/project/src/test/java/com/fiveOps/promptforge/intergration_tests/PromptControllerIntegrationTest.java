@@ -219,7 +219,8 @@ class PromptControllerIntegrationTest {
   void whenDeletePrompt_thenSuccess() throws Exception {
     // First unpublish the prompt since public prompts cannot be deleted
     mockMvc
-        .perform(post("/api/prompts/" + promptId + "/unpublish").cookie(new Cookie("token", authToken)))
+        .perform(
+            post("/api/prompts/" + promptId + "/unpublish").cookie(new Cookie("token", authToken)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.visibility").value("private"));
 
