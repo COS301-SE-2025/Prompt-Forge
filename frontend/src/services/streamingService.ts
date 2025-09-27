@@ -13,6 +13,7 @@ export interface StreamingCallbacks {
   onContent: (content: string) => void;
   onComplete: () => void;
   onError: (error: string) => void;
+  formatAsMarkdown?: boolean; // New option to control formatting (defaults to true)
 }
 
 export class StreamingService {
@@ -38,7 +39,11 @@ export class StreamingService {
         try {
           await this.editorService.promptOpenRouterStream(
             requestBody,
-            callbacks.onContent,
+            (content: string) => {
+              // Format the content based on the callback preference
+              const formattedContent = this.formatResponse(content, callbacks.formatAsMarkdown ?? true);
+              callbacks.onContent(formattedContent);
+            },
             callbacks.onComplete,
             callbacks.onError
           );
@@ -76,7 +81,8 @@ export class StreamingService {
           
           if (data.choices && data.choices[0] && data.choices[0].message) {
             const responseText = data.choices[0].message.content;
-            callbacks.onContent(responseText);
+            const formattedText = this.formatResponse(responseText, callbacks.formatAsMarkdown ?? true);
+            callbacks.onContent(formattedText);
             callbacks.onComplete();
           } else if (data.error) {
             // Handle specific error codes
@@ -260,19 +266,53 @@ export class StreamingService {
    * Helper function to decode Unicode escape sequences
    */
   public decodeUnicode(str: string): string {
+    if (!str) return str;
+
     return str
+      // Handle newlines
+      .replace(/\\n/g, '\n')
+      // Decode Unicode escape sequences
       .replace(/\\u[\dA-F]{4}/gi, match =>
         String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
       )
-      .replace(/\\n/g, '\n')
-      .replace(/\\/g, '')
-      .replace(/\*\*/g, '')  // Remove markdown bold
-      .replace(/\*([^*]+)\*/g, '$1')  // Remove markdown italic
+      // Remove backslashes that are clearly escapes (but be very conservative)
+      .replace(/\\(?!["\\/bfnrtu])/g, '');
   }
 
   /**
-   * Validate and optimize an image before processing
+   * Format LLM response with options for markdown or plain text
    */
+  public formatResponse(content: string, formatAsMarkdown: boolean = true): string {
+    if (!content) return content;
+
+    // First decode Unicode escape sequences
+    let formatted = this.decodeUnicode(content);
+
+    // Always remove ** bold markers and ## headers but keep the content
+    // Handle both complete and potentially split markers
+    const before = formatted;
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '$1');
+    // Also handle any remaining single ** that might be split across chunks
+    formatted = formatted.replace(/\*\*/g, '');
+    // Remove markdown headers but keep the text
+    formatted = formatted.replace(/^(#{1,6}\s+)(.+)$/gm, '$2');
+    
+    if (before !== formatted) {
+      console.log('Removed ** markers and headers:', { before, after: formatted });
+    }
+
+    if (formatAsMarkdown) {
+      // Keep other markdown formatting intact
+      return formatted;
+    } else {
+      // Remove additional markdown formatting if requested
+      return formatted
+        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')  // Remove links but keep text
+        .replace(/`([^`]+)`/g, '$1')  // Remove inline code but keep content
+        .trim();
+    }
+  }
+
   public validateAndOptimizeImage(imageDataUrl: string, modelId: string): string | null {
     try {
       // console.log(`Validating image for ${modelId}`);
@@ -299,5 +339,26 @@ export class StreamingService {
       console.error("Image validation error:", error);
       return null;
     }
+  }
+
+  /**
+   * Convenience method to format LLM response content
+   */
+  public formatLLMResponse(content: string, keepMarkdown: boolean = true): string {
+    return this.formatResponse(content, keepMarkdown);
+  }
+
+  /**
+   * Strip all markdown formatting from LLM response
+   */
+  public stripMarkdownFormatting(content: string): string {
+    return this.formatResponse(content, false);
+  }
+
+  /**
+   * Keep markdown formatting in LLM response
+   */
+  public keepMarkdownFormatting(content: string): string {
+    return this.formatResponse(content, true);
   }
 }
