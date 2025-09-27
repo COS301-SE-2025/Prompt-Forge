@@ -273,7 +273,7 @@ export default function SocialPage() {
 
     // Create popup notification
     const notification = document.createElement("div")
-    notification.className = "challenge-notification fixed top-4 right-4 bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white p-6 rounded-xl shadow-2xl z-[9999] max-w-sm backdrop-blur-lg border border-white/20 transform translate-x-full transition-transform duration-500 ease-out"
+    notification.className = "challenge-notification fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white p-4 sm:p-6 rounded-xl shadow-2xl z-[9999] backdrop-blur-lg border border-white/20 transform translate-y-[-100%] transition-transform duration-500 ease-out"
     
     notification.innerHTML = `
       <div class="flex items-start justify-between">
@@ -301,7 +301,7 @@ export default function SocialPage() {
     
     // Animate in
     setTimeout(() => {
-      notification.style.transform = 'translateX(0)'
+      notification.style.transform = 'translateY(0)'
     }, 100)
     
     // Add event listeners
@@ -327,7 +327,7 @@ export default function SocialPage() {
     
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
-        notification.style.transform = 'translateX(full)'
+        notification.style.transform = 'translateY(-100%)'
         setTimeout(() => notification.remove(), 300)
       })
     }
@@ -335,7 +335,7 @@ export default function SocialPage() {
     // Auto remove after 10 seconds
     setTimeout(() => {
       if (notification.parentElement) {
-        notification.style.transform = 'translateX(full)'
+        notification.style.transform = 'translateY(-100%)'
         setTimeout(() => notification.remove(), 300)
       }
     }, 10000)
@@ -353,7 +353,7 @@ export default function SocialPage() {
   const showNotification = (message: string) => {
     // Simple toast notification for other messages
     const toast = document.createElement("div")
-    toast.className = "fixed bottom-4 right-4 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-4 py-2 rounded-lg shadow-lg z-50 transform translate-y-full transition-transform duration-300"
+    toast.className = "fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-4 py-3 rounded-lg shadow-lg z-50 transform translate-y-full transition-transform duration-300 text-sm sm:text-base"
     toast.textContent = message
     
     document.body.appendChild(toast)
@@ -760,14 +760,14 @@ export default function SocialPage() {
     <div className="min-h-screen bg-background">
       {/* Fallback error UI if something goes wrong */}
       {error && (
-        <div className="mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 rounded-lg shadow-sm">
-          <div className="flex items-center">
-            <div className="bg-red-100 dark:bg-red-800 p-2 rounded-lg mr-3">
+        <div className="mx-3 sm:mx-4 mt-4 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 rounded-lg shadow-sm">
+          <div className="flex items-start">
+            <div className="bg-red-100 dark:bg-red-800 p-2 rounded-lg mr-3 flex-shrink-0">
               <X className="h-4 w-4 text-red-600 dark:text-red-400" />
             </div>
-            <div>
-              <h4 className="font-semibold">Error</h4>
-              <p className="text-sm">{error}</p>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-semibold text-sm sm:text-base">Error</h4>
+              <p className="text-sm mt-1">{error}</p>
             </div>
           </div>
         </div>
@@ -776,21 +776,23 @@ export default function SocialPage() {
             {/* Header - Enhanced for social media feel */}
       <div className="sticky top-0 z-40 bg-white/90 dark:bg-background backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold mb-2">Discover Users</h1>
-              <p className="text-muted-foreground">Connect with other prompt engineers and creators</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold mb-2">Discover Users</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Connect with other prompt engineers and creators</p>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-end space-x-2 sm:space-x-3">
               <Link to="/war">
-                {/* <Button
+                <Button
                   variant="outline"
-                  className="bg-gradient-to-r from-[#3ebb9e]/10 to-[#2ea688]/10 hover:from-[#3ebb9e]/20 hover:to-[#2ea688]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] transition-all duration-300 rounded-lg"
+                  size="sm"
+                  className="bg-gradient-to-r from-[#3ebb9e]/10 to-[#2ea688]/10 hover:from-[#3ebb9e]/20 hover:to-[#2ea688]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] transition-all duration-300 rounded-lg text-xs sm:text-sm"
                 >
-                  <Swords className="h-4 w-4 mr-2" />
-                  Battles
-                </Button> */}
+                  <Swords className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden xs:inline">Battles</span>
+                  <span className="xs:hidden">War</span>
+                </Button>
               </Link>
 
               {challenges.length > 0 && (
@@ -801,21 +803,21 @@ export default function SocialPage() {
                   className="relative p-2 hover:bg-[#3ebb9e]/10 dark:hover:bg-[#3ebb9e]/20 rounded-lg transition-colors duration-300"
                   title={`${challenges.filter((c) => c.status === "PENDING").length} pending challenges`}
                 >
-                  {/* <Bell className="h-6 w-6 text-[#3ebb9e]" /> */}
-                  {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center animate-pulse">
+                  <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-[#3ebb9e]" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center animate-pulse">
                     {challenges.filter((c) => c.status === "PENDING").length}
-                  </span> */}
+                  </span>
                 </Button>
               )}
             </div>
           </div>
 
           {/* Search */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="relative">
               <Input
-                placeholder="       Search users..."
-                className="bg-muted border-muted pl-10"
+                placeholder="Search users..."
+                className="bg-muted border-muted pl-10 text-sm sm:text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -828,7 +830,7 @@ export default function SocialPage() {
       </div>
 
       {/* Main Content - Social Media Style */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800 custom-scrollbar">
         <Tabs
           value={activeTab}
           onValueChange={(value) => {
@@ -836,40 +838,46 @@ export default function SocialPage() {
           }}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-gray-100 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg p-1 shadow-sm">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 bg-gray-100 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg p-1 shadow-sm overflow-x-auto">
             <TabsTrigger
               value="discover"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center text-xs sm:text-sm min-w-0 flex-shrink-0"
             >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Discover
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="truncate">Discover</span>
             </TabsTrigger>
             <TabsTrigger
               value="following"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center text-xs sm:text-sm min-w-0 flex-shrink-0"
             >
-              <Users className="h-4 w-4 mr-2" />
-              Following ({totalElements.following})
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Following</span>
+              <span className="sm:hidden">Follow</span>
+              <span className="ml-1">({totalElements.following})</span>
             </TabsTrigger>
             <TabsTrigger
               value="followers"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center text-xs sm:text-sm min-w-0 flex-shrink-0"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Followers ({totalElements.followers})
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Followers</span>
+              <span className="sm:hidden">Fans</span>
+              <span className="ml-1">({totalElements.followers})</span>
             </TabsTrigger>
             <TabsTrigger
               value="challenges"
-              className={`rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 relative flex items-center justify-center ${
+              className={`rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 relative flex items-center justify-center text-xs sm:text-sm min-w-0 flex-shrink-0 ${
                 challenges.filter((c) => c.status === "PENDING").length > 0
                   ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 animate-pulse"
                   : ""
               }`}
             >
-              <Trophy className="h-4 w-4 mr-2" />
-              Challenges ({challenges.length})
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Challenges</span>
+              <span className="sm:hidden">Duel</span>
+              <span className="ml-1">({challenges.length})</span>
               {challenges.filter((c) => c.status === "PENDING").length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
                   {challenges.filter((c) => c.status === "PENDING").length}
                 </span>
               )}
@@ -892,7 +900,7 @@ export default function SocialPage() {
 
             {!tabLoading.discover && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {users.map((user) => (
                     <UserCard
                       key={user.userId}
@@ -919,52 +927,59 @@ export default function SocialPage() {
 
             {/* Pagination for Discover */}
             {!tabLoading.discover && totalPages.discover > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("discover", Math.max(1, currentPage.discover - 1))}
-                  disabled={currentPage.discover === 1}
-                >
-                  Previous
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-2 mt-6 sm:mt-8">
+                <div className="flex justify-center gap-1 sm:gap-2 order-2 sm:order-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("discover", Math.max(1, currentPage.discover - 1))}
+                    disabled={currentPage.discover === 1}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Previous
+                  </Button>
 
-                {Array.from({ length: Math.min(totalPages.discover, 5) }).map((_, i) => {
-                  let pageNumber
-                  if (totalPages.discover <= 5) {
-                    pageNumber = i + 1
-                  } else if (currentPage.discover <= 3) {
-                    pageNumber = i + 1
-                  } else if (currentPage.discover >= totalPages.discover - 2) {
-                    pageNumber = totalPages.discover - 4 + i
-                  } else {
-                    pageNumber = currentPage.discover - 2 + i
-                  }
+                  {Array.from({ length: Math.min(totalPages.discover, 5) }).map((_, i) => {
+                    let pageNumber
+                    if (totalPages.discover <= 5) {
+                      pageNumber = i + 1
+                    } else if (currentPage.discover <= 3) {
+                      pageNumber = i + 1
+                    } else if (currentPage.discover >= totalPages.discover - 2) {
+                      pageNumber = totalPages.discover - 4 + i
+                    } else {
+                      pageNumber = currentPage.discover - 2 + i
+                    }
 
-                  return (
-                    <Button
-                      key={pageNumber}
-                      variant={currentPage.discover === pageNumber ? "default" : "outline"}
-                      size="sm"
-                      className={`min-w-[2.5rem] rounded-lg ${
-                        currentPage.discover === pageNumber
-                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
-                      }`}
-                      onClick={() => changePage("discover", pageNumber)}
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                })}
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={currentPage.discover === pageNumber ? "default" : "outline"}
+                        size="sm"
+                        className={`min-w-[32px] sm:min-w-[40px] rounded-lg text-xs sm:text-sm px-2 sm:px-3 ${
+                          currentPage.discover === pageNumber
+                            ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                        }`}
+                        onClick={() => changePage("discover", pageNumber)}
+                      >
+                        {pageNumber}
+                      </Button>
+                    )
+                  })}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("discover", Math.min(totalPages.discover, currentPage.discover + 1))}
-                  disabled={currentPage.discover === totalPages.discover}
-                >
-                  Next
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("discover", Math.min(totalPages.discover, currentPage.discover + 1))}
+                    disabled={currentPage.discover === totalPages.discover}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Next
+                  </Button>
+                </div>
+                <div className="text-center text-xs sm:text-sm text-muted-foreground order-1 sm:order-2">
+                  Page {currentPage.discover} of {totalPages.discover}
+                </div>
               </div>
             )}
           </TabsContent>
@@ -985,7 +1000,7 @@ export default function SocialPage() {
 
             {!tabLoading.following && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {following.map((user) => (
                     <UserCard
                       key={user.userId}
@@ -1018,52 +1033,59 @@ export default function SocialPage() {
 
             {/* Pagination for Following */}
             {!tabLoading.following && totalPages.following > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("following", Math.max(1, currentPage.following - 1))}
-                  disabled={currentPage.following === 1}
-                >
-                  Previous
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-2 mt-6 sm:mt-8">
+                <div className="flex justify-center gap-1 sm:gap-2 order-2 sm:order-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("following", Math.max(1, currentPage.following - 1))}
+                    disabled={currentPage.following === 1}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Previous
+                  </Button>
 
-                {Array.from({ length: Math.min(totalPages.following, 5) }).map((_, i) => {
-                  let pageNumber
-                  if (totalPages.following <= 5) {
-                    pageNumber = i + 1
-                  } else if (currentPage.following <= 3) {
-                    pageNumber = i + 1
-                  } else if (currentPage.following >= totalPages.following - 2) {
-                    pageNumber = totalPages.following - 4 + i
-                  } else {
-                    pageNumber = currentPage.following - 2 + i
-                  }
+                  {Array.from({ length: Math.min(totalPages.following, 5) }).map((_, i) => {
+                    let pageNumber
+                    if (totalPages.following <= 5) {
+                      pageNumber = i + 1
+                    } else if (currentPage.following <= 3) {
+                      pageNumber = i + 1
+                    } else if (currentPage.following >= totalPages.following - 2) {
+                      pageNumber = totalPages.following - 4 + i
+                    } else {
+                      pageNumber = currentPage.following - 2 + i
+                    }
 
-                  return (
-                    <Button
-                      key={pageNumber}
-                      variant={currentPage.following === pageNumber ? "default" : "outline"}
-                      size="sm"
-                      className={`min-w-[2.5rem] rounded-lg ${
-                        currentPage.following === pageNumber
-                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
-                      }`}
-                      onClick={() => changePage("following", pageNumber)}
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                })}
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={currentPage.following === pageNumber ? "default" : "outline"}
+                        size="sm"
+                        className={`min-w-[32px] sm:min-w-[40px] rounded-lg text-xs sm:text-sm px-2 sm:px-3 ${
+                          currentPage.following === pageNumber
+                            ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                        }`}
+                        onClick={() => changePage("following", pageNumber)}
+                      >
+                        {pageNumber}
+                      </Button>
+                    )
+                  })}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("following", Math.min(totalPages.following, currentPage.following + 1))}
-                  disabled={currentPage.following === totalPages.following}
-                >
-                  Next
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("following", Math.min(totalPages.following, currentPage.following + 1))}
+                    disabled={currentPage.following === totalPages.following}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Next
+                  </Button>
+                </div>
+                <div className="text-center text-xs sm:text-sm text-muted-foreground order-1 sm:order-2">
+                  Page {currentPage.following} of {totalPages.following}
+                </div>
               </div>
             )}
           </TabsContent>
@@ -1084,7 +1106,7 @@ export default function SocialPage() {
 
             {!tabLoading.followers && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {followers.map((user) => (
                     <UserCard
                       key={user.userId}
@@ -1111,52 +1133,59 @@ export default function SocialPage() {
 
             {/* Pagination for Followers */}
             {!tabLoading.followers && totalPages.followers > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("followers", Math.max(1, currentPage.followers - 1))}
-                  disabled={currentPage.followers === 1}
-                >
-                  Previous
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-2 mt-6 sm:mt-8">
+                <div className="flex justify-center gap-1 sm:gap-2 order-2 sm:order-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("followers", Math.max(1, currentPage.followers - 1))}
+                    disabled={currentPage.followers === 1}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Previous
+                  </Button>
 
-                {Array.from({ length: Math.min(totalPages.followers, 5) }).map((_, i) => {
-                  let pageNumber
-                  if (totalPages.followers <= 5) {
-                    pageNumber = i + 1
-                  } else if (currentPage.followers <= 3) {
-                    pageNumber = i + 1
-                  } else if (currentPage.followers >= totalPages.followers - 2) {
-                    pageNumber = totalPages.followers - 4 + i
-                  } else {
-                    pageNumber = currentPage.followers - 2 + i
-                  }
+                  {Array.from({ length: Math.min(totalPages.followers, 5) }).map((_, i) => {
+                    let pageNumber
+                    if (totalPages.followers <= 5) {
+                      pageNumber = i + 1
+                    } else if (currentPage.followers <= 3) {
+                      pageNumber = i + 1
+                    } else if (currentPage.followers >= totalPages.followers - 2) {
+                      pageNumber = totalPages.followers - 4 + i
+                    } else {
+                      pageNumber = currentPage.followers - 2 + i
+                    }
 
-                  return (
-                    <Button
-                      key={pageNumber}
-                      variant={currentPage.followers === pageNumber ? "default" : "outline"}
-                      size="sm"
-                      className={`min-w-[2.5rem] rounded-lg ${
-                        currentPage.followers === pageNumber
-                          ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
-                      }`}
-                      onClick={() => changePage("followers", pageNumber)}
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                })}
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={currentPage.followers === pageNumber ? "default" : "outline"}
+                        size="sm"
+                        className={`min-w-[32px] sm:min-w-[40px] rounded-lg text-xs sm:text-sm px-2 sm:px-3 ${
+                          currentPage.followers === pageNumber
+                            ? "bg-[#3ebb9e] hover:bg-[#00674f]" : ""
+                        }`}
+                        onClick={() => changePage("followers", pageNumber)}
+                      >
+                        {pageNumber}
+                      </Button>
+                    )
+                  })}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => changePage("followers", Math.min(totalPages.followers, currentPage.followers + 1))}
-                  disabled={currentPage.followers === totalPages.followers}
-                >
-                  Next
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changePage("followers", Math.min(totalPages.followers, currentPage.followers + 1))}
+                    disabled={currentPage.followers === totalPages.followers}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Next
+                  </Button>
+                </div>
+                <div className="text-center text-xs sm:text-sm text-muted-foreground order-1 sm:order-2">
+                  Page {currentPage.followers} of {totalPages.followers}
+                </div>
               </div>
             )}
           </TabsContent>
@@ -1165,25 +1194,25 @@ export default function SocialPage() {
           <TabsContent value="challenges" className="space-y-6">
             {/* Cancel Active Game Banner inside Challenges tab */}
             {activeGameError && (
-              <div className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg shadow-sm">
-                <div className="flex items-start">
-                  <div className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-lg mr-4">
+              <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-0">
+                  <div className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-lg flex-shrink-0 self-start">
                     <Trophy className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Active Battle Detected</h4>
-                    <p className="text-yellow-700 dark:text-yellow-300 mb-4">{activeGameError}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2 text-sm sm:text-base">Active Battle Detected</h4>
+                    <p className="text-yellow-700 dark:text-yellow-300 mb-4 text-sm">{activeGameError}</p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={handleCancelActiveGame}
-                        className="bg-red-500 text-white hover:bg-red-600 rounded-lg"
+                        className="bg-red-500 text-white hover:bg-red-600 rounded-lg text-sm py-2"
                       >
                         Cancel Active Game
                       </Button>
                       {activeGameId && (
                         <Button
                           onClick={() => (window.location.href = `/prompt-wars/game/${activeGameId}`)}
-                          className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white hover:from-[#2ea688] hover:to-[#1e7a66] rounded-lg"
+                          className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white hover:from-[#2ea688] hover:to-[#1e7a66] rounded-lg text-sm py-2"
                         >
                           Return to Ongoing Match
                         </Button>
@@ -1203,16 +1232,16 @@ export default function SocialPage() {
               return (
                 <>
                   {pendingReceived.length > 0 && (
-                    <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 shadow-sm">
-                      <div className="flex items-center">
-                        <div className="bg-red-100 dark:bg-red-800 p-3 rounded-lg mr-4">
-                          <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
+                    <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 sm:p-6 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
+                        <div className="bg-red-100 dark:bg-red-800 p-2 sm:p-3 rounded-lg flex-shrink-0 self-start">
+                          <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
                         </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-1">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base sm:text-lg font-bold text-red-800 dark:text-red-200 mb-1">
                             {pendingReceived.length} Pending Challenge{pendingReceived.length > 1 ? "s" : ""}!
                           </h3>
-                          <p className="text-red-600 dark:text-red-300">Accept or decline the challenges below to take action!</p>
+                          <p className="text-red-600 dark:text-red-300 text-sm">Accept or decline the challenges below to take action!</p>
                         </div>
                       </div>
                     </div>
@@ -1221,9 +1250,9 @@ export default function SocialPage() {
                   {/* Received Challenges Section */}
                   {receivedChallenges.length > 0 && (
                     <div className="space-y-4">
-                      <h3 className="text-xl font-bold flex items-center text-gray-900 dark:text-gray-100">
-                        <Swords className="h-6 w-6 mr-3 text-[#3ebb9e]" />
-                        Received Challenges ({receivedChallenges.length})
+                      <h3 className="text-lg sm:text-xl font-bold flex items-center text-gray-900 dark:text-gray-100">
+                        <Swords className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-[#3ebb9e]" />
+                        <span className="text-sm sm:text-base">Received Challenges ({receivedChallenges.length})</span>
                       </h3>
                       <div className="grid gap-4">
                         {receivedChallenges.map((challenge) => (
@@ -1235,11 +1264,11 @@ export default function SocialPage() {
                                 : "border-gray-200 dark:border-gray-700"
                             }`}
                           >
-                            <div className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <div className="relative">
-                                    <Avatar className="w-14 h-14 border-2 border-white dark:border-gray-700 shadow-lg group-hover:border-[#3ebb9e] transition-all duration-300">
+                            <div className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex items-center space-x-3 sm:space-x-4">
+                                  <div className="relative flex-shrink-0">
+                                    <Avatar className="w-12 h-12 sm:w-14 sm:h-14 border-2 border-white dark:border-gray-700 shadow-lg group-hover:border-[#3ebb9e] transition-all duration-300">
                                       <AvatarImage
                                         src={getAvatarUrl(challenge.challengerAvatar) || "/placeholder.svg"}
                                         alt={challenge.challengerName}
@@ -1249,27 +1278,27 @@ export default function SocialPage() {
                                       </AvatarFallback>
                                     </Avatar>
                                     {challenge.status === "PENDING" && (
-                                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-6 w-6 flex items-center justify-center animate-pulse">
+                                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-lg h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center animate-pulse">
                                         !
                                       </div>
                                     )}
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                      <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 group-hover:text-[#3ebb9e] transition-colors duration-300">{challenge.challengerName}</h4>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                                      <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-gray-100 group-hover:text-[#3ebb9e] transition-colors duration-300 truncate">{challenge.challengerName}</h4>
                                       {challenge.status === "PENDING" && (
-                                        <Badge className="bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800">
+                                        <Badge className="bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800 text-xs self-start">
                                           Waiting for Response
                                         </Badge>
                                       )}
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
                                       {challenge.message || "Challenge to a prompt war!"}
                                     </p>
-                                    <div className="flex items-center space-x-3 mb-2">
+                                    <div className="flex flex-wrap items-center gap-2 mb-2">
                                       <Badge
                                         variant="secondary"
-                                        className={`${
+                                        className={`text-xs ${
                                           challenge.gameType === "REVERSE_PROMPT"
                                             ? "bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800"
                                             : "bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800"
@@ -1292,14 +1321,14 @@ export default function SocialPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex flex-col space-y-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                                   {challenge.status === "PENDING" && (
-                                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div className="flex flex-col sm:flex-row gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
                                       <Button
                                         size="sm"
                                         onClick={() => handleAcceptChallenge(challenge.id)}
                                         disabled={challengeLoading[challenge.id]}
-                                        className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white min-w-[90px] rounded-lg group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25 transition-all duration-300"
+                                        className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white min-w-[90px] rounded-lg group-hover:shadow-lg group-hover:shadow-[#3ebb9e]/25 transition-all duration-300 text-sm"
                                       >
                                         {challengeLoading[challenge.id] ? (
                                           <Loader2 className="h-4 w-4 animate-spin mr-1" />
@@ -1313,7 +1342,7 @@ export default function SocialPage() {
                                         variant="outline"
                                         onClick={() => handleDeclineChallenge(challenge.id)}
                                         disabled={challengeLoading[challenge.id]}
-                                        className="min-w-[90px] border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300"
+                                        className="min-w-[90px] border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300 text-sm"
                                       >
                                         {challengeLoading[challenge.id] ? (
                                           <Loader2 className="h-4 w-4 animate-spin mr-1" />
@@ -1325,9 +1354,9 @@ export default function SocialPage() {
                                     </div>
                                   )}
 
-                                  <div className="bg-gradient-to-r from-transparent to-transparent pt-3">
+                                  <div className="flex justify-center sm:flex sm:justify-end">
                                     <Badge
-                                      className={`text-center rounded-lg ${
+                                      className={`text-center rounded-lg text-xs ${
                                         challenge.status === "PENDING"
                                           ? "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800"
                                           : challenge.status === "ACCEPTED"
@@ -1358,9 +1387,9 @@ export default function SocialPage() {
                   {/* Sent Challenges Section */}
                   {sentChallenges.length > 0 && (
                     <div className="space-y-4">
-                      <h3 className="text-xl font-bold flex items-center text-gray-900 dark:text-gray-100">
-                        <Swords className="h-6 w-6 mr-3 text-blue-500" />
-                        Sent Challenges ({sentChallenges.length})
+                      <h3 className="text-lg sm:text-xl font-bold flex items-center text-gray-900 dark:text-gray-100">
+                        <Swords className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-500" />
+                        <span className="text-sm sm:text-base">Sent Challenges ({sentChallenges.length})</span>
                       </h3>
                       <div className="grid gap-4">
                         {sentChallenges.map((challenge) => (
@@ -1368,11 +1397,11 @@ export default function SocialPage() {
                             key={challenge.id}
                             className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group border border-gray-200 dark:border-gray-700 hover:shadow-[0_0_20px_rgba(62,187,158,0.2)] hover:border-[#3ebb9e]/30 bg-white dark:bg-gray-800"
                           >
-                            <div className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <div className="relative">
-                                    <Avatar className="w-14 h-14 border-2 border-white dark:border-gray-700 shadow-lg group-hover:border-[#3ebb9e] transition-all duration-300">
+                            <div className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex items-center space-x-3 sm:space-x-4">
+                                  <div className="relative flex-shrink-0">
+                                    <Avatar className="w-12 h-12 sm:w-14 sm:h-14 border-2 border-white dark:border-gray-700 shadow-lg group-hover:border-[#3ebb9e] transition-all duration-300">
                                       <AvatarImage
                                         src={
                                           challenge.challengerAvatar && !failedAvatars[challenge.id]
@@ -1387,19 +1416,19 @@ export default function SocialPage() {
                                       </AvatarFallback>
                                     </Avatar>
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                      <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 group-hover:text-[#3ebb9e] transition-colors duration-300">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                                      <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-gray-100 group-hover:text-[#3ebb9e] transition-colors duration-300 truncate">
                                         Challenged {challenge.opponentName || "Player"}
                                       </h4>
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
                                       {challenge.message || "Challenge to a prompt war!"}
                                     </p>
-                                    <div className="flex items-center space-x-3 mb-2">
+                                    <div className="flex flex-wrap items-center gap-2 mb-2">
                                       <Badge
                                         variant="secondary"
-                                        className={`${
+                                        className={`text-xs ${
                                           challenge.gameType === "REVERSE_PROMPT"
                                             ? "bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800"
                                             : "bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800"
@@ -1422,33 +1451,26 @@ export default function SocialPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex flex-col space-y-3">
-                                  {/* Empty space to match received challenges button area */}
-                                  <div className="flex space-x-2 opacity-0 min-h-[32px]">
-                                    {/* Invisible placeholder buttons to maintain consistent height */}
-                                  </div>
-
-                                  <div className="bg-gradient-to-r from-transparent to-transparent pt-3">
-                                    <Badge
-                                      className={`text-center rounded-lg ${
-                                        challenge.status === "PENDING"
-                                          ? "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800"
-                                          : challenge.status === "ACCEPTED"
-                                            ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800"
-                                            : challenge.status === "DECLINED"
-                                              ? "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800"
-                                              : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700"
-                                      }`}
-                                    >
-                                      {challenge.status === "PENDING"
-                                        ? "⏳ Waiting for response"
+                                <div className="flex justify-center sm:flex sm:justify-end">
+                                  <Badge
+                                    className={`text-center rounded-lg text-xs ${
+                                      challenge.status === "PENDING"
+                                        ? "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800"
                                         : challenge.status === "ACCEPTED"
-                                          ? "✅ Accepted"
+                                          ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800"
                                           : challenge.status === "DECLINED"
-                                            ? "❌ Declined"
-                                            : challenge.status}
-                                    </Badge>
-                                  </div>
+                                            ? "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800"
+                                            : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700"
+                                    }`}
+                                  >
+                                    {challenge.status === "PENDING"
+                                      ? "⏳ Waiting for response"
+                                      : challenge.status === "ACCEPTED"
+                                        ? "✅ Accepted"
+                                        : challenge.status === "DECLINED"
+                                          ? "❌ Declined"
+                                          : challenge.status}
+                                  </Badge>
                                 </div>
                               </div>
                             </div>
@@ -1478,19 +1500,19 @@ export default function SocialPage() {
       {/* Challenge Modal */}
       {showChallengeModal && selectedOpponent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border-0 shadow-2xl">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#3ebb9e] to-[#2ea688] rounded-lg flex items-center justify-center">
-                    <Swords className="w-6 h-6 text-white" />
+          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border-0 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-start mb-4 sm:mb-6">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#3ebb9e] to-[#2ea688] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Challenge {selectedOpponent.username}</h2>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 truncate">Challenge {selectedOpponent.username}</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Ready for battle?</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowChallengeModal(false)} className="rounded-lg">
+                <Button variant="ghost" size="sm" onClick={() => setShowChallengeModal(false)} className="rounded-lg flex-shrink-0 ml-2">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -1498,35 +1520,35 @@ export default function SocialPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Game Type</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button
                       variant={selectedGameType === "PROMPT_CREATION" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setSelectedGameType("PROMPT_CREATION")}
-                      className={`rounded-lg transition-all duration-200 ${
+                      className={`rounded-lg transition-all duration-200 h-auto py-3 px-4 text-sm sm:text-base ${
                         selectedGameType === "PROMPT_CREATION"
                           ? "bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white shadow-lg"
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <Swords className="w-4 h-4 mr-1" />
-                      Classic
+                      <Swords className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span>Classic Battle</span>
                     </Button>
                     <Button
                       variant={selectedGameType === "REVERSE_PROMPT" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setSelectedGameType("REVERSE_PROMPT")}
-                      className={`rounded-lg transition-all duration-200 ${
+                      className={`rounded-lg transition-all duration-200 h-auto py-3 px-4 text-sm sm:text-base ${
                         selectedGameType === "REVERSE_PROMPT"
                           ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg"
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Reverse
+                      <RotateCcw className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span>Reverse Battle</span>
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {selectedGameType === "REVERSE_PROMPT" 
                       ? "Guess what prompt created the given image" 
                       : "Create the best prompt for a given theme"}
@@ -1536,7 +1558,7 @@ export default function SocialPage() {
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Challenge Message</label>
                   <textarea
-                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#3ebb9e] focus:ring-[#3ebb9e]/20 dark:focus:ring-[#3ebb9e]/30 focus:bg-white dark:focus:bg-gray-600 transition-colors"
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#3ebb9e] focus:ring-[#3ebb9e]/20 dark:focus:ring-[#3ebb9e]/30 focus:bg-white dark:focus:bg-gray-600 transition-colors text-sm sm:text-base"
                     rows={3}
                     placeholder="Add a message to your challenge..."
                     value={challengeMessage}
@@ -1544,15 +1566,19 @@ export default function SocialPage() {
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={handleSendChallenge}
-                    className="flex-1 bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white font-semibold rounded-lg"
+                    className="flex-1 bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white font-semibold rounded-lg py-3 text-sm sm:text-base"
                   >
                     <Zap className="w-4 h-4 mr-2" />
                     Send Challenge
                   </Button>
-                  <Button variant="outline" onClick={() => setShowChallengeModal(false)} className="px-6 rounded-lg bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowChallengeModal(false)} 
+                    className="px-6 py-3 rounded-lg bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm sm:text-base"
+                  >
                     Cancel
                   </Button>
                 </div>

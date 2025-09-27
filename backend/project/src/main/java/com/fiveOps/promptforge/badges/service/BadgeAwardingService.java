@@ -57,6 +57,11 @@ public class BadgeAwardingService {
       long promptCount = promptRepository.countByAuthorId(userId);
       System.out.println("📊 User " + userId + " has authored " + promptCount + " prompts");
 
+      // Get user's distinct category count
+      long categoryCount = promptRepository.countDistinctCategoriesByAuthorId(userId);
+      System.out.println(
+          "📊 User " + userId + " has created prompts in " + categoryCount + " categories");
+
       // Check total badges in database
       long totalBadges = badgeRepository.count();
       System.out.println("🏆 Total badges in database: " + totalBadges);
@@ -82,6 +87,24 @@ public class BadgeAwardingService {
         awardBadgeByName(userId, "First Prompt");
       } else {
         System.out.println("⚠️ User has no prompts, no badges to award");
+      }
+
+      // Check for category exploration badges
+      if (categoryCount >= 5) {
+        System.out.println(
+            "🎯 User qualifies for category exploration badges (" + categoryCount + " categories)");
+        awardBadgeByName(userId, "Category Explorer");
+        // Check if user has prompts in all categories (this would need to be determined by checking
+        // total categories in system)
+        // For now, award Renaissance Creator if they have 10+ categories
+        if (categoryCount >= 10) {
+          awardBadgeByName(userId, "Renaissance Creator");
+        }
+      } else if (categoryCount >= 1) {
+        System.out.println(
+            "📝 User has explored "
+                + categoryCount
+                + " categories but needs 5+ for Category Explorer badge");
       }
 
       System.out.println("✅ Completed badge check for user " + userId);

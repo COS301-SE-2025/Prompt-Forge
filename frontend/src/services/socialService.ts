@@ -211,7 +211,38 @@ export class SocialAPI {
         number: page
       };
     }
-    return response.json();
+    const result = await response.json();
+    
+    // Fetch prompt counts for each user
+    const usersWithPromptCounts = await Promise.all(
+      result.content.map(async (user: SocialUser) => {
+        try {
+          const promptResponse = await fetch(`${API_BASE_URL}/prompts/public/author/${user.username}?page=0&size=1`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (promptResponse.ok) {
+            const promptPage = await promptResponse.json();
+            return {
+              ...user,
+              totalPrompts: promptPage.totalElements || 0
+            };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch prompt count for user ${user.username}:`, error);
+        }
+        return {
+          ...user,
+          totalPrompts: 0
+        };
+      })
+    );
+    
+    return {
+      ...result,
+      content: usersWithPromptCounts
+    };
   }
 
   static async getFollowingPaginated(page: number, size: number): Promise<PaginatedResponse<SocialUser>> {
@@ -228,7 +259,38 @@ export class SocialAPI {
         number: page
       };
     }
-    return response.json();
+    const result = await response.json();
+    
+    // Fetch prompt counts for each user
+    const usersWithPromptCounts = await Promise.all(
+      result.content.map(async (user: SocialUser) => {
+        try {
+          const promptResponse = await fetch(`${API_BASE_URL}/prompts/public/author/${user.username}?page=0&size=1`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (promptResponse.ok) {
+            const promptPage = await promptResponse.json();
+            return {
+              ...user,
+              totalPrompts: promptPage.totalElements || 0
+            };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch prompt count for user ${user.username}:`, error);
+        }
+        return {
+          ...user,
+          totalPrompts: 0
+        };
+      })
+    );
+    
+    return {
+      ...result,
+      content: usersWithPromptCounts
+    };
   }
 
   static async getFollowersPaginated(page: number, size: number): Promise<PaginatedResponse<SocialUser>> {
@@ -245,7 +307,38 @@ export class SocialAPI {
         number: page
       };
     }
-    return response.json();
+    const result = await response.json();
+    
+    // Fetch prompt counts for each user
+    const usersWithPromptCounts = await Promise.all(
+      result.content.map(async (user: SocialUser) => {
+        try {
+          const promptResponse = await fetch(`${API_BASE_URL}/prompts/public/author/${user.username}?page=0&size=1`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (promptResponse.ok) {
+            const promptPage = await promptResponse.json();
+            return {
+              ...user,
+              totalPrompts: promptPage.totalElements || 0
+            };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch prompt count for user ${user.username}:`, error);
+        }
+        return {
+          ...user,
+          totalPrompts: 0
+        };
+      })
+    );
+    
+    return {
+      ...result,
+      content: usersWithPromptCounts
+    };
   }
 }
 

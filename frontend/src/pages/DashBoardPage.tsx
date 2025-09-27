@@ -637,31 +637,45 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
                 src={profileImage || "/placeholder.svg?height=80&width=80"}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                onClick={() => navigate(`/profile-settings`)}
+                onClick={() => navigate(`/user/${username}`)}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
             <h3
               className="font-medium cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile-settings`)}
+              onClick={() => navigate(`/user/${username}`)}
             >
               {username}
             </h3>
+            <div className="flex space-x-2 my-3">
+              <Button
+                size="sm"
+             
+                className={`transition-all duration-300 w-full flex items-center justify-center
+                  bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
+                  `}
+                onClick={() => navigate(`/user/${username}`)}
+              >
+                View Profile
+              </Button>
+            </div>
             <div className="grid grid-cols-3 gap-4 w-full mt-4">
-              <div className="text-center">
+              <div className="text-center cursor-pointer hover:text-[#3ebb9e]"
+                onClick={() => navigate(`/my-prompts`)}
+              >
                 <div className="font-semibold">{myPrompts.length}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
               <div
                 className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
+                onClick={() => navigate(`/social`)}
               >
                 <div className="font-semibold">{followers}</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
               <div
                 className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
+                onClick={() => navigate(`/social`)}
               >
                 <div className="font-semibold">{following}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
