@@ -566,11 +566,12 @@ export default function SocialPage() {
       // Navigate to the war page with game ID
       if (gameData && gameData.id) {
         console.log("Navigating to game:", gameData.id)
-        window.location.href = `/war?gameId=${gameData.id}`
+        // Redirect to the PromptWars route used by the PromptWars page
+        window.location.href = `/prompt-wars/game/${gameData.id}`
       } else {
-        console.log("No game ID, navigating to war page")
-        // Fallback - just go to war page
-        window.location.href = `/war`
+        console.log("No game ID, navigating to social hub as fallback")
+        // Fallback - go back to social hub rather than training/war route
+        window.location.href = `/social`
       }
     } catch (error) {
       console.error("Failed to accept challenge:", error)

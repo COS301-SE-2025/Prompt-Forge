@@ -1131,7 +1131,7 @@ const isMultiplayerGame = !!gameId;
           {
             id: generateUniqueId(),
             user: "System",
-            message: "✅ Prompt submitted! Waiting for opponent...",
+            message: " Prompt submitted! Waiting for opponent...",
             timestamp: new Date(),
           },
         ])
