@@ -523,7 +523,7 @@ explain how the response should be adapted to fit.]"
                   </div>
                 </div>
                 {!responseACollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 max-h-[550px] relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
                       <StreamingDisplay
                         content={streamingEnabled ? typingEffectA.displayText : aiResponseA}
@@ -630,7 +630,7 @@ explain how the response should be adapted to fit.]"
                   </div>
                 </div>
                 {!responseBCollapsed && (
-                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+                  <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 max-h-[550px] relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
                       <StreamingDisplay
                         content={streamingEnabled ? typingEffectB.displayText : aiResponseB}
