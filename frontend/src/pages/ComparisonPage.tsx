@@ -632,16 +632,13 @@ explain how the response should be adapted to fit.]"
                 {!responseBCollapsed && (
                   <div className="bg-gray-100 dark:bg-card rounded-lg p-2 sm:p-3 flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
                     <div className="h-full overflow-y-auto custom-scrollbar">
-                      {isLoadingB ? (
-                        <div className="flex items-center space-x-2">
-                          <RotateCcw className="h-4 w-4 animate-spin" />
-                          <span>Generating response...</span>
-                        </div>
-                      ) : (
-                        <pre className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap">
-                          {aiResponseB}
-                        </pre>
-                      )}
+                      <StreamingDisplay
+                        content={streamingEnabled ? typingEffectB.displayText : aiResponseB}
+                        isLoading={isLoadingB}
+                        streamingEnabled={streamingEnabled}
+                        placeholder="AI response to prompt B will appear here..."
+                        className="text-xs sm:text-xs lg:text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 )}
