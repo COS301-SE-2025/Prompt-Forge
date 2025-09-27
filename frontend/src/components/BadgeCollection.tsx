@@ -256,7 +256,7 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                 value={category.key} 
                 className="text-xs rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
               >
-                {category.label} ({category.count})
+                {category.label}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -270,13 +270,13 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
               value="earned" 
               className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
             >
-              Earned ({earnedBadges.length})
+              Earned
             </TabsTrigger>
             <TabsTrigger 
               value="progress" 
               className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3ebb9e] data-[state=active]:to-[#2ea688] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center justify-center"
             >
-              In Progress ({inProgressBadges.length})
+              In Progress
             </TabsTrigger>
           </TabsList>
           
@@ -292,7 +292,7 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                     return new Date(b.earnedAt || '').getTime() - new Date(a.earnedAt || '').getTime()
                   })
                   .map(badge => (
-                  <div key={badge.badgeId} className="p-4 border rounded-lg bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 transition-all duration-200 relative overflow-hidden">
+                  <div key={badge.badgeId} className="p-4 border rounded-lg bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30 transition-all duration-200 relative overflow-hidden border-green-200 dark:border-green-700">
                     <div className="flex items-center gap-3 mb-3">
                       <BadgeComponent
                         badge={badge}
@@ -301,28 +301,28 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                         showTooltip={false}
                       />
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-green-700 mb-1 flex items-center">
-                          ✅ Completed
+                        <div className="text-sm font-medium text-green-700 dark:text-green-300 mb-1 flex items-center">
+                          Completed
                         </div>
-                        <div className="w-full bg-green-200 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-green-200 dark:bg-green-800 rounded-full h-2 overflow-hidden">
                           <div 
-                            className="h-full transition-all duration-500 ease-out rounded-full bg-green-500"
+                            className="h-full transition-all duration-500 ease-out rounded-full bg-green-500 dark:bg-green-400"
                             style={{ width: '100%' }}
                           />
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                       {badge.description}
                     </p>
                     {badge.earnedAt && (
-                      <p className="text-xs text-green-600 mt-2 font-medium">
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
                         Earned on {new Date(badge.earnedAt).toLocaleDateString()}
                       </p>
                     )}
                     {/* Shine effect for legendary and epic badges */}
                     {(badge.rarity === 'legendary' || badge.rarity === 'epic') && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-200/30 to-transparent animate-pulse rounded-lg pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-200/30 dark:via-yellow-300/20 to-transparent animate-pulse rounded-lg pointer-events-none" />
                     )}
                   </div>
                 ))}
@@ -330,9 +330,9 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
               {earnedBadges.length === 0 && (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="text-gray-400 text-lg mb-2">🏆</div>
+                    <div className="text-gray-400 dark:text-gray-500 text-lg mb-2">🏆</div>
                     <p className="text-muted-foreground">No badges earned yet.</p>
-                    <p className="text-sm text-gray-400 mt-1">Start creating prompts to earn your first badge!</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Start creating prompts to earn your first badge!</p>
                   </div>
                 </div>
               )}
@@ -345,7 +345,7 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                 {inProgressBadges
                   .sort((a, b) => (b.progress || 0) - (a.progress || 0)) // Sort by progress descending
                   .map(badge => (
-                  <div key={badge.badgeId} className="p-4 border rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-200">
+                  <div key={badge.badgeId} className="p-4 border rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200">
                     <div className="flex items-center gap-3 mb-3">
                       <BadgeComponent
                         badge={badge}
@@ -354,38 +354,16 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                         showTooltip={false}
                       />
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-600 mb-1 flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            {badge.progress || 0}% Complete
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-                              {getProgressDetails(badge)}
-                            </span>
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                          <div 
-                            className="h-full transition-all duration-700 ease-out rounded-full relative overflow-hidden"
-                            style={{ 
-                              width: `${badge.progress || 0}%`,
-                              background: `linear-gradient(90deg, ${badge.color}99, ${badge.color})`
-                            }}
-                          >
-                            {/* Shimmer effect for active progress */}
-                            {badge.progress && badge.progress > 0 && badge.progress < 100 && (
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                       {badge.description}
                     </p>
                     {badge.progress !== undefined && badge.progress < 100 && (
-                      <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-2">
+                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">Next milestone:</span>
-                          <span className="text-green-600">{getNextMilestone(badge)}</span>
+                          <span className="text-green-600 dark:text-green-400">{getNextMilestone(badge)}</span>
                         </div>
                       </div>
                     )}
@@ -395,9 +373,9 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
               {inProgressBadges.length === 0 && (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="text-gray-400 text-lg mb-2">🎯</div>
+                    <div className="text-gray-400 dark:text-gray-500 text-lg mb-2">🎯</div>
                     <p className="text-muted-foreground">No badges in progress.</p>
-                    <p className="text-sm text-gray-400 mt-1">Keep creating and engaging to unlock new achievements!</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Keep creating and engaging to unlock new achievements!</p>
                   </div>
                 </div>
               )}

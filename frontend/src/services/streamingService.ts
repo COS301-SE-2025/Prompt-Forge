@@ -294,8 +294,16 @@ export class StreamingService {
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '$1');
     // Also handle any remaining single ** that might be split across chunks
     formatted = formatted.replace(/\*\*/g, '');
-    // Remove markdown headers but keep the text
-    formatted = formatted.replace(/^(#{1,6}\s+)(.+)$/gm, '$2');
+    // Remove markdown headers but keep the text - handle various formats
+    formatted = formatted.replace(/^#{1,6}\s*(.+)$/gm, '$1'); // Headers at start of line (with or without space)
+    formatted = formatted.replace(/\n#{1,6}\s*(.+)$/gm, '\n$1'); // Headers after newlines (with or without space)
+    formatted = formatted.replace(/(^|\n)#{1,6}\s*(.+?)(?=\n|$)/g, '$1$2'); // More comprehensive header removal
+    // Final cleanup: remove any remaining # characters at start of lines (including standalone # sequences)
+    formatted = formatted.replace(/^#+\s*/gm, '');
+    formatted = formatted.replace(/\n#+\s*/g, '\n');
+    // Additional cleanup for any remaining # sequences that might be embedded
+    formatted = formatted.replace(/^\s*#+\s*$/gm, ''); // Remove lines that are just # characters
+    formatted = formatted.replace(/\n\s*#+\s*\n/g, '\n'); // Remove lines with only # characters between content
     
     if (before !== formatted) {
       console.log('Removed ** markers and headers:', { before, after: formatted });

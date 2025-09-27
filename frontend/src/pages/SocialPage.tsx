@@ -566,7 +566,7 @@ export default function SocialPage() {
       // Navigate to the war page with game ID
       if (gameData && gameData.id) {
         console.log("Navigating to game:", gameData.id)
-        window.location.href = `/war?gameId=${gameData.id}`
+        window.location.href = `/prompt-wars/game/${gameData.id}`
       } else {
         console.log("No game ID, navigating to war page")
         // Fallback - just go to war page
@@ -816,7 +816,7 @@ export default function SocialPage() {
           <div className="mb-4 sm:mb-6">
             <div className="relative">
               <Input
-                placeholder="Search users..."
+                placeholder="        Search for users..."
                 className="bg-muted border-muted pl-10 text-sm sm:text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1194,25 +1194,25 @@ export default function SocialPage() {
           <TabsContent value="challenges" className="space-y-6">
             {/* Cancel Active Game Banner inside Challenges tab */}
             {activeGameError && (
-              <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-0">
-                  <div className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-lg flex-shrink-0 self-start">
-                    <Trophy className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 sm:p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded-lg flex-shrink-0">
+                    <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2 text-sm sm:text-base">Active Battle Detected</h4>
-                    <p className="text-yellow-700 dark:text-yellow-300 mb-4 text-sm">{activeGameError}</p>
+                    <h4 className="font-bold text-yellow-800 dark:text-yellow-200 mb-2 text-base sm:text-lg">Active Battle Detected</h4>
+                    <p className="text-yellow-700 dark:text-yellow-300 mb-4 text-sm sm:text-base">{activeGameError}</p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={handleCancelActiveGame}
-                        className="bg-red-500 text-white hover:bg-red-600 rounded-lg text-sm py-2"
+                        className="bg-red-500 hover:bg-red-600 text-white rounded-lg py-2 px-4 text-sm sm:text-base font-medium transition-colors duration-200"
                       >
                         Cancel Active Game
                       </Button>
                       {activeGameId && (
                         <Button
                           onClick={() => (window.location.href = `/prompt-wars/game/${activeGameId}`)}
-                          className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white hover:from-[#2ea688] hover:to-[#1e7a66] rounded-lg text-sm py-2"
+                          className="bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white rounded-lg py-2 px-4 text-sm sm:text-base font-medium transition-all duration-200"
                         >
                           Return to Ongoing Match
                         </Button>
@@ -1233,15 +1233,15 @@ export default function SocialPage() {
                 <>
                   {pendingReceived.length > 0 && (
                     <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 sm:p-6 shadow-sm">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
-                        <div className="bg-red-100 dark:bg-red-800 p-2 sm:p-3 rounded-lg flex-shrink-0 self-start">
-                          <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div className="bg-red-100 dark:bg-red-800 p-3 rounded-lg flex-shrink-0">
+                          <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-base sm:text-lg font-bold text-red-800 dark:text-red-200 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base sm:text-lg font-bold text-red-800 dark:text-red-200 mb-2">
                             {pendingReceived.length} Pending Challenge{pendingReceived.length > 1 ? "s" : ""}!
                           </h3>
-                          <p className="text-red-600 dark:text-red-300 text-sm">Accept or decline the challenges below to take action!</p>
+                          <p className="text-red-600 dark:text-red-300 text-sm sm:text-base">Accept or decline the challenges below to take action!</p>
                         </div>
                       </div>
                     </div>
