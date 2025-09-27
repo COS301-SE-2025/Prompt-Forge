@@ -149,17 +149,26 @@ export const UserCard: React.FC<UserCardProps> = ({
             <div className="text-lg font-semibold text-foreground">
               {typeof user.followers === "number" ? user.followers.toLocaleString() : user.followers.length}
             </div>
-            <div className="text-xs text-muted-foreground font-medium">Followers</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Followers</span>
+              <span className="sm:hidden">Fans</span>
+            </div>
           </div>
           <div className="space-y-1">
             <div className="text-lg font-semibold text-foreground">{user.totalPrompts?.toLocaleString() || 0}</div>
-            <div className="text-xs text-muted-foreground font-medium">Prompts</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Prompts</span>
+              <span className="sm:hidden">AI</span>
+            </div>
           </div>
           <div className="space-y-1">
             <div className="text-lg font-semibold text-foreground flex items-center justify-center">
               <BadgeCount username={user.username} showIcon={true} />
             </div>
-            <div className="text-xs text-muted-foreground font-medium">Badges</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Badges</span>
+              <span className="sm:hidden">★</span>
+            </div>
           </div>
         </div>
       </div>
