@@ -28,7 +28,7 @@ class MLProxyControllerTest {
 
   @InjectMocks private MLProxyController controller;
 
-  private static final String ML_SERVICE_URL = "http://localhost:8000";
+  private static final String ML_SERVICE_URL = "http://localhost:8001";
 
   @BeforeEach
   void setUp() {

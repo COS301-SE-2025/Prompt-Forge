@@ -1517,7 +1517,6 @@ explain how the response should be adapted to fit.]"
             </div>
             
             <div className="p-6 space-y-8">
-
             {/* Getting Started */}
             <section>
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
@@ -1594,6 +1593,36 @@ explain how the response should be adapted to fit.]"
                       <span className="font-semibold text-orange-400 text-sm">Kimi Dev 72B</span>
                     </div>
                     <p className="text-xs text-muted-foreground">Specialized for software engineering tasks</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Optimizer Wizard Section */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <Sparkles className="h-4 w-4 mr-2 text-[#40ffaa]" />
+                  Optimizer Wizard
+                </h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start space-x-3">
+                    <span className="text-lg flex-shrink-0 font-medium text-[#40ffaa]">🪄</span>
+                    <div>
+                      <p>
+                        The Optimizer Wizard guides you through a step-by-step process to analyze, improve, and structure your prompt for best results. It covers analysis, goal setting, structure, context, and review.
+                      </p>
+                      <p className="mt-2">Use the <strong>Optimize Prompt</strong> button below to launch the wizard and get tailored suggestions for your prompt.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 mt-3">
+                    <span className="text-xs text-muted-foreground">(Step-by-step prompt improvement)</span>
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-[#BF40BF] to-[#4079ff] text-white font-semibold h-8 text-xs"
+                      onClick={() => navigate('/optimizerwizard', { state: { promptText } })}
+                    >
+                      <Wand2 className="h-3 w-3 mr-1" />
+                      Optimize Prompt
+                    </Button>
                   </div>
                 </div>
               </section>
