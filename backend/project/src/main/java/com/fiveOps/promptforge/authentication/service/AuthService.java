@@ -1,5 +1,6 @@
 package com.fiveOps.promptforge.authentication.service;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -112,4 +113,8 @@ public class AuthService {
     // Generate and return JWT token
     return jwtUtil.generateToken(user.getEmail());
   }
+
+  public void logoutUser(String token, String username) {
+       
+    }
 }
