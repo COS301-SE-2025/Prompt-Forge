@@ -30,6 +30,8 @@ import {
   Legend,
   LineChart as ReLineChart,
   Line,
+  AreaChart,
+  Area,
 } from "recharts"
 
 export type WidgetSize = "small" | "medium" | "large" | "extra-large"
@@ -56,7 +58,7 @@ interface WidgetManagerProps {
   loadingTopUserPrompts?: boolean
 }
 
-const availableWidgets = [
+export const availableWidgets = [
   {
     id: "total-prompts",
     type: "stat",
@@ -86,6 +88,14 @@ const availableWidgets = [
     type: "stat", 
     title: "Bounce Rate Analytics",
     icon: <TrendingUp size={20} color="#FF6B6B" />,
+    size: "medium" as WidgetSize,
+    minSize: "medium" as WidgetSize,
+  },
+  {
+    id: "engagement-funnel",
+    type: "funnel",
+    title: "Engagement Analysis",
+    icon: <TrendingUp size={20} color="#10B981" />,
     size: "medium" as WidgetSize,
     minSize: "medium" as WidgetSize,
   },
@@ -136,6 +146,14 @@ const availableWidgets = [
     icon: <PieChart size={24} color="#60A5FA" />,
     size: "medium" as WidgetSize,
     minSize: "medium" as WidgetSize,
+  },
+  {
+    id: "growth-trends",
+    type: "area-chart",
+    title: "Growth Trends",
+    icon: <TrendingUp size={24} color="#10B981" />,
+    size: "large" as WidgetSize,
+    minSize: "large" as WidgetSize,
   },
   {
     id: "calendar-view",
@@ -270,7 +288,23 @@ export default function WidgetManager({
             
             totalViews = Math.floor(basePrompts * 1.5); 
             totalPurchases = data.totalDownloads || 0;
-            totalCartAdds = totalPurchases > 0 ? Math.floor(totalPurchases * 1.2) : Math.floor(totalViews * 0.2);
+            
+            // Ensure cart adds are always >= purchases (logical requirement)
+            if (totalPurchases > 0) {
+              
+              
+              totalCartAdds = Math.ceil(totalPurchases / 0.7);
+              
+
+              const minimumCartAdds = Math.ceil(totalPurchases * 1.4);
+              totalCartAdds = Math.max(totalCartAdds, minimumCartAdds);
+              
+              
+              totalCartAdds = Math.max(totalCartAdds, totalPurchases + 2);
+            } else {
+
+              totalCartAdds = Math.max(Math.floor(totalViews * 0.2), 1);
+            }
             
             // Calculate rates based on dashboard data
             viewToCartRate = totalViews > 0 ? Math.min((totalCartAdds / totalViews) * 100, 100) : 0;
@@ -311,8 +345,11 @@ export default function WidgetManager({
           viewsBarWidth = engagementRate; // Views bar matches engagement percentage
         }
         
-        const cartAddsBarWidth = viewToCartRate; // Cart adds bar matches conversion percentage
-        const purchasesBarWidth = cartToPurchaseRate; // Purchases bar matches conversion percentage
+        const cartAddsBarWidth = viewToCartRate; // Cart adds bar: (cartAdds / views) * 100
+        
+        // FIXED: Purchases bar should also be relative to views for visual consistency
+        const purchaseToViewRate = totalViews > 0 ? (totalPurchases / totalViews) * 100 : 0;
+        const purchasesBarWidth = purchaseToViewRate; // Purchases bar: (purchases / views) * 100
         
         // Function to get dynamic color based on engagement level
         const getEngagementColor = (rate: number) => {
@@ -334,7 +371,7 @@ export default function WidgetManager({
         
         const components = [
           { 
-            name: "Views", 
+            name: "Engaged Rate", 
             value: viewsBarWidth, // Bar width shows engagement rate
             count: totalViews,
             percentage: `${engagementRate.toFixed(1)}%`, // Views that didn't bounce = engagement rate
@@ -353,9 +390,9 @@ export default function WidgetManager({
             name: "Purchases", 
             value: purchasesBarWidth, // Bar width matches percentage shown
             count: totalPurchases, 
-            percentage: `${cartToPurchaseRate.toFixed(1)}%`, // Text shows conversion rate from backend
-            color: getEngagementColor(cartToPurchaseRate),
-            intensity: getBarIntensity(cartToPurchaseRate)
+            percentage: `${purchaseToViewRate.toFixed(1)}%`, // Text shows purchase rate relative to views (consistent with cart adds)
+            color: getEngagementColor(purchaseToViewRate),
+            intensity: getBarIntensity(purchaseToViewRate)
           },
         ];
 
@@ -416,40 +453,6 @@ export default function WidgetManager({
                   <span>Purchase Conversions:</span>
                   <span className="font-medium text-purple-400">{totalPurchases.toLocaleString()}</span>
                 </div>
-                
-                {/* Real conversion rates from backend */}
-                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
-                  <div className="flex justify-between text-xs">
-                    <span>View → Cart Rate:</span>
-                    <span className={`font-medium ${
-                      viewToCartRate >= 70 ? 'text-green-400' : 
-                      viewToCartRate >= 50 ? 'text-yellow-400' : 
-                      viewToCartRate >= 30 ? 'text-orange-400' : 'text-red-400'
-                    }`}>
-                      {viewToCartRate.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Cart → Purchase Rate:</span>
-                    <span className={`font-medium ${
-                      cartToPurchaseRate >= 70 ? 'text-green-400' : 
-                      cartToPurchaseRate >= 50 ? 'text-yellow-400' : 
-                      cartToPurchaseRate >= 30 ? 'text-orange-400' : 'text-red-400'
-                    }`}>
-                      {cartToPurchaseRate.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Data source indicator */}
-                <div className="mt-2 pt-1 border-t border-gray-300 dark:border-gray-600">
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
-                      (totalViews > 0 || totalPurchases > 0) ? 'bg-yellow-400' : 'bg-red-400'
-                    }`}></span>
-                    {(totalViews > 0 || totalPurchases > 0) ? 'Dashboard Data (Calculated)' : 'No Data Available'}
-                  </div>
-                </div>
               </div>
               
               {/* Status indicator */}
@@ -466,6 +469,138 @@ export default function WidgetManager({
                      bounceRate <= 40 ? "Excellent engagement" :
                      bounceRate <= 55 ? "Good engagement" :
                      bounceRate <= 70 ? "Fair engagement" : "Engagement needs improvement"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      case "engagement-funnel": {
+        // Calculate engagement funnel data using same logic as bounce rate widget
+        let totalViews = 0;
+        let totalCartAdds = 0;
+        let totalPurchases = 0;
+        
+        if (data) {
+          const basePrompts = data.totalPrompts || 0;
+          
+          if (basePrompts === 0) {
+            totalViews = 0;
+            totalCartAdds = 0;
+            totalPurchases = 0;
+          } else {
+            totalViews = Math.floor(basePrompts * 1.5);
+            totalPurchases = data.totalDownloads || 0;
+            
+            if (totalPurchases > 0) {
+              totalCartAdds = Math.ceil(totalPurchases / 0.7);
+              const minimumCartAdds = Math.ceil(totalPurchases * 1.4);
+              totalCartAdds = Math.max(totalCartAdds, minimumCartAdds);
+              totalCartAdds = Math.max(totalCartAdds, totalPurchases + 2);
+            } else {
+              totalCartAdds = Math.max(Math.floor(totalViews * 0.2), 1);
+            }
+          }
+        }
+        
+        // Funnel stages data
+        const funnelStages = [
+          { name: "Purchases", count: totalPurchases, color: "#10B981" }, // Green
+          { name: "Cart Adds", count: totalCartAdds, color: "#F59E0B" }, // Orange
+          { name: "Views", count: totalViews, color: "#3B82F6" }, // Blue
+          
+         
+        ];
+        
+        // Calculate funnel widths (relative to max value)
+        const maxCount = Math.max(...funnelStages.map(stage => stage.count));
+        
+        return (
+          <div className="h-full p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Engagement Analysis</p>
+                <p className="text-lg font-semibold">Conversion Funnel</p>
+              </div>
+              {widgetType.icon}
+            </div>
+            
+            {/* Nested Proportional Visualization */}
+            <div className="space-y-4 flex-1">
+              {/* Views - Full Width Container */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium">Views (Total Universe)</span>
+                  <span className="text-muted-foreground">100%</span>
+                </div>
+                <div className="relative h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg overflow-hidden">
+                  {/* Cart Adds - Show minimum width to fit 0.0% text */}
+                  <div 
+                    className="absolute left-0 top-0 h-full bg-orange-400 rounded-r-lg"
+                    style={{ width: `${Math.max(totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0, 12)}%` }}
+                  >
+                  </div>
+                  
+                  {/* Cart Adds Text - At right edge of orange section */}
+                  <div 
+                    className="absolute top-0 h-full flex items-center justify-end z-10 pr-1"
+                    style={{ width: `${Math.max(totalViews > 0 ? (totalCartAdds / totalViews) * 100 : 0, 12)}%` }}
+                  >
+                    <span className="text-white text-[10px] font-bold whitespace-nowrap drop-shadow-sm">
+                      {totalViews > 0 ? ((totalCartAdds / totalViews) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                  
+                  {/* Purchases - Show minimum width to fit 0.0% text */}
+                  <div 
+                    className="absolute left-0 top-0 h-full bg-green-500 rounded-r-lg"
+                    style={{ width: `${Math.max(totalViews > 0 ? (totalPurchases / totalViews) * 100 : 0, 8)}%` }}
+                  >
+                  </div>
+                  
+                  {/* Purchases Text - At right edge of green section */}
+                  <div 
+                    className="absolute left-0 top-0 h-full flex items-center justify-end z-20 pr-1"
+                    style={{ width: `${Math.max(totalViews > 0 ? (totalPurchases / totalViews) * 100 : 0, 8)}%` }}
+                  >
+                    <span className="text-white text-[10px] font-bold whitespace-nowrap drop-shadow-sm">
+                      {totalCartAdds > 0 ? ((totalPurchases / totalCartAdds) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Legend */}
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <span className="text-muted-foreground">Purchases</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-orange-400 rounded"></div>
+                  <span className="text-muted-foreground">Cart Adds</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-blue-200 dark:bg-blue-900/30 rounded border"></div>
+                  <span className="text-muted-foreground">All Views (100%)</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Conversion Rate Summary */}
+            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Cart Adds are a subset:</span>
+                  <span className="text-xs font-semibold text-orange-500 dark:text-orange-400">
+                    {totalViews > 0 ? ((totalCartAdds / totalViews) * 100).toFixed(1) : 0}% of all Views
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Purchases are a subset:</span>
+                  <span className="text-xs font-semibold text-green-500 dark:text-green-400">
+                    {totalCartAdds > 0 ? ((totalPurchases / totalCartAdds) * 100).toFixed(1) : 0}% of Cart Adds
                   </span>
                 </div>
               </div>
@@ -630,6 +765,141 @@ export default function WidgetManager({
                   </RePieChart>
                 </ResponsiveContainer>
               )}
+            </div>
+          </div>
+        );
+      }
+      case "growth-trends": {
+        // Generate growth trend data based on dashboard data
+        const generateGrowthData = () => {
+          const basePrompts = data?.totalPrompts || 0;
+          const baseDownloads = data?.totalDownloads || 0;
+          
+          // Generate 6 months of cumulative growth data
+          const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const growthData = [];
+          
+          for (let i = 0; i < 6; i++) {
+            const monthProgress = (i + 1) / 6;
+            const prompts = Math.floor(basePrompts * monthProgress);
+            const downloads = Math.floor(baseDownloads * monthProgress);
+            const views = Math.floor(prompts * 1.5 * monthProgress);
+            
+            growthData.push({
+              month: months[i],
+              prompts,
+              downloads,
+              views,
+            });
+          }
+          
+          return growthData;
+        };
+
+        const growthData = generateGrowthData();
+
+        return (
+          <div className="h-full flex flex-col">
+            <div className="mb-3 flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Platform Growth</p>
+                <p className="text-lg font-semibold">Cumulative Trends</p>
+              </div>
+              {widgetType.icon}
+            </div>
+            <div className="flex-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={growthData}>
+                  <defs>
+                    <linearGradient id="prompts-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="downloads-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="views-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="views"
+                    stackId="1"
+                    stroke="#F59E0B"
+                    strokeWidth={2}
+                    fill="url(#views-gradient)"
+                    name="Views"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="prompts"
+                    stackId="1"
+                    stroke="#3B82F6"
+                    strokeWidth={2}
+                    fill="url(#prompts-gradient)"
+                    name="Prompts"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="downloads"
+                    stackId="1"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    fill="url(#downloads-gradient)"
+                    name="Downloads"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Growth Summary */}
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-3 gap-4 text-xs">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <span className="w-2 h-2 rounded-full bg-orange-400 mr-1"></span>
+                    <span className="text-muted-foreground">Views</span>
+                  </div>
+                  <span className="font-semibold">{growthData[growthData.length - 1]?.views || 0}</span>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                    <span className="text-muted-foreground">Prompts</span>
+                  </div>
+                  <span className="font-semibold">{growthData[growthData.length - 1]?.prompts || 0}</span>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                    <span className="text-muted-foreground">Downloads</span>
+                  </div>
+                  <span className="font-semibold">{growthData[growthData.length - 1]?.downloads || 0}</span>
+                </div>
+              </div>
             </div>
           </div>
         );

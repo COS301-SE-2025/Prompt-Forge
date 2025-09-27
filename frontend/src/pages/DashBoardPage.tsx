@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/Button";
 import { ArrowRight, Star, Activity, Rocket, TrendingUp } from "lucide-react"
 import { StandardPromptCard } from "@/components/StandardPromptCard"
 import { MyPrompt } from '@/Models/MyPrompt';
-import WidgetManager, { type Widget } from "@/components/WidgetManager"
+import WidgetManager, { type Widget, availableWidgets } from "@/components/WidgetManager"
 import { dashProfileService } from '../services/dashprofileService';
+import { BadgeCollection } from '@/components/BadgeCollection';
 
 
 // Category breakdown widget
@@ -498,8 +499,17 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
 
   const handleUpdateWidgets = (newWidgets: Widget[]) => {
     setWidgets(newWidgets)
-    // Save to localStorage for persistence
-    localStorage.setItem("dashboardWidgets", JSON.stringify(newWidgets))
+    // Save to localStorage for persistence (exclude components to avoid serialization issues)
+    const widgetsToSave = newWidgets.map(widget => ({
+      id: widget.id,
+      type: widget.type,
+      title: widget.title,
+      isActive: widget.isActive,
+      position: widget.position,
+      size: widget.size,
+      minSize: widget.minSize
+    }))
+    localStorage.setItem("dashboardWidgets", JSON.stringify(widgetsToSave))
   }
 
   // Load saved widgets on mount
@@ -508,18 +518,29 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
     if (savedWidgets) {
       try {
         const parsedWidgets = JSON.parse(savedWidgets)
-        // Ensure all widgets have the required size properties
-        const updatedWidgets = parsedWidgets.map((widget: any) => ({
-          ...widget,
-          size: widget.size || "small",
-          minSize: widget.minSize || "small",
-        }))
+        // Reconstruct widgets with proper icons and components from availableWidgets
+        const updatedWidgets = parsedWidgets.map((savedWidget: any) => {
+          const widgetConfig = availableWidgets.find(aw => aw.id === savedWidget.id)
+          if (!widgetConfig) return null // Skip widgets that don't exist anymore
+          
+          return {
+            ...savedWidget,
+            icon: widgetConfig.icon,
+            component: savedWidget.id === "category-breakdown" 
+              ? <CategoryBreakdownWidget data={categoryBreakdown} loading={loadingCategoryBreakdown} />
+              : <div></div>, // Empty component initially, will be populated when data loads
+            size: savedWidget.size || widgetConfig.size || "small",
+            minSize: savedWidget.minSize || widgetConfig.minSize || "small",
+          }
+        }).filter(Boolean) // Remove any null widgets
+        
         setWidgets(updatedWidgets)
-      } catch {
+      } catch (error) {
+        console.warn("Failed to load saved widgets:", error)
         // Keep default widgets if parsing fails
       }
     }
-  }, [])
+  }, [categoryBreakdown, loadingCategoryBreakdown])
 
   if (authLoading) {
     return (
@@ -670,6 +691,16 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
               analyticsOverviewData={monthlyPromptCounts}
               loadingAnalyticsOverview={loadingMonthlyCounts}
               loadingTopUserPrompts={loadingTopUserPrompts}
+            />
+          </div>
+
+          {/* Badges Section */}
+          <div className="mb-8">
+            <BadgeCollection
+              showProgress={true}
+              isOwnProfile={true}
+              maxDisplay={6}
+              title="My Badges"
             />
           </div>
 

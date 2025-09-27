@@ -8,4 +8,7 @@ joblib
 huggingface-hub
 openai
 python-dotenv
-
+httpx==0.25.2
+pytest==7.4.3
+python-multipart==0.0.6
+pytest-cov==4.1.0

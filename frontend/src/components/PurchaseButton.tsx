@@ -42,7 +42,7 @@ export const PurchaseButton = ({
         </div>
       ) : (
         <>
-          {price === 0 ? "Get Free" : `Add to cart for $${price.toFixed(2)}`}
+          {price === 0 ? "Get Free" : `Add to cart for ZAR ${price.toFixed(2)}`}
         </>
       )}
     </Button>
