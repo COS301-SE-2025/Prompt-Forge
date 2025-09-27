@@ -8,6 +8,7 @@ import { Star, Swords, Timer, Crown, Gem, UserPlus, Sparkles } from "lucide-reac
 import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { BadgeCount } from "@/components/BadgeCount"
 
 interface Prompt {
   id: string
@@ -155,11 +156,10 @@ export const UserCard: React.FC<UserCardProps> = ({
             <div className="text-xs text-muted-foreground font-medium">Prompts</div>
           </div>
           <div className="space-y-1">
-            <div className="flex items-center justify-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-lg font-semibold text-foreground">{user.averageRating?.toFixed(1) || "0.0"}</span>
+            <div className="text-lg font-semibold text-foreground flex items-center justify-center">
+              <BadgeCount username={user.username} showIcon={true} />
             </div>
-            <div className="text-xs text-muted-foreground font-medium">Rating</div>
+            <div className="text-xs text-muted-foreground font-medium">Badges</div>
           </div>
         </div>
       </div>
