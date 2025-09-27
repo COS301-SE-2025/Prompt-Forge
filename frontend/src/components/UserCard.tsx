@@ -8,6 +8,7 @@ import { Star, Swords, Timer, Crown, Gem, UserPlus, Sparkles } from "lucide-reac
 import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { BadgeCount } from "@/components/BadgeCount"
 
 interface Prompt {
   id: string
@@ -148,18 +149,26 @@ export const UserCard: React.FC<UserCardProps> = ({
             <div className="text-lg font-semibold text-foreground">
               {typeof user.followers === "number" ? user.followers.toLocaleString() : user.followers.length}
             </div>
-            <div className="text-xs text-muted-foreground font-medium">Followers</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Followers</span>
+              <span className="sm:hidden">Fans</span>
+            </div>
           </div>
           <div className="space-y-1">
             <div className="text-lg font-semibold text-foreground">{user.totalPrompts?.toLocaleString() || 0}</div>
-            <div className="text-xs text-muted-foreground font-medium">Prompts</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Prompts</span>
+              <span className="sm:hidden">AI</span>
+            </div>
           </div>
           <div className="space-y-1">
-            <div className="flex items-center justify-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-lg font-semibold text-foreground">{user.averageRating?.toFixed(1) || "0.0"}</span>
+            <div className="text-lg font-semibold text-foreground flex items-center justify-center">
+              <BadgeCount username={user.username} showIcon={true} />
             </div>
-            <div className="text-xs text-muted-foreground font-medium">Rating</div>
+            <div className="text-xs text-muted-foreground font-medium">
+              <span className="hidden sm:inline">Badges</span>
+              <span className="sm:hidden">★</span>
+            </div>
           </div>
         </div>
       </div>

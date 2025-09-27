@@ -105,4 +105,19 @@ export class BadgeService {
     const data = await response.json()
     return data.count
   }
+
+  // Check and assign badges based on user activity
+  static async checkAndAssignBadges(): Promise<{ message: string; badgesAssigned: BadgeData[] }> {
+    const response = await fetch(`${API_BASE_URL}/badges/me/check`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to check and assign badges')
+    }
+    
+    return response.json()
+  }
 }
