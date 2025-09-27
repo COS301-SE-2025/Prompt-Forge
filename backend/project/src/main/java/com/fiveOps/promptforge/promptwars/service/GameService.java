@@ -42,7 +42,7 @@ public class GameService {
       java.util.concurrent.ConcurrentHashMap.newKeySet();
   // In-memory guard to avoid duplicate simultaneous finalization/rating requests
   private final java.util.Set<java.util.UUID> finalizationLocks =
-    java.util.concurrent.ConcurrentHashMap.newKeySet();
+      java.util.concurrent.ConcurrentHashMap.newKeySet();
 
   @Value("${openrouter.base.url:https://openrouter.ai/api/v1}")
   private String openRouterBaseUrl;
@@ -277,7 +277,8 @@ public class GameService {
       // This handles race conditions where AI rating completes before second player submits
       boolean hasPlayerSubmitted = game.hasPlayerSubmittedPrompt(playerId);
       if (hasPlayerSubmitted) {
-        throw new IllegalArgumentException("Game is not in writing phase and you have already submitted");
+        throw new IllegalArgumentException(
+            "Game is not in writing phase and you have already submitted");
       }
       // Allow the submission to proceed if player hasn't submitted yet
     }
@@ -291,8 +292,9 @@ public class GameService {
     }
 
     // Validate prompt content - reject if it contains log messages or other invalid data
-    if (prompt.contains("Nothing to write") || prompt.contains("Completed") ||
-        prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+    if (prompt.contains("Nothing to write")
+        || prompt.contains("Completed")
+        || prompt.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
       throw new IllegalArgumentException("Invalid prompt content detected");
     }
 
@@ -374,13 +376,13 @@ public class GameService {
       ratingStart.put("type", "AI_RATING_STARTED");
       ratingStart.put("gameId", gameId.toString());
       ratingStart.put("message", "AI judge is evaluating the prompts...");
-  ratingStart.put("newPhase", GameState.RATING.toString());
+      ratingStart.put("newPhase", GameState.RATING.toString());
 
       Map<String, Object> phaseChange = new HashMap<>();
       phaseChange.put("type", "PHASE_CHANGE");
       phaseChange.put("gameId", gameId.toString());
       phaseChange.put("gameState", GameState.RATING.toString());
-  phaseChange.put("newPhase", GameState.RATING.toString());
+      phaseChange.put("newPhase", GameState.RATING.toString());
 
       webSocketService.sendGameUpdate(game.getPlayer1Id(), ratingStart);
       webSocketService.sendGameUpdate(game.getPlayer2Id(), ratingStart);
@@ -389,8 +391,8 @@ public class GameService {
 
       System.out.println("Calling AI rating API...");
       // Get AI rating for both prompts
-      Map<String, Object> ratings = getAIRating(game.getScenario(),
-          game.getPlayer1Prompt(), game.getPlayer2Prompt());
+      Map<String, Object> ratings =
+          getAIRating(game.getScenario(), game.getPlayer1Prompt(), game.getPlayer2Prompt());
 
       System.out.println("AI rating completed, processing results...");
       int player1Score = (Integer) ratings.get("player1Score");
@@ -401,16 +403,16 @@ public class GameService {
       System.out.println("Player 1 score: " + player1Score + ", Player 2 score: " + player2Score);
 
       // Set the AI scores (clamped to 0-10)
-  game.setPlayer1Score(player1Score);
-  game.setPlayer2Score(player2Score);
+      game.setPlayer1Score(player1Score);
+      game.setPlayer2Score(player2Score);
       game.setRatingExplanation((String) ratings.get("explanation"));
 
-  // Player rating should correspond to their own score.
-  // Note: DB check constraint disallows 0 for player*_rating, so store null when score == 0
-  Integer player1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
-  Integer player2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
-  game.setPlayer1Rating(player1Rating);
-  game.setPlayer2Rating(player2Rating);
+      // Player rating should correspond to their own score.
+      // Note: DB check constraint disallows 0 for player*_rating, so store null when score == 0
+      Integer player1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
+      Integer player2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
+      game.setPlayer1Rating(player1Rating);
+      game.setPlayer2Rating(player2Rating);
 
       // Calculate winner and finish game
       UUID winner = game.calculateWinner();
@@ -462,14 +464,14 @@ public class GameService {
       fallbackGame.setGameState(GameState.RATING);
       gameRepository.save(fallbackGame);
 
-  Map<String, Object> phaseChange = new HashMap<>();
-  phaseChange.put("type", "PHASE_CHANGE");
-  phaseChange.put("gameId", gameId.toString());
-  phaseChange.put("gameState", GameState.RATING.toString());
-  phaseChange.put("newPhase", GameState.RATING.toString());
+      Map<String, Object> phaseChange = new HashMap<>();
+      phaseChange.put("type", "PHASE_CHANGE");
+      phaseChange.put("gameId", gameId.toString());
+      phaseChange.put("gameState", GameState.RATING.toString());
+      phaseChange.put("newPhase", GameState.RATING.toString());
 
-  webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), phaseChange);
-  webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), phaseChange);
+      webSocketService.sendGameUpdate(fallbackGame.getPlayer1Id(), phaseChange);
+      webSocketService.sendGameUpdate(fallbackGame.getPlayer2Id(), phaseChange);
 
       Map<String, Object> fallbackRatings = getFallbackRating();
       int player1Score = (Integer) fallbackRatings.get("player1Score");
@@ -477,16 +479,16 @@ public class GameService {
       player1Score = Math.max(0, Math.min(10, player1Score));
       player2Score = Math.max(0, Math.min(10, player2Score));
 
-  fallbackGame.setPlayer1Score(player1Score);
-  fallbackGame.setPlayer2Score(player2Score);
+      fallbackGame.setPlayer1Score(player1Score);
+      fallbackGame.setPlayer2Score(player2Score);
       fallbackGame.setRatingExplanation(
           "AI rating service temporarily unavailable. Random scores assigned.");
 
-  // Do not write 0 into the player rating columns because DB constraint disallows 0.
-  Integer fbPlayer1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
-  Integer fbPlayer2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
-  fallbackGame.setPlayer1Rating(fbPlayer1Rating);
-  fallbackGame.setPlayer2Rating(fbPlayer2Rating);
+      // Do not write 0 into the player rating columns because DB constraint disallows 0.
+      Integer fbPlayer1Rating = (player1Score > 0 && player1Score <= 10) ? player1Score : null;
+      Integer fbPlayer2Rating = (player2Score > 0 && player2Score <= 10) ? player2Score : null;
+      fallbackGame.setPlayer1Rating(fbPlayer1Rating);
+      fallbackGame.setPlayer2Rating(fbPlayer2Rating);
 
       UUID winner = fallbackGame.calculateWinner();
       fallbackGame.setWinnerId(winner);
@@ -627,27 +629,33 @@ public class GameService {
       int player2Score = 5; // Default fallback
 
       // Patterns to attempt, in order
-      java.util.regex.Pattern[] p1Patterns = new java.util.regex.Pattern[] {
-        java.util.regex.Pattern.compile("Prompt\\s*1\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Rating\\s*1\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Prompt1\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Player\\s*1\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-      };
+      java.util.regex.Pattern[] p1Patterns =
+          new java.util.regex.Pattern[] {
+            java.util.regex.Pattern.compile(
+                "Prompt\\s*1\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Rating\\s*1\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Prompt1\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Player\\s*1\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+          };
 
-      java.util.regex.Pattern[] p2Patterns = new java.util.regex.Pattern[] {
-        java.util.regex.Pattern.compile("Prompt\\s*2\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Rating\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Prompt2\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-        java.util.regex.Pattern.compile("Player\\s*2\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE),
-      };
+      java.util.regex.Pattern[] p2Patterns =
+          new java.util.regex.Pattern[] {
+            java.util.regex.Pattern.compile(
+                "Prompt\\s*2\\s*Score\\s*[:\\-]?\\s*(\\d{1,2})",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Rating\\s*2\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Prompt2\\s*[:\\-]?\\s*(\\d{1,2})", java.util.regex.Pattern.CASE_INSENSITIVE),
+            java.util.regex.Pattern.compile(
+                "Player\\s*2\\s*score\\s*[:\\-]?\\s*(\\d{1,2})",
+                java.util.regex.Pattern.CASE_INSENSITIVE),
+          };
 
       // Try each pattern until we find a match
       for (java.util.regex.Pattern p : p1Patterns) {
@@ -676,9 +684,10 @@ public class GameService {
 
       // Compact inline pattern like: "Prompt 1: X, Prompt 2: Y" or "Prompt1: X Prompt2: Y"
       if ((player1Score == 5 || player2Score == 5)) {
-        java.util.regex.Pattern compact = java.util.regex.Pattern.compile(
-            "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
-            java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Pattern compact =
+            java.util.regex.Pattern.compile(
+                "Prompt\\s*1\\s*[:\\-]?\\s*(\\d{1,2})\\s*[,;\\s]+Prompt\\s*2\\s*[:\\-]?\\s*(\\d{1,2})",
+                java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher cm = compact.matcher(result);
         if (cm.find()) {
           try {
@@ -698,8 +707,8 @@ public class GameService {
       ratings.put("player2Score", player2Score);
       ratings.put("explanation", result);
 
-      System.out.println("parseRatingResult extracted scores -> p1: " + player1Score +
-          ", p2: " + player2Score);
+      System.out.println(
+          "parseRatingResult extracted scores -> p1: " + player1Score + ", p2: " + player2Score);
 
     } catch (Exception e) {
       System.err.println("Error parsing rating result: " + e.getMessage());
