@@ -255,7 +255,8 @@ export class PromptService {
 
   async getPromptReviews(promptId: string): Promise<Review[]> {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.get(
         `/store/prompts/${actualId}/reviews`
       );
@@ -310,7 +311,8 @@ export class PromptService {
   async postReview(promptId: string, reviewData: { rating: number; comment: string }) {
 
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.post(`/store/prompts/${actualId}/reviews`, {
         rating: reviewData.rating,
         comment: reviewData.comment,
@@ -350,7 +352,8 @@ export class PromptService {
 
   async updateReview(promptId: string, reviewId: string, reviewData: { rating: number; comment: string }) {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.put(`/store/prompts/${actualId}/reviews/${reviewId}`, {
         rating: reviewData.rating,
         comment: reviewData.comment,
@@ -387,7 +390,8 @@ export class PromptService {
 
   async deleteReview(promptId: string, reviewId: string): Promise<void> {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.delete(`/store/prompts/${actualId}/reviews/${reviewId}`)
 
       if (!response.ok) {
