@@ -424,7 +424,7 @@ export default function ProfileSettingsPage() {
                   </div>
                 </Card> */}
 
-                <Card className="p-6 border-red-200">
+                {/* <Card className="p-6 border-red-200">
                   <h2 className="text-lg font-medium text-red-500 mb-4">Danger Zone</h2>
 
                   <div className="space-y-4">
@@ -449,7 +449,7 @@ export default function ProfileSettingsPage() {
                       <Button className="min-h-fit" variant="destructive">Delete Account</Button>
                     </div>
                   </div>
-                </Card>
+                </Card> */}
               </div>
             </TabsContent>
 

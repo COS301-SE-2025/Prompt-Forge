@@ -81,14 +81,7 @@ public class UserService {
     }
 
     // Username update (with uniqueness check)
-    if (dto.getUsername() != null
-        && !dto.getUsername().isBlank()
-        && !dto.getUsername().equals(user.getUsername())) {
-      if (userRepository.existsByUsername(dto.getUsername())) {
-        throw new RuntimeException("Username is already taken");
-      }
-      user.setUsername(dto.getUsername());
-    }
+    ensureUsernameAvailable(dto, user);
 
     // Bio update
     if (dto.getBio() != null) {
@@ -117,6 +110,22 @@ public class UserService {
 
   public List<UserDto> getAllUsers() {
     return userRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+  }
+
+  // Helper extracted to reduce method complexity and centralize username validation
+  private void ensureUsernameAvailable(UpdateProfileDto dto, User user) {
+    if (dto.getUsername() != null
+        && !dto.getUsername().isBlank()
+        && !dto.getUsername().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(dto.getUsername())) {
+        com.fiveOps.promptforge.user_profile.model.User existing =
+            userRepository.findByUsername(dto.getUsername()).orElse(null);
+        if (existing != null && !existing.getUserId().equals(user.getUserId())) {
+          throw new RuntimeException("Username is already taken");
+        }
+      }
+      user.setUsername(dto.getUsername());
+    }
   }
 
   public void deleteUser(UUID id) {

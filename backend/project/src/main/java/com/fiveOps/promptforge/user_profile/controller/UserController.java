@@ -418,6 +418,26 @@ public class UserController {
     String email = extractEmailFromCookie(request);
     String currentPassword = body.get("currentPassword");
     String newPassword = body.get("newPassword");
+
+    // Support encrypted fields (frontend sends encryptedCurrentPassword / encryptedNewPassword)
+    if ((body.get("isEncrypted") != null && Boolean.parseBoolean(body.get("isEncrypted")))
+        || body.get("encryptedCurrentPassword") != null
+        || body.get("encryptedNewPassword") != null) {
+      // Lazily get RsaKeyManager bean
+      try {
+        com.fiveOps.promptforge.authentication.util.RsaKeyManager km =
+            org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext()
+                .getBean(com.fiveOps.promptforge.authentication.util.RsaKeyManager.class);
+        if (body.get("encryptedCurrentPassword") != null) {
+          currentPassword = km.decryptBase64EncryptedRSA(body.get("encryptedCurrentPassword"));
+        }
+        if (body.get("encryptedNewPassword") != null) {
+          newPassword = km.decryptBase64EncryptedRSA(body.get("encryptedNewPassword"));
+        }
+      } catch (Exception e) {
+        // ignore and fallback to plaintext fields
+      }
+    }
     User user = userService.findByEmail(email);
     if (user == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "User not found"));

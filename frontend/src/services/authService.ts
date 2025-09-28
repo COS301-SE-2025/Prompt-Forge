@@ -1,5 +1,6 @@
 import HttpClient from "./httpClient";
 import { User } from "@/Models/User";
+import { encryptWithServerPublicKey } from "@/utils/encryption";
 
 export class AuthService {
   private httpClient = HttpClient;
@@ -7,7 +8,15 @@ export class AuthService {
 
   async login(userData: User) {
     try {
-      const response = await this.httpClient.post(`${this.baseUrl}/login`, userData);
+      // Encrypt password payload before sending to server
+      const body: any = { email: userData.email };
+      if (userData.password) {
+        const encrypted = await encryptWithServerPublicKey(userData.password);
+        body.encryptedPassword = encrypted;
+        body.isEncrypted = true;
+      }
+
+  const response = await this.httpClient.post(`${this.baseUrl}/login`, body);
 
       const isJson = response.headers.get("content-type")?.includes("application/json");
       let data = null;
@@ -37,7 +46,15 @@ export class AuthService {
         throw new Error("All fields are required");
       }
 
-      const response = await this.httpClient.post(`${this.baseUrl}/signup`, userData);
+      // Encrypt password before sending
+      const body: any = { email: userData.email, username: userData.username };
+      if (userData.password) {
+        const encrypted = await encryptWithServerPublicKey(userData.password);
+        body.encryptedPassword = encrypted;
+        body.isEncrypted = true;
+      }
+
+  const response = await this.httpClient.post(`${this.baseUrl}/signup`, body);
       const data = await response.json();
 
       if (!response.ok) {
