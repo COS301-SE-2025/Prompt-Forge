@@ -388,17 +388,11 @@ export default function ProfilePage() {
                 <div className="font-semibold">{publicPromptCount}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
-              <div
-                className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
-              >
+              <div className="text-center">
                 <div className="font-semibold">{userProfile.followersCount}</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
-              <div
-                className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
-              >
+              <div className="text-center">
                 <div className="font-semibold">{userProfile.followingCount}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>
