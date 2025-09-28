@@ -1,0 +1,146 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "health 200": {
+                            "fails": 1,
+                            "name": "health 200",
+                            "path": "::setup::health 200",
+                            "id": "2e53f0809577cfb38a24601c3672b857",
+                            "passes": 0
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "login success (200|201|204)": {
+                "passes": 1972,
+                "fails": 0,
+                "name": "login success (200|201|204)",
+                "path": "::login success (200|201|204)",
+                "id": "9b40daf2c82f20a93e0c9256bc6ecaa8"
+            }
+        }
+    },
+    "metrics": {
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_req_waiting": {
+            "max": 6012.4058,
+            "p(90)": 3370.00256,
+            "p(95)": 3488.306199999999,
+            "avg": 3073.1758447541774,
+            "min": 1.5594,
+            "med": 3055.8213
+        },
+        "checks": {
+            "passes": 1972,
+            "fails": 1,
+            "value": 0.9994931576279777
+        },
+        "http_req_connecting": {
+            "avg": 0.049289254941713136,
+            "min": 0,
+            "med": 0,
+            "max": 10.6167,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "data_received": {
+            "count": 1749496,
+            "rate": 14244.347102051139
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 3489.768079999999,
+            "avg": 3075.933257251517,
+            "min": 554.193,
+            "med": 3057.3047,
+            "max": 6016.5509,
+            "p(90)": 3371.47267
+        },
+        "http_req_receiving": {
+            "p(95)": 2.5340399999999983,
+            "avg": 1.1570999999999976,
+            "min": 0,
+            "med": 0.8105,
+            "max": 43.1574,
+            "p(90)": 1.8012199999999998
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_reqs": {
+            "count": 1973,
+            "rate": 16.064110367984206
+        },
+        "iteration_duration": {
+            "avg": 3076.3630881338663,
+            "min": 554.7024,
+            "med": 3057.5693499999998,
+            "max": 6016.5509,
+            "p(90)": 3371.5332000000003,
+            "p(95)": 3490.219734999999
+        },
+        "http_req_failed": {
+            "passes": 1,
+            "fails": 1972,
+            "value": 0.0005068423720223011
+        },
+        "vus": {
+            "value": 13,
+            "min": 13,
+            "max": 50
+        },
+        "http_req_blocked": {
+            "med": 0,
+            "max": 13.2939,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.07073988849467817,
+            "min": 0
+        },
+        "data_sent": {
+            "count": 406343,
+            "rate": 3308.4332484834295
+        },
+        "iterations": {
+            "count": 1972,
+            "rate": 16.05596839618087
+        },
+        "http_req_duration": {
+            "p(95)": 3489.528059999999,
+            "avg": 3074.375611556002,
+            "min": 2.6983,
+            "med": 3057.1487,
+            "max": 6016.5509,
+            "p(90)": 3371.37824
+        },
+        "http_req_sending": {
+            "med": 0,
+            "max": 21.1284,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.04266680182463252,
+            "min": 0
+        }
+    },
+    "setup_data": {
+        "healthStatus": 403
+    }
+}

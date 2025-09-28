@@ -1,0 +1,146 @@
+{
+    "metrics": {
+        "checks": {
+            "passes": 2208,
+            "fails": 1,
+            "value": 0.9995473064735174
+        },
+        "data_sent": {
+            "count": 467319,
+            "rate": 3115.244267257663
+        },
+        "http_req_connecting": {
+            "p(95)": 31.4085,
+            "avg": 3.281692802172932,
+            "min": 0,
+            "med": 0,
+            "max": 69.7682,
+            "p(90)": 7.0856
+        },
+        "http_req_duration": {
+            "avg": 30232.10807369856,
+            "min": 4.5681,
+            "med": 33391.9822,
+            "max": 50121.712,
+            "p(90)": 37639.915360000006,
+            "p(95)": 38491.98258
+        },
+        "http_req_waiting": {
+            "p(95)": 38488.29336,
+            "avg": 30228.427860525077,
+            "min": 3.564,
+            "med": 33388.0197,
+            "max": 50121.2033,
+            "p(90)": 37638.992580000006
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_receiving": {
+            "p(95)": 7.52152,
+            "avg": 2.311600226346765,
+            "min": 0,
+            "med": 1.0546,
+            "max": 109.4883,
+            "p(90)": 4.095800000000001
+        },
+        "http_reqs": {
+            "count": 2209,
+            "rate": 14.725646905801343
+        },
+        "data_received": {
+            "rate": 13057.949061655514,
+            "count": 1958828
+        },
+        "vus": {
+            "max": 500,
+            "value": 61,
+            "min": 61
+        },
+        "http_req_blocked": {
+            "max": 69.7682,
+            "p(90)": 7.799420000000001,
+            "p(95)": 32.746959999999994,
+            "avg": 3.4882629696695333,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_sending": {
+            "p(90)": 1.0029,
+            "p(95)": 3.9962,
+            "avg": 1.3686129470348556,
+            "min": 0,
+            "med": 0,
+            "max": 67.537
+        },
+        "iterations": {
+            "count": 2208,
+            "rate": 14.718980700773818
+        },
+        "vus_max": {
+            "value": 500,
+            "min": 500,
+            "max": 500
+        },
+        "http_req_failed": {
+            "passes": 1,
+            "fails": 2208,
+            "value": 0.0004526935264825713
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 857.9574,
+            "med": 33392.53035,
+            "max": 50121.712,
+            "p(90)": 37643.79849,
+            "p(95)": 38492.10467,
+            "avg": 30245.79808274462
+        },
+        "iteration_duration": {
+            "min": 863.981,
+            "med": 33392.593,
+            "max": 50121.712,
+            "p(90)": 37644.26973,
+            "p(95)": 38492.657945,
+            "avg": 30249.82504094205
+        }
+    },
+    "setup_data": {
+        "healthStatus": 403
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "health 200": {
+                            "path": "::setup::health 200",
+                            "id": "2e53f0809577cfb38a24601c3672b857",
+                            "passes": 0,
+                            "fails": 1,
+                            "name": "health 200"
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "login success (200|201|204)": {
+                "path": "::login success (200|201|204)",
+                "id": "9b40daf2c82f20a93e0c9256bc6ecaa8",
+                "passes": 2208,
+                "fails": 0,
+                "name": "login success (200|201|204)"
+            }
+        }
+    }
+}
