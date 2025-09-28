@@ -1,8 +1,6 @@
 package com.fiveOps.promptforge.user_profile.service;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +26,6 @@ public class UserService {
 
   @Autowired private UserRepository userRepository;
 
-  private final Path uploadDir = Paths.get("uploads/profile-pictures");
   private final PasswordEncoder passwordEncoder;
   private static final List<String> ALLOWED_MIME_TYPES =
       List.of("image/jpeg", "image/png", "image/gif");

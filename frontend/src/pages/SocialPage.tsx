@@ -283,7 +283,7 @@ export default function SocialPage() {
             <h4 class="font-bold text-lg">New Challenge!</h4>
           </div>
           <p class="text-sm opacity-90 mb-1">${challenge.challengerName} wants to battle!</p>
-          <p class="text-xs opacity-75">${challenge.gameType === "REVERSE_PROMPT" ? "Reverse Battle" : "Classic Battle"}</p>
+          <p class="text-xs opacity-75">${challenge.gameType === "REVERSE_PROMPT" ? "Unprompted" : "Classic Battle"}</p>
           <div class="flex gap-2 mt-4">
             <button class="challenge-accept-btn bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 border border-white/30">
               Accept ⚡
@@ -1310,7 +1310,7 @@ export default function SocialPage() {
                                           <Swords className="w-3 h-3 mr-1" />
                                         )}
                                         {challenge.gameType === "REVERSE_PROMPT"
-                                          ? "Reverse Battle"
+                                          ? "Unprompted"
                                           : "Classic Battle"}
                                       </Badge>
                                     </div>
@@ -1440,7 +1440,7 @@ export default function SocialPage() {
                                           <Swords className="w-3 h-3 mr-1" />
                                         )}
                                         {challenge.gameType === "REVERSE_PROMPT"
-                                          ? "Reverse Battle"
+                                          ? "Unprompted"
                                           : "Classic Battle"}
                                       </Badge>
                                     </div>
@@ -1545,7 +1545,7 @@ export default function SocialPage() {
                       }`}
                     >
                       <RotateCcw className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span>Reverse Battle</span>
+                      <span>Unprompted</span>
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
