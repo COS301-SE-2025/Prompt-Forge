@@ -77,14 +77,12 @@ export default function MarketplacePage() {
     
     try {
       const tags = await promptService.getAllTags()
-      console.log("Fetched tags:", tags) // Debug log
       setAvailableCategories(tags || []) // Ensure fallback to empty array
       setCategoriesError(null)
     } catch (error) {
       console.error('Error fetching categories:', error)
       
       if (retryCount < maxRetries) {
-        console.log(`Retrying category fetch (${retryCount + 1}/${maxRetries})...`)
         setTimeout(() => {
           fetchAvailableCategories(retryCount + 1)
         }, 1000 * (retryCount + 1)) // Exponential backoff
@@ -108,7 +106,6 @@ export default function MarketplacePage() {
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
     setCurrentPage(1) //Reset to page 1
-    // console.log("filter:", filter);
     
     fetchData(selectedCategory, filter, searchQuery, 1)
   }
@@ -116,7 +113,6 @@ export default function MarketplacePage() {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1) //Reset to page 1
-    // console.log("category:", category);
     
     // Only update results, don't reload categories
     fetchData(category, selectedFilter, searchQuery, 1)
@@ -187,7 +183,6 @@ export default function MarketplacePage() {
   // ✅ Add effect to retry categories if they fail to load and prompts are successful
   useEffect(() => {
     if (!categoriesLoading && availableCategories.length === 0 && categoriesError && currentPrompts.length > 0) {
-      console.log("Prompts loaded but categories failed, retrying categories...")
       setTimeout(() => {
         fetchAvailableCategories(0)
       }, 2000)
