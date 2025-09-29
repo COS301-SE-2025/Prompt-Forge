@@ -1,6 +1,8 @@
 /* eslint-env browser */
 /* global CryptoKey */
-const SERVER_PUBLIC_KEY_URL = '/api/auth/public-key';
+import { API_BASE_URL } from '@/config/api';
+
+const SERVER_PUBLIC_KEY_URL = `${API_BASE_URL}/auth/public-key`;
 
 async function fetchServerPublicKey(): Promise<CryptoKey> {
   const res = await fetch(SERVER_PUBLIC_KEY_URL);
