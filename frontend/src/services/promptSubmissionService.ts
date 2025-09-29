@@ -18,13 +18,11 @@ class PromptSubmissionService {
   
   async submitPrompt(data: PromptSubmissionData): Promise<any> {
     try {
-      // console.log('Submitting prompt:', data)
       
       const response = await httpClient.post('/prompts', data)
       
       if (response.ok) {
         const result = await response.json()
-        // console.log('Prompt submitted successfully:', result)
         return result
       } else {
         const errorText = await response.text()
@@ -38,13 +36,10 @@ class PromptSubmissionService {
 
   async updatePrompt(id: string, data: PromptSubmissionData): Promise<any> {
     try {
-      // console.log('Updating prompt:', id, data)
-      
       const response = await httpClient.put(`/prompts/${id}`, data)
       
       if (response.ok) {
         const result = await response.json()
-        // console.log('Prompt updated successfully:', result)
         return result
       } else {
         const errorText = await response.text()
@@ -58,13 +53,11 @@ class PromptSubmissionService {
 
   async publishPrompt(id: string): Promise<any> {
     try {
-      // console.log('Publishing prompt:', id)
       
       const response = await httpClient.post(`/prompts/${id}/publish`)
       
       if (response.ok) {
         const result = await response.json()
-        // console.log('Prompt published successfully:', result)
         return result
       } else {
         const errorText = await response.text()
@@ -78,13 +71,11 @@ class PromptSubmissionService {
 
   async unpublishPrompt(id: string): Promise<any> {
     try {
-      // console.log('Unpublishing prompt:', id)
       
       const response = await httpClient.post(`/prompts/${id}/unpublish`)
       
       if (response.ok) {
         const result = await response.json()
-        // console.log('Prompt unpublished successfully:', result)
         return result
       } else {
         const errorText = await response.text()

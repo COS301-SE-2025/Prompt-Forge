@@ -394,7 +394,6 @@ Make it optimized for a ${selectedPersona.name} who needs to ${selectedPersona.u
             setIsGenerating(false)
             setGeneratedPrompt(accumulatedContent)
             showNotification("success", "Prompt Generated", "Your prompt has been generated successfully!");
-            // console.log("Prompt generation completed")
           },
           onError: (error: string) => {
             setIsGenerating(false)

@@ -168,7 +168,6 @@ export default function ComparisonPage() {
         aiModels[modelIndex].supportsImages // Add the missing parameter
       );
 
-      // console.log(` Test request for side ${side}:`, requestBody);
       
       // Use streamingService to handle the request
       await streamingService.streamRequest(
@@ -275,8 +274,6 @@ Please provide:
           content: ratingPrompt,
         }]
       };
-
-      // console.log("Comparison rating request:", requestBody);
       
       const response = await fetch(`${API_BASE_URL}/test/openrouter/chat`, {
         method: "POST",

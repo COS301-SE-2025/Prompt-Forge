@@ -32,12 +32,10 @@ class PromptWarsWebSocketService {
         const baseUrl = API_BASE_URL.replace('/api', '').replace('http://', 'ws://').replace('https://', 'wss://');
         const wsUrl = `${baseUrl}/api/simple-ws?userId=${userId}`;
         
-        console.log('Connecting to WebSocket:', wsUrl);
         if(this.socket === null){
           this.socket = new (window as any).WebSocket(wsUrl);
 
           this.socket.onopen = () => {
-            console.log('WebSocket connected');
             this.reconnectAttempts = 0;
             
             // Send user identification
@@ -60,7 +58,6 @@ class PromptWarsWebSocketService {
         };
 
         this.socket.onclose = (event: any) => {
-          console.log('WebSocket disconnected:', event.code, event.reason);
           this.handleReconnect();
         };
 
@@ -94,7 +91,6 @@ class PromptWarsWebSocketService {
       this.reconnectAttempts++;
       const delay = Math.pow(2, this.reconnectAttempts) * 1000; // Exponential backoff
       
-      console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
       
       this.reconnectTimeout = window.setTimeout(() => {
         // Retrieve userId from localStorage or context
@@ -107,7 +103,6 @@ class PromptWarsWebSocketService {
   }
 
   private handleMessage(data: WebSocketMessage) {
-    console.log('WebSocket message received:', data);
     
     // Emit to specific event listeners
     const eventListeners = this.listeners.get(data.type);

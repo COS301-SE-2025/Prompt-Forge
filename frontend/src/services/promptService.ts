@@ -20,15 +20,12 @@ export class PromptService {
 
       const prompt: Prompt = await promptResponse.json();
 
-      // console.log("ownershipResponse");
       let ownership = false;
       if (ownershipResponse.ok) {
         const ownershipText = await ownershipResponse.text();
         ownership = ownershipText ? JSON.parse(ownershipText) : false;
       }
-      // console.log(ownership);
 
-      // console.log("addedToCartResponse");
       let addedToCart = false;
       if (addedToCartResponse.ok) {
         const cartText = await addedToCartResponse.text();
@@ -88,8 +85,6 @@ export class PromptService {
         //filter=all && tags=all && search=""
         const promptsResponse = await this.httpClient.get(`/store/prompts?page=${page}&size=12`)
         const prompts = await promptsResponse.json();
-        // console.log("prompts:");
-        // console.log(prompts);
 
         return prompts;
       }
@@ -103,8 +98,6 @@ export class PromptService {
 
       if (searchStructure.filter === "all") {
         this.getByCategory(searchStructure.tag, page)
-          // .then(console.log)
-        // console.log("thi.getbycat", log);
 
         return this.getByCategory(searchStructure.tag, page);
       }
@@ -201,13 +194,11 @@ export class PromptService {
       }
 
       if (tagName === "all" && filterName !== "all"){
-        // console.log("tagName === all && filterName !== all");
         
         const response = await this.httpClient.get(`/prompts/myprompts?filterName=${filterName}&page=${page}&size=${size}`);
         return response.json();
       } 
       
-      // console.log("last lappppp");
       const response = await this.httpClient.get(`/prompts/myprompts?tagName=${tagName}&filterName=${filterName}&page=${page}&size=${size}`);
       return response.json();
       
@@ -287,10 +278,8 @@ export class PromptService {
       const response = await this.httpClient.get('/store/prompts/tags');
       const tags = await response.json();
       const tagNames = tags.map((tag:Tag)=>tag.name)
-      // console.log("tagNames:", tagNames);
       
       localStorage.setItem("tagNames", JSON.stringify(tagNames))
-      // console.log("local tags:", localStorage.getItem("tagNames"));      
       return tags
     } catch (error) {
       console.error(error);
@@ -335,7 +324,6 @@ export class PromptService {
             }
           }
         } catch (e) {
-          // console.log('Could not read error response body')
         }
 
         throw new Error(errorMessage)
@@ -373,7 +361,6 @@ export class PromptService {
             }
           }
         } catch (e) {
-          // console.log('Could not read error response body')
         }
 
         throw new Error(errorMessage)
@@ -408,7 +395,6 @@ export class PromptService {
             }
           }
         } catch (e) {
-          // console.log('Could not read error response body')
         }
 
         throw new Error(errorMessage)
