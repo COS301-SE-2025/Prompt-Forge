@@ -45,7 +45,6 @@ export default function MyPromptsPage() {
     
     try {
       const tags = await promptService.getAllTags()
-      console.log("Fetched tags:", tags) // Debug log
       const categoryNames = ["all", ...(tags || []).map(tag => tag.name)]
       setAvailableCategories(categoryNames)
       setCategoriesError(null)
@@ -53,7 +52,6 @@ export default function MyPromptsPage() {
       console.error('Error fetching categories:', error)
       
       if (retryCount < maxRetries) {
-        console.log(`Retrying category fetch (${retryCount + 1}/${maxRetries})...`)
         setTimeout(() => {
           fetchAvailableCategories(retryCount + 1)
         }, 1000 * (retryCount + 1)) // Exponential backoff
@@ -80,16 +78,12 @@ export default function MyPromptsPage() {
       try {
         const username = localStorage.getItem('username')
         if (!username || username === 'Guest') {
-          // console.log("User not authenticated, redirecting to login")
-
           navigate('/login')
           return
         }
         setIsAuthenticated(true)
 
-
         //Get user profile using JWT token (sent via cookies)
-        // console.log("Fetching user profile...")
 
         const response = await httpClient.get('/user/me')
         if (response.ok) {
@@ -97,9 +91,7 @@ export default function MyPromptsPage() {
           setUserProfile(userData)
 
 
-          // console.log("User profile loaded:", userData)
         } else if (response.status === 401) {
-          // console.log("Unauthorized, redirecting to login")
 
           localStorage.removeItem('username')
           localStorage.removeItem('userId')
@@ -144,7 +136,6 @@ export default function MyPromptsPage() {
         }
 
         //Fetch prompts using JWT authentication (cookies)
-        console.log("Fetching prompts for authorId:", authorId)
         const userPromptsPage = await promptService.getAuthoredAndPurchasedPrompts(authorId, selectedCategory, selectedFilter, currentPage - 1, 12)
         setTotalPages(userPromptsPage.totalPages);
         setPromptCount(userPromptsPage.totalElements)
@@ -205,7 +196,6 @@ export default function MyPromptsPage() {
   // ✅ Add effect to retry categories if they fail to load and prompts are successful
   useEffect(() => {
     if (!categoriesLoading && availableCategories.length <= 1 && categoriesError && allUserPrompts.length > 0) {
-      console.log("Prompts loaded but categories failed, retrying categories...")
       setTimeout(() => {
         fetchAvailableCategories(0)
       }, 2000)
@@ -429,10 +419,8 @@ export default function MyPromptsPage() {
 
   const handlePublishPrompt = async (id: string, isCurrentlyPublished: boolean) => {
     try {
-
       const action = isCurrentlyPublished ? "unpublish" : "publish"
 
-      // console.log(`${action}ing prompt ${id}...`)
       // For now, just update local state (you can add API call later)
       setMyPrompts((prev) => prev.map((p) =>
         p.id === id
@@ -446,8 +434,6 @@ export default function MyPromptsPage() {
           : p
       ))
 
-
-      // console.log(`Prompt ${action}ed successfully`)
     } catch (error) {
       console.error(`Error ${isCurrentlyPublished ? 'unpublishing' : 'publishing'} prompt:`, error)
     }
