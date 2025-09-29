@@ -303,7 +303,6 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
           let page = (await response.json());
         
           let prompts = page.content;
-          // console.log("prompts:", prompts);
           
           if (!Array.isArray(prompts)) prompts = [];
 

@@ -157,8 +157,6 @@ export class StreamingService {
     
     // Case 1: Only image, no text - use minimal prompt
     if (!cleanPrompt && image && image !== "loading" && supportsImages) {
-      // console.log(`Creating image-only request for model ${modelId} - OpenRouter format`);
-      
       try {
         // Validate image
         if (!image.startsWith('data:image/')) {
@@ -167,8 +165,6 @@ export class StreamingService {
         }
         
         // For all models, use OpenRouter's standardized format
-        // console.log("Using OpenRouter standard image format");
-        
         return {
           model: modelId,
           messages: [{
@@ -202,7 +198,6 @@ export class StreamingService {
     } 
     // Case 2: Both text and image
     else if (cleanPrompt && image && image !== "loading" && supportsImages) {
-      // console.log(`Creating text+image request for model ${modelId} - OpenRouter format`);
       
       try {
         // Check if image format is valid
@@ -212,7 +207,6 @@ export class StreamingService {
         }
         
         // For all models, use OpenRouter's standardized format
-        // console.log("Using OpenRouter standard image format");
         
         return {
           model: modelId,
@@ -247,7 +241,6 @@ export class StreamingService {
     }
     // Case 3: Text only (no image or image not supported)
     else {
-      // console.log(`Creating text-only request for model ${modelId}`);
       
       const finalPrompt = cleanPrompt || "Hello";
       
@@ -306,7 +299,6 @@ export class StreamingService {
     formatted = formatted.replace(/\n\s*#+\s*\n/g, '\n'); // Remove lines with only # characters between content
     
     if (before !== formatted) {
-      console.log('Removed ** markers and headers:', { before, after: formatted });
     }
 
     if (formatAsMarkdown) {
@@ -323,7 +315,6 @@ export class StreamingService {
 
   public validateAndOptimizeImage(imageDataUrl: string, modelId: string): string | null {
     try {
-      // console.log(`Validating image for ${modelId}`);
       
       // Check for valid image format
       if (!imageDataUrl.startsWith('data:image/')) {
@@ -333,7 +324,6 @@ export class StreamingService {
       
       // Check image size - different limits for different models
       const sizeKB = Math.round(imageDataUrl.length / 1024);
-      // console.log(`Image size: ${sizeKB}KB`);
       
       const maxSizeKB = modelId.includes("gemini") ? 10240 : 4096;
       
