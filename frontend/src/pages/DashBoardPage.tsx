@@ -737,13 +737,13 @@ function CategoryBreakdownWidget({ data, loading }: { data: Record<string, numbe
                 src={profileImage || "/placeholder.svg?height=80&width=80"}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                onClick={() => navigate(`/profile-settings`)}
+                onClick={() => navigate(`/user/${username}`)}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-card"></div>
             </div>
             <h3
               className="font-medium cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile-settings`)}
+              onClick={() => navigate(`/user/${username}`)}
             >
               {username}
             </h3>

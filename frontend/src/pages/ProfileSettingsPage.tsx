@@ -424,7 +424,7 @@ export default function ProfileSettingsPage() {
                   </div>
                 </Card> */}
 
-                <Card className="p-6 border-red-200">
+                {/* <Card className="p-6 border-red-200">
                   <h2 className="text-lg font-medium text-red-500 mb-4">Danger Zone</h2>
 
                   <div className="space-y-4">
@@ -449,7 +449,7 @@ export default function ProfileSettingsPage() {
                       <Button className="min-h-fit" variant="destructive">Delete Account</Button>
                     </div>
                   </div>
-                </Card>
+                </Card> */}
               </div>
             </TabsContent>
 
@@ -530,14 +530,6 @@ export default function ProfileSettingsPage() {
                             >
                               Edit Payment Method
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-200 w-full"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Payment Method
-                            </Button>
                           </div>
                         </div>
 
@@ -557,14 +549,6 @@ export default function ProfileSettingsPage() {
                               className="bg-muted hover:bg-muted/80"
                             >
                               Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-200"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="hidden lg:inline ml-2">Delete</span>
                             </Button>
                           </div>
                         </div>

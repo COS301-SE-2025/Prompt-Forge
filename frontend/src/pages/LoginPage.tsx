@@ -362,15 +362,6 @@ export default function LoginPage() {
                       </div>
 
                       <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                        <button
-                          onClick={() => {
-                            setShowForgotPassword(true);
-                            setError("");
-                          }}
-                          className="hover:text-[#3ebb9e] text-[#3ebb9e] text-sm transition-colors underline"
-                        >
-                          Forgot password?
-                        </button>
                       </div>
 
                       <Button 

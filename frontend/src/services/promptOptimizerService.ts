@@ -1,4 +1,5 @@
 import API_BASE_URL from '@/config/api';
+import { StreamingService } from './streamingService';
 
 interface OptimizationRequest {
   text: string; // <-- change from 'prompt' to 'text'
@@ -44,6 +45,7 @@ interface AnalysisResponse {
 
 class PromptOptimizerService {
   private baseURL = `${API_BASE_URL}/ml`;
+  private streamingService = new StreamingService();
 
   async optimizePrompt(request: OptimizationRequest): Promise<MLServiceOptimizationResponse> {
     try {
@@ -59,7 +61,23 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.prompt) {
+        data.prompt = this.streamingService.formatResponse(data.prompt, false);
+      }
+      if (data.suggestions) {
+        data.suggestions = data.suggestions.map((suggestion: any) => ({
+          ...suggestion,
+          suggestion: this.streamingService.formatResponse(suggestion.suggestion, false),
+          before: this.streamingService.formatResponse(suggestion.before, false),
+          after: this.streamingService.formatResponse(suggestion.after, false),
+          impact: this.streamingService.formatResponse(suggestion.impact, false)
+        }));
+      }
+
+      return data;
     } catch (error) {
       console.error('Error optimizing prompt:', error);
       throw error;
@@ -101,7 +119,26 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.suggestions) {
+        data.suggestions = data.suggestions.map((suggestion: string) => 
+          this.streamingService.formatResponse(suggestion, false)
+        );
+      }
+      if (data.strengths) {
+        data.strengths = data.strengths.map((strength: string) => 
+          this.streamingService.formatResponse(strength, false)
+        );
+      }
+      if (data.weaknesses) {
+        data.weaknesses = data.weaknesses.map((weakness: string) => 
+          this.streamingService.formatResponse(weakness, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error analyzing prompt:', error);
       throw error;
@@ -138,7 +175,40 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.analysis?.issues) {
+        data.analysis.issues = data.analysis.issues.map((issue: string) => 
+          this.streamingService.formatResponse(issue, false)
+        );
+      }
+      if (data.analysis?.suggestions) {
+        data.analysis.suggestions = data.analysis.suggestions.map((suggestion: string) => 
+          this.streamingService.formatResponse(suggestion, false)
+        );
+      }
+      if (data.analysis?.improvement_potential) {
+        data.analysis.improvement_potential = this.streamingService.formatResponse(data.analysis.improvement_potential, false);
+      }
+      if (data.analysis?.rating_explanation) {
+        data.analysis.rating_explanation = this.streamingService.formatResponse(data.analysis.rating_explanation, false);
+      }
+      if (data.improvement_areas) {
+        data.improvement_areas = data.improvement_areas.map((area: string) => 
+          this.streamingService.formatResponse(area, false)
+        );
+      }
+      if (data.recommended_goals) {
+        data.recommended_goals = Object.fromEntries(
+          Object.entries(data.recommended_goals).map(([key, value]) => [
+            key, 
+            this.streamingService.formatResponse(value as string, false)
+          ])
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in wizard analyze:', error);
       throw error;
@@ -159,7 +229,22 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.optimized_prompt) {
+        data.optimized_prompt = this.streamingService.formatResponse(data.optimized_prompt, false);
+      }
+      if (data.optimization_details?.improvement_explanation) {
+        data.optimization_details.improvement_explanation = this.streamingService.formatResponse(data.optimization_details.improvement_explanation, false);
+      }
+      if (data.optimization_details?.key_changes) {
+        data.optimization_details.key_changes = data.optimization_details.key_changes.map((change: string) => 
+          this.streamingService.formatResponse(change, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in wizard goals:', error);
       throw error;
@@ -180,7 +265,22 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.optimized_prompt) {
+        data.optimized_prompt = this.streamingService.formatResponse(data.optimized_prompt, false);
+      }
+      if (data.structure_details?.structure_explanation) {
+        data.structure_details.structure_explanation = this.streamingService.formatResponse(data.structure_details.structure_explanation, false);
+      }
+      if (data.structure_details?.structural_improvements) {
+        data.structure_details.structural_improvements = data.structure_details.structural_improvements.map((improvement: string) => 
+          this.streamingService.formatResponse(improvement, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in wizard structure:', error);
       throw error;
@@ -201,7 +301,22 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.optimized_prompt) {
+        data.optimized_prompt = this.streamingService.formatResponse(data.optimized_prompt, false);
+      }
+      if (data.context_details?.context_explanation) {
+        data.context_details.context_explanation = this.streamingService.formatResponse(data.context_details.context_explanation, false);
+      }
+      if (data.context_details?.context_improvements) {
+        data.context_details.context_improvements = data.context_details.context_improvements.map((improvement: string) => 
+          this.streamingService.formatResponse(improvement, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in wizard context:', error);
       throw error;
@@ -227,7 +342,38 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.optimized_prompt) {
+        data.optimized_prompt = this.streamingService.formatResponse(data.optimized_prompt, false);
+      }
+      if (data.optimization_details?.improvement_explanation) {
+        data.optimization_details.improvement_explanation = this.streamingService.formatResponse(data.optimization_details.improvement_explanation, false);
+      }
+      if (data.optimization_details?.key_changes) {
+        data.optimization_details.key_changes = data.optimization_details.key_changes.map((change: string) => 
+          this.streamingService.formatResponse(change, false)
+        );
+      }
+      if (data.structure_details?.structure_explanation) {
+        data.structure_details.structure_explanation = this.streamingService.formatResponse(data.structure_details.structure_explanation, false);
+      }
+      if (data.structure_details?.structural_improvements) {
+        data.structure_details.structural_improvements = data.structure_details.structural_improvements.map((improvement: string) => 
+          this.streamingService.formatResponse(improvement, false)
+        );
+      }
+      if (data.context_details?.context_explanation) {
+        data.context_details.context_explanation = this.streamingService.formatResponse(data.context_details.context_explanation, false);
+      }
+      if (data.context_details?.context_improvements) {
+        data.context_details.context_improvements = data.context_details.context_improvements.map((improvement: string) => 
+          this.streamingService.formatResponse(improvement, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in wizard comprehensive:', error);
       throw error;
@@ -249,7 +395,22 @@ class PromptOptimizerService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Format text responses to remove ## headers and other markdown formatting
+      if (data.optimized_prompt) {
+        data.optimized_prompt = this.streamingService.formatResponse(data.optimized_prompt, false);
+      }
+      if (data.explanation) {
+        data.explanation = this.streamingService.formatResponse(data.explanation, false);
+      }
+      if (data.improvements) {
+        data.improvements = data.improvements.map((improvement: string) => 
+          this.streamingService.formatResponse(improvement, false)
+        );
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in simple optimization:', error);
       throw error;

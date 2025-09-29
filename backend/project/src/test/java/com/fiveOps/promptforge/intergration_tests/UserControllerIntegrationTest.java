@@ -167,8 +167,10 @@ class UserControllerIntegrationTest {
   void whenUpdateUserById_thenReturnUpdatedUser() throws Exception {
     String token = setupUserAndGetToken();
 
+    // Use a unique username to avoid collisions with existing seeded/test data
+    String newUsername = "UpdatedUser" + System.currentTimeMillis();
     UpdateProfileDto updateDto = new UpdateProfileDto();
-    updateDto.setUsername("UpdatedUser");
+    updateDto.setUsername(newUsername);
 
     mockMvc
         .perform(
@@ -177,7 +179,7 @@ class UserControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(updateDto))
                 .cookie(new Cookie("token", token)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("UpdatedUser"));
+        .andExpect(jsonPath("$.username").value(newUsername));
   }
 
   @Test

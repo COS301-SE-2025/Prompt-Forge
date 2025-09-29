@@ -332,7 +332,7 @@ export default function ProfilePage() {
         <div className="w-full lg:w-96 bg-card border-r border-border p-6">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-2">
-              <Avatar className="w-20 h-20 border-2 border-border cursor-pointer" onClick={() => navigate(`/profile-settings`)}>
+              <Avatar className="w-20 h-20 border-2 border-border cursor-pointer">
                 <AvatarImage
                   src={!imageError ? userProfile.profilePicture : undefined}
                   alt="Profile"
@@ -349,59 +349,50 @@ export default function ProfilePage() {
             </div>
             <h3
               className="font-bold cursor-pointer hover:text-[#3ebb9e]"
-              onClick={() => navigate(`/profile-settings`)}
             >
               {username}
             </h3>
 
-            <div className="flex space-x-2 my-3">
-              <Button
-                size="sm"
-                variant={userProfile.isFollowing ? "outline" : "default"}
-                className={`px-6 flex-1 ${userProfile.isFollowing
-                  ? "hover:border-[#3ebb9e] hover:text-[#3ebb9e]"
-                  : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
-                  } transition-colors duration-300`}
-                onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
-                disabled={currentUserId === userProfile.userId}
-              >
-                {userProfile.isFollowing ? "Following" : "Follow"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                
-                className={`transition-all duration-300 w-full flex items-center justify-center
-                  bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 
-                  ${currentUserId === userProfile.userId ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                title={ "Challenge to Prompt Wars" }
-                disabled={currentUserId === userProfile.userId}
-              >
-                
-                Challenge
-                <Swords className="h-4 w-4 ml-2" />
-               
-
-              </Button>
-            </div>
+            {currentUserId !== userProfile.userId && (
+              <div className="flex space-x-2 my-3">
+                <Button
+                  size="sm"
+                  variant={userProfile.isFollowing ? "outline" : "default"}
+                  className={`px-6 flex-1 ${userProfile.isFollowing
+                    ? "hover:border-[#3ebb9e] hover:text-[#3ebb9e]"
+                    : "bg-[#3ebb9e] hover:bg-[#00674f] text-white"
+                    } transition-colors duration-300`}
+                  onClick={() => handleFollow(userProfile.userId, userProfile.isFollowing)}
+                >
+                  {userProfile.isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`transition-all duration-300 w-full flex items-center justify-center
+                    bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 `}
+                  title={ "Challenge to Prompt Wars" }
+                  onClick={() => {
+                    /* trigger challenge flow - existing behaviour previously disabled for self */
+                    /* Keep the same handler location or add action here when needed */
+                  }}
+                >
+                  Challenge
+                  <Swords className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            )}
             
             <div className="grid grid-cols-3 gap-2 w-full mt-4">
               <div className="text-center">
                 <div className="font-semibold">{publicPromptCount}</div>
                 <div className="text-xs text-muted-foreground">Prompts</div>
               </div>
-              <div
-                className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
-              >
+              <div className="text-center">
                 <div className="font-semibold">{userProfile.followersCount}</div>
                 <div className="text-xs text-muted-foreground">Followers</div>
               </div>
-              <div
-                className="text-center cursor-pointer hover:text-[#3ebb9e]"
-                onClick={() => navigate(`/profile/${currentUserId}`)}
-              >
+              <div className="text-center">
                 <div className="font-semibold">{userProfile.followingCount}</div>
                 <div className="text-xs text-muted-foreground">Following</div>
               </div>

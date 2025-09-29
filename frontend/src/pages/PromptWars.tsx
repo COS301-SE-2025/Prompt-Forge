@@ -1028,7 +1028,7 @@ const isMultiplayerGame = !!gameId;
             {
               id: generateUniqueId(),
               user: "System",
-              message: "🎮 Reverse Battle started! Generating first question...",
+              message: "🎮 Unprompted started! Generating first question...",
               timestamp: new Date(),
             },
           ])
@@ -1568,7 +1568,7 @@ Overall Analysis: [brief summary]`,
                 </div>
               </div>
               <h1 className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-[#3ebb9e] via-white to-[#4079ff] bg-clip-text text-transparent">
-                {gameData?.gameType === 'REVERSE_PROMPT' ? 'REVERSE PROMPT WARS' : 'PROMPT WARS'}
+                {gameData?.gameType === 'REVERSE_PROMPT' ? 'UNPROMPTED' : 'PROMPT WARS'}
               </h1>
               <div className="relative">
                 <Swords className="h-8 w-8 sm:h-12 sm:w-12 text-[#4079ff] animate-pulse" />
@@ -1735,14 +1735,14 @@ Overall Analysis: [brief summary]`,
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 sm:mb-4">
                       {gameData?.gameType === 'REVERSE_PROMPT' 
-                        ? (isMultiplayerGame ? "REVERSE BATTLE READY" : "REVERSE ARENA") 
+                        ? (isMultiplayerGame ? "UNPROMPTED" : "UNPROMPTED") 
                         : (isMultiplayerGame ? "AWAITING CHALLENGER" : "ENTER THE ARENA")}
                     </h2>
                     <p className="text-sm sm:text-lg text-slate-300 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">
                       {gameData?.gameType === 'REVERSE_PROMPT' 
                         ? (isMultiplayerGame
-                          ? "Ready for reverse prompt battle! You'll guess which prompts generated AI outputs. First to 5 wins!"
-                          : "Test your prompt analysis skills in reverse battles!")
+                          ? "Ready for Unprompted battle! You'll guess which prompts generated AI outputs. First to 5 wins!"
+                          : "Test your prompt analysis skills in Unprompted battles!")
                         : (isMultiplayerGame
                           ? "Your opponent is preparing for battle. Both warriors must be ready before the arena opens..."
                           : "Step into the ultimate prompt crafting battleground. Face AI opponents in epic battles of creativity, strategy, and wit.")}
@@ -1780,7 +1780,7 @@ Overall Analysis: [brief summary]`,
                     </Button>
                   )}
 
-                  {/* Next Question Button for Reverse Battles
+                  {/* Next Question Button for Unprompted
                   {isMultiplayerGame && gameData?.gameType === 'REVERSE_PROMPT' && gameState === 'waiting' && gameData.questionNumber && gameData.questionNumber > 0 && (
                     <Button
                       onClick={generateQuestion}
@@ -1931,7 +1931,7 @@ Overall Analysis: [brief summary]`,
                         <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2 sm:gap-3">
                             <Target className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
-                            REVERSE BATTLE
+                            UNPROMPTED
                           </div>
                           <div
                             className={`text-xl sm:text-2xl font-black ${

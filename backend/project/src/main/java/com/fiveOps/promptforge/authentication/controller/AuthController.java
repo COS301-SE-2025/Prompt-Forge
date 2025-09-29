@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fiveOps.promptforge.authentication.dto.LoginRequest;
 import com.fiveOps.promptforge.authentication.dto.SignupRequest;
 import com.fiveOps.promptforge.authentication.service.AuthService;
+import com.fiveOps.promptforge.authentication.util.RsaKeyManager;
 import com.fiveOps.promptforge.user_profile.model.User;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -36,9 +37,11 @@ public class AuthController {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
   private final AuthService authService;
+  private final RsaKeyManager rsaKeyManager;
 
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, RsaKeyManager rsaKeyManager) {
     this.authService = authService;
+    this.rsaKeyManager = rsaKeyManager;
   }
 
   @Value("${GOOGLE_CLIENT_ID}")
@@ -49,6 +52,12 @@ public class AuthController {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
 
+    // If frontend sent an encrypted password, decrypt it first
+    if (request.getIsEncrypted() != null && request.getIsEncrypted()) {
+      String decrypted = rsaKeyManager.decryptBase64EncryptedRSA(request.getEncryptedPassword());
+      request.setPassword(decrypted);
+    }
+
     authService.signup(request);
     return ResponseEntity.ok().headers(headers).body(Map.of("message", "Signup successful"));
   }
@@ -57,12 +66,15 @@ public class AuthController {
   public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     try {
       LOGGER.info("Login attempt by user: {}", request.getEmail());
-      System.out.println("Login attempt for email: " + request.getEmail());
+
+      // If password is encrypted in payload, decrypt before authenticating
+      if (request.getIsEncrypted() != null && request.getIsEncrypted()) {
+        String decrypted = rsaKeyManager.decryptBase64EncryptedRSA(request.getEncryptedPassword());
+        request.setPassword(decrypted);
+      }
 
       String token = authService.login(request);
-      System.out.println(
-          "Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
-      LOGGER.info("Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
+      LOGGER.info("Generated token: {}", (token != null ? token.substring(0, 20) + "..." : "NULL"));
       // Get user info for response
       User user = authService.getUserByEmail(request.getEmail());
 
@@ -82,13 +94,11 @@ public class AuthController {
               .sameSite("None")
               .build();
 
-      System.out.println("Setting cookie: " + cookie.toString());
-
       return ResponseEntity.ok()
           .header(HttpHeaders.SET_COOKIE, cookie.toString())
           .body(responseBody);
     } catch (RuntimeException e) {
-      System.err.println("Login failed: " + e.getMessage());
+      LOGGER.error("Login failed: {}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
     }
   }
@@ -138,10 +148,7 @@ public class AuthController {
       // Generate JWT token and ensure user exists/updated
       String token = authService.googleLogin(googleId, email, name, pictureUrl);
 
-      // Log token for debugging (optional)
-      System.out.println(
-          "Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
-      LOGGER.info("Generated token: " + (token != null ? token.substring(0, 20) + "..." : "NULL"));
+      LOGGER.info("Generated token: {}", (token != null ? token.substring(0, 20) + "..." : "NULL"));
 
       // Get user info for response
       User user = authService.getUserByEmail(email);
@@ -162,16 +169,27 @@ public class AuthController {
               .sameSite("None")
               .build();
 
-      System.out.println("Setting cookie: " + cookie.toString());
-
       return ResponseEntity.ok()
           .header(HttpHeaders.SET_COOKIE, cookie.toString())
           .body(responseBody);
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOGGER.error("Google login failed", e);
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("message", "Google login failed"));
     }
   }
+
+  @RequestMapping("/public-key")
+  public ResponseEntity<?> publicKey() {
+    try {
+      Map<String, Object> jwk = rsaKeyManager.getPublicJwk();
+      return ResponseEntity.ok().body(jwk);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to retrieve public key"));
+    }
+  }
+
+  // debug-decrypt endpoint removed
 }
