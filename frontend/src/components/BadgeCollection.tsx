@@ -210,7 +210,6 @@ export const BadgeCollection: React.FC<BadgeCollectionProps> = ({
     setRefreshing(true)
     try {
       const result = await BadgeService.checkAndAssignBadges()
-      console.log('Badge check result:', result)
       // Refresh badges after check
       await fetchBadges()
     } catch (error) {
