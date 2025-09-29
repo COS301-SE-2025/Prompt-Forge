@@ -202,11 +202,13 @@ const isMultiplayerGame = !!gameId;
   // Initialize multiplayer game and WebSocket
   useEffect(() => {
     if (isMultiplayerGame && gameId) {
+      console.log('Initializing multiplayer game:', gameId)
       
       // Connect to WebSocket
       const userId = localStorage.getItem('userId')
       if (userId) {
         promptWarsWebSocket.connect(userId).then(() => {
+          console.log('Joining game room:', gameId, 'with userId:', userId)
           promptWarsWebSocket.joinGameRoom(gameId)
         }).catch(console.error)
       }
@@ -239,6 +241,7 @@ const isMultiplayerGame = !!gameId;
   useEffect(() => {
     const unsubscribeGameUpdate = promptWarsWebSocket.on('GAME_STATE_UPDATE', (update: GameUpdate) => {
       if (update.gameId === gameId) {
+        console.log('Game state update received:', update)
         setGameState(update.gameState.toLowerCase() as GameState)
         if (update.scenario) {
           setScenario(normalizeScenario(update.scenario))
@@ -250,6 +253,7 @@ const isMultiplayerGame = !!gameId;
     // Handle scenario generation
     const unsubscribeScenarioGenerated = promptWarsWebSocket.on('SCENARIO_GENERATED', (data: any) => {
       if (data.gameId === gameId) {
+  console.log('Scenario generated:', data)
   setScenario(normalizeScenario(data.scenario))
         setGameState(data.gameState.toLowerCase() as GameState)
         setChatMessages(prev => [
@@ -268,6 +272,7 @@ const isMultiplayerGame = !!gameId;
     // Handle prompt submissions
     const unsubscribePromptSubmitted = promptWarsWebSocket.on('PROMPT_SUBMITTED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Prompt submitted:', data)
         // Show notification that someone submitted
         setChatMessages(prev => [
           ...prev,
@@ -284,6 +289,7 @@ const isMultiplayerGame = !!gameId;
     // Handle phase changes
     const unsubscribePhaseChange = promptWarsWebSocket.on('PHASE_CHANGE', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Phase change:', data)
         setGameState(data.newPhase.toLowerCase() as GameState)
         
         if (data.newPhase === 'RATING') {
@@ -315,6 +321,7 @@ const isMultiplayerGame = !!gameId;
     // Handle rating submissions
     const unsubscribeRatingSubmitted = promptWarsWebSocket.on('RATING_SUBMITTED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Rating submitted:', data)
         setChatMessages(prev => [
           ...prev,
           {
@@ -330,6 +337,7 @@ const isMultiplayerGame = !!gameId;
     // Handle game finished event
     const unsubscribeGameFinished = promptWarsWebSocket.on('GAME_FINISHED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Game finished:', data)
         setGameState('finished')
         setChatMessages(prev => [
           ...prev,
@@ -347,6 +355,7 @@ const isMultiplayerGame = !!gameId;
     // Handle AI rating started event
     const unsubscribeAIRatingStarted = promptWarsWebSocket.on('AI_RATING_STARTED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('AI rating started:', data)
         setGameState('rating')
         setChatMessages(prev => [
           ...prev,
@@ -363,6 +372,7 @@ const isMultiplayerGame = !!gameId;
     // Handle game restart event
     const unsubscribeGameRestarted = promptWarsWebSocket.on('GAME_RESTARTED', (data: any) => {
       if (data.gameId === gameId) {
+  console.log('Game restarted:', data)
   setGameState(data.gameState.toLowerCase() as GameState) // Convert to lowercase
   setScenario(normalizeScenario(data.scenario))
         setTimeLeft(120) // Start the timer
@@ -431,6 +441,7 @@ const isMultiplayerGame = !!gameId;
 
     const unsubscribeChatMessage = promptWarsWebSocket.on('GAME_CHAT', (chatData: any) => {
       if (chatData.gameId === gameId) {
+        console.log('Chat message received:', chatData)
         
         const currentUserId = localStorage.getItem('userId')
         const isOwnMessage = chatData.userId === currentUserId
@@ -442,6 +453,7 @@ const isMultiplayerGame = !!gameId;
           message: chatData.message,
           timestamp: new Date(chatData.timestamp)
         }
+        console.log('Adding chat message:', newChatMessage)
         setChatMessages(prev => {
           // Prevent duplicate messages by checking if this exact message already exists
           const messageExists = prev.some(msg => 
@@ -461,6 +473,7 @@ const isMultiplayerGame = !!gameId;
 
     const unsubscribeUserJoined = promptWarsWebSocket.on('USER_JOINED_GAME', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('User joined game room:', data)
         setChatMessages(prev => [...prev, {
           id: generateUniqueId(),
           user: "System",
@@ -471,6 +484,7 @@ const isMultiplayerGame = !!gameId;
     })
 
     const unsubscribeAll = promptWarsWebSocket.onAny((data: any) => {
+      console.log('WebSocket event:', data)
     })
 
     // Listen for explicit game actions (e.g., player left) so we can show a popup and redirect
@@ -496,12 +510,17 @@ const isMultiplayerGame = !!gameId;
     // Reverse prompt battle event listeners
     const unsubscribeQuestionGenerated = promptWarsWebSocket.on('QUESTION_GENERATED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Question generated:', data)
+        console.log('Setting question:', data.question)
+        console.log('Setting output:', data.output)
+        console.log('Setting options:', data.options)
         
   setCurrentQuestion(data.question || '')
   setCurrentOutput(data.output || '')
         
         // Robustly parse options using helper to handle malformed payloads
         const options = parseOptions(data.options)
+        console.log('Parsed options (robust):', options)
         if ((!options || options.length === 0) && data.options) {
           console.warn('parseOptions returned empty for raw options:', data.options)
         }
@@ -524,6 +543,7 @@ const isMultiplayerGame = !!gameId;
 
     const unsubscribeAnswerResults = promptWarsWebSocket.on('ANSWER_RESULTS', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Answer results:', data)
         setCorrectAnswer(data.correctAnswer)
         // Map scores correctly according to which player we are.
         // Prefer IDs supplied in the payload (avoid relying on possibly stale gameData)
@@ -547,6 +567,7 @@ const isMultiplayerGame = !!gameId;
 
     const unsubscribeReverseGameFinished = promptWarsWebSocket.on('REVERSE_GAME_FINISHED', (data: any) => {
       if (data.gameId === gameId) {
+        console.log('Reverse game finished:', data)
         setGameState('finished')
         const currentUserId = localStorage.getItem('userId')
         let result: "player" | "opponent" | "tie" = "opponent";
@@ -647,6 +668,8 @@ const isMultiplayerGame = !!gameId;
       setGameStateDetails(state)
       setGameState(game.gameState.toLowerCase() as GameState)
       
+      console.log('Loaded game data:', game)
+      console.log('Game type:', game.gameType)
       
       // Load reverse prompt battle data if applicable
       if (game.gameType === 'REVERSE_PROMPT') {
@@ -713,6 +736,7 @@ const isMultiplayerGame = !!gameId;
       
       // Load ratings if in finished state
       if (game.gameState.toLowerCase() === 'finished' || game.gameState.toLowerCase() === 'results') {
+        console.log('Game finished, loading final results:', game)
         setShowOpponentPrompt(true)
 
         const currentUserId = localStorage.getItem('userId')
@@ -1415,6 +1439,7 @@ Overall Analysis: [brief summary]`,
   const generateQuestion = async () => {
     if (!gameId) return
     
+    console.log('Generating question for game:', gameId)
     setLoading(true)
     setError(null)
     
@@ -1422,11 +1447,13 @@ Overall Analysis: [brief summary]`,
       // mark that a new round is loading so UI hides begin button
       const qn = (gameData && gameData.questionNumber) ? gameData.questionNumber : questionNumber
       if (generationRequestedForQN.current === qn) {
+        console.log('Generation already requested for questionNumber', qn, '— skipping duplicate request')
         return
       }
       generationRequestedForQN.current = qn
       setRoundLoading(true)
       const response = await promptWarsGameAPI.generateQuestion(gameId)
+      console.log('Generate question response:', response)
       // Question data will come via WebSocket
     } catch (error) {
       console.error('Failed to generate question:', error)

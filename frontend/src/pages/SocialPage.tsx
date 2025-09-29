@@ -181,9 +181,12 @@ export default function SocialPage() {
       const baseUrl = API_BASE_URL.replace("/api", "").replace("http://", "ws://").replace("https://", "wss://")
       const wsUrl = `${baseUrl}/api/simple-ws?userId=${userId}`
 
+      console.log("Connecting to WebSocket:", wsUrl)
+
       socket = new (window as any).WebSocket(wsUrl)
 
       socket.onopen = () => {
+        console.log("WebSocket connected")
         // Wait a moment before sending to ensure connection is fully established
         setTimeout(() => {
           socket?.send(
@@ -198,6 +201,7 @@ export default function SocialPage() {
       socket.onmessage = (event: any) => {
         try {
           const data = JSON.parse(event.data)
+          console.log("Received WebSocket message:", data)
           handleWebSocketMessage(data)
         } catch (error) {
           console.error("Error parsing WebSocket message:", error)
@@ -205,6 +209,7 @@ export default function SocialPage() {
       }
 
       socket.onclose = () => {
+        console.log("WebSocket disconnected")
         // Attempt to reconnect after 5 seconds
         setTimeout(initializeWebSocket, 5000)
       }
@@ -218,6 +223,7 @@ export default function SocialPage() {
   }
 
   const handleWebSocketMessage = (data: any) => {
+    console.log("Handling WebSocket message:", data)
 
     switch (data.type) {
       case "CHALLENGE_RECEIVED":
@@ -252,9 +258,11 @@ export default function SocialPage() {
 
       case "USER_CONNECTED":
         // Handle user connected message, e.g., update online status if needed
+        console.log("User connected:", data.userId)
         break
 
       default:
+        console.log("Unhandled message type:", data.type)
     }
   }
 
@@ -546,7 +554,9 @@ export default function SocialPage() {
   const handleAcceptChallenge = async (challengeId: string) => {
     setChallengeLoading((prev) => ({ ...prev, [challengeId]: true }))
     try {
+      console.log("Accepting challenge:", challengeId)
       const gameData = await ChallengeAPI.acceptChallenge(challengeId)
+      console.log("Game created:", gameData)
 
       // Update challenge status in local state
       setChallenges((prev) => prev.map((c) => (c.id === challengeId ? { ...c, status: "ACCEPTED" as const } : c)))
@@ -555,8 +565,10 @@ export default function SocialPage() {
 
       // Navigate to the war page with game ID
       if (gameData && gameData.id) {
+        console.log("Navigating to game:", gameData.id)
         window.location.href = `/prompt-wars/game/${gameData.id}`
       } else {
+        console.log("No game ID, navigating to war page")
         // Fallback - just go to war page
         window.location.href = `/war`
       }
@@ -571,6 +583,7 @@ export default function SocialPage() {
   const handleDeclineChallenge = async (challengeId: string) => {
     setChallengeLoading((prev) => ({ ...prev, [challengeId]: true }))
     try {
+      console.log("Declining challenge:", challengeId)
       await ChallengeAPI.declineChallenge(challengeId)
 
       // Update challenge status in local state
