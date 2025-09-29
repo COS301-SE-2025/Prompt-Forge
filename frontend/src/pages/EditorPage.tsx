@@ -296,7 +296,6 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       
       if (validatedImage) {
         setUploadedImage(validatedImage);
-        // console.log("Image uploaded and validated successfully");
       } else {
         setUploadedImage(null);
         showNotification("error", "Image Upload Failed", "The image could not be processed. Please try a different image.");
@@ -403,8 +402,6 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       }],
       stream: streamingEnabled
     };
-
-    // console.log("Rating request:", requestBody);
     
     // Use streamingService to handle the request
     await streamingService.streamRequest(
@@ -424,7 +421,6 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
           if (streamingEnabled && typingEffect.displayText) {
             setRatingResponse(typingEffect.displayText);
           }
-          // console.log("Rating completed");
         },
         onError: (error: string) => {
           setIsLoadingRating(false);
@@ -479,8 +475,6 @@ const getSuggested = async (prompt: string, response: string) => {
       }],
       stream: streamingEnabled
     }
-
-    // console.log("Suggestion request:", requestBody);
     
     // Use streamingService to handle the request
     await streamingService.streamRequest(
@@ -501,7 +495,6 @@ const getSuggested = async (prompt: string, response: string) => {
           if (streamingEnabled && typingEffect.displayText) {
             setSuggestionResponse(typingEffect.displayText);
           }
-          // console.log("Suggestion completed");
         },
         onError: (error: string) => {
           setIsLoadingSuggestion(false);
@@ -544,9 +537,7 @@ const fallbackToWorkingModel = async () => {
   for (let i = 0; i < aiModels.length; i++) {
     if (i === originalModel) continue; // Skip the one that failed
     
-    try {
-      // console.log(`Trying model ${aiModels[i].name}...`);
-      
+    try {      
       // Update status with improved styling
       statusElement.innerHTML = `
         <div class="flex items-center">
@@ -612,7 +603,6 @@ const fallbackToWorkingModel = async () => {
         break;
       }
     } catch (error) {
-      // console.log(`Model ${aiModels[i].name} also failed`, error);
     }
   }
   
@@ -676,8 +666,6 @@ const fallbackToWorkingModel = async () => {
         aiModels[selectedModel].model,
         aiModels[selectedModel].supportsImages // Pass this parameter
       );
-
-      // console.log("Test request with model:", aiModels[selectedModel].name);
       
       // Use streamingService to handle the request
       await streamingService.streamRequest(
@@ -698,7 +686,6 @@ const fallbackToWorkingModel = async () => {
             if (streamingEnabled && typingEffect.displayText) {
               setAiResponse(typingEffect.displayText);
             }
-            // console.log("Streaming completed");
           },
           onError: (error: string) => {
             setIsLoading(false);
