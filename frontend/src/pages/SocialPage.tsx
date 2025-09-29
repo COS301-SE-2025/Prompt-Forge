@@ -568,6 +568,7 @@ export default function SocialPage() {
     }
   }
 
+  
   const handleDeclineChallenge = async (challengeId: string) => {
     setChallengeLoading((prev) => ({ ...prev, [challengeId]: true }))
     try {
