@@ -73,11 +73,13 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     // Get additional allowed origins from environment variable
     String additionalOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
-    List<String> allowedOrigins = new ArrayList<>(Arrays.asList(
-        "http://localhost:5173",
-        "https://prompt-forge.co.za",
-        "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com",
-        "https://d898wq8ttyuze.cloudfront.net/api"));
+    List<String> allowedOrigins =
+        new ArrayList<>(
+            Arrays.asList(
+                "http://localhost:5173",
+                "https://prompt-forge.co.za",
+                "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com",
+                "https://d898wq8ttyuze.cloudfront.net/api"));
 
     if (additionalOrigins != null && !additionalOrigins.trim().isEmpty()) {
       // Split by comma and add each origin
