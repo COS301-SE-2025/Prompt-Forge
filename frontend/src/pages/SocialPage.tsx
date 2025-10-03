@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
@@ -24,8 +24,11 @@ import {
 let socket: any = null
 
 export default function SocialPage() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("discover")
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [showChallengeModal, setShowChallengeModal] = useState(false)
   const [selectedOpponent, setSelectedOpponent] = useState<SocialUser | null>(null)
@@ -143,8 +146,29 @@ export default function SocialPage() {
     return "An unexpected error occurred. Please try again."
   }
 
+  // Authentication check
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const username = localStorage.getItem('username')
+        if (!username || username === 'Guest') {
+          navigate('/login')
+          return
+        }
+        setIsAuthenticated(true)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        navigate('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    checkAuth()
+  }, [navigate])
+
   // Initialize WebSocket connection
   useEffect(() => {
+    if (!isAuthenticated) return
     initializeWebSocket()
     loadInitialData()
 
@@ -166,7 +190,7 @@ export default function SocialPage() {
       }
       window.removeEventListener("hashchange", handleHashChange)
     }
-  }, [])
+  }, [isAuthenticated])
 
   const initializeWebSocket = () => {
     try {
@@ -181,9 +205,12 @@ export default function SocialPage() {
       const baseUrl = API_BASE_URL.replace("/api", "").replace("http://", "ws://").replace("https://", "wss://")
       const wsUrl = `${baseUrl}/api/simple-ws?userId=${userId}`
 
+      console.log("Connecting to WebSocket:", wsUrl)
+
       socket = new (window as any).WebSocket(wsUrl)
 
       socket.onopen = () => {
+        console.log("WebSocket connected")
         // Wait a moment before sending to ensure connection is fully established
         setTimeout(() => {
           socket?.send(
@@ -198,6 +225,7 @@ export default function SocialPage() {
       socket.onmessage = (event: any) => {
         try {
           const data = JSON.parse(event.data)
+          console.log("Received WebSocket message:", data)
           handleWebSocketMessage(data)
         } catch (error) {
           console.error("Error parsing WebSocket message:", error)
@@ -205,6 +233,7 @@ export default function SocialPage() {
       }
 
       socket.onclose = () => {
+        console.log("WebSocket disconnected")
         // Attempt to reconnect after 5 seconds
         setTimeout(initializeWebSocket, 5000)
       }
@@ -218,6 +247,7 @@ export default function SocialPage() {
   }
 
   const handleWebSocketMessage = (data: any) => {
+    console.log("Handling WebSocket message:", data)
 
     switch (data.type) {
       case "CHALLENGE_RECEIVED":
@@ -252,9 +282,11 @@ export default function SocialPage() {
 
       case "USER_CONNECTED":
         // Handle user connected message, e.g., update online status if needed
+        console.log("User connected:", data.userId)
         break
 
       default:
+        console.log("Unhandled message type:", data.type)
     }
   }
 
@@ -546,7 +578,9 @@ export default function SocialPage() {
   const handleAcceptChallenge = async (challengeId: string) => {
     setChallengeLoading((prev) => ({ ...prev, [challengeId]: true }))
     try {
+      console.log("Accepting challenge:", challengeId)
       const gameData = await ChallengeAPI.acceptChallenge(challengeId)
+      console.log("Game created:", gameData)
 
       // Update challenge status in local state
       setChallenges((prev) => prev.map((c) => (c.id === challengeId ? { ...c, status: "ACCEPTED" as const } : c)))
@@ -555,8 +589,10 @@ export default function SocialPage() {
 
       // Navigate to the war page with game ID
       if (gameData && gameData.id) {
+        console.log("Navigating to game:", gameData.id)
         window.location.href = `/prompt-wars/game/${gameData.id}`
       } else {
+        console.log("No game ID, navigating to war page")
         // Fallback - just go to war page
         window.location.href = `/war`
       }
@@ -571,6 +607,7 @@ export default function SocialPage() {
   const handleDeclineChallenge = async (challengeId: string) => {
     setChallengeLoading((prev) => ({ ...prev, [challengeId]: true }))
     try {
+      console.log("Declining challenge:", challengeId)
       await ChallengeAPI.declineChallenge(challengeId)
 
       // Update challenge status in local state
@@ -738,6 +775,34 @@ export default function SocialPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your social feed...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Early return for authentication loading
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+          <p className="text-muted-foreground mb-4">Please log in to access the social features</p>
+          <Link to="/login">
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+              Go to Login
+            </Button>
+          </Link>
         </div>
       </div>
     )

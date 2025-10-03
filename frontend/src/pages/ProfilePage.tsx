@@ -167,6 +167,7 @@ export default function ProfilePage() {
           let prompts = page.content;
 
           if (!Array.isArray(prompts)) prompts = [];
+          console.log("propmts:",prompts);
 
           const mappedPrompts: MyPrompt[] = prompts.map((p: any) => ({
             id: p.id,

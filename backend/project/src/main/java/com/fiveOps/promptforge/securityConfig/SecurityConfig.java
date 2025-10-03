@@ -1,8 +1,6 @@
 package com.fiveOps.promptforge.securityConfig;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,29 +69,14 @@ public class SecurityConfig {
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-    // Get additional allowed origins from environment variable
-    String additionalOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
-    List<String> allowedOrigins =
-        new ArrayList<>(
-            Arrays.asList(
-                "http://localhost:5173",
-                "https://prompt-forge.co.za",
-                "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com",
-                "https://d898wq8ttyuze.cloudfront.net/api"));
-
-    if (additionalOrigins != null && !additionalOrigins.trim().isEmpty()) {
-      // Split by comma and add each origin
-      String[] origins = additionalOrigins.split(",");
-      for (String origin : origins) {
-        String trimmed = origin.trim();
-        if (!trimmed.isEmpty()) {
-          allowedOrigins.add(trimmed);
-        }
-      }
-    }
 
     CorsConfiguration defaultConfig = new CorsConfiguration();
-    defaultConfig.setAllowedOriginPatterns(allowedOrigins);
+    defaultConfig.setAllowedOriginPatterns(
+        Arrays.asList(
+            "http://localhost:5173",
+            "https://prompt-forge.co.za",
+            "https://69v54mpz44.execute-api.eu-north-1.amazonaws.com",
+            "https://d898wq8ttyuze.cloudfront.net/api"));
     defaultConfig.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     defaultConfig.setAllowedHeaders(Arrays.asList("*"));
@@ -101,7 +84,8 @@ public class SecurityConfig {
     defaultConfig.setMaxAge(3600L);
 
     CorsConfiguration noCredentialsConfig = new CorsConfiguration();
-    noCredentialsConfig.setAllowedOriginPatterns(allowedOrigins);
+    noCredentialsConfig.setAllowedOriginPatterns(
+        Arrays.asList("http://localhost:5173", "https://prompt-forge.co.za"));
     noCredentialsConfig.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     noCredentialsConfig.setAllowedHeaders(Arrays.asList("*"));
