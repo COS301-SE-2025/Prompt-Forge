@@ -1,8 +1,6 @@
 package com.fiveOps.promptforge.user_profile.service;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +26,6 @@ public class UserService {
 
   @Autowired private UserRepository userRepository;
 
-  private final Path uploadDir = Paths.get("uploads/profile-pictures");
   private final PasswordEncoder passwordEncoder;
   private static final List<String> ALLOWED_MIME_TYPES =
       List.of("image/jpeg", "image/png", "image/gif");
@@ -81,14 +78,7 @@ public class UserService {
     }
 
     // Username update (with uniqueness check)
-    if (dto.getUsername() != null
-        && !dto.getUsername().isBlank()
-        && !dto.getUsername().equals(user.getUsername())) {
-      if (userRepository.existsByUsername(dto.getUsername())) {
-        throw new RuntimeException("Username is already taken");
-      }
-      user.setUsername(dto.getUsername());
-    }
+    ensureUsernameAvailable(dto, user);
 
     // Bio update
     if (dto.getBio() != null) {
@@ -117,6 +107,22 @@ public class UserService {
 
   public List<UserDto> getAllUsers() {
     return userRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+  }
+
+  // Helper extracted to reduce method complexity and centralize username validation
+  private void ensureUsernameAvailable(UpdateProfileDto dto, User user) {
+    if (dto.getUsername() != null
+        && !dto.getUsername().isBlank()
+        && !dto.getUsername().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(dto.getUsername())) {
+        com.fiveOps.promptforge.user_profile.model.User existing =
+            userRepository.findByUsername(dto.getUsername()).orElse(null);
+        if (existing != null && !existing.getUserId().equals(user.getUserId())) {
+          throw new RuntimeException("Username is already taken");
+        }
+      }
+      user.setUsername(dto.getUsername());
+    }
   }
 
   public void deleteUser(UUID id) {

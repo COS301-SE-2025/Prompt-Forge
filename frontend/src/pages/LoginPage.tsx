@@ -64,16 +64,12 @@ export default function LoginPage() {
       return;
     }
 
-    try {
-      // console.log("Attempting login with:", { email: loginEmail });
-      
+    try {      
       const result = await authService.login({ 
         email: loginEmail, 
         password: loginPassword 
       });
-      
-      // console.log("Login result:", result);
-      
+            
       if (result?.message === "Login successful") {
         // Store user data from response
         if (result.username) localStorage.setItem("username", result.username);
@@ -82,7 +78,6 @@ export default function LoginPage() {
         if (result.token) localStorage.setItem("token", result.token); // Store JWT token
         
         setError("");
-        // console.log("Login successful, navigating to dashboard");
         navigate("/home"); // Navigate to dashboard to test
       } else {
         console.warn("Unexpected login result:", result);
@@ -134,8 +129,6 @@ export default function LoginPage() {
         confirmPassword: confirmPassword,
       });
 
-      // console.log("Signup result:", signupResult);
-
       // Check if signup was successful
       if (signupResult?.message === "Signup successful" || 
           signupResult?.message === "User created successfully" ||
@@ -148,8 +141,6 @@ export default function LoginPage() {
             email: signupEmail, 
             password: signupPassword 
           });
-
-          // console.log("Auto-login result:", loginResult);
 
           if (loginResult?.message === "Login successful") {
             // Store user data from login response
@@ -362,15 +353,6 @@ export default function LoginPage() {
                       </div>
 
                       <div className="flex justify-between text-xs text-muted-foreground mt-4 items-center">
-                        <button
-                          onClick={() => {
-                            setShowForgotPassword(true);
-                            setError("");
-                          }}
-                          className="hover:text-[#3ebb9e] text-[#3ebb9e] text-sm transition-colors underline"
-                        >
-                          Forgot password?
-                        </button>
                       </div>
 
                       <Button 

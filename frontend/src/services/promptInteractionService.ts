@@ -24,7 +24,8 @@ export class PromptInteractionService {
    */
   async recordInteraction(promptId: string, action: InteractionType): Promise<PromptInteractionResponse> {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.post(`/prompts/${actualId}/interact?action=${action}`, {});
       
       if (!response.ok) {
@@ -49,7 +50,8 @@ export class PromptInteractionService {
    */
   async getBounceRate(promptId: string): Promise<number> {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.get(`/prompts/${actualId}/bounce-rate`);
       
       if (!response.ok) {
@@ -71,7 +73,8 @@ export class PromptInteractionService {
    */
   async getViewCount(promptId: string): Promise<number> {
     try {
-      const actualId = IdObfuscator.reveal(promptId);
+      // Check if promptId is already a UUID (raw) or needs to be revealed (obfuscated)
+      const actualId = promptId.includes('-') ? promptId : IdObfuscator.reveal(promptId);
       const response = await this.httpClient.get(`/prompts/${actualId}/views`);
       
       if (!response.ok) {

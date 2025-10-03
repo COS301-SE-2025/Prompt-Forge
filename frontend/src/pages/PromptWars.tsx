@@ -1028,7 +1028,7 @@ const isMultiplayerGame = !!gameId;
             {
               id: generateUniqueId(),
               user: "System",
-              message: "🎮 Reverse Battle started! Generating first question...",
+              message: "🎮 Unprompted started! Generating first question...",
               timestamp: new Date(),
             },
           ])
@@ -1556,34 +1556,34 @@ Overall Analysis: [brief summary]`,
         )}
       </div>
 
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Epic Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center gap-4 mb-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center gap-2 sm:gap-4 mb-4">
               <div className="relative">
-                <Swords className="h-12 w-12 text-[#3ebb9e] animate-pulse" />
-                <div className="absolute inset-0 h-12 w-12 text-[#3ebb9e] opacity-20">
-                  <Swords className="h-12 w-12" />
+                <Swords className="h-8 w-8 sm:h-12 sm:w-12 text-[#3ebb9e] animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 sm:h-12 sm:w-12 text-[#3ebb9e] opacity-20">
+                  <Swords className="h-8 w-8 sm:h-12 sm:w-12" />
                 </div>
               </div>
-              <h1 className="text-5xl font-black bg-gradient-to-r from-[#3ebb9e] via-white to-[#4079ff] bg-clip-text text-transparent">
-                {gameData?.gameType === 'REVERSE_PROMPT' ? 'REVERSE PROMPT WARS' : 'PROMPT WARS'}
+              <h1 className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-[#3ebb9e] via-white to-[#4079ff] bg-clip-text text-transparent">
+                {gameData?.gameType === 'REVERSE_PROMPT' ? 'UNPROMPTED' : 'PROMPT WARS'}
               </h1>
               <div className="relative">
-                <Swords className="h-12 w-12 text-[#4079ff] animate-pulse" />
-                <div className="absolute inset-0 h-12 w-12 text-[#4079ff] opacity-20">
-                  <Swords className="h-12 w-12" />
+                <Swords className="h-8 w-8 sm:h-12 sm:w-12 text-[#4079ff] animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 sm:h-12 sm:w-12 text-[#4079ff] opacity-20">
+                  <Swords className="h-8 w-8 sm:h-12 sm:w-12" />
                 </div>
               </div>
             </div>
-            <p className="text-xl text-slate-300 font-medium">
+            <p className="text-lg sm:text-xl text-slate-300 font-medium">
               {isMultiplayerGame ? `🔥 LIVE BATTLE vs ${opponentName}` : "⚡ AI-Powered Combat Arena"}
             </p>
             {loading && (
               <div className="flex items-center justify-center gap-2 text-[#3ebb9e] mt-3">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="font-semibold">Initializing Battle Systems...</span>
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                <span className="font-semibold text-sm sm:text-base">Initializing Battle Systems...</span>
               </div>
             )}
           </div>
@@ -1612,20 +1612,20 @@ Overall Analysis: [brief summary]`,
             {/* Battle Status Panel */}
             <div className="xl:col-span-3">
               <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-gradient-to-br from-[#3ebb9e] to-[#4079ff] rounded-lg">
-                      <Shield className="h-6 w-6 text-white" />
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div className="p-1.5 sm:p-2 bg-gradient-to-br from-[#3ebb9e] to-[#4079ff] rounded-lg">
+                      <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold text-white">Battle Status</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Battle Status</h2>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Game Mode */}
                     <div className="text-center">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 border border-[#3ebb9e]/30 rounded-full mb-2">
-                        <Sparkles className="h-4 w-4 text-[#3ebb9e]" />
-                        <span className="text-sm font-semibold text-white">
+                      <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-[#3ebb9e]/20 to-[#4079ff]/20 border border-[#3ebb9e]/30 rounded-full mb-2">
+                        <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-[#3ebb9e]" />
+                        <span className="text-xs sm:text-sm font-semibold text-white">
                           {isMultiplayerGame ? "LIVE MATCH" : "TRAINING MODE"}
                         </span>
                       </div>
@@ -1635,18 +1635,18 @@ Overall Analysis: [brief summary]`,
                     </div>
 
                     {/* Current Phase */}
-                    <div className="bg-slate-700/30 rounded-lg p-4">
-                      <div className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                        <Target className="h-4 w-4" />
+                    <div className="bg-slate-700/30 rounded-lg p-3 sm:p-4">
+                      <div className="text-xs sm:text-sm text-slate-400 mb-2 flex items-center gap-1.5 sm:gap-2">
+                        <Target className="h-3 w-3 sm:h-4 sm:w-4" />
                         Current Phase
                       </div>
-                      <div className="text-lg font-bold text-white capitalize flex items-center gap-2">
-                        {gameState === "waiting" && <Zap className="h-5 w-5 text-[#3ebb9e]" />}
-                        {gameState === "scenario" && <Eye className="h-5 w-5 text-[#4079ff]" />}
-                        {gameState === "writing" && <Timer className="h-5 w-5 text-yellow-400" />}
-                        {gameState === "rating" && <Star className="h-5 w-5 text-purple-400" />}
+                      <div className="text-base sm:text-lg font-bold text-white capitalize flex items-center gap-1.5 sm:gap-2">
+                        {gameState === "waiting" && <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e]" />}
+                        {gameState === "scenario" && <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff]" />}
+                        {gameState === "writing" && <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />}
+                        {gameState === "rating" && <Star className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />}
                         {(gameState === "results" || gameState === "finished") && (
-                          <Trophy className="h-5 w-5 text-[#3ebb9e]" />
+                          <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e]" />
                         )}
                         {gameState === "waiting"
                           ? isMultiplayerGame
@@ -1658,37 +1658,37 @@ Overall Analysis: [brief summary]`,
 
                     {/* Timer */}
                     {gameState === "writing" && (
-                      <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-4">
-                        <div className="text-sm text-red-300 mb-2 flex items-center gap-2">
-                          <Flame className="h-4 w-4" />
+                      <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-3 sm:p-4">
+                        <div className="text-xs sm:text-sm text-red-300 mb-2 flex items-center gap-1.5 sm:gap-2">
+                          <Flame className="h-3 w-3 sm:h-4 sm:w-4" />
                           Time Remaining
                         </div>
                         <div
-                          className={`text-3xl font-black flex items-center gap-2 ${
+                          className={`text-2xl sm:text-3xl font-black flex items-center gap-1.5 sm:gap-2 ${
                             timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-orange-400"
                           }`}
                         >
-                          <Timer className="h-6 w-6" />
+                          <Timer className="h-4 w-4 sm:h-6 sm:w-6" />
                           {formatTime(timeLeft)}
                         </div>
                       </div>
                     )}
 
                     {/* Players */}
-                    <div className="bg-slate-700/30 rounded-lg p-4">
-                      <div className="text-sm text-slate-400 mb-3 flex items-center gap-2">
-                        <Users className="h-4 w-4" />
+                    <div className="bg-slate-700/30 rounded-lg p-3 sm:p-4">
+                      <div className="text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                         Combatants
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-[#3ebb9e] rounded-full animate-pulse"></div>
-                          <span className="text-white font-semibold">You</span>
+                      <div className="space-y-2 sm:space-y-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#3ebb9e] rounded-full animate-pulse"></div>
+                          <span className="text-sm sm:text-base text-white font-semibold">You</span>
                           <div className="ml-auto text-xs text-[#3ebb9e] font-semibold">READY</div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-[#4079ff] rounded-full animate-pulse"></div>
-                          <span className="text-white font-semibold">{opponentName}</span>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#4079ff] rounded-full animate-pulse"></div>
+                          <span className="text-sm sm:text-base text-white font-semibold">{opponentName}</span>
                           <div className="ml-auto text-xs text-[#4079ff] font-semibold">READY</div>
                         </div>
                       </div>
@@ -1701,7 +1701,7 @@ Overall Analysis: [brief summary]`,
             {/* Main Battle Arena */}
             <div className="xl:col-span-6">
               <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm min-h-[400px]">
-                <div className="p-8">
+                <div className="p-4 sm:p-8">
               {/* Debug Controls - Remove in production
               {process.env.NODE_ENV === 'development' && (
                 <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-lg">
@@ -1728,21 +1728,21 @@ Overall Analysis: [brief summary]`,
 
               {gameState === "waiting" && (
                 <div className="text-center h-full flex flex-col justify-center">
-                  <div className="mb-8">
-                    <div className="relative inline-block mb-6">
-                      <div className="text-8xl mb-4">⚔️</div>
-                      <div className="absolute inset-0 text-8xl animate-ping opacity-20">⚔️</div>
+                  <div className="mb-6 sm:mb-8">
+                    <div className="relative inline-block mb-4 sm:mb-6">
+                      <div className="text-6xl sm:text-8xl mb-4">⚔️</div>
+                      <div className="absolute inset-0 text-6xl sm:text-8xl animate-ping opacity-20">⚔️</div>
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-4">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 sm:mb-4">
                       {gameData?.gameType === 'REVERSE_PROMPT' 
-                        ? (isMultiplayerGame ? "REVERSE BATTLE READY" : "REVERSE ARENA") 
+                        ? (isMultiplayerGame ? "UNPROMPTED" : "UNPROMPTED") 
                         : (isMultiplayerGame ? "AWAITING CHALLENGER" : "ENTER THE ARENA")}
                     </h2>
-                    <p className="text-slate-300 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm sm:text-lg text-slate-300 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">
                       {gameData?.gameType === 'REVERSE_PROMPT' 
                         ? (isMultiplayerGame
-                          ? "Ready for reverse prompt battle! You'll guess which prompts generated AI outputs. First to 5 wins!"
-                          : "Test your prompt analysis skills in reverse battles!")
+                          ? "Ready for Unprompted battle! You'll guess which prompts generated AI outputs. First to 5 wins!"
+                          : "Test your prompt analysis skills in Unprompted battles!")
                         : (isMultiplayerGame
                           ? "Your opponent is preparing for battle. Both warriors must be ready before the arena opens..."
                           : "Step into the ultimate prompt crafting battleground. Face AI opponents in epic battles of creativity, strategy, and wit.")}
@@ -1764,23 +1764,23 @@ Overall Analysis: [brief summary]`,
                         loading || isLoadingScenario || roundLoading ||
                         (isMultiplayerGame && gameData?.gameType === 'REVERSE_PROMPT' && (questionNumber > 1 || gameState !== 'waiting'))
                       }
-                      className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-8 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      className="bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#3ebb9e]/80 hover:to-[#4079ff]/80 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     >
                       {loading || isLoadingScenario || roundLoading ? (
                         <>
-                          <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+                          <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 animate-spin" />
                           {isMultiplayerGame ? "INITIATING BATTLE..." : "GENERATING SCENARIO..."}
                         </>
                       ) : (
                         <>
-                          <Zap className="h-6 w-6 mr-3" />
+                          <Zap className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                           {isMultiplayerGame ? "BEGIN LIVE BATTLE" : "START NEW BATTLE"}
                         </>
                       )}
                     </Button>
                   )}
 
-                  {/* Next Question Button for Reverse Battles
+                  {/* Next Question Button for Unprompted
                   {isMultiplayerGame && gameData?.gameType === 'REVERSE_PROMPT' && gameState === 'waiting' && gameData.questionNumber && gameData.questionNumber > 0 && (
                     <Button
                       onClick={generateQuestion}
@@ -1804,19 +1804,19 @@ Overall Analysis: [brief summary]`,
               )}
 
               {gameState === "scenario" && (
-                <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
-                      <Target className="h-8 w-8 text-[#4079ff]" />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="text-center mb-6 sm:mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 flex items-center justify-center gap-2 sm:gap-3">
+                      <Target className="h-6 w-6 sm:h-8 sm:w-8 text-[#4079ff]" />
                       BATTLE SCENARIO
                     </h2>
-                    <p className="text-slate-400">Study your mission carefully, warrior</p>
+                    <p className="text-sm sm:text-base text-slate-400">Study your mission carefully, warrior</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-8">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="p-3 bg-[#4079ff]/20 rounded-lg">
-                        <Eye className="h-6 w-6 text-[#4079ff]" />
+                  <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-4 sm:p-8">
+                    <div className="flex items-start gap-3 sm:gap-4 mb-4">
+                      <div className="p-2 sm:p-3 bg-[#4079ff]/20 rounded-lg">
+                        <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-[#4079ff]" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-white mb-4">Your Mission</h3>
@@ -1855,29 +1855,31 @@ Overall Analysis: [brief summary]`,
               )}
 
               {gameState === "writing" && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Classic Prompt Battle - Writing Phase */}
                   {(!gameData?.gameType || gameData?.gameType === 'PROMPT_CREATION') && (
                     <>
-                      <div className="text-center mb-6">
-                        <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
-                          <Timer className="h-8 w-8 text-yellow-400" />
-                          CRAFTING PHASE
+                      <div className="text-center mb-4 sm:mb-6">
+                        <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Timer className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-400" />
+                            CRAFTING PHASE
+                          </div>
                           <div
-                            className={`text-2xl font-black ml-4 ${
+                            className={`text-xl sm:text-2xl font-black ${
                               timeLeft <= 30 ? "text-red-400 animate-pulse" : "text-yellow-400"
                             }`}
                           >
                             {formatTime(timeLeft)}
                           </div>
                         </h2>
-                        <p className="text-slate-400">Channel your creativity into the ultimate prompt</p>
+                        <p className="text-sm sm:text-base text-slate-400">Channel your creativity into the ultimate prompt</p>
                       </div>
 
                       {/* Scenario Reminder */}
-                      <div className="bg-[#4079ff]/10 border border-[#4079ff]/30 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <Target className="h-5 w-5 text-[#4079ff] mt-1 flex-shrink-0" />
+                      <div className="bg-[#4079ff]/10 border border-[#4079ff]/30 rounded-lg p-3 sm:p-4">
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <Target className="h-4 w-4 sm:h-5 sm:w-5 text-[#4079ff] mt-1 flex-shrink-0" />
                           <div>
                             <h4 className="font-semibold text-white mb-1">Mission Briefing</h4>
                             <p className="text-sm text-slate-300">{scenario}</p>
@@ -1892,7 +1894,7 @@ Overall Analysis: [brief summary]`,
                           value={myPrompt}
                           onChange={(e) => setMyPrompt(e.target.value)}
                           placeholder="Forge your legendary prompt here... Make it count, warrior!"
-                          className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none text-lg custom-scrollbar"
+                          className="w-full h-40 px-4 py-3 bg-muted border border-slate-600 rounded-xl text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none text-lg custom-scrollbar"
                         />
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-slate-400">💡 Tip: Be specific, creative, and consider edge cases</span>
@@ -1925,27 +1927,29 @@ Overall Analysis: [brief summary]`,
                   {/* Reverse Prompt Battle - Answering Phase */}
                   {gameData?.gameType === 'REVERSE_PROMPT' && (
                     <>
-                      <div className="text-center mb-6">
-                        <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
-                          <Target className="h-8 w-8 text-purple-400" />
-                          REVERSE BATTLE
+                      <div className="text-center mb-4 sm:mb-6">
+                        <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Target className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
+                            UNPROMPTED
+                          </div>
                           <div
-                            className={`text-2xl font-black ml-4 ${
+                            className={`text-xl sm:text-2xl font-black ${
                               timeLeft <= 15 ? "text-red-400 animate-pulse" : "text-purple-400"
                             }`}
                           >
                             {formatTime(timeLeft)}
                           </div>
                         </h2>
-                        <p className="text-slate-400">Question {questionNumber} • Score: {playerScore} vs {opponentScore}</p>
+                        <p className="text-sm sm:text-base text-slate-400">Question {questionNumber} • Score: {playerScore} vs {opponentScore}</p>
                       </div>
 
                       {/* Question */}
-                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-6">
-                        <div className="flex items-start gap-3">
-                          <Sparkles className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 sm:p-6">
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 mt-1 flex-shrink-0" />
                           <div className="flex-1">
-                            <h4 className="font-semibold text-white mb-2">
+                            <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">
                               {currentQuestion || 'Loading question...'}
                             </h4>
                             <div className="bg-slate-800 rounded-lg p-4 mt-4">
@@ -2054,7 +2058,9 @@ Overall Analysis: [brief summary]`,
                         Your Prompt
                       </h3>
                       <div className="bg-slate-700/50 rounded-lg p-4">
-                        <p className="text-slate-200 text-sm leading-relaxed">{myPrompt}</p>
+                        <div className="text-slate-200 text-sm leading-relaxed max-h-64 overflow-y-auto custom-scrollbar">
+                          {myPrompt}
+                        </div>
                       </div>
                     </div>
 
@@ -2066,7 +2072,9 @@ Overall Analysis: [brief summary]`,
                       </h3>
                       <div className="bg-slate-700/50 rounded-lg p-4">
                         {showOpponentPrompt ? (
-                          <p className="text-slate-200 text-sm leading-relaxed">{opponentPrompt}</p>
+                          <div className="text-slate-200 text-sm leading-relaxed max-h-64 overflow-y-auto custom-scrollbar">
+                            {opponentPrompt}
+                          </div>
                         ) : (
                           <div className="flex items-center gap-2 text-slate-400">
                             <EyeOff className="h-4 w-4" />
@@ -2078,19 +2086,19 @@ Overall Analysis: [brief summary]`,
                   </div>
 
                   {showOpponentPrompt && (
-                    <div className="bg-slate-700/30 rounded-xl p-6 space-y-6">
+                    <div className="bg-slate-700/30 rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div>
-                        <label className="block text-white font-bold text-lg mb-4">
+                        <label className="block text-white font-bold text-base sm:text-lg mb-3 sm:mb-4">
                           ⭐ Rate Your Opponent's Prompt (1-10)
                         </label>
-                        <div className="flex gap-2 mb-4 justify-center">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 justify-center">
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                             <Button
                               key={rating}
                               onClick={() => setMyRating(rating)}
                               variant={myRating === rating ? "default" : "outline"}
                               size="sm"
-                              className={`w-12 h-12 text-lg font-bold ${
+                              className={`w-8 h-8 sm:w-12 sm:h-12 text-sm sm:text-lg font-bold ${
                                 myRating === rating
                                   ? "bg-gradient-to-r from-[#3ebb9e] to-emerald-500 text-white border-0"
                                   : "border-slate-600 text-slate-300 hover:border-[#3ebb9e] hover:text-white"
@@ -2110,7 +2118,7 @@ Overall Analysis: [brief summary]`,
                           value={ratingExplanation}
                           onChange={(e) => setRatingExplanation(e.target.value)}
                           placeholder="Share your thoughts on their strategy..."
-                          className="w-full h-24 px-4 py-3 bg-muted border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none"
+                          className="w-full h-24 px-4 py-3 bg-muted border border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3ebb9e] focus:border-transparent resize-none"
                         />
                       </div>
 
@@ -2139,12 +2147,12 @@ Overall Analysis: [brief summary]`,
               )}
 
               {(gameState === "results" || gameState === "finished") && (
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   <div className="text-center">
-                        <div className="text-8xl mb-4">
+                        <div className="text-6xl sm:text-8xl mb-3 sm:mb-4">
                           {winner === "player" ? "🏆" : winner === "opponent" ? "⚔️" : "🤝"}
                         </div>
-                        <h2 className="text-4xl font-black mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-black mb-3 sm:mb-4">
                           <span
                             className={`bg-gradient-to-r bg-clip-text text-transparent ${
                               winner === "player"
@@ -2157,7 +2165,7 @@ Overall Analysis: [brief summary]`,
                             {winner === "player" ? "VICTORY!" : winner === "opponent" ? "DEFEAT" : "DRAW!"}
                           </span>
                         </h2>
-                        <p className="text-slate-300 text-lg">
+                        <p className="text-slate-300 text-base sm:text-lg px-4">
                           {winner === "player"
                             ? (gameData?.gameType === 'REVERSE_PROMPT' ? 'You got the most correct answers!' : 'You scored higher on the AI judge!')
                             : winner === "opponent"
@@ -2166,16 +2174,16 @@ Overall Analysis: [brief summary]`,
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                         <div
-                          className={`rounded-xl p-6 ${
+                          className={`rounded-xl p-4 sm:p-6 ${
                             playerRating >= opponentRating
                               ? "bg-gradient-to-br from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/40"
                               : "bg-slate-700/30 border border-slate-600/50"
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Your Score</h3>
+                          <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h3 className="text-base sm:text-lg font-bold text-white">Your Score</h3>
                             {playerRating > opponentRating && <Crown className="h-6 w-6 text-[#3ebb9e]" />}
                           </div>
                           <div className="text-4xl font-black text-white mb-2">{playerRating}/{gameData?.gameType === 'REVERSE_PROMPT' ? 5 : 10}</div>
@@ -2205,7 +2213,7 @@ Overall Analysis: [brief summary]`,
                             <MessageSquare className="h-5 w-5 text-[#3ebb9e]" />
                             AI Judge Analysis
                           </h3>
-                          <div className="text-slate-300 leading-relaxed space-y-3">
+                          <div className="text-slate-300 leading-relaxed space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
                             {ratingExplanation.split('\n\n').map((section, idx) => {
                               const colonIndex = section.indexOf(':')
                               if (colonIndex > 0) {
@@ -2260,37 +2268,37 @@ Overall Analysis: [brief summary]`,
             {/* Battle Chat */}
             <div className="xl:col-span-3">
               <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm min-h-[200px] max-h-[70vh] flex flex-col custom-scrollbar">
-                <div className="p-4 border-b border-slate-700/50">
+                <div className="p-3 sm:p-4 border-b border-slate-700/50">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <MessageCircle className="h-5 w-5 text-[#3ebb9e]" />
+                    <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e]" />
                       Battle Chat
                     </h2>
                     <Button
                       onClick={() => setShowChat(!showChat)}
                       variant="ghost"
                       size="sm"
-                      className="text-slate-400 hover:text-white hover:bg-slate-700/50"
+                      className="text-slate-400 hover:text-white hover:bg-slate-700/50 h-8 w-8 sm:h-9 sm:w-9 p-0"
                     >
-                      {showChat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showChat ? <EyeOff className="h-3 w-3 sm:h-4 sm:w-4" /> : <Eye className="h-3 w-3 sm:h-4 sm:w-4" />}
                     </Button>
                   </div>
                 </div>
 
                 {showChat && (
                   <>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[40vh] custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-[40vh] custom-scrollbar">
                       {chatMessages.map((message) => (
                         <div
                           key={message.id}
-                          className={`p-3 rounded-lg text-sm ${
+                          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
                            message.user === "System"
                             ? "bg-gradient-to-r from-[#4079ff]/20 to-green-500/20 border border-[#4079ff]/30 text-white"
                             : message.user === "You"
-                              ? "bg-gradient-to-r from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/30 text-[#3ebb9e] ml-4"
+                              ? "bg-gradient-to-r from-[#3ebb9e]/20 to-emerald-500/20 border border-[#3ebb9e]/30 text-[#3ebb9e] ml-2 sm:ml-4"
                               : message.user === "Player 2"
-                              ? "bg-gradient-to-r from-pink-500/20 to-yellow-400/20 border border-pink-400/30 text-pink-300 mr-4"
-                              : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-4"
+                              ? "bg-gradient-to-r from-pink-500/20 to-yellow-400/20 border border-pink-400/30 text-pink-300 mr-2 sm:mr-4"
+                              : "bg-slate-700/50 border border-slate-600/50 text-slate-200 mr-2 sm:mr-4"
                           }`}
                         >
                           <div className="font-semibold text-xs opacity-80 mb-1">{message.user}</div>
@@ -2300,21 +2308,21 @@ Overall Analysis: [brief summary]`,
                       <div ref={chatEndRef} />
                     </div>
 
-                    <div className="p-4 border-t border-slate-700/50 custom-scrollbar">
+                    <div className="p-3 sm:p-4 border-t border-slate-700/50 custom-scrollbar">
                       <div className="flex gap-2">
                         <Input
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
                           placeholder="Send a battle cry..."
-                          className="flex-1 bg-muted/20 border-slate-600 text-white placeholder-slate-400 focus:ring-[#3ebb9e] focus:border-[#3ebb9e]"
+                          className="flex-1 bg-muted/20 border-slate-600 text-gray-900 dark:text-white placeholder-slate-400 focus:ring-[#3ebb9e] focus:border-[#3ebb9e] text-sm sm:text-base"
                         />
                         <Button
                           onClick={sendChatMessage}
                           size="sm"
-                          className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-4"
+                          className="bg-gradient-to-r from-[#3ebb9e] to-emerald-500 hover:from-[#3ebb9e]/80 hover:to-emerald-500/80 text-white px-3 sm:px-4 h-9 sm:h-10"
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>

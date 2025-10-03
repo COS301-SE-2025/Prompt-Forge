@@ -64,15 +64,16 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Document                     | Link                                                                                                         | Last Updated   |
 |------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
 | **🚀 Live Application**      | **[Access Prompt Forge App](https://prompt-forge.co.za)**                                                 | **September 2025** |
-| System Architecture          | [View System Architecture PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/System_Architecture.pdf) | September 2025 |
-| SRS Document (v4)            | [View SRS Document PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/SRS_v4.pdf)         | September 2025 |
-| User Manual                  | [View User Manual PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/User_Manual.pdf)     | September 2025 |
-| Technical Installation Guide | [View Installation Guide PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/Installation_Guide.pdf) | September 2025 |
-| Coding Standards             | [View Coding Standards PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/Coding_Standards.pdf) | September 2025 |
-| Testing Policy               | [View Testing Policy PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/Testing_Policy.pdf) | September 2025 |
-| Project Management           | [View Scrum Board](https://your-project-management-tool.com)                                               | September 2025 |
-| Demo 4 Video                 | [Watch Demo Video](https://youtu.be/your-demo4-video)                                                      | September 2025 |
-| Demo 4 Slides                | [View Presentation Slides PDF](https://github.com/COS301-SE-2025/Prompt-Forge/blob/main/docs/Demo4_Slides.pdf) | September 2025 |
+| System Architecture          | [View System Architecture PDF](./assests/System_Architecture.pdf) | September 2025 |
+| SRS Document (v4)            | [View SRS Document PDF](./assests/SRS_V4.pdf)         | September 2025 |
+| User Manual                  | [View User Manual PDF](./assests/User_Manual.pdf)     | September 2025 |
+| Technical Installation Guide | [View Installation Guide PDF](./assests/Installation_Guide.pdf) | September 2025 |
+| Coding Standards             | [View Coding Standards PDF](./assests/Coding_Standards.pdf) | September 2025 |
+| Testing Policy               | [View Testing Policy PDF](./assests/Testing_Policy.pdf) | September 2025 |
+| Project Management           | [View Scrum Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)                                               | September 2025 |
+| Non-Functional Testing              | [View Non-Functional Testing PDF](./assests/NF_Testing.pdf) | September 2025 |
+| Demo 4 Video                 | [Watch Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)                                                      | September 2025 |
+| Demo 4 Slides                | [View Presentation Slides PDF](./assests/Demo4_Slides.pdf) | September 2025 |
 
 ---
 

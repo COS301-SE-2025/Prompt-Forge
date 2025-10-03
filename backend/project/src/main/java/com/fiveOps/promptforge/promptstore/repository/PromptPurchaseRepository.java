@@ -15,6 +15,4 @@ public interface PromptPurchaseRepository extends JpaRepository<PromptPurchase, 
   List<PromptPurchase> findByUserId(UUID userId);
 
   Long countByPromptId(UUID promptId);
-
-  void deleteByPromptIdAndUserId(UUID promptId, UUID userId);
 }
