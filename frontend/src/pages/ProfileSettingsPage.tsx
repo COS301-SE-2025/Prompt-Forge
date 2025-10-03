@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { useNavigate, Link } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
 import { Input } from "../components/ui/Input"
@@ -15,7 +16,12 @@ import BankCard from "@/components/BankCard"
 import { getCardColor } from "@/Models/BankCard"
 
 export default function ProfileSettingsPage() {
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   
   // Saved state
   const [profileImage, setProfileImage] = useState<string>("/placeholder.svg?height=100&width=100")
@@ -45,8 +51,30 @@ export default function ProfileSettingsPage() {
   const [passwordStatus, setPasswordStatus] = useState<null | "saving" | "success" | "error">(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  // Authentication check
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const username = localStorage.getItem('username')
+        if (!username || username === 'Guest') {
+          navigate('/login')
+          return
+        }
+        setIsAuthenticated(true)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        navigate('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    checkAuth()
+  }, [navigate])
+
   // Load profile data on mount
   useEffect(() => {
+    if (!isAuthenticated) return
+    
     async function fetchProfile() {
       try {
         setLoading(true)

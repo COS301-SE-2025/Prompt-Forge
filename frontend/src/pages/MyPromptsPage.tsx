@@ -171,7 +171,7 @@ export default function MyPromptsPage() {
         )
         setMyPrompts(mappedPrompts)
 
-        // ✅ Remove localStorage dependency for categories - now handled by fetchAvailableCategories
+        // Remove localStorage dependency for categories - now handled by fetchAvailableCategories
 
       } catch (error) {
         console.error("Error fetching prompts:", error)
@@ -186,14 +186,14 @@ export default function MyPromptsPage() {
     }
   }, [isAuthenticated, navigate, userProfile])
 
-  // ✅ Add useEffect to fetch categories independently (same as MarketplacePage)
+  // Add useEffect to fetch categories independently (same as MarketplacePage)
   useEffect(() => {
     if (isAuthenticated) {
       fetchAvailableCategories()
     }
   }, [isAuthenticated])
 
-  // ✅ Add effect to retry categories if they fail to load and prompts are successful
+  // Add effect to retry categories if they fail to load and prompts are successful
   useEffect(() => {
     if (!categoriesLoading && availableCategories.length <= 1 && categoriesError && allUserPrompts.length > 0) {
       setTimeout(() => {

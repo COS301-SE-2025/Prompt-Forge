@@ -149,12 +149,35 @@ export default function SubmitPromptPage() {
 
   // Fix: Track if we've loaded edit data to prevent overwriting on refresh
   const [editLoaded, setEditLoaded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
 
   {/* payment details */}
   const [payoutDetails, setPayoutDetails] = useState<PayoutCard | null>(null)
   const [bankList, setBankList] = useState<Array<BankIdentifier>>([])
   
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const username = localStorage.getItem('username')
+        if (!username || username === 'Guest') {
+          navigate('/login')
+          return
+        }
+        setIsAuthenticated(true)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        navigate('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    checkAuth()
+  }, [navigate])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    
     let editData: EditPromptData | null = null;
 
     profileService.getPayoutDetails()
@@ -683,6 +706,34 @@ export default function SubmitPromptPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading prompt information...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Early return for authentication loading
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+          <p className="text-muted-foreground mb-4">Please log in to submit prompts</p>
+          <Link to="/login">
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+              Go to Login
+            </Button>
+          </Link>
         </div>
       </div>
     )
