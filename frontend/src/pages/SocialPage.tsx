@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
@@ -24,8 +24,11 @@ import {
 let socket: any = null
 
 export default function SocialPage() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("discover")
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [showChallengeModal, setShowChallengeModal] = useState(false)
   const [selectedOpponent, setSelectedOpponent] = useState<SocialUser | null>(null)
@@ -143,8 +146,29 @@ export default function SocialPage() {
     return "An unexpected error occurred. Please try again."
   }
 
+  // Authentication check
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const username = localStorage.getItem('username')
+        if (!username || username === 'Guest') {
+          navigate('/login')
+          return
+        }
+        setIsAuthenticated(true)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        navigate('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    checkAuth()
+  }, [navigate])
+
   // Initialize WebSocket connection
   useEffect(() => {
+    if (!isAuthenticated) return
     initializeWebSocket()
     loadInitialData()
 
@@ -166,7 +190,7 @@ export default function SocialPage() {
       }
       window.removeEventListener("hashchange", handleHashChange)
     }
-  }, [])
+  }, [isAuthenticated])
 
   const initializeWebSocket = () => {
     try {
@@ -751,6 +775,34 @@ export default function SocialPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your social feed...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Early return for authentication loading
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+          <p className="text-muted-foreground mb-4">Please log in to access the social features</p>
+          <Link to="/login">
+            <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+              Go to Login
+            </Button>
+          </Link>
         </div>
       </div>
     )

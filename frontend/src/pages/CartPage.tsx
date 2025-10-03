@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react';
 import { CartSummary } from '@/components/CartSummary';
 import { ShoppingCartIcon } from 'lucide-react';
 import { CartItem } from '@/components/CartItem';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CartService } from '@/services/cartServices';
 import { CartPrompt, EnrichedPrompt } from '@/Models/CartPrompt';
 import { PromptService } from '@/services/promptService';
+import { Button } from '@/components/ui/Button';
 
 export default function CartPage() {
     const cartService = new CartService();
     const promptService = new PromptService()
+    const navigate = useNavigate()
 
     const [cartItems, setCartItems] = useState<EnrichedPrompt[]>([]);
     const [loading, setLoading] = useState(false)
     const [removing, setRemoving] = useState(false)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [authLoading, setAuthLoading] = useState(true)
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.promptPrice, 0);
 
@@ -41,9 +45,31 @@ export default function CartPage() {
         return enrichedPrompts;
     };
 
+    // Authentication check
     useEffect(() => {
-        fetchData()
-    }, [])
+        const checkAuth = async () => {
+            try {
+                const username = localStorage.getItem('username')
+                if (!username || username === 'Guest') {
+                    navigate('/login')
+                    return
+                }
+                setIsAuthenticated(true)
+            } catch (error) {
+                console.error('Auth check failed:', error)
+                navigate('/login')
+            } finally {
+                setAuthLoading(false)
+            }
+        }
+        checkAuth()
+    }, [navigate])
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchData()
+        }
+    }, [isAuthenticated])
 
     const fetchData = async () => {
         setLoading(true);
@@ -71,6 +97,34 @@ export default function CartPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
                     <p className="text-sm sm:text-base text-muted-foreground">Loading Cart...</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Early return for authentication loading
+    if (authLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                    <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+                    <p className="text-muted-foreground mb-4">Please log in to view your cart</p>
+                    <Link to="/login">
+                        <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white">
+                            Go to Login
+                        </Button>
+                    </Link>
                 </div>
             </div>
         )
