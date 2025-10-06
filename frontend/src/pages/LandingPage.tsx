@@ -1,88 +1,60 @@
 "use client"
 
-import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
-import { Badge } from "../components/ui/Badge"
+import { Button } from "@/components/ui/Button"
+import { Card } from "@/components/ui/Card"
+import { Badge } from "@/components/ui/Badge"
 import {
   BrainCircuit,
   Search,
   Users,
   ShoppingCart,
   TestTube,
-  BarChart3,
   Target,
-  ArrowRight,
   CheckCircle,
   Moon,
   Sun,
+  Swords,
+  Trophy,
+  MessageCircle,
+  BarChart3,
+  Wand2,
 } from "lucide-react"
-import { useState, useEffect } from "react"
-import { useTheme } from "../components/theme-provider"
+import { useTheme } from "@/components/theme-provider"
 import { Link } from "react-router-dom"
 import Silk from "@/components/Silk"
 import { useInView } from "react-intersection-observer"
+import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack"
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme()
-  // const [typedText, setTypedText] = useState("")
-  // const [typedText2, setTypedText2] = useState("")
-  // const fullText = "Forge the Future of"
-  // const fullText2 = "AI Interactions"
 
   // Silk background color for light/dark mode
   const silkBg =
-    theme === "light"
-      ? [1, 1, 1] as [number, number, number]
-      : [0.0078, 0.031, 0.090] as [number, number, number]
-
-  // For the bottom CTA section
-  const silkCtaBg =
-    theme === "light"
-      ? [1, 1, 1] as [number, number, number]
-      : [0.0078, 0.031, 0.090] as [number, number, number]
+    theme === "light" ? ([1, 1, 1] as [number, number, number]) : ([0.0078, 0.031, 0.09] as [number, number, number])
 
   // Intersection observers for each section
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.2 })
   const { ref: problemRef, inView: problemInView } = useInView({ triggerOnce: true, threshold: 0.2 })
-  const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.2 })
   const { ref: howItWorksRef, inView: howItWorksInView } = useInView({ triggerOnce: true, threshold: 0.2 })
   const { ref: ctaRef, inView: ctaInView } = useInView({ triggerOnce: true, threshold: 0.2 })
 
-  // Comment out typing effect for better performance
-  // useEffect(() => {
-  //   let index = 0
-  //   const timer = setInterval(() => {
-  //     if (index <= fullText.length) {
-  //       setTypedText(fullText.slice(0, index))
-  //       index++
-  //     } else {
-  //       clearInterval(timer)
-  //         let index2 = 0
-  //         const timer2 = setInterval(() => {
-  //           if (index2 <= fullText2.length) {
-  //             setTypedText2(fullText2.slice(0, index2))
-  //             index2++
-  //           } else {
-  //             clearInterval(timer2)
-  //           }
-  //         }, 60)
-  //     }
-  //   }, 60)
-
-  //   return () => clearInterval(timer)
-  // }, [])
-
   return (
-    <div className={`min-h-screen bg-background ${theme === "light" ? "text-black" : "text-white"}`}>
+    <div className={`min-h-screen relative ${theme === "light" ? "text-black" : "text-white"}`}>
+      <div className="fixed inset-0 bg-gradient-to-br from-[#3ebb9e]/5 via-transparent to-[#00674f]/5 pointer-events-none"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(62,187,158,0.1),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(0,103,79,0.1),transparent_50%)] pointer-events-none"></div>
       {/* Navigation */}
-      <nav className={`border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown`}>
+      <nav
+        className={`border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center space-x-2">
               <div className="bg-[#00876e]/10 p-1 rounded-lg">
                 <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8 text-[#3ebb9e]" />
               </div>
-              <span className={`text-lg sm:text-2xl font-bold ${theme === "light" ? "text-[#0C201B]" : "text-white"}`}>PROMPT FORGE</span>
+              <span className={`text-lg sm:text-2xl font-bold ${theme === "light" ? "text-[#0C201B]" : "text-white"}`}>
+                PROMPT FORGE
+              </span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a
@@ -135,24 +107,26 @@ export default function LandingPage() {
           <Silk speed={1} bgColor={silkBg} />
         </div>
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32">
-          <div
-            className={`text-center max-w-4xl mx-auto transition-all duration-1000`}
-          >
+          <div className={`text-center max-w-4xl mx-auto transition-all duration-1000`}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6">
-              <Badge className={`bg-[FFFFFF]/10 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"} hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center`}>
+              <Badge
+                className={`bg-[FFFFFF]/10 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"} hover:bg-[#00876e]/20 text-sm sm:text-lg px-3 py-2 text-center`}
+              >
                 The Future of AI Prompt Engineering
               </Badge>
             </div>
-            <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}>
-              <span className="inline-block min-h-[1.2em]">
-                Forge the Future of
-              </span>
+            <h1
+              className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+            >
+              <span className="inline-block min-h-[1.2em]">Forge the Future of</span>
               <br />
-              <span className="inline-block min-h-[1.2em] text-[#45c1a4] drop-shadow-[0_0_25px_rgba(69,193,164,0.6)] ">
+              <span className="inline-block min-h-[1.2em] text-[#45c1a4] drop-shadow-[0_0_25px_rgba(69,193,164,0.6)]">
                 AI Interactions
               </span>
             </h1>
-            <p className={`text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed px-4 ${theme === "light" ? "text-black/80" : "text-[#FFFFFF]/80"}`}>
+            <p
+              className={`text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed px-4 ${theme === "light" ? "text-black/80" : "text-[#FFFFFF]/80"}`}
+            >
               The world's first comprehensive marketplace for AI prompts. Discover, test, compare, and master
               high-quality prompts to unlock your AI's full potential.
             </p>
@@ -163,39 +137,43 @@ export default function LandingPage() {
                   className="w-full sm:w-auto bg-[#00674f] hover:bg-[#004d3a] text-white px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300"
                 >
                   Start Your Journey
-                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
-              <a
-                href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="https://youtu.be/yl0QSkbYKJc" target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   variant="outline"
-                  className={`w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300
-                    ${theme === "light"
+                  className={`w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300 ${
+                    theme === "light"
                       ? "border-black text-black hover:bg-black/10"
-                      : "border-white text-white hover:bg-[#00674f]/10"}
-                  `}
+                      : "border-white text-white hover:bg-[#00674f]/10"
+                  }`}
                 >
                   Watch Demo
                 </Button>
               </a>
             </div>
-            <div className={`mt-8 sm:mt-12 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm px-4
-              ${theme === "light" ? "text-black/60" : "text-[#FFFFFF]/60"}`}>
+            <div
+              className={`mt-8 sm:mt-12 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm px-4 ${
+                theme === "light" ? "text-black/60" : "text-[#FFFFFF]/60"
+              }`}
+            >
               <div className="flex items-center">
-                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
+                <CheckCircle
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                />
                 No Credit Card Required
               </div>
               <div className="flex items-center">
-                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-200 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
+                <CheckCircle
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-200 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                />
                 Free Testing Environment
               </div>
               <div className="flex items-center">
-                <CheckCircle className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-400 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`} />
+                <CheckCircle
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-400 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                />
                 Community Driven
               </div>
             </div>
@@ -204,13 +182,13 @@ export default function LandingPage() {
           {/* Bouncing Down Arrow - Mobile Responsive */}
           <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <a
-              href="#features"
-              className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation
-                ${theme === "light"
+              href="#problem"
+              className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation ${
+                theme === "light"
                   ? "bg-black/10 hover:bg-black/20 active:bg-black/30"
-                  : "bg-white/10 hover:bg-white/20 active:bg-white/30"}
-              `}
-              aria-label="Scroll down to features"
+                  : "bg-white/10 hover:bg-white/20 active:bg-white/30"
+              }`}
+              aria-label="Scroll down to problem section"
             >
               <svg
                 className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${theme === "light" ? "text-black" : "text-white"}`}
@@ -218,19 +196,14 @@ export default function LandingPage() {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </a>
           </div>
         </div>
       </section>
 
-      {/* Problem Statement */}
+       {/* Problem Statement */}
       <section ref={problemRef} className="py-16 sm:py-20 bg-muted/30">
         <div
           className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
@@ -278,146 +251,369 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Solution Overview */}
-      <section ref={featuresRef} id="features" className="py-16 sm:py-20">
-        <div
-          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
-            featuresInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
-          <div className="text-center mb-12 sm:mb-16">
-            <Badge className="mb-4 bg-[#3ebb9e]/0 text-[#00674f] text-base sm:text-lg">Our Solution</Badge>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
-              Everything You Need for Prompt Excellence
-            </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-              Prompt Forge provides a comprehensive ecosystem for prompt engineering, from discovery to optimization.
-            </p>
-          </div>
-
-          {/* Marketplace section - Mobile responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center mb-16 sm:mb-20">
-            <div className="order-2 lg:order-1">
-              <div className="flex items-center mb-4">
-                <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
-                  <ShoppingCart className="h-4 w-4 text-[#3ebb9e]" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold">Prompt Marketplace</h3>
-              </div>
-              <p className="text-base sm:text-lg text-muted-foreground mb-6">
-                Discover and purchase high-quality, tested prompts from expert prompt engineers. Filter by industry, use
-                case, and performance ratings.
-              </p>
-              <ul className="space-y-3">
-                <li className="flex items-center animate-slideInLeft animation-delay-200">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Curated by experts</span>
-                </li>
-                <li className="flex items-center animate-slideInLeft animation-delay-400">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Performance guaranteed</span>
-                </li>
-                <li className="flex items-center animate-slideInLeft animation-delay-600">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Industry-specific categories</span>
-                </li>
-              </ul>
-            </div>
-            <div className="w-full max-w-[300px] sm:max-w-[400px] lg:max-w-[500px] mx-auto order-1 lg:order-2">
-              <div className="bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl">
-                <img
-                  src="/Marketplace.png"
-                  alt="Prompt Marketplace Interface"
-                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Testing Ground section - Mobile responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center mb-16 sm:mb-20">
-            <div className="w-full max-w-[300px] sm:max-w-[400px] lg:max-w-[500px] mx-auto order-1">
-              <div className="bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl">
-                <img
-                  src="/TestingGround.png"
-                  alt="Testing Ground Interface"
-                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-            <div className="order-2">
-              <div className="flex items-center mb-4">
-                <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
-                  <TestTube className="h-4 w-4 text-[#3ebb9e]" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold">Testing Ground</h3>
-              </div>
-              <p className="text-base sm:text-lg text-muted-foreground mb-6">
-                Test your prompts in a controlled environment across multiple AI models. Get real-time performance
-                metrics and optimization suggestions.
-              </p>
-              <ul className="space-y-3">
-                <li className="flex items-center animate-slideInRight animation-delay-200">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Multi-model testing</span>
-                </li>
-                <li className="flex items-center animate-slideInRight animation-delay-400">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Real-time analytics</span>
-                </li>
-                <li className="flex items-center animate-slideInRight animation-delay-600">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">A/B comparison tools</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Community section - Mobile responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <div className="flex items-center mb-4">
-                <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-4">
-                  <BarChart3 className="h-4 w-4 text-[#3ebb9e]" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold">Analytics & Community</h3>
-              </div>
-              <p className="text-base sm:text-lg text-muted-foreground mb-6">
-                Community-driven ranking system with comprehensive analytics. Connect with other prompt engineers and
-                share knowledge in our vibrant community.
-              </p>
-              <ul className="space-y-3">
-                <li className="flex items-center animate-slideInLeft animation-delay-200">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Performance tracking</span>
-                </li>
-                <li className="flex items-center animate-slideInLeft animation-delay-400">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-200 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Community ratings</span>
-                </li>
-                <li className="flex items-center animate-slideInLeft animation-delay-600">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#3ebb9e] mr-3 animate-tick animation-delay-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Knowledge sharing</span>
-                </li>
-              </ul>
-            </div>
-            <div className="w-full max-w-[300px] sm:max-w-[400px] lg:max-w-[500px] mx-auto order-1 lg:order-2">
-              <div className="bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl">
-                <img
-                  src="/Community.png"
-                  alt="Community & Analytics Dashboard"
-                  className="w-full h-auto rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-          </div>
+      {/* Solution Overview with ScrollStack */}
+      <section id="features" className="py-0 relative overflow-hidden border-b-2 border-border/40 shadow-md">
+        <div className="text-center pt-16 sm:pt-20 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 relative z-10">
+          <Badge className="mb-4 bg-[#3ebb9e]/10 text-[#00674f] dark:text-[#3ebb9e] text-base sm:text-lg border-2 border-[#3ebb9e]/30">
+            Our Solution
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
+            Everything You Need for Prompt Excellence
+          </h2>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
+            Prompt Forge provides a comprehensive ecosystem for prompt engineering, from discovery to optimization.
+          </p>
         </div>
+
+        <ScrollStack useWindowScroll itemDistance={150} itemStackDistance={40} baseScale={0.9} itemScale={0.02} className="relative z-10">
+          {/* Marketplace Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <ShoppingCart className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Prompt Marketplace</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Discover and purchase high-quality, tested prompts from expert prompt engineers. Filter by industry,
+                    use case, and performance ratings.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Curated by experts</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Performance guaranteed</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Industry-specific categories</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/Marketplace.png"
+                        alt="Prompt Marketplace Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          {/* Testing Ground Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/TestingGround.png"
+                        alt="Testing Ground Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <TestTube className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Testing Ground</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Test your prompts in a controlled environment across multiple AI models. Get real-time performance
+                    metrics and optimization suggestions.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Multi-model testing</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time analytics</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">A/B comparison tools</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          {/* Prompt Builder Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <BrainCircuit className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Prompt Builder</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Create effective AI prompts effortlessly with our beginner-friendly builder. Choose from expert-crafted
+                    templates, get personalized guidance, and build prompts that work - no prior experience required.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Beginner-friendly interface</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Pre-built templates for common tasks</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Step-by-step guidance</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Role-based prompt optimization</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/Builder.png"
+                        alt="Prompt Builder Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          {/* Social Hub & Battles Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img src="/Community.png" alt="Social Hub & Battle System" className="w-full h-auto rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <Users className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Social Hub & Battles</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Connect with other prompt engineers, follow creators, and challenge them to epic prompt battles.
+                    Choose between Classic prompt creation or Unprompted reverse-engineering battles.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Users className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Follow & connect with creators</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Swords className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Challenge users to battles</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Trophy className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time battle notifications</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <MessageCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Community knowledge sharing</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          {/* Dashboard Analytics & Widgets Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <BarChart3 className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Dashboard Analytics</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Track your prompt performance with comprehensive analytics, customizable widgets, and real-time
+                    insights. Monitor usage patterns, ratings, and optimize your prompt engineering workflow.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Customizable dashboard widgets</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time performance analytics</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Usage tracking and insights</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Category breakdown analytics</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img src="/Dashboard.png" alt="Dashboard Analytics & Widgets" className="w-full h-auto rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          {/* Optimizer Wizard & AI Recommendations Card */}
+          <ScrollStackItem>
+            <div
+              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img src="/Wizard.png" alt="Optimizer Wizard & AI Recommendations" className="w-full h-auto rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <Wand2 className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Optimizer Wizard & AI Recommendations</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Transform your prompts with our intelligent optimizer wizard. Get AI-powered recommendations,
+                    step-by-step improvements, and comprehensive analysis to maximize your prompt effectiveness.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Step-by-step optimization wizard</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">AI-powered prompt analysis</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Smart recommendations & suggestions</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Comprehensive improvement tracking</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </ScrollStackItem>
+        </ScrollStack>
       </section>
 
       {/* How It Works */}
-      <section ref={howItWorksRef} id="how-it-works" className="py-16 sm:py-20 bg-muted/30">
+      <section ref={howItWorksRef} id="how-it-works" className="py-16 sm:py-20 relative overflow-hidden border-b-2 border-border/40 shadow-md">
         <div
-          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
+          className={`relative container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 z-10 ${
             howItWorksInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
           }`}
         >
@@ -429,8 +625,8 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto">
-            <div className="text-center animate-fadeInUp">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
+            <div className="text-center animate-fadeInUp hover:scale-105 transition-all duration-300">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:rotate-6">
                 1
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Discover</h3>
@@ -438,8 +634,8 @@ export default function LandingPage() {
                 Browse our marketplace of tested, high-quality prompts across various categories and industries.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-200">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
+            <div className="text-center animate-fadeInUp animation-delay-200 hover:scale-105 transition-all duration-300">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:-rotate-6">
                 2
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Test</h3>
@@ -447,8 +643,8 @@ export default function LandingPage() {
                 Use our testing ground to evaluate prompts with different AI models and compare performance.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-400">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
+            <div className="text-center animate-fadeInUp animation-delay-400 hover:scale-105 transition-all duration-300">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:rotate-6">
                 3
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Optimize</h3>
@@ -456,8 +652,8 @@ export default function LandingPage() {
                 Get AI-powered suggestions and community feedback to continuously improve your prompts.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-600">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4">
+            <div className="text-center animate-fadeInUp animation-delay-600 hover:scale-105 transition-all duration-300">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:-rotate-6">
                 4
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Master</h3>
@@ -465,58 +661,6 @@ export default function LandingPage() {
                 Deploy optimized prompts in your applications and share successful ones with the community.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section ref={ctaRef} className="py-16 sm:py-20 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Silk speed={1} bgColor={silkCtaBg} />
-        </div>
-        <div
-          className={`relative container mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-1000 ${
-            ctaInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
-          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 animate-fadeInUp ${
-            theme === "light" ? "text-black" : "text-white"
-          }`}>
-            Ready to Transform Your AI Experience?
-          </h2>
-          <p className={`text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto animate-fadeInUp animation-delay-200 px-4 ${
-            theme === "light" ? "text-black/90" : "text-white/90"
-          }`}>
-            Join thousands of prompt engineers, creators, and AI enthusiasts who are already forging the future of AI
-            interactions.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-400 px-4">
-            <Link to="/login">
-              <Button
-                size="lg"
-                className={`w-full sm:w-auto bg-white ${theme === "light" ? "text-[#00674f] hover:bg-gray-100" : "text-[#00674f] hover:bg-gray-100"} px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300`}
-              >
-                Start Free Today
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-bounce-horizontal" />
-              </Button>
-            </Link>
-            <a
-              href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                size="lg"
-                variant="outline"
-                className={`w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg hover:scale-105 transition-all duration-300
-                  ${theme === "light"
-                    ? "border-black text-black hover:bg-black/10"
-                    : "border-white text-white hover:bg-white/10"}
-                `}
-              >
-                Watch Demo
-              </Button>
-            </a>
           </div>
         </div>
       </section>
@@ -537,7 +681,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
                   <a
-                    href="https://youtu.be/eiQ9EBDL4Es?si=fVpf0idoo0f2zxuJ"
+                    href="https://youtu.be/yl0QSkbYKJc"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -551,10 +695,7 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <a
-                    href="mailto:5iveOps.Capstone@gmail.com"
-                    className="hover:text-white"
-                  >
+                  <a href="mailto:5iveOps.Capstone@gmail.com" className="hover:text-white">
                     Contact Us
                   </a>
                 </li>
@@ -584,10 +725,17 @@ export default function LandingPage() {
                   </a>
                 </li>
               </ul>
+              <div className="mt-6">
+                <Link to="/login">
+                  <Button className="bg-[#3ebb9e] hover:bg-[#00674f] text-white px-6 py-2 text-sm font-medium hover:scale-105 transition-all duration-300">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-gray-400">
-            <p>&copy; 2025 Prompt Forge. All rights reserved. Built with ❤️ for the AI community.</p>
+            <p>&copy; 2025 Prompt Forge. All rights reserved.</p>
           </div>
         </div>
       </footer>
