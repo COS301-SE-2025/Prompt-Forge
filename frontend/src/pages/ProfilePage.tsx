@@ -2,15 +2,16 @@ import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar"
 import { MyPrompt } from '@/Models/MyPrompt';
 import { dashProfileService } from '../services/dashprofileService';
 
 
 import { PromptCard } from '@/components/PromptCard';
-import { SocialAPI } from '@/services/socialService';
+import { SocialAPI, ChallengeAPI } from '@/services/socialService';
 import { FullScreenSpinner } from '@/components/FullScreenSpinner';
-import { Swords, Award } from 'lucide-react';
+import { Swords, Award, X, Zap, RotateCcw } from 'lucide-react';
 import { promptWarsWebSocket } from '@/services/promptWarsWebSocket';
 import { BadgeCollection } from '@/components/BadgeCollection';
 import { BadgeCount } from '@/components/BadgeCount';
@@ -65,6 +66,12 @@ export default function ProfilePage() {
   //Pagination
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Challenge functionality
+  const [showChallengeModal, setShowChallengeModal] = useState(false)
+  const [challengeMessage, setChallengeMessage] = useState("")
+  const [selectedGameType, setSelectedGameType] = useState<"PROMPT_CREATION" | "REVERSE_PROMPT">("PROMPT_CREATION")
+  const [challengeLoading, setChallengeLoading] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -259,6 +266,24 @@ export default function ProfilePage() {
     }
   }
 
+  const handleSendChallenge = async () => {
+    if (!userProfile.userId) return
+
+    try {
+      setChallengeLoading(true)
+      await ChallengeAPI.sendChallenge(userProfile.userId, challengeMessage || undefined, selectedGameType)
+
+      setShowChallengeModal(false)
+      setChallengeMessage("")
+      setSelectedGameType("PROMPT_CREATION")
+    } catch (error) {
+      console.error("Failed to send challenge:", error)
+      setError("Failed to send challenge. Please try again.")
+    } finally {
+      setChallengeLoading(false)
+    }
+  }
+
 
   if (authLoading) {
     return (
@@ -372,10 +397,7 @@ export default function ProfilePage() {
                   className={`transition-all duration-300 w-full flex items-center justify-center
                     bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30 `}
                   title={ "Challenge to Prompt Wars" }
-                  onClick={() => {
-                    /* trigger challenge flow - existing behaviour previously disabled for self */
-                    /* Keep the same handler location or add action here when needed */
-                  }}
+                  onClick={() => setShowChallengeModal(true)}
                 >
                   Challenge
                   <Swords className="h-4 w-4 ml-2" />
@@ -515,6 +537,107 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Challenge Modal */}
+      {showChallengeModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border-0 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-start mb-4 sm:mb-6">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#3ebb9e] to-[#2ea688] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 truncate">Challenge {userProfile.username}</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Ready for battle?</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowChallengeModal(false)} className="rounded-lg flex-shrink-0 ml-2">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Game Type</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button
+                      variant={selectedGameType === "PROMPT_CREATION" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedGameType("PROMPT_CREATION")}
+                      className={`rounded-lg transition-all duration-200 h-auto py-3 px-4 text-sm sm:text-base ${
+                        selectedGameType === "PROMPT_CREATION"
+                          ? "bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] text-white shadow-lg"
+                          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <Swords className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span>Classic Battle</span>
+                    </Button>
+                    <Button
+                      variant={selectedGameType === "REVERSE_PROMPT" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedGameType("REVERSE_PROMPT")}
+                      className={`rounded-lg transition-all duration-200 h-auto py-3 px-4 text-sm sm:text-base ${
+                        selectedGameType === "REVERSE_PROMPT"
+                          ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg"
+                          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span>Unprompted</span>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {selectedGameType === "REVERSE_PROMPT" 
+                      ? "Guess what prompt created the given image" 
+                      : "Create the best prompt for a given theme"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Challenge Message</label>
+                  <textarea
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#3ebb9e] focus:ring-[#3ebb9e]/20 dark:focus:ring-[#3ebb9e]/30 focus:bg-white dark:focus:bg-gray-600 transition-colors text-sm sm:text-base"
+                    rows={3}
+                    placeholder="Add a message to your challenge..."
+                    value={challengeMessage}
+                    onChange={(e) => setChallengeMessage(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    onClick={handleSendChallenge}
+                    disabled={challengeLoading}
+                    className="flex-1 bg-gradient-to-r from-[#3ebb9e] to-[#2ea688] hover:from-[#2ea688] hover:to-[#1e7a66] text-white font-semibold rounded-lg py-3 text-sm sm:text-base disabled:opacity-50"
+                  >
+                    {challengeLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Send Challenge
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowChallengeModal(false)} 
+                    className="px-6 py-3 rounded-lg bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm sm:text-base"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar"
 import { Badge } from "@/components/ui/Badge"
-import { Users, UserPlus, Swords, Search, Trophy, X, Bell, Zap, Loader2, TrendingUp, Sparkles, Home, MessageSquare, User, RotateCcw } from "lucide-react"
+import { Users, UserPlus, Swords, Search, Trophy, X, Bell, Zap, Loader2, TrendingUp, Sparkles, Home, MessageSquare, User, RotateCcw, HelpCircle } from "lucide-react"
 import { UserCard } from "../components/UserCard"
 import {
   ChallengeAPI,
@@ -50,6 +50,9 @@ export default function SocialPage() {
   const [allPrompts, setAllPrompts] = useState<Prompt[]>([])
   const [activeGameError, setActiveGameError] = useState<string | null>(null)
   const [activeGameId, setActiveGameId] = useState<string | null>(null)
+
+  // Help modal state
+  const [showHelpModal, setShowHelpModal] = useState(false)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<{ [key: string]: number }>({
@@ -846,7 +849,15 @@ export default function SocialPage() {
                   <span className="xs:hidden">War</span>
                 </Button>
               </Link>
-
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHelpModal(true)}
+                className="bg-gradient-to-r from-[#3ebb9e]/10 to-[#2ea688]/10 hover:from-[#3ebb9e]/20 hover:to-[#2ea688]/20 text-[#3ebb9e] border-[#3ebb9e]/30 hover:border-[#3ebb9e] transition-all duration-300 rounded-lg text-xs sm:text-sm"
+                title="Help & Tips"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </Button>
               {challenges.length > 0 && (
                 <Button
                   variant="ghost"
@@ -1637,6 +1648,181 @@ export default function SocialPage() {
               </div>
             </div>
           </Card>
+        </div>
+      )}
+      
+      {/* Help Modal */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 custom-scrollbar">
+          <div className="bg-background border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-foreground">Social Hub Complete Guide</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowHelpModal(false)}
+                className="h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
+                aria-label="Close help modal"
+              >
+                <span className="text-lg">✕</span>
+              </Button>
+            </div>
+
+            <div className="p-6 space-y-8">
+              {/* How to Use Section */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <Users className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  How to Use the Social Hub
+                </h3>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                  <li>Browse the <strong>Discover</strong> tab to find other prompt engineers and creators</li>
+                  <li>Click the <strong>Follow</strong> button to connect with users you're interested in</li>
+                  <li>Check your <strong>Following</strong> tab to see users you've followed</li>
+                  <li>View your <strong>Followers</strong> to see who follows you</li>
+                  <li>Send <strong>Challenge</strong> requests to battle other users in prompt wars</li>
+                  <li>Choose between <strong>Classic</strong> (create prompts) or <strong>Unprompted</strong> (guess prompts) battle types</li>
+                  <li>Monitor your <strong>Challenges</strong> tab for incoming and outgoing battle requests</li>
+                </ol>
+              </section>
+
+              {/* Social Features Guide */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <UserPlus className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  Social Features Guide
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">Discover Users</h4>
+                        <p className="text-sm text-muted-foreground">Browse and search for other prompt engineers. Use the search bar to find specific users by username.</p>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <UserPlus className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">Following System</h4>
+                        <p className="text-sm text-muted-foreground">Follow users to stay connected. You can only challenge users you follow. Unfollow anytime to manage your network.</p>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <Swords className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">Challenge Battles</h4>
+                        <p className="text-sm text-muted-foreground">Send challenge requests to battle other users. Choose between Classic prompt creation or Unprompted reverse engineering battles.</p>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <Bell className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">Real-time Notifications</h4>
+                        <p className="text-sm text-muted-foreground">Get instant notifications for new challenges, accepted battles, and game updates via WebSocket.</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </section>
+
+              {/* Game Types */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <Trophy className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  Battle Game Types
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-2">Classic Battle</h4>
+                        <p className="text-sm text-muted-foreground mb-2">Create the best prompt for a given scenario. Test your prompt engineering creativity and strategy.</p>
+                        <div className="text-xs text-muted-foreground">
+                          <strong>How it works:</strong> Both players receive the same scenario and craft competing prompts. Each player rates their opponent's prompt (1-10), then an AI judge determines the winner based on the ratings.
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          <strong>Time:</strong> 2 minutes to craft your prompt
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-card/60 border-border">
+                    <div className="flex items-start gap-3">
+                      <Zap className="h-5 w-5 text-[#3ebb9e] mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-2">Unprompted Battle</h4>
+                        <p className="text-sm text-muted-foreground mb-2">Guess which prompt generated mysterious AI outputs. Test your reverse prompt engineering skills.</p>
+                        <div className="text-xs text-muted-foreground">
+                          <strong>How it works:</strong> Answer multiple-choice questions about which prompt created a given AI output. First player to get 5 correct answers wins.
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          <strong>Time:</strong> 1 minute per question • Best of 5 rounds
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </section>
+
+              {/* Tips and Best Practices */}
+              <section>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center border-b border-border pb-2">
+                  <MessageSquare className="h-5 w-5 mr-2 text-[#3ebb9e]" />
+                  Tips & Best Practices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Follow users whose prompts you admire to stay updated with their work</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Send personalized challenge messages to make your battles more engaging</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Check your online status - you can only challenge users who are currently online</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">In Classic battles, focus on specificity and creativity in your prompts</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Monitor your Challenges tab regularly to respond to incoming battle requests</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Use the search function to find specific users or browse by interests</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">Build your network strategically - quality connections lead to better battles</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-[#3ebb9e] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-sm text-muted-foreground">In Unprompted battles, think about common prompt patterns and AI behavior</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
       )}
     </div>
