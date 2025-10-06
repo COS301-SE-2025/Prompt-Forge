@@ -203,10 +203,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Problem Statement */}
-      <section id="problem" ref={problemRef} className="py-16 sm:py-20 relative overflow-hidden border-b-2 border-border/40 shadow-md">
+       {/* Problem Statement */}
+      <section ref={problemRef} className="py-16 sm:py-20 bg-muted/30">
         <div
-          className={`relative container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 z-10 ${
+          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
             problemInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
           }`}
         >
@@ -220,27 +220,27 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-red-500 hover:scale-105 hover:rotate-1 transition-all duration-300 shadow-xl hover:shadow-2xl transform-gpu">
-              <div className="text-red-500 mb-4 transform-gpu">
-                <Target className="h-6 w-6 sm:h-8 sm:w-8 mx-auto drop-shadow-lg" />
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-red-500 hover:scale-105 transition-all duration-300">
+              <div className="text-red-500 mb-4">
+                <Target className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Inconsistent Results</h3>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Without proper prompt engineering, AI outputs vary wildly in quality and relevance.
               </p>
             </Card>
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-yellow-500 hover:scale-105 hover:-rotate-1 transition-all duration-300 shadow-xl hover:shadow-2xl transform-gpu">
-              <div className="text-yellow-500 mb-4 transform-gpu">
-                <Search className="h-6 w-6 sm:h-8 sm:w-8 mx-auto drop-shadow-lg" />
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-yellow-500 hover:scale-105 transition-all duration-300">
+              <div className="text-yellow-500 mb-4">
+                <Search className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">No Testing Framework</h3>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Users lack proper tools to test, compare, and optimize their prompts systematically.
               </p>
             </Card>
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-blue-500 hover:scale-105 hover:rotate-1 transition-all duration-300 shadow-xl hover:shadow-2xl transform-gpu">
-              <div className="text-blue-500 mb-4 transform-gpu">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 mx-auto drop-shadow-lg" />
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-blue-500 hover:scale-105 transition-all duration-300">
+              <div className="text-blue-500 mb-4">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Isolated Learning</h3>
               <p className="text-sm sm:text-base text-muted-foreground">
@@ -308,7 +308,7 @@ export default function LandingPage() {
                 </div>
                 <div className="w-full order-1 lg:order-2 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img
                         src="/Marketplace.png"
                         alt="Prompt Marketplace Interface"
@@ -331,7 +331,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="w-full order-1 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img
                         src="/TestingGround.png"
                         alt="Testing Ground Interface"
@@ -424,7 +424,7 @@ export default function LandingPage() {
                 </div>
                 <div className="w-full order-1 lg:order-2 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img
                         src="/Builder.png"
                         alt="Prompt Builder Interface"
@@ -447,7 +447,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="w-full order-1 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img src="/Community.png" alt="Social Hub & Battle System" className="w-full h-auto rounded-lg" />
                     </div>
                   </div>
@@ -542,7 +542,7 @@ export default function LandingPage() {
                 </div>
                 <div className="w-full order-1 lg:order-2 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img src="/Dashboard.png" alt="Dashboard Analytics & Widgets" className="w-full h-auto rounded-lg" />
                     </div>
                   </div>
@@ -561,7 +561,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="w-full order-1 flex items-center justify-center">
                   <div className="max-w-md w-full">
-                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
                       <img src="/Wizard.png" alt="Optimizer Wizard & AI Recommendations" className="w-full h-auto rounded-lg" />
                     </div>
                   </div>
