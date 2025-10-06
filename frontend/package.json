@@ -37,6 +37,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jspdf": "^3.0.1",
+    "lenis": "^1.3.11",
     "lucide-react": "^0.263.1",
     "ogl": "^1.0.11",
     "react": "^18.2.0",
