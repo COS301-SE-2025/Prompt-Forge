@@ -519,7 +519,359 @@ export default function LandingPage() {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <ScrollStack useWindowScroll itemDistance={200} itemStackDistance={50} baseScale={0.9} itemScale={0.015} className="relative z-10">
+          {/* Mobile: Normal cards in grid */}
+          <div className="block md:hidden space-y-8">
+            {/* Marketplace Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <ShoppingCart className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Prompt Marketplace</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Discover and purchase high-quality, tested prompts from expert prompt engineers. Filter by industry,
+                    use case, and performance ratings.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Curated by experts</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Performance guaranteed</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Industry-specific categories</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">User reviews & ratings</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/Marketplace.png"
+                        alt="Prompt Marketplace Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testing Ground Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/TestingGround.png"
+                        alt="Testing Ground Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <TestTube className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Testing Ground</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Test your prompts in a controlled environment across multiple AI models. Get real-time performance
+                    metrics and optimization suggestions.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Multi-model testing</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time analytics</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">A/B comparison tools</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Performance benchmarking</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Prompt Builder Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <BrainCircuit className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Prompt Builder</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Create effective AI prompts effortlessly with our beginner-friendly builder. Choose from expert-crafted
+                    templates, get personalized guidance, and build prompts that work - no prior experience required.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Beginner-friendly interface</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Pre-built templates for common tasks</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Step-by-step guidance</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Role-based prompt optimization</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/Builder.png"
+                        alt="Prompt Builder Interface"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Hub & Battles Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img src="/Community.png" alt="Social Hub & Battle System" className="w-full h-auto rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <Users className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Social Hub & Battles</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Connect with other prompt engineers, follow creators, and challenge them to epic prompt battles.
+                    Choose between Classic prompt creation or Unprompted reverse-engineering battles.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Users className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Follow & connect with creators</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Swords className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Challenge users to battles</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <Trophy className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time battle notifications</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <MessageCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Community knowledge sharing</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Dashboard Analytics & Widgets Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="order-2 lg:order-1 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <BarChart3 className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Dashboard Analytics</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Track your prompt performance with comprehensive analytics, customizable widgets, and real-time
+                    insights. Monitor usage patterns, ratings, and optimize your prompt engineering workflow.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Customizable dashboard widgets</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Real-time performance analytics</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Usage tracking and insights</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Category breakdown analytics</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="w-full order-1 lg:order-2 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img src="/Dashboard.png" alt="Dashboard Analytics & Widgets" className="w-full h-auto rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Optimizer Wizard & AI Recommendations Card */}
+            <div
+              className={`rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
+                theme === "light" ? "bg-white/90" : "bg-slate-900/90"
+              }`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
+                <div className="w-full order-1 lg:order-1 flex items-center justify-center">
+                  <div className="max-w-md w-full">
+                    <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
+                      <img
+                        src="/Wizard.png"
+                        alt="Optimizer Wizard & AI Recommendations"
+                        className="w-full h-auto rounded-lg"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="order-2 lg:order-2 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
+                      <Wand2 className="h-6 w-6 text-[#3ebb9e]" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold">Optimizer Wizard & AI Recommendations</h3>
+                  </div>
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">
+                    Transform your prompts with our intelligent optimizer wizard. Get AI-powered recommendations,
+                    step-by-step improvements, and comprehensive analysis to maximize your prompt effectiveness.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Step-by-step optimization wizard</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">AI-powered prompt analysis</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Smart recommendations & suggestions</span>
+                    </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Comprehensive improvement tracking</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop: ScrollStack */}
+          <div className="hidden md:block">
+            <ScrollStack useWindowScroll itemDistance={200} itemStackDistance={50} baseScale={0.9} itemScale={0.015} className="relative z-10">
           {/* Marketplace Card */}
           <ScrollStackItem>
             <div
@@ -885,6 +1237,7 @@ export default function LandingPage() {
             </div>
           </ScrollStackItem>
         </ScrollStack>
+          </div>
         </div>
       </section>
 

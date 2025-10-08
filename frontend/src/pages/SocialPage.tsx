@@ -706,10 +706,26 @@ export default function SocialPage() {
         changePage("following", currentPage.following)
       }
 
+      // Find username from the appropriate array based on current tab
+      const findUsername = (userId: string) => {
+        switch (activeTab) {
+          case "discover":
+            return users.find((u) => u.userId === userId)?.username
+          case "following":
+            return following.find((u) => u.userId === userId)?.username
+          case "followers":
+            return followers.find((u) => u.userId === userId)?.username
+          default:
+            return users.find((u) => u.userId === userId)?.username
+        }
+      }
+
+      const username = findUsername(userId)
+
       showNotification(
         isCurrentlyFollowing
-          ? `Unfollowed ${users.find((u) => u.userId === userId)?.username}`
-          : `Following ${users.find((u) => u.userId === userId)?.username}`,
+          ? `Unfollowed ${username || "user"}`
+          : `Following ${username || "user"}`,
       )
     } catch (error) {
       console.error("Failed to follow/unfollow user:", error)

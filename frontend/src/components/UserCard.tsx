@@ -182,18 +182,20 @@ export const UserCard: React.FC<UserCardProps> = ({
               <Button
                 size="sm"
                 variant="outline"
-                className="px-6 flex-1 hover:border-[#3ebb9e] hover:text-[#3ebb9e] transition-colors duration-300"
+                className="px-2 sm:px-6 flex-1 hover:border-[#3ebb9e] hover:text-[#3ebb9e] transition-colors duration-300"
                 onClick={() => handleFollow(user.userId, user.isFollowing || false)}
               >
-                Following
+                <span className="hidden sm:inline">Following</span>
+                <span className="sm:hidden">✓</span>
               </Button>
             ) : (
               <Button
                 size="sm"
-                className="px-6 flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white transition-colors duration-300"
+                className="px-2 sm:px-6 flex-1 bg-[#3ebb9e] hover:bg-[#00674f] text-white transition-colors duration-300"
                 onClick={() => handleFollow(user.userId, user.isFollowing || false)}
               >
-                Follow
+                <span className="hidden sm:inline">Follow</span>
+                <span className="sm:hidden">+</span>
               </Button>
             )}
 
@@ -210,7 +212,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                     showNotification(`${user.username} is currently offline. Try again when they're online!`)
                   }
                 }}
-                className={`transition-all duration-300 flex items-center justify-center ${
+                className={`transition-all duration-300 flex items-center justify-center w-10 h-8 ${
                   user.active
                     ? "bg-[#3ebb9e]/10 hover:bg-[#3ebb9e]/20 text-[#3ebb9e] border-[#3ebb9e]/30"
                     : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
