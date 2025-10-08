@@ -205,19 +205,271 @@ export default function LoginPage() {
     return <>{children}</>;
   };
 
-  // Silk background color for light/dark mode
-  const silkBg =
-    theme === "light"
-      ? [1, 1, 1] as [number, number, number]
-      : [0.0078, 0.031, 0.090] as [number, number, number]
-
   return (
-    <main className={`min-h-screen flex flex-col ${theme === "light" ? "bg-white text-black" : "bg-muted/30 text-white"}`}>
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left Silk/Brand Section */}
-        <div className="relative w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center order-1 lg:order-1 min-h-[300px] lg:min-h-screen overflow-hidden">
-          <div className="absolute inset-0">
-            <Silk speed={1} bgColor={silkBg} /> {/* <-- Pass bgColor */}
+    <main className={`min-h-screen flex flex-col relative ${theme === "light" ? "bg-white text-black" : "bg-muted/30 text-white"}`}>
+      {/* Background gradients covering entire page */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#3ebb9e]/12 via-transparent to-black/40 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(62,187,158,0.12),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(0,103,79,0.12),transparent_50%)] pointer-events-none"></div>
+
+      <div className="flex-1 flex flex-col lg:flex-row relative z-10">
+        {/* Left Brand Section */}
+        <div className={`relative w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center text-center order-1 lg:order-1 min-h-[300px] lg:min-h-screen overflow-hidden lg:border-r ${theme === "light" ? "border-gray-200" : "border-gray-700"}`}>
+
+          {/* Neural Network Visualization */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Input Layer */}
+            {[...Array(10)].map((_, i) => {
+              const y = 14 + (i * 7); // Vertical spacing for input layer
+              return (
+                <div
+                  key={`input-${i}`}
+                  className={`absolute rounded-full border-2 ${
+                    theme === "light"
+                      ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                      : i % 4 === 0 ? 'bg-[#3ebb9e]/30 border-[#3ebb9e]/70 shadow-lg shadow-[#3ebb9e]/40' :
+                        i % 4 === 1 ? 'bg-[#45c1a4]/25 border-[#45c1a4]/55 shadow-md shadow-[#45c1a4]/35' :
+                        i % 4 === 2 ? 'bg-[#2da085]/35 border-[#2da085]/70 shadow-lg shadow-[#2da085]/45' :
+                        'bg-[#00674f]/30 border-[#00674f]/65 shadow-md shadow-[#00674f]/40'
+                  } ${i % 3 === 0 ? 'animate-float-slow' : i % 3 === 1 ? 'animate-float-medium' : 'animate-float-fast'}`}
+                  style={{
+                    left: '6%',
+                    top: `${y}%`,
+                    width: '6px',
+                    height: '6px',
+                    animationDelay: `${Math.random() * 8}s`,
+                    filter: 'blur(3px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Hidden Layer 1 */}
+            {[...Array(14)].map((_, i) => {
+              const y = 10 + (i * 5.5); // More nodes in hidden layer
+              return (
+                <div
+                  key={`hidden1-${i}`}
+                  className={`absolute rounded-full border-2 ${
+                    theme === "light"
+                      ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                      : i % 5 === 0 ? 'bg-[#3ebb9e]/27 border-[#3ebb9e]/55 shadow-md shadow-[#3ebb9e]/35' :
+                        i % 5 === 1 ? 'bg-[#45c1a4]/23 border-[#45c1a4]/45 shadow-sm shadow-[#45c1a4]/30' :
+                        i % 5 === 2 ? 'bg-[#2da085]/32 border-[#2da085]/60 shadow-lg shadow-[#2da085]/40' :
+                        i % 5 === 3 ? 'bg-[#00674f]/27 border-[#00674f]/55 shadow-md shadow-[#00674f]/35' :
+                        'bg-[#1db394]/30 border-[#1db394]/58 shadow-lg shadow-[#1db394]/38'
+                  } ${i % 4 === 0 ? 'animate-float-medium' : i % 4 === 1 ? 'animate-float-fast' : i % 4 === 2 ? 'animate-float-slow' : 'animate-float-medium'}`}
+                  style={{
+                    left: '28%',
+                    top: `${y}%`,
+                    width: '5px',
+                    height: '5px',
+                    animationDelay: `${Math.random() * 10}s`,
+                    filter: 'blur(2.5px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Hidden Layer 2 */}
+            {[...Array(12)].map((_, i) => {
+              const y = 12 + (i * 6);
+              return (
+                <div
+                  key={`hidden2-${i}`}
+                  className={`absolute rounded-full border-2 ${
+                    theme === "light"
+                      ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                      : i % 4 === 0 ? 'bg-[#3ebb9e]/23 border-[#3ebb9e]/50 shadow-sm shadow-[#3ebb9e]/30' :
+                        i % 4 === 1 ? 'bg-[#45c1a4]/28 border-[#45c1a4]/55 shadow-lg shadow-[#45c1a4]/35' :
+                        i % 4 === 2 ? 'bg-[#2da085]/26 border-[#2da085]/53 shadow-md shadow-[#2da085]/32' :
+                        'bg-[#00674f]/24 border-[#00674f]/52 shadow-sm shadow-[#00674f]/31'
+                  } ${i % 3 === 0 ? 'animate-float-fast' : i % 3 === 1 ? 'animate-float-medium' : 'animate-float-slow'}`}
+                  style={{
+                    left: '50%',
+                    top: `${y}%`,
+                    width: '6px',
+                    height: '6px',
+                    animationDelay: `${Math.random() * 12}s`,
+                    filter: 'blur(3.5px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Hidden Layer 3 */}
+            {[...Array(10)].map((_, i) => {
+              const y = 14 + (i * 6.5);
+              return (
+                <div
+                  key={`hidden3-${i}`}
+                  className={`absolute rounded-full border-2 ${
+                    theme === "light"
+                      ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                      : i % 4 === 0 ? 'bg-[#3ebb9e]/20 border-[#3ebb9e]/45 shadow-sm shadow-[#3ebb9e]/27' :
+                        i % 4 === 1 ? 'bg-[#45c1a4]/26 border-[#45c1a4]/52 shadow-md shadow-[#45c1a4]/32' :
+                        i % 4 === 2 ? 'bg-[#2da085]/23 border-[#2da085]/48 shadow-sm shadow-[#2da085]/29' :
+                        'bg-[#00674f]/22 border-[#00674f]/46 shadow-sm shadow-[#00674f]/28'
+                  } ${i % 4 === 0 ? 'animate-float-slow' : i % 4 === 1 ? 'animate-float-fast' : i % 4 === 2 ? 'animate-float-medium' : 'animate-float-slow'}`}
+                  style={{
+                    left: '72%',
+                    top: `${y}%`,
+                    width: '5.5px',
+                    height: '5.5px',
+                    animationDelay: `${Math.random() * 14}s`,
+                    filter: 'blur(4px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Output Layer */}
+            {[...Array(6)].map((_, i) => {
+              const y = 20 + (i * 10); // Fewer, larger output nodes
+              return (
+                <div
+                  key={`output-${i}`}
+                  className={`absolute rounded-full border-2 ${
+                    theme === "light"
+                      ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                      : i % 3 === 0 ? 'bg-[#3ebb9e]/33 border-[#3ebb9e]/70 shadow-xl shadow-[#3ebb9e]/45' :
+                        i % 3 === 1 ? 'bg-[#00674f]/30 border-[#00674f]/65 shadow-lg shadow-[#00674f]/42' :
+                        'bg-[#2da085]/28 border-[#2da085]/60 shadow-lg shadow-[#2da085]/38'
+                  } animate-float-slow`}
+                  style={{
+                    left: '92%',
+                    top: `${y}%`,
+                    width: '8px',
+                    height: '8px',
+                    animationDelay: `${Math.random() * 6}s`,
+                    filter: 'blur(2px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Neural Connections - Input to Hidden1 */}
+            {[...Array(15)].map((_, i) => {
+              const inputIdx = Math.floor(Math.random() * 10);
+              const hiddenIdx = Math.floor(Math.random() * 14);
+              const inputY = 14 + (inputIdx * 7);
+              const hiddenY = 10 + (hiddenIdx * 5.5);
+              const length = Math.sqrt((22) ** 2 + (hiddenY - inputY) ** 2); // 28% - 6% = 22%
+              const angle = Math.atan2(hiddenY - inputY, 22);
+
+              return (
+                <div
+                  key={`conn1-${i}`}
+                  className="absolute animate-pulse"
+                  style={{
+                    left: '6%',
+                    top: `${inputY}%`,
+                    width: `${length}%`,
+                    height: '1px',
+                    background: theme === "light"
+                      ? `linear-gradient(90deg, rgba(78,205,196,${0.15 + Math.random() * 0.25}) 0%, rgba(78,205,196,${0.08 + Math.random() * 0.15}) 50%, transparent 100%)`
+                      : `linear-gradient(90deg, rgba(62,187,158,${0.15 + Math.random() * 0.25}) 0%, rgba(62,187,158,${0.08 + Math.random() * 0.15}) 50%, transparent 100%)`,
+                    transform: `rotate(${angle}rad)`,
+                    transformOrigin: '0 0',
+                    animationDelay: `${Math.random() * 8}s`,
+                    animationDuration: `${4 + Math.random() * 3}s`,
+                    filter: 'blur(1.5px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Neural Connections - Hidden1 to Hidden2 */}
+            {[...Array(18)].map((_, i) => {
+              const hidden1Idx = Math.floor(Math.random() * 14);
+              const hidden2Idx = Math.floor(Math.random() * 12);
+              const hidden1Y = 10 + (hidden1Idx * 5.5);
+              const hidden2Y = 12 + (hidden2Idx * 6);
+              const length = Math.sqrt((22) ** 2 + (hidden2Y - hidden1Y) ** 2); // 50% - 28% = 22%
+              const angle = Math.atan2(hidden2Y - hidden1Y, 22);
+
+              return (
+                <div
+                  key={`conn2-${i}`}
+                  className="absolute animate-pulse"
+                  style={{
+                    left: '28%',
+                    top: `${hidden1Y}%`,
+                    width: `${length}%`,
+                    height: '1px',
+                    background: theme === "light"
+                      ? `linear-gradient(90deg, rgba(78,205,196,${0.12 + Math.random() * 0.2}) 0%, rgba(78,205,196,${0.06 + Math.random() * 0.12}) 50%, transparent 100%)`
+                      : `linear-gradient(90deg, rgba(69,193,164,${0.12 + Math.random() * 0.2}) 0%, rgba(69,193,164,${0.06 + Math.random() * 0.12}) 50%, transparent 100%)`,
+                    transform: `rotate(${angle}rad)`,
+                    transformOrigin: '0 0',
+                    animationDelay: `${Math.random() * 10}s`,
+                    animationDuration: `${3 + Math.random() * 4}s`,
+                    filter: 'blur(2px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Neural Connections - Hidden2 to Hidden3 */}
+            {[...Array(15)].map((_, i) => {
+              const hidden2Idx = Math.floor(Math.random() * 12);
+              const hidden3Idx = Math.floor(Math.random() * 10);
+              const hidden2Y = 12 + (hidden2Idx * 6);
+              const hidden3Y = 14 + (hidden3Idx * 6.5);
+              const length = Math.sqrt((22) ** 2 + (hidden3Y - hidden2Y) ** 2); // 72% - 50% = 22%
+              const angle = Math.atan2(hidden3Y - hidden2Y, 22);
+
+              return (
+                <div
+                  key={`conn3-${i}`}
+                  className="absolute animate-pulse"
+                  style={{
+                    left: '50%',
+                    top: `${hidden2Y}%`,
+                    width: `${length}%`,
+                    height: '1px',
+                    background: theme === "light"
+                      ? `linear-gradient(90deg, rgba(78,205,196,${0.18 + Math.random() * 0.28}) 0%, rgba(78,205,196,${0.09 + Math.random() * 0.18}) 50%, transparent 100%)`
+                      : `linear-gradient(90deg, rgba(45,160,133,${0.18 + Math.random() * 0.28}) 0%, rgba(45,160,133,${0.09 + Math.random() * 0.18}) 50%, transparent 100%)`,
+                    transform: `rotate(${angle}rad)`,
+                    transformOrigin: '0 0',
+                    animationDelay: `${Math.random() * 12}s`,
+                    animationDuration: `${5 + Math.random() * 3}s`,
+                    filter: 'blur(2.5px)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Neural Connections - Hidden3 to Output */}
+            {[...Array(12)].map((_, i) => {
+              const hidden3Idx = Math.floor(Math.random() * 10);
+              const outputIdx = Math.floor(Math.random() * 6);
+              const hidden3Y = 14 + (hidden3Idx * 6.5);
+              const outputY = 20 + (outputIdx * 10);
+              const length = Math.sqrt((20) ** 2 + (outputY - hidden3Y) ** 2); // 92% - 72% = 20%
+              const angle = Math.atan2(outputY - hidden3Y, 20);
+
+              return (
+                <div
+                  key={`conn4-${i}`}
+                  className="absolute animate-pulse"
+                  style={{
+                    left: '72%',
+                    top: `${hidden3Y}%`,
+                    width: `${length}%`,
+                    height: '1px',
+                    background: theme === "light"
+                      ? `linear-gradient(90deg, rgba(78,205,196,${0.2 + Math.random() * 0.3}) 0%, rgba(78,205,196,${0.1 + Math.random() * 0.2}) 50%, transparent 100%)`
+                      : `linear-gradient(90deg, rgba(0,103,79,${0.2 + Math.random() * 0.3}) 0%, rgba(0,103,79,${0.1 + Math.random() * 0.2}) 50%, transparent 100%)`,
+                    transform: `rotate(${angle}rad)`,
+                    transformOrigin: '0 0',
+                    animationDelay: `${Math.random() * 6}s`,
+                    animationDuration: `${6 + Math.random() * 4}s`,
+                    filter: 'blur(3px)',
+                  }}
+                />
+              );
+            })}
           </div>
           <div className="relative z-10 max-w-sm sm:max-w-md mx-auto">
             <div className="mb-4 sm:mb-6 flex justify-center">
