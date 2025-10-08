@@ -29,10 +29,6 @@
 
 .scroll-stack-card {
   transform-origin: top center;
-  will-change: transform, filter;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
   height: auto;
   min-height: 20rem;
   width: 100%;
@@ -40,11 +36,7 @@
   padding: 0;
   border-radius: 40px;
   box-sizing: border-box;
-  /* Improve mobile performance */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
   position: relative;
-  /* Smooth transitions */
   transition: transform 0.1s ease-out, filter 0.1s ease-out;
 }
 
