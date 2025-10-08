@@ -354,55 +354,33 @@ export default function OptimizerPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                  serviceStatus === "online"
-                    ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                    : serviceStatus === "offline"
-                      ? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                      : "bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700"
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    serviceStatus === "online"
-                      ? "bg-green-500"
-                      : serviceStatus === "offline"
-                        ? "bg-red-500"
-                        : "bg-gray-400"
-                  }`}
-                />
-                <span className="hidden sm:inline">
-                  {serviceStatus === "checking" ? "Connecting..." : serviceStatus === "online" ? "Online" : "Offline"}
-                </span>
-              </div>
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={serviceStatus === "checking" || isRefreshing}
-                className="h-8"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
               >
-                <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowHelpModal(true)}
-                className="border-gray-300 dark:border-gray-600 h-8"
+                className="border-gray-300 dark:border-gray-600 h-7 w-7 sm:h-8 sm:w-8 p-0"
                 title="Help & Tips"
               >
-                <HelpCircle className="h-4 w-4" />
+                <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/editor")}
-                className="h-10 w-10 flex items-center justify-center rounded-lg transition-all duration-300"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex items-center justify-center rounded-lg transition-all duration-300"
                 title="Back to Testing Ground"
               >
-                <X className="h-10 w-10" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
           </div>

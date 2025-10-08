@@ -1198,7 +1198,8 @@ export default function OptimizerWizard() {
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Goal-Optimized Prompt
+                        <span className="hidden sm:inline">Generate Goal-Optimized Prompt</span>
+                        <span className="sm:hidden">Optimize Goals</span>
                       </>
                     )}
                   </Button>
@@ -1375,7 +1376,8 @@ export default function OptimizerWizard() {
                       ) : (
                         <>
                           <Sparkles className="h-5 w-5 mr-2" />
-                          Generate AI-Structured Prompt
+                          <span className="hidden sm:inline">Generate AI-Structured Prompt</span>
+                          <span className="sm:hidden">Structure Prompt</span>
                         </>
                       )}
                     </Button>
@@ -1434,7 +1436,8 @@ export default function OptimizerWizard() {
                       ) : (
                         <>
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy Structured Prompt
+                          <span className="hidden sm:inline">Copy Structured Prompt</span>
+                          <span className="sm:hidden">Copy</span>
                         </>
                       )}
                     </Button>
@@ -1582,7 +1585,8 @@ export default function OptimizerWizard() {
                         ) : (
                           <>
                             <Sparkles className="h-5 w-5 mr-2" />
-                            Generate Context-Enhanced Prompt
+                            <span className="hidden sm:inline">Generate Context-Enhanced Prompt</span>
+                            <span className="sm:hidden">Enhance Context</span>
                           </>
                         )}
                       </Button>
@@ -1642,7 +1646,8 @@ export default function OptimizerWizard() {
                       ) : (
                         <>
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy Enhanced Prompt
+                          <span className="hidden sm:inline">Copy Enhanced Prompt</span>
+                          <span className="sm:hidden">Copy</span>
                         </>
                       )}
                     </Button>
@@ -1713,7 +1718,8 @@ export default function OptimizerWizard() {
                       ) : (
                         <>
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy Prompt
+                          <span className="hidden sm:inline">Copy Prompt</span>
+                          <span className="sm:hidden">Copy</span>
                         </>
                       )}
                     </Button>
@@ -1732,7 +1738,8 @@ export default function OptimizerWizard() {
                       ) : (
                         <>
                           <Wand2 className="h-4 w-4 mr-2" />
-                          Full AI Optimization
+                          <span className="hidden sm:inline">Full AI Optimization</span>
+                          <span className="sm:hidden">Optimize</span>
                         </>
                       )}
                     </Button>
@@ -1894,7 +1901,8 @@ export default function OptimizerWizard() {
                       size="lg"
                     >
                       <Save className="h-6 w-6 mr-3" />
-                      Save & Use Optimized Prompt
+                      <span className="hidden sm:inline">Save & Use Optimized Prompt</span>
+                      <span className="sm:hidden">Save Prompt</span>
                     </Button>
                   </div>
                 </div>
@@ -1966,8 +1974,8 @@ export default function OptimizerWizard() {
             </div>
           </div>
           {/* Progress Bar below heading, inside same background */}
-          <div className="h-8 sm:h-16" />
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-6">
+          <div className="h-8 sm:h-20" />
+          <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-6 overflow-x-auto px-2 pb-4 sm:pb-6 pt-2 sm:pt-4">
             {WIZARD_STEPS.map((step, index) => {
               const isActive = step.id === currentStep;
               const isCompleted = step.id < currentStep;
@@ -1975,19 +1983,19 @@ export default function OptimizerWizard() {
                 <div key={step.id} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+                      className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
                         isCompleted
                           ? "bg-gradient-to-r from-[#3ebb9e] to-green-500 text-white shadow-lg"
                           : isActive
-                            ? `bg-gradient-to-r ${step.color} text-white ring-4 ring-[#3ebb9e]/20 shadow-xl`
+                            ? `bg-gradient-to-r ${step.color} text-white ring-2 sm:ring-4 ring-[#3ebb9e]/20 shadow-xl`
                             : "bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
                       }`}
                     >
-                      {isCompleted ? <Check className="h-6 w-6" /> : <step.icon className="h-6 w-6" />}
+                      {isCompleted ? <Check className="h-4 w-4 sm:h-6 sm:w-6" /> : <step.icon className="h-4 w-4 sm:h-6 sm:w-6" />}
                     </div>
-                    <div className="mt-2 text-center">
+                    <div className="mt-1 sm:mt-2 text-center">
                       <div
-                        className={`text-sm font-semibold ${
+                        className={`text-xs sm:text-sm font-semibold ${
                           isActive
                             ? "text-[#3ebb9e]"
                             : isCompleted
@@ -2001,7 +2009,7 @@ export default function OptimizerWizard() {
                   </div>
                   {index < WIZARD_STEPS.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-6 rounded-full transition-all duration-500 ${
+                      className={`w-4 sm:w-auto sm:flex-1 h-0.5 sm:h-1 mx-1 sm:mx-6 rounded-full transition-all duration-500 ${
                         step.id < currentStep
                           ? "bg-gradient-to-r from-[#3ebb9e] to-green-500"
                           : "bg-gray-200 dark:bg-gray-600"
@@ -2027,28 +2035,28 @@ export default function OptimizerWizard() {
         </div>
 
         {/* Navigation */}
-  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+        <div className="flex items-center justify-center mt-6 gap-4">
           <Button
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-3 border-2 border-[#3ebb9e] text-[#3ebb9e] hover:bg-[#3ebb9e] hover:text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent"
+            className="flex items-center gap-2 border-2 border-[#3ebb9e] text-[#3ebb9e] hover:bg-[#3ebb9e] hover:text-white font-semibold py-2 px-4 sm:w-32 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent"
           >
-            <ArrowLeft className="h-5 w-5" />
-            Previous
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Previous</span>
           </Button>
 
           <div className="text-center">
             <div className="text-sm text-muted-foreground mb-2">
               Step {currentStep} of {WIZARD_STEPS.length}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2">
               {WIZARD_STEPS.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${
                     index + 1 === currentStep
-                      ? "bg-[#3ebb9e] w-6"
+                      ? "bg-[#3ebb9e] w-4 sm:w-6"
                       : index + 1 < currentStep
                         ? "bg-green-500"
                         : "bg-gray-300"
@@ -2061,10 +2069,10 @@ export default function OptimizerWizard() {
           <Button
             onClick={nextStep}
             disabled={currentStep === WIZARD_STEPS.length}
-            className="flex items-center gap-3 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#3ebb9e] to-[#4079ff] hover:from-[#4079ff] hover:to-[#3ebb9e] text-white font-semibold py-2 px-4 sm:w-32 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
-            <ArrowRight className="h-5 w-5" />
+            <span className="hidden sm:inline">Next</span>
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
