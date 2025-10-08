@@ -2,9 +2,15 @@
 
 import type React from "react"
 
-import { useLayoutEffect, useRef, useCallback } from "react"
+import { useLayoutEffect, useRef, useCallback, useEffect, useState } from "react"
 import Lenis from "lenis"
 import "./ScrollStack.css"
+
+// Detect if we're on a mobile device
+const isMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768
+}
 
 export const ScrollStackItem = ({
   children,
@@ -51,6 +57,14 @@ const ScrollStack = ({
   const cardsRef = useRef<HTMLElement[]>([])
   const lastTransformsRef = useRef(new Map())
   const isUpdatingRef = useRef(false)
+  const [mobile, setMobile] = useState(false)
+  const scrollTimeoutRef = useRef<number | null>(null)
+  const isScrollingRef = useRef(false)
+  
+  // Detect mobile on mount
+  useEffect(() => {
+    setMobile(isMobile())
+  }, [])
 
   const calculateProgress = useCallback((scrollTop: number, start: number, end: number) => {
     if (scrollTop < start) return 0
@@ -101,9 +115,10 @@ const ScrollStack = ({
 
     const { scrollTop, containerHeight, scrollContainer } = getScrollData()
 
-    // Skip updates if scroll hasn't changed significantly
+    // Skip updates if scroll hasn't changed significantly (higher threshold on mobile)
+    const threshold = mobile ? 3 : 1
     const lastScrollTop = lastTransformsRef.current.get('scrollTop') || 0
-    if (Math.abs(scrollTop - lastScrollTop) < 0.5) {
+    if (Math.abs(scrollTop - lastScrollTop) < threshold) {
       isUpdatingRef.current = false
       return
     }
@@ -129,10 +144,12 @@ const ScrollStack = ({
       const scaleProgress = calculateProgress(scrollTop, triggerStart, triggerEnd)
       const targetScale = baseScale + i * itemScale
       const scale = Math.max(targetScale, 1 - scaleProgress * (1 - targetScale))
-      const rotation = rotationAmount ? i * rotationAmount * scaleProgress : 0
+      
+      // Disable rotation and blur on mobile to save CPU
+      const rotation = (!mobile && rotationAmount) ? i * rotationAmount * scaleProgress : 0
 
       let blur = 0
-      if (blurAmount) {
+      if (!mobile && blurAmount) {
         let topCardIndex = 0
         for (let j = 0; j < cardsRef.current.length; j++) {
           const jCardTop = getElementOffset(cardsRef.current[j])
@@ -217,10 +234,42 @@ const ScrollStack = ({
   ])
 
   const handleScroll = useCallback(() => {
-    updateCardTransforms()
-  }, [updateCardTransforms])
+    // On mobile, use throttling to reduce CPU usage
+    if (mobile) {
+      if (!isScrollingRef.current) {
+        isScrollingRef.current = true
+        updateCardTransforms()
+      }
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+      
+      // Set timeout to mark scrolling as finished
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        isScrollingRef.current = false
+        updateCardTransforms() // Final update when scrolling stops
+      }, 100) // 100ms throttle on mobile
+    } else {
+      updateCardTransforms()
+    }
+  }, [updateCardTransforms, mobile])
 
   const setupLenis = useCallback(() => {
+    // Disable Lenis smooth scrolling on mobile to save CPU
+    if (mobile) {
+      if (useWindowScroll) {
+        window.addEventListener('scroll', handleScroll, { passive: true })
+      } else {
+        const scroller = scrollerRef.current
+        if (scroller) {
+          scroller.addEventListener('scroll', handleScroll, { passive: true })
+        }
+      }
+      return
+    }
+    
     if (useWindowScroll) {
       const lenis = new Lenis({
         duration: 1.2,
@@ -273,7 +322,7 @@ const ScrollStack = ({
       lenisRef.current = lenis
       return lenis
     }
-  }, [handleScroll, useWindowScroll])
+  }, [handleScroll, useWindowScroll, mobile])
 
   useLayoutEffect(() => {
     const scroller = scrollerRef.current
@@ -291,13 +340,9 @@ const ScrollStack = ({
     cards.forEach((card, i) => {
       card.style.marginTop = "30px"
       card.style.marginBottom = `${itemDistance}px`
-      card.style.willChange = "transform, filter"
+      // Simplified styling for better performance
       card.style.transformOrigin = "top center"
-      card.style.backfaceVisibility = "hidden"
-      card.style.transform = "translateZ(0)"
-      card.style.webkitTransform = "translateZ(0)"
-      card.style.perspective = "1000px"
-      card.style.webkitPerspective = "1000px"
+      card.style.position = "relative"
     })
 
     setupLenis()
@@ -305,11 +350,25 @@ const ScrollStack = ({
     updateCardTransforms()
 
     return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
       if (lenisRef.current) {
         lenisRef.current.destroy()
+      }
+      // Clean up native scroll listeners on mobile
+      if (mobile) {
+        if (useWindowScroll) {
+          window.removeEventListener('scroll', handleScroll)
+        } else {
+          const scroller = scrollerRef.current
+          if (scroller) {
+            scroller.removeEventListener('scroll', handleScroll)
+          }
+        }
       }
       stackCompletedRef.current = false
       cardsRef.current = []
@@ -330,6 +389,8 @@ const ScrollStack = ({
     onStackComplete,
     setupLenis,
     updateCardTransforms,
+    mobile,
+    handleScroll,
   ])
 
   return (

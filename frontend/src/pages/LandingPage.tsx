@@ -21,30 +21,25 @@ import {
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Link } from "react-router-dom"
-import Silk from "@/components/Silk"
 import { useInView } from "react-intersection-observer"
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack"
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme()
 
-  // Silk background color for light/dark mode
-  const silkBg =
-    theme === "light" ? ([1, 1, 1] as [number, number, number]) : ([0.0078, 0.031, 0.09] as [number, number, number])
-
-  // Intersection observers for each section
-  const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.2 })
-  const { ref: problemRef, inView: problemInView } = useInView({ triggerOnce: true, threshold: 0.2 })
-  const { ref: howItWorksRef, inView: howItWorksInView } = useInView({ triggerOnce: true, threshold: 0.2 })
-  const { ref: ctaRef, inView: ctaInView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  // Intersection observers for each section - optimized for performance
+  const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: false, threshold: 0.1 }) // Monitor continuously for neural network
+  const { ref: problemRef, inView: problemInView } = useInView({ triggerOnce: true, threshold: 0.1, rootMargin: '50px' })
+  const { ref: howItWorksRef, inView: howItWorksInView } = useInView({ triggerOnce: true, threshold: 0.1, rootMargin: '50px' })
+  const { ref: ctaRef, inView: ctaInView } = useInView({ triggerOnce: true, threshold: 0.1, rootMargin: '50px' })
 
   return (
     <div className={`min-h-screen relative ${theme === "light" ? "text-black" : "text-white"}`}>
-      <div className="fixed inset-0 bg-gradient-to-br from-[#3ebb9e]/5 via-transparent to-[#00674f]/5 pointer-events-none"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(62,187,158,0.1),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(0,103,79,0.1),transparent_50%)] pointer-events-none"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-[#3ebb9e]/8 via-transparent to-[#00674f]/8 pointer-events-none"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(62,187,158,0.15),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(0,103,79,0.15),transparent_50%)] pointer-events-none"></div>
       {/* Navigation */}
       <nav
-        className={`border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 animate-slideDown`}
+        className={`border-[#00876e] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
@@ -103,9 +98,267 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Silk speed={1} bgColor={silkBg} />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#3ebb9e]/15 via-transparent to-[#00674f]/15"></div>
+        
+        {/* Neural Network Visualization - Only render when hero is in view */}
+        {heroInView && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Input Layer */}
+          {[...Array(10)].map((_, i) => {
+            const y = 14 + (i * 7); // Vertical spacing for input layer
+            return (
+              <div
+                key={`input-${i}`}
+                className={`absolute rounded-full border-2 ${
+                  theme === "light"
+                    ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                    : i % 4 === 0 ? 'bg-[#3ebb9e]/30 border-[#3ebb9e]/70 shadow-lg shadow-[#3ebb9e]/40' :
+                      i % 4 === 1 ? 'bg-[#45c1a4]/25 border-[#45c1a4]/55 shadow-md shadow-[#45c1a4]/35' :
+                      i % 4 === 2 ? 'bg-[#2da085]/35 border-[#2da085]/70 shadow-lg shadow-[#2da085]/45' :
+                      'bg-[#00674f]/30 border-[#00674f]/65 shadow-md shadow-[#00674f]/40'
+                } ${i % 3 === 0 ? 'animate-float-slow' : i % 3 === 1 ? 'animate-float-medium' : 'animate-float-fast'}`}
+                style={{
+                  left: '6%',
+                  top: `${y}%`,
+                  width: '6px',
+                  height: '6px',
+                  animationDelay: `${Math.random() * 8}s`,
+                  filter: 'blur(3px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Hidden Layer 1 */}
+          {[...Array(14)].map((_, i) => {
+            const y = 10 + (i * 5.5); // More nodes in hidden layer
+            return (
+              <div
+                key={`hidden1-${i}`}
+                className={`absolute rounded-full border-2 ${
+                  theme === "light"
+                    ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                    : i % 5 === 0 ? 'bg-[#3ebb9e]/27 border-[#3ebb9e]/55 shadow-md shadow-[#3ebb9e]/35' :
+                      i % 5 === 1 ? 'bg-[#45c1a4]/23 border-[#45c1a4]/45 shadow-sm shadow-[#45c1a4]/30' :
+                      i % 5 === 2 ? 'bg-[#2da085]/32 border-[#2da085]/60 shadow-lg shadow-[#2da085]/40' :
+                      i % 5 === 3 ? 'bg-[#00674f]/27 border-[#00674f]/55 shadow-md shadow-[#00674f]/35' :
+                      'bg-[#1db394]/30 border-[#1db394]/58 shadow-lg shadow-[#1db394]/38'
+                } ${i % 4 === 0 ? 'animate-float-medium' : i % 4 === 1 ? 'animate-float-fast' : i % 4 === 2 ? 'animate-float-slow' : 'animate-float-medium'}`}
+                style={{
+                  left: '28%',
+                  top: `${y}%`,
+                  width: '5px',
+                  height: '5px',
+                  animationDelay: `${Math.random() * 10}s`,
+                  filter: 'blur(2.5px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Hidden Layer 2 */}
+          {[...Array(12)].map((_, i) => {
+            const y = 12 + (i * 6);
+            return (
+              <div
+                key={`hidden2-${i}`}
+                className={`absolute rounded-full border-2 ${
+                  theme === "light"
+                    ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                    : i % 4 === 0 ? 'bg-[#3ebb9e]/23 border-[#3ebb9e]/50 shadow-sm shadow-[#3ebb9e]/30' :
+                      i % 4 === 1 ? 'bg-[#45c1a4]/28 border-[#45c1a4]/55 shadow-lg shadow-[#45c1a4]/35' :
+                      i % 4 === 2 ? 'bg-[#2da085]/26 border-[#2da085]/53 shadow-md shadow-[#2da085]/32' :
+                      'bg-[#00674f]/24 border-[#00674f]/52 shadow-sm shadow-[#00674f]/31'
+                } ${i % 3 === 0 ? 'animate-float-fast' : i % 3 === 1 ? 'animate-float-medium' : 'animate-float-slow'}`}
+                style={{
+                  left: '50%',
+                  top: `${y}%`,
+                  width: '6px',
+                  height: '6px',
+                  animationDelay: `${Math.random() * 12}s`,
+                  filter: 'blur(3.5px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Hidden Layer 3 */}
+          {[...Array(10)].map((_, i) => {
+            const y = 14 + (i * 6.5);
+            return (
+              <div
+                key={`hidden3-${i}`}
+                className={`absolute rounded-full border-2 ${
+                  theme === "light"
+                    ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                    : i % 4 === 0 ? 'bg-[#3ebb9e]/20 border-[#3ebb9e]/45 shadow-sm shadow-[#3ebb9e]/27' :
+                      i % 4 === 1 ? 'bg-[#45c1a4]/26 border-[#45c1a4]/52 shadow-md shadow-[#45c1a4]/32' :
+                      i % 4 === 2 ? 'bg-[#2da085]/23 border-[#2da085]/48 shadow-sm shadow-[#2da085]/29' :
+                      'bg-[#00674f]/22 border-[#00674f]/46 shadow-sm shadow-[#00674f]/28'
+                } ${i % 4 === 0 ? 'animate-float-slow' : i % 4 === 1 ? 'animate-float-fast' : i % 4 === 2 ? 'animate-float-medium' : 'animate-float-slow'}`}
+                style={{
+                  left: '72%',
+                  top: `${y}%`,
+                  width: '5.5px',
+                  height: '5.5px',
+                  animationDelay: `${Math.random() * 14}s`,
+                  filter: 'blur(4px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Output Layer */}
+          {[...Array(6)].map((_, i) => {
+            const y = 20 + (i * 10); // Fewer, larger output nodes
+            return (
+              <div
+                key={`output-${i}`}
+                className={`absolute rounded-full border-2 ${
+                  theme === "light"
+                    ? 'bg-[#4ecdc4] border-[#26d0ce]'
+                    : i % 3 === 0 ? 'bg-[#3ebb9e]/33 border-[#3ebb9e]/70 shadow-xl shadow-[#3ebb9e]/45' :
+                      i % 3 === 1 ? 'bg-[#00674f]/30 border-[#00674f]/65 shadow-lg shadow-[#00674f]/42' :
+                      'bg-[#2da085]/28 border-[#2da085]/60 shadow-lg shadow-[#2da085]/38'
+                } animate-float-slow`}
+                style={{
+                  left: '92%',
+                  top: `${y}%`,
+                  width: '8px',
+                  height: '8px',
+                  animationDelay: `${Math.random() * 6}s`,
+                  filter: 'blur(2px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Neural Connections - Input to Hidden1 */}
+          {[...Array(15)].map((_, i) => {
+            const inputIdx = Math.floor(Math.random() * 10);
+            const hiddenIdx = Math.floor(Math.random() * 14);
+            const inputY = 14 + (inputIdx * 7);
+            const hiddenY = 10 + (hiddenIdx * 5.5);
+            const length = Math.sqrt((22) ** 2 + (hiddenY - inputY) ** 2); // 28% - 6% = 22%
+            const angle = Math.atan2(hiddenY - inputY, 22);
+
+            return (
+              <div
+                key={`conn1-${i}`}
+                className="absolute animate-pulse"
+                style={{
+                  left: '6%',
+                  top: `${inputY}%`,
+                  width: `${length}%`,
+                  height: '1px',
+                  background: theme === "light"
+                    ? `linear-gradient(90deg, rgba(78,205,196,${0.15 + Math.random() * 0.25}) 0%, rgba(78,205,196,${0.08 + Math.random() * 0.15}) 50%, transparent 100%)`
+                    : `linear-gradient(90deg, rgba(62,187,158,${0.15 + Math.random() * 0.25}) 0%, rgba(62,187,158,${0.08 + Math.random() * 0.15}) 50%, transparent 100%)`,
+                  transform: `rotate(${angle}rad)`,
+                  transformOrigin: '0 0',
+                  animationDelay: `${Math.random() * 8}s`,
+                  animationDuration: `${4 + Math.random() * 3}s`,
+                  filter: 'blur(1.5px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Neural Connections - Hidden1 to Hidden2 */}
+          {[...Array(18)].map((_, i) => {
+            const hidden1Idx = Math.floor(Math.random() * 14);
+            const hidden2Idx = Math.floor(Math.random() * 12);
+            const hidden1Y = 10 + (hidden1Idx * 5.5);
+            const hidden2Y = 12 + (hidden2Idx * 6);
+            const length = Math.sqrt((22) ** 2 + (hidden2Y - hidden1Y) ** 2); // 50% - 28% = 22%
+            const angle = Math.atan2(hidden2Y - hidden1Y, 22);
+
+            return (
+              <div
+                key={`conn2-${i}`}
+                className="absolute animate-pulse"
+                style={{
+                  left: '28%',
+                  top: `${hidden1Y}%`,
+                  width: `${length}%`,
+                  height: '1px',
+                  background: theme === "light"
+                    ? `linear-gradient(90deg, rgba(78,205,196,${0.12 + Math.random() * 0.2}) 0%, rgba(78,205,196,${0.06 + Math.random() * 0.12}) 50%, transparent 100%)`
+                    : `linear-gradient(90deg, rgba(69,193,164,${0.12 + Math.random() * 0.2}) 0%, rgba(69,193,164,${0.06 + Math.random() * 0.12}) 50%, transparent 100%)`,
+                  transform: `rotate(${angle}rad)`,
+                  transformOrigin: '0 0',
+                  animationDelay: `${Math.random() * 10}s`,
+                  animationDuration: `${3 + Math.random() * 4}s`,
+                  filter: 'blur(2px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Neural Connections - Hidden2 to Hidden3 */}
+          {[...Array(15)].map((_, i) => {
+            const hidden2Idx = Math.floor(Math.random() * 12);
+            const hidden3Idx = Math.floor(Math.random() * 10);
+            const hidden2Y = 12 + (hidden2Idx * 6);
+            const hidden3Y = 14 + (hidden3Idx * 6.5);
+            const length = Math.sqrt((22) ** 2 + (hidden3Y - hidden2Y) ** 2); // 72% - 50% = 22%
+            const angle = Math.atan2(hidden3Y - hidden2Y, 22);
+
+            return (
+              <div
+                key={`conn3-${i}`}
+                className="absolute animate-pulse"
+                style={{
+                  left: '50%',
+                  top: `${hidden2Y}%`,
+                  width: `${length}%`,
+                  height: '1px',
+                  background: theme === "light"
+                    ? `linear-gradient(90deg, rgba(78,205,196,${0.18 + Math.random() * 0.28}) 0%, rgba(78,205,196,${0.09 + Math.random() * 0.18}) 50%, transparent 100%)`
+                    : `linear-gradient(90deg, rgba(45,160,133,${0.18 + Math.random() * 0.28}) 0%, rgba(45,160,133,${0.09 + Math.random() * 0.18}) 50%, transparent 100%)`,
+                  transform: `rotate(${angle}rad)`,
+                  transformOrigin: '0 0',
+                  animationDelay: `${Math.random() * 12}s`,
+                  animationDuration: `${5 + Math.random() * 3}s`,
+                  filter: 'blur(2.5px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Neural Connections - Hidden3 to Output */}
+          {[...Array(12)].map((_, i) => {
+            const hidden3Idx = Math.floor(Math.random() * 10);
+            const outputIdx = Math.floor(Math.random() * 6);
+            const hidden3Y = 14 + (hidden3Idx * 6.5);
+            const outputY = 20 + (outputIdx * 10);
+            const length = Math.sqrt((20) ** 2 + (outputY - hidden3Y) ** 2); // 92% - 72% = 20%
+            const angle = Math.atan2(outputY - hidden3Y, 20);
+
+            return (
+              <div
+                key={`conn4-${i}`}
+                className="absolute animate-pulse"
+                style={{
+                  left: '72%',
+                  top: `${hidden3Y}%`,
+                  width: `${length}%`,
+                  height: '1px',
+                  background: theme === "light"
+                    ? `linear-gradient(90deg, rgba(78,205,196,${0.2 + Math.random() * 0.3}) 0%, rgba(78,205,196,${0.1 + Math.random() * 0.2}) 50%, transparent 100%)`
+                    : `linear-gradient(90deg, rgba(0,103,79,${0.2 + Math.random() * 0.3}) 0%, rgba(0,103,79,${0.1 + Math.random() * 0.2}) 50%, transparent 100%)`,
+                  transform: `rotate(${angle}rad)`,
+                  transformOrigin: '0 0',
+                  animationDelay: `${Math.random() * 6}s`,
+                  animationDuration: `${6 + Math.random() * 4}s`,
+                  filter: 'blur(3px)',
+                }}
+              />
+            );
+          })}
         </div>
+        )}
+
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32">
           <div className={`text-center max-w-4xl mx-auto transition-all duration-1000`}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6">
@@ -160,19 +413,19 @@ export default function LandingPage() {
             >
               <div className="flex items-center">
                 <CheckCircle
-                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
                 />
                 No Credit Card Required
               </div>
               <div className="flex items-center">
                 <CheckCircle
-                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-200 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
                 />
                 Free Testing Environment
               </div>
               <div className="flex items-center">
                 <CheckCircle
-                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-tick animation-delay-400 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
+                  className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 ${theme === "light" ? "text-black" : "text-[#FFFFFF]"}`}
                 />
                 Community Driven
               </div>
@@ -206,8 +459,8 @@ export default function LandingPage() {
        {/* Problem Statement */}
       <section ref={problemRef} className="py-16 sm:py-20 bg-muted/30">
         <div
-          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
-            problemInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-opacity duration-700 ${
+            problemInView ? "opacity-100" : "opacity-0"
           }`}
         >
           <div className="text-center mb-12 sm:mb-16">
@@ -220,7 +473,7 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-red-500 hover:scale-105 transition-all duration-300">
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-red-500">
               <div className="text-red-500 mb-4">
                 <Target className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
@@ -229,7 +482,7 @@ export default function LandingPage() {
                 Without proper prompt engineering, AI outputs vary wildly in quality and relevance.
               </p>
             </Card>
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-yellow-500 hover:scale-105 transition-all duration-300">
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-yellow-500">
               <div className="text-yellow-500 mb-4">
                 <Search className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
@@ -238,7 +491,7 @@ export default function LandingPage() {
                 Users lack proper tools to test, compare, and optimize their prompts systematically.
               </p>
             </Card>
-            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-blue-500 hover:scale-105 transition-all duration-300">
+            <Card className="p-4 sm:p-6 text-center border-l-4 border-l-blue-500">
               <div className="text-blue-500 mb-4">
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
               </div>
@@ -252,8 +505,8 @@ export default function LandingPage() {
       </section>
 
       {/* Solution Overview with ScrollStack */}
-      <section id="features" className="py-0 relative overflow-hidden border-b-2 border-border/40 shadow-md">
-        <div className="text-center pt-16 sm:pt-20 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 relative z-10">
+      <section id="features" className="py-8 sm:py-12 lg:py-16 relative overflow-hidden border-b-2 border-border/40 shadow-md" style={{ willChange: 'transform' }}>
+        <div className="text-center pt-20 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 relative z-10">
           <Badge className="mb-4 bg-[#3ebb9e]/10 text-[#00674f] dark:text-[#3ebb9e] text-base sm:text-lg border-2 border-[#3ebb9e]/30">
             Our Solution
           </Badge>
@@ -265,13 +518,15 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <ScrollStack useWindowScroll itemDistance={150} itemStackDistance={40} baseScale={0.9} itemScale={0.02} className="relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <ScrollStack useWindowScroll itemDistance={200} itemStackDistance={50} baseScale={0.9} itemScale={0.015} className="relative z-10">
           {/* Marketplace Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="order-2 lg:order-1 space-y-4">
@@ -304,6 +559,12 @@ export default function LandingPage() {
                       </div>
                       <span className="text-sm sm:text-base">Industry-specific categories</span>
                     </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">User reviews & ratings</span>
+                    </li>
                   </ul>
                 </div>
                 <div className="w-full order-1 lg:order-2 flex items-center justify-center">
@@ -324,9 +585,10 @@ export default function LandingPage() {
           {/* Testing Ground Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="w-full order-1 flex items-center justify-center">
@@ -370,6 +632,12 @@ export default function LandingPage() {
                       </div>
                       <span className="text-sm sm:text-base">A/B comparison tools</span>
                     </li>
+                    <li className="flex items-center group">
+                      <div className="bg-[#3ebb9e]/10 p-2 rounded-lg mr-3">
+                        <CheckCircle className="h-5 w-5 text-[#3ebb9e]" />
+                      </div>
+                      <span className="text-sm sm:text-base">Performance benchmarking</span>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -379,9 +647,10 @@ export default function LandingPage() {
           {/* Prompt Builder Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="order-2 lg:order-1 space-y-4">
@@ -440,9 +709,10 @@ export default function LandingPage() {
           {/* Social Hub & Battles Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="w-full order-1 flex items-center justify-center">
@@ -497,9 +767,10 @@ export default function LandingPage() {
           {/* Dashboard Analytics & Widgets Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
                 <div className="order-2 lg:order-1 space-y-4">
@@ -554,19 +825,25 @@ export default function LandingPage() {
           {/* Optimizer Wizard & AI Recommendations Card */}
           <ScrollStackItem>
             <div
-              className={`h-full rounded-3xl backdrop-blur-sm border-2 border-border shadow-2xl overflow-hidden transform-gpu hover:scale-[1.02] transition-all duration-500 ${
+              className={`h-full rounded-3xl border-2 border-border shadow-2xl overflow-hidden ${
                 theme === "light" ? "bg-white/90" : "bg-slate-900/90"
               }`}
+              style={{ willChange: 'transform' }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center h-full p-6 sm:p-8 lg:p-12">
-                <div className="w-full order-1 flex items-center justify-center">
+                <div className="w-full order-1 lg:order-1 flex items-center justify-center">
                   <div className="max-w-md w-full">
                     <div className={`p-4 rounded-xl shadow-xl ${theme === "light" ? "bg-gray-50" : "bg-gray-800"}`}>
-                      <img src="/Wizard.png" alt="Optimizer Wizard & AI Recommendations" className="w-full h-auto rounded-lg" />
+                      <img
+                        src="/Wizard.png"
+                        alt="Optimizer Wizard & AI Recommendations"
+                        className="w-full h-auto rounded-lg"
+                        loading="lazy"
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="order-2 space-y-4">
+                <div className="order-2 lg:order-2 space-y-4">
                   <div className="flex items-center mb-4">
                     <div className="bg-[#3ebb9e]/10 p-3 rounded-xl mr-4 shadow-lg">
                       <Wand2 className="h-6 w-6 text-[#3ebb9e]" />
@@ -608,16 +885,13 @@ export default function LandingPage() {
             </div>
           </ScrollStackItem>
         </ScrollStack>
+        </div>
       </section>
 
       {/* How It Works */}
       <section ref={howItWorksRef} id="how-it-works" className="py-16 sm:py-20 relative overflow-hidden border-b-2 border-border/40 shadow-md">
-        <div
-          className={`relative container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 z-10 ${
-            howItWorksInView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
-          <div className="text-center mb-12 sm:mb-16 animate-fadeInUp">
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 z-10">
+          <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">How Prompt Forge Works</h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               A simple, powerful workflow that transforms how you work with AI prompts
@@ -625,8 +899,8 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto">
-            <div className="text-center animate-fadeInUp hover:scale-105 transition-all duration-300">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:rotate-6">
+            <div className="text-center">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl">
                 1
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Discover</h3>
@@ -634,8 +908,8 @@ export default function LandingPage() {
                 Browse our marketplace of tested, high-quality prompts across various categories and industries.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-200 hover:scale-105 transition-all duration-300">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:-rotate-6">
+            <div className="text-center">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl">
                 2
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Test</h3>
@@ -643,8 +917,8 @@ export default function LandingPage() {
                 Use our testing ground to evaluate prompts with different AI models and compare performance.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-400 hover:scale-105 transition-all duration-300">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:rotate-6">
+            <div className="text-center">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl">
                 3
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Optimize</h3>
@@ -652,8 +926,8 @@ export default function LandingPage() {
                 Get AI-powered suggestions and community feedback to continuously improve your prompts.
               </p>
             </div>
-            <div className="text-center animate-fadeInUp animation-delay-600 hover:scale-105 transition-all duration-300">
-              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl hover:shadow-2xl transform-gpu hover:-rotate-6">
+            <div className="text-center">
+              <div className="bg-[#3ebb9e] text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-bold mx-auto mb-4 shadow-xl">
                 4
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">Master</h3>
@@ -666,12 +940,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer - Mobile Responsive */}
-      <footer className="bg-[#0C201B] text-white py-8 sm:py-12 animate-fadeInUp">
+      <footer className="bg-[#0C201B] text-white py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
-                <BrainCircuit className="w-4 h-4 text-[#3ebb9e] animate-pulse" />
+                <BrainCircuit className="w-4 h-4 text-[#3ebb9e]" />
                 <span className="text-base font-bold">PROMPT FORGE</span>
               </div>
               <p className="text-gray-400 text-sm">Empowering the future of AI through better prompts.</p>
