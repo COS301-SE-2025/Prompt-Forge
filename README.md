@@ -66,6 +66,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 <details>
   <summary><strong>📑 Demo 4 Documentation Links</strong></summary>
 
+<div align="center">
 
 | Document                     | Link                                                                                                         | Last Updated   |
 |------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
@@ -81,12 +82,16 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Demo 4 Video                 | [Watch Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)                                                      | September 2025 |
 | Demo 4 Slides                | [View Presentation Slides PDF](./assests/Demo4_Slides.pdf) | September 2025 |
 
+</div>
+
 </details>
 
 ---
 
 <details>
   <summary><strong>📑 Demo 3 Documentation Links</strong></summary>
+
+<div align="center">
 
 | Document                     | Link                                                                                                         | Last Updated   |
 |------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
@@ -101,12 +106,16 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Demo 3 Video                 | [Watch Video](https://youtu.be/eiQ9EBDL4Es)                                                                    | August 2025    |
 | SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)        | August 2025    |
 
+</div>
+
 </details>
 
 ---
 
 <details>
   <summary><strong>📑 Demo 2 Documentation Links</strong></summary>
+
+<div align="center">
 
 | Document                  | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
@@ -116,12 +125,17 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
 | System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
 | Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
+
+</div>
+
 </details>
 
 ---
 
 <details>
   <summary><strong>📑 Demo 1 Documentation Links</strong></summary>
+
+<div align="center">
 
 | Document                  | Link                                                    | Last Updated |
 |--------------------------|--------------------------------------------------------|--------------|
@@ -131,6 +145,8 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
 | Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
 | Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+
+</div>
 
 </details>
 
@@ -156,6 +172,8 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 🧱 Tech Stack
 
+<div align="center">
+
 | Layer         | Technology                         |  |
 |---------------|-------------------------------------|-------|
 | Frontend      | React with Tailwind CSS            | <img src="https://skillicons.dev/icons?i=react,tailwind" /> |
@@ -166,6 +184,8 @@ We use a **GitFlow** branching strategy to organize our development:
 | Versioning    | Git + GitFlow                      | <img src="https://skillicons.dev/icons?i=git,github" /> |
 | Deployment    | AWS Free Tier / Local Dev          | <img src="https://skillicons.dev/icons?i=aws" /> |
 | Testing       | JUnit                              | <img src="https://skillicons.dev/icons?i=java" /> |
+
+</div>
 
 ---
 
@@ -181,6 +201,8 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ## 🔍 Repository Quality
 
+<div align="center">
+
 | Item                    | Status     |
 |-------------------------|------------|
 | CI/CD Pipeline          | ![GitHub Actions Workflow Status](https://github.com/COS301-SE-2025/Prompt-Forge/actions/workflows/main.yml/badge.svg) |
@@ -189,6 +211,8 @@ We use a **GitFlow** branching strategy to organize our development:
 | Non-Functional Tests    | ✅ Completed|
 | Issue Tracking          | ✅ Enabled |
 | GitHub Project Board    | ✅ Linked  |
+
+</div>
 
 ---
 
