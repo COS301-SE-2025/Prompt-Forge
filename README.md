@@ -36,6 +36,7 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 - 🚀 **[Live Application - Prompt Forge](https://prompt-forge.co.za)** ⭐
 - 📋 [GitHub Project Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)
+- 🎬 [Project Day Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)
 
 ---
 
@@ -59,7 +60,9 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-## 📑 Demo 4 Documentation Links
+<details>
+  <summary><strong>📑 Demo 4 Documentation Links</strong></summary>
+
 
 | Document                     | Link                                                                                                         | Last Updated   |
 |------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
@@ -74,6 +77,8 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Non-Functional Testing              | [View Non-Functional Testing PDF](./assests/NF_Testing.pdf) | September 2025 |
 | Demo 4 Video                 | [Watch Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)                                                      | September 2025 |
 | Demo 4 Slides                | [View Presentation Slides PDF](./assests/Demo4_Slides.pdf) | September 2025 |
+
+</details>
 
 ---
 
@@ -181,30 +186,6 @@ We use a **GitFlow** branching strategy to organize our development:
 | Non-Functional Tests    | ✅ Completed|
 | Issue Tracking          | ✅ Enabled |
 | GitHub Project Board    | ✅ Linked  |
-| Code Coverage           | ![Codecov](https://img.shields.io/codecov/c/github/COS301-SE-2025/Prompt-Forge?style=flat-square) |
-| Code Quality            | ![Code Climate](https://img.shields.io/codeclimate/maintainability/COS301-SE-2025/Prompt-Forge?style=flat-square) |
-
----
-
-## ⭐ WOW Factors (Extra Features)
-
-Our Demo 4 showcases two impressive extra features beyond the original client requirements:
-
-### 🎯 WOW Factor 1: Prompt Wars - Competitive Prompt Testing Arena
-An innovative gamified feature that transforms prompt engineering into an engaging competitive experience. Users can create "battles" where prompts compete against each other using the same AI model. The system automatically evaluates prompts based on multiple criteria including response quality, creativity, accuracy, and performance metrics. Features include:
-
-- **Real-time Battle Arena**: Live competitive testing environment where prompts face off
-- **Automated Scoring System**: Intelligent evaluation using multiple AI models and human-defined criteria
-- **Reverse Prompt War Mode**: A unique twist where users are given AI responses and must craft the most effective prompt that could have generated that output - testing reverse engineering skills
-- **Real-time Chat Integration**: Participants can discuss strategies and share insights during battles
-
-### 🚀 WOW Factor 2: AI Optimizer Wizard - Intelligent Prompt Enhancement
-A sophisticated AI-powered assistant that automatically analyzes and optimizes user prompts for better performance. This wizard uses advanced natural language processing and machine learning techniques to suggest improvements, restructure prompts, and enhance their effectiveness across different AI models. Key capabilities include:
-
-- **Smart Prompt Analysis**: Deep analysis of prompt structure, clarity, and potential effectiveness
-- **Auto-Optimization Suggestions**: AI-generated recommendations for prompt improvements
-- **Performance Prediction**: Estimates prompt effectiveness before execution
-- **Template Generation**: Creates optimized prompt templates based on user goals
 
 ---
 
@@ -228,36 +209,6 @@ A sophisticated AI-powered assistant that automatically analyzes and optimizes u
 - 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
 - 💼 Industry Client Meetings: Bi-weekly via Google Meet/Discord
 - 🧾 Meeting minutes logged on ClickUp
-
----
-
-## 📋 Demo 4 Achievements (September 29-30, 2025)
-
-- [x] **100% Project Completion**
-  - [x] All core functionality implemented
-  - [x] System fully deployed and accessible
-  - [x] Production-ready application
-- [x] **WOW Factors**
-  - [x] Two impressive extra features implemented
-  - [x] Features go beyond original client requirements
-- [x] **Quality & Testing**
-  - [x] Automated unit and integration tests for ALL use cases
-  - [x] Non-functional requirement testing (performance, availability, usability)
-  - [x] CI/CD pipeline fully operational
-- [x] **Documentation**
-  - [x] All documents converted to PDF format
-  - [x] Technical installation manual updated
-  - [x] User manual integrated as Help menu in app
-  - [x] Testing policy documented
-  - [x] Coding standards documented
-- [x] **Deployment & Access**
-  - [x] Live application link available
-  - [x] System accessible to end-users
-  - [x] Help menu functionality working
-- [x] **Project Management**
-  - [x] Sprint reviews and burn-down charts ready
-  - [x] Scrum meeting documentation available
-  - [x] All team member contributions visible
 
 ---
 
