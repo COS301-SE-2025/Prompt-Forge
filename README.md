@@ -72,9 +72,8 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 | Frontend      | React with Tailwind CSS            | <img src="https://skillicons.dev/icons?i=react,tailwind" /> |
 | Backend       | Spring Boot                        | <img src="https://skillicons.dev/icons?i=spring" /> |
 | Database      | PostgreSQL                         | <img src="https://skillicons.dev/icons?i=postgres" /> |
-| LLMs          | OpenRouter API                     | 🤖 |
+| LLMs          | OpenRouter API                     |  |
 | AI Services   | Hugging Face (Sentiment Analysis)  | <img src="https://skillicons.dev/icons?i=pytorch" /> |
-| Auth          | Mock Auth / Alternative Auth       | <img src="https://skillicons.dev/icons?i=auth0" /> |
 | Versioning    | Git + GitFlow                      | <img src="https://skillicons.dev/icons?i=git,github" /> |
 | Containerization | Docker                          | <img src="https://skillicons.dev/icons?i=docker" /> |
 | Deployment    | AWS Free Tier / Local Dev          | <img src="https://skillicons.dev/icons?i=aws" /> |
