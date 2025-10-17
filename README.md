@@ -179,9 +179,11 @@ We use a **GitFlow** branching strategy to organize our development:
 | Frontend      | React with Tailwind CSS            | <img src="https://skillicons.dev/icons?i=react,tailwind" /> |
 | Backend       | Spring Boot                        | <img src="https://skillicons.dev/icons?i=spring" /> |
 | Database      | PostgreSQL                         | <img src="https://skillicons.dev/icons?i=postgres" /> |
-| LLMs          | Hugging Face (Sentiment Analysis)  | <img src="https://skillicons.dev/icons?i=pytorch" /> |
+| LLMs          | OpenRouter API                     | 🤖 |
+| AI Services   | Hugging Face (Sentiment Analysis)  | <img src="https://skillicons.dev/icons?i=pytorch" /> |
 | Auth          | Mock Auth / Alternative Auth       | <img src="https://skillicons.dev/icons?i=auth0" /> |
 | Versioning    | Git + GitFlow                      | <img src="https://skillicons.dev/icons?i=git,github" /> |
+| Containerization | Docker                          | <img src="https://skillicons.dev/icons?i=docker" /> |
 | Deployment    | AWS Free Tier / Local Dev          | <img src="https://skillicons.dev/icons?i=aws" /> |
 | Testing       | JUnit                              | <img src="https://skillicons.dev/icons?i=java" /> |
 
@@ -189,17 +191,54 @@ We use a **GitFlow** branching strategy to organize our development:
 
 ---
 
-## 🌳 Branching Strategy (GitFlow)
+<details>
+  <summary><strong>�️ Repository Structure & GitFlow</strong></summary>
 
+We use a **GitFlow** branching strategy to organize our development:
+
+- **Main** – Production-ready code.
+- **Dev** – Major development changes and integration.
+- **Feature** – Temporary branches for developing new features.
+- **Bugfix** – For fixing non-critical bugs.
+- **Hotfix** – For addressing critical production issues that need immediate fixing.
+
+**Pros of this approach:**
+- Provides a clear separation between stable releases, ongoing development, and feature work.
+- Ensures a well-structured workflow for large projects and planned releases.
+- Supports parallel development of multiple features without affecting stability.
+- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
+
+**Branching Strategy:**
 - `main` – Stable production code  
 - `dev` – Active development branch  
 - `feature/*` – New features (e.g. `feature/auth`)  
 - `release/*` – Pre-demo branches  
 - `hotfix/*` – Emergency fixes  
 
+</details>
+
 ---
 
-## 🔍 Repository Quality
+## 🏗️ Repository Structure & GitFlow
+
+We use a **GitFlow** branching strategy to organize our development:
+
+- **Main** – Production-ready code.
+- **Dev** – Major development changes and integration.
+- **Feature** – Temporary branches for developing new features.
+- **Bugfix** – For fixing non-critical bugs.
+- **Hotfix** – For addressing critical production issues that need immediate fixing.
+
+**Pros of this approach:**
+- Provides a clear separation between stable releases, ongoing development, and feature work.
+- Ensures a well-structured workflow for large projects and planned releases.
+- Supports parallel development of multiple features without affecting stability.
+- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
+
+---
+
+<details>
+  <summary><strong>🔍 Repository Quality</strong></summary>
 
 <div align="center">
 
@@ -214,9 +253,12 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </div>
 
+</details>
+
 ---
 
-## 🧪 Testing & Quality Assurance
+<details>
+  <summary><strong>🧪 Testing & Quality Assurance</strong></summary>
 
 ### Automated Testing Coverage
 - ✅ **Unit Tests**: 80% coverage of all components
@@ -229,13 +271,18 @@ We use a **GitFlow** branching strategy to organize our development:
 - **Security**: Comprehensive security testing implemented
 - **Usability**: User experience testing with real users
 
+</details>
+
 ---
 
-## ⏱️ Meeting Schedule
+<details>
+  <summary><strong>⏱️ Meeting Schedule</strong></summary>
 
 - 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
 - 💼 Industry Client Meetings: Bi-weekly via Google Meet/Discord
 - 🧾 Meeting minutes logged on ClickUp
+
+</details>
 
 ---
 
