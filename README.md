@@ -110,8 +110,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
-
 <details>
   <summary><strong>🔍 Repository Quality</strong></summary>
 
@@ -130,8 +128,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
-
 <details>
   <summary><strong>🧪 Testing & Quality Assurance</strong></summary>
 
@@ -148,8 +144,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
-
 <details>
   <summary><strong>⏱️ Meeting Schedule</strong></summary>
 
@@ -159,7 +153,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
 <details>
   <summary><strong>📑 Demo 4 Documentation Links</strong></summary>
 
@@ -183,8 +176,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
-
 <details>
   <summary><strong>📑 Demo 3 Documentation Links</strong></summary>
 
@@ -207,8 +198,6 @@ We use a **GitFlow** branching strategy to organize our development:
 
 </details>
 
----
-
 <details>
   <summary><strong>📑 Demo 2 Documentation Links</strong></summary>
 
@@ -226,8 +215,6 @@ We use a **GitFlow** branching strategy to organize our development:
 </div>
 
 </details>
-
----
 
 <details>
   <summary><strong>📑 Demo 1 Documentation Links</strong></summary>
