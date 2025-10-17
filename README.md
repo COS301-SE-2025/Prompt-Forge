@@ -63,95 +63,6 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-<details>
-  <summary><strong>📑 Demo 4 Documentation Links</strong></summary>
-
-<div align="center">
-
-| Document                     | Link                                                                                                         | Last Updated   |
-|------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
-| **🚀 Live Application**      | **[Access Prompt Forge App](https://prompt-forge.co.za)**                                                 | **September 2025** |
-| System Architecture          | [View System Architecture PDF](./assests/System_Architecture.pdf) | September 2025 |
-| SRS Document (v4)            | [View SRS Document PDF](./assests/SRS_V4.pdf)         | September 2025 |
-| User Manual                  | [View User Manual PDF](./assests/User_Manual.pdf)     | September 2025 |
-| Technical Installation Guide | [View Installation Guide PDF](./assests/Installation_Guide.pdf) | September 2025 |
-| Coding Standards             | [View Coding Standards PDF](./assests/Coding_Standards.pdf) | September 2025 |
-| Testing Policy               | [View Testing Policy PDF](./assests/Testing_Policy.pdf) | September 2025 |
-| Project Management           | [View Scrum Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)                                               | September 2025 |
-| Non-Functional Testing              | [View Non-Functional Testing PDF](./assests/NF_Testing.pdf) | September 2025 |
-| Demo 4 Video                 | [Watch Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)                                                      | September 2025 |
-| Demo 4 Slides                | [View Presentation Slides PDF](./assests/Demo4_Slides.pdf) | September 2025 |
-
-</div>
-
-</details>
-
----
-
-<details>
-  <summary><strong>📑 Demo 3 Documentation Links</strong></summary>
-
-<div align="center">
-
-| Document                     | Link                                                                                                         | Last Updated   |
-|------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
-| System Architecture          | [View System Architecture](https://drive.google.com/file/d/1mVVcVclobKORRtTm4vgns3pQy0ypbRHj/view?usp=drive_link) | August 2025    |
-| Service Contract             | [View Service Contract](https://drive.google.com/file/d/12bRdWPDinuQXJMcPl0oR8tOpZjQP7juK/view?usp=drive_link)                | August 2025    |
-| Architectural Diagram        | [View Architectural Diagram](https://drive.google.com/file/d/1f75Qed8NT2zd7IEiwRZ0BLovlcyVFLby/view?usp=drive_link) | August 2025    |
-| Coding Standards             | [View Coding Standards](https://drive.google.com/file/d/1FjncreWg3cTUy3LXy2OnGI6shrZpOBZk/view?usp=drive_link)                | August 2025    |
-| User Manual                  | [View User Manual](https://drive.google.com/file/d/1p0vjn4-18oTdBc_W3wHoSq76oI0dCS6P/view?usp=drive_link)                     | August 2025    |
-| Deployment Manual            | [View Deployment Manual](https://drive.google.com/file/d/1tE-ffppAZep6CFKIbv_AHWBjHAzveStu/view?usp=drive_link)                | August 2025    |
-| Technical Installation Guide | [View Technical Installation Guide](https://drive.google.com/file/d/1VzBdXQvPTnEs7fomJMeuyx9dov0WLoQn/view?usp=drive_link)      | August 2025    |
-| Slides                       | [View Slides](https://drive.google.com/file/d/1uYp0r5ZEM67UIkEVqGXXwlktBRdEJYSu/view?usp=drive_link)              | August 2025    |
-| Demo 3 Video                 | [Watch Video](https://youtu.be/eiQ9EBDL4Es)                                                                    | August 2025    |
-| SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)        | August 2025    |
-
-</div>
-
-</details>
-
----
-
-<details>
-  <summary><strong>📑 Demo 2 Documentation Links</strong></summary>
-
-<div align="center">
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
-| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
-| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
-
-</div>
-
-</details>
-
----
-
-<details>
-  <summary><strong>📑 Demo 1 Documentation Links</strong></summary>
-
-<div align="center">
-
-| Document                  | Link                                                    | Last Updated |
-|--------------------------|--------------------------------------------------------|--------------|
-| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
-| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
-| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
-| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
-| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
-| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
-
-</div>
-
-</details>
-
----
-
 ## 🧱 Tech Stack
 
 <div align="center">
@@ -245,6 +156,94 @@ We use a **GitFlow** branching strategy to organize our development:
 - 🧑‍🤝‍🧑 Internal Standups: Daily (scheduled on Google Meet)
 - 💼 Industry Client Meetings: Bi-weekly via Google Meet/Discord
 - 🧾 Meeting minutes logged on ClickUp
+
+</details>
+
+---
+<details>
+  <summary><strong>📑 Demo 4 Documentation Links</strong></summary>
+
+<div align="center">
+
+| Document                     | Link                                                                                                         | Last Updated   |
+|------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
+| **🚀 Live Application**      | **[Access Prompt Forge App](https://prompt-forge.co.za)**                                                 | **September 2025** |
+| System Architecture          | [View System Architecture PDF](./assests/System_Architecture.pdf) | September 2025 |
+| SRS Document (v4)            | [View SRS Document PDF](./assests/SRS_V4.pdf)         | September 2025 |
+| User Manual                  | [View User Manual PDF](./assests/User_Manual.pdf)     | September 2025 |
+| Technical Installation Guide | [View Installation Guide PDF](./assests/Installation_Guide.pdf) | September 2025 |
+| Coding Standards             | [View Coding Standards PDF](./assests/Coding_Standards.pdf) | September 2025 |
+| Testing Policy               | [View Testing Policy PDF](./assests/Testing_Policy.pdf) | September 2025 |
+| Project Management           | [View Scrum Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)                                               | September 2025 |
+| Non-Functional Testing              | [View Non-Functional Testing PDF](./assests/NF_Testing.pdf) | September 2025 |
+| Demo 4 Video                 | [Watch Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)                                                      | September 2025 |
+| Demo 4 Slides                | [View Presentation Slides PDF](./assests/Demo4_Slides.pdf) | September 2025 |
+
+</div>
+
+</details>
+
+---
+
+<details>
+  <summary><strong>📑 Demo 3 Documentation Links</strong></summary>
+
+<div align="center">
+
+| Document                     | Link                                                                                                         | Last Updated   |
+|------------------------------|--------------------------------------------------------------------------------------------------------------|----------------|
+| System Architecture          | [View System Architecture](https://drive.google.com/file/d/1mVVcVclobKORRtTm4vgns3pQy0ypbRHj/view?usp=drive_link) | August 2025    |
+| Service Contract             | [View Service Contract](https://drive.google.com/file/d/12bRdWPDinuQXJMcPl0oR8tOpZjQP7juK/view?usp=drive_link)                | August 2025    |
+| Architectural Diagram        | [View Architectural Diagram](https://drive.google.com/file/d/1f75Qed8NT2zd7IEiwRZ0BLovlcyVFLby/view?usp=drive_link) | August 2025    |
+| Coding Standards             | [View Coding Standards](https://drive.google.com/file/d/1FjncreWg3cTUy3LXy2OnGI6shrZpOBZk/view?usp=drive_link)                | August 2025    |
+| User Manual                  | [View User Manual](https://drive.google.com/file/d/1p0vjn4-18oTdBc_W3wHoSq76oI0dCS6P/view?usp=drive_link)                     | August 2025    |
+| Deployment Manual            | [View Deployment Manual](https://drive.google.com/file/d/1tE-ffppAZep6CFKIbv_AHWBjHAzveStu/view?usp=drive_link)                | August 2025    |
+| Technical Installation Guide | [View Technical Installation Guide](https://drive.google.com/file/d/1VzBdXQvPTnEs7fomJMeuyx9dov0WLoQn/view?usp=drive_link)      | August 2025    |
+| Slides                       | [View Slides](https://drive.google.com/file/d/1uYp0r5ZEM67UIkEVqGXXwlktBRdEJYSu/view?usp=drive_link)              | August 2025    |
+| Demo 3 Video                 | [Watch Video](https://youtu.be/eiQ9EBDL4Es)                                                                    | August 2025    |
+| SRS Document                 | [View SRS Document](https://drive.google.com/file/d/1dmzDw5RNfslPlMNZixtgAIkevkQDCiBb/view?usp=drive_link)        | August 2025    |
+
+</div>
+
+</details>
+
+---
+
+<details>
+  <summary><strong>📑 Demo 2 Documentation Links</strong></summary>
+
+<div align="center">
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagrams         | [View Diagram](https://drive.google.com/file/d/1KQzmjeK7Au6ioJ0eVTkUpytNd4E2c5eu/view?usp=sharing)     | June 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/14fAjR_zyBDBEDXfzP5hQw_MRdtoea1VT/view?usp=sharing)                               | June 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/132GNzE06QbND1RXmnkL7f92t5NrWtzIC/view?usp=sharing)     | June 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1h8FAfMzn4GwzFmwS5aBIXjzL8O2STj-1/view?usp=sharing)            | June 2025     |
+| System Architecture   | [View Architecture](https://drive.google.com/file/d/1J3GODVC2RinjOIx0BsEoBvv2Y4khQfBF/view?usp=sharing)      | June 2025     |
+| Demo 2 Video  | [Watch Video](https://drive.google.com/file/d/1fQUiAE1jZicyU2C6_7n-0SN5B2nv4IUv/view?usp=sharing)      | June 2025     |
+
+</div>
+
+</details>
+
+---
+
+<details>
+  <summary><strong>📑 Demo 1 Documentation Links</strong></summary>
+
+<div align="center">
+
+| Document                  | Link                                                    | Last Updated |
+|--------------------------|--------------------------------------------------------|--------------|
+| Use Case Diagram         | [View Diagram](https://drive.google.com/file/d/1eoIGPYuoWCs3tRzsBlW02MM4sN4x7rvT/view?usp=drive_link)     | May 2025     |
+| SRS Document             | [View SRS](https://drive.google.com/file/d/1ojft7UjbRuU96RTMqqTKClgqYOL5ZKWm/view?usp=drive_link)                               | May 2025     |
+| Functional Requirements  | [View Requirements](https://drive.google.com/file/d/1UBtGIk0gNEKziwiy4G1PO9w5LVT4bgFg/view?usp=drive_link)     | May 2025     |
+| Domain Model            | [View Model](https://drive.google.com/file/d/1V0wv8kGaGNVB6bygEwAQ0wgOQsAP6vz1/view?usp=drive_link)            | May 2025     |
+| Architectural Diagram   | [View Architecture](https://drive.google.com/file/d/1dEjR2zyeBPEoBtFn4JxvvIUPm-gGjR4y/view?usp=drive_link)      | May 2025     |
+| Demo 1 Video  | [Watch Video](https://drive.google.com/file/d/1lekgm25uiSeLMxurxhPEMP1yBw_nFJR-/view?usp=sharing)      | May 2025     |
+
+</div>
 
 </details>
 
