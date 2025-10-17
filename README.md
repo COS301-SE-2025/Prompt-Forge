@@ -152,24 +152,6 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 
 ---
 
-## 🏗️ Repository Structure & GitFlow
-
-We use a **GitFlow** branching strategy to organize our development:
-
-- **Main** – Production-ready code.
-- **Dev** – Major development changes and integration.
-- **Feature** – Temporary branches for developing new features.
-- **Bugfix** – For fixing non-critical bugs.
-- **Hotfix** – For addressing critical production issues that need immediate fixing.
-
-**Pros of this approach:**
-- Provides a clear separation between stable releases, ongoing development, and feature work.
-- Ensures a well-structured workflow for large projects and planned releases.
-- Supports parallel development of multiple features without affecting stability.
-- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
-
----
-
 ## 🧱 Tech Stack
 
 <div align="center">
@@ -192,7 +174,7 @@ We use a **GitFlow** branching strategy to organize our development:
 ---
 
 <details>
-  <summary><strong>�️ Repository Structure & GitFlow</strong></summary>
+  <summary><strong>🏗️ Repository Structure & GitFlow</strong></summary>
 
 We use a **GitFlow** branching strategy to organize our development:
 
@@ -216,24 +198,6 @@ We use a **GitFlow** branching strategy to organize our development:
 - `hotfix/*` – Emergency fixes  
 
 </details>
-
----
-
-## 🏗️ Repository Structure & GitFlow
-
-We use a **GitFlow** branching strategy to organize our development:
-
-- **Main** – Production-ready code.
-- **Dev** – Major development changes and integration.
-- **Feature** – Temporary branches for developing new features.
-- **Bugfix** – For fixing non-critical bugs.
-- **Hotfix** – For addressing critical production issues that need immediate fixing.
-
-**Pros of this approach:**
-- Provides a clear separation between stable releases, ongoing development, and feature work.
-- Ensures a well-structured workflow for large projects and planned releases.
-- Supports parallel development of multiple features without affecting stability.
-- Feature branches enable focused development efforts, reducing the risk of introducing bugs in the main codebase.
 
 ---
 
