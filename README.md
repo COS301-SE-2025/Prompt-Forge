@@ -37,6 +37,9 @@ Prompt Forge is a full-featured web-based platform designed to help individuals 
 - 🚀 **[Live Application - Prompt Forge](https://prompt-forge.co.za)** ⭐
 - 📋 [GitHub Project Board](https://github.com/COS301-SE-2025/Prompt-Forge/projects)
 - 🎬 [Project Day Demo Video](https://drive.google.com/drive/folders/11ZvIwm4eRPXp8F0Jtzg2L5Hl7rq6sOxi?usp=sharing)
+- 📄 [SRS Document](./assests/SRS_V4.pdf)
+- 🏗️ [System Architecture](./assests/System_Architecture.pdf)
+
 
 ---
 
