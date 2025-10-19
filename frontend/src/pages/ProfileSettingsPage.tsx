@@ -90,6 +90,7 @@ export default function ProfileSettingsPage() {
           const payoutDetails = await profileService.getPayoutDetails();
           setPayoutDetails(payoutDetails);
         } catch (error) {
+          console.log("No payout details found:", error);
           setPayoutDetails(null);
         }
 
@@ -111,18 +112,25 @@ export default function ProfileSettingsPage() {
       }
     }
     fetchProfile()
-  }, [])
+  }, [isAuthenticated])
 
-  // Show loading state while fetching profile
-  if (loading) {
+  // Show loading state while checking authentication or fetching profile
+  if (authLoading || loading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3ebb9e] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p className="text-muted-foreground">
+            {authLoading ? "Checking authentication..." : "Loading profile..."}
+          </p>
         </div>
       </div>
     )
+  }
+
+  // Don't render if not authenticated (shouldn't reach here due to redirect)
+  if (!isAuthenticated) {
+    return null
   }
 
   // Only update pending image, not saved
