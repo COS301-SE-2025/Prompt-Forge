@@ -9,6 +9,10 @@
 EPI-USE Labs.     </a>
 </h3>
 
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/c0dec161-ae9c-4c93-9fc4-3eefe5731d52" width="600" controls></video>
+</p>
+
 Prompt Forge is a full-featured web-based platform designed to help individuals and organizations craft, test, and evaluate high-performing prompts for AI systems. It empowers users to explore prompt effectiveness, compare results across different models, and collaborate in a structured and ethical environment. The platform features an integrated chat system for real-time collaboration and community engagement.
 
 ---
